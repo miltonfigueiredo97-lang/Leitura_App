@@ -167,57 +167,116 @@ function useReadingData(user) {
   return { ...state, reload: load };
 }
 
-function buildStats(data) {
-  const { library, sessions, ratings, goals, collections } = data;
-  const currentYear = new Date().getFullYear();
-  const completed = library.filter((item) => ['completo', 'lido', 'finalizado'].includes(statusKey(item.status)) || n(item.progress) >= 1);
-  const reading = library.filter((item) => ['lendo', 'em leitura'].includes(statusKey(item.status)));
-  const paused = library.filter((item) => ['pausado', 'pausados'].includes(statusKey(item.status)));
-  const waiting = library.filter((item) => ['aguardando', 'pendente', 'planejado'].includes(statusKey(item.status)));
-  const pagesRead = library.reduce((acc, item) => acc + n(item.currentPage), 0);
-  const totalPages = library.reduce((acc, item) => acc + n(item.totalPages || item.pages), 0);
+function itemYear(item) {
+  return String(item.targetYear || item.completionYear || '').trim();
+}
+
+function isCompleted(item) {
+  return ['completo', 'lido', 'finalizado'].includes(statusKey(item.status)) || n(item.progress) >= 1;
+}
+
+function isReading(item) {
+  return ['lendo', 'em leitura'].includes(statusKey(item.status));
+}
+
+function isPaused(item) {
+  return ['pausado', 'pausados'].includes(statusKey(item.status));
+}
+
+function isWaiting(item) {
+  return ['aguardando', 'pendente', 'planejado'].includes(statusKey(item.status));
+}
+
+function getAvailableYears(data) {
+  const years = new Set();
+  data.goals.forEach((g) => { if (n(g.year)) years.add(String(g.year)); });
+  data.library.forEach((item) => {
+    const y = itemYear(item);
+    if (/^\d{4}$/.test(y)) years.add(y);
+  });
+  data.sessions.forEach((s) => {
+    const y = s.year || String(s.date || '').slice(0, 4);
+    if (/^\d{4}$/.test(String(y))) years.add(String(y));
+  });
+  return [...years].sort((a, b) => Number(b) - Number(a));
+}
+
+function filterByYear(data, yearFilter) {
+  if (yearFilter === 'all') return data;
+  const year = String(yearFilter);
+  return {
+    ...data,
+    library: data.library.filter((item) => itemYear(item) === year),
+    sessions: data.sessions.filter((s) => String(s.year || String(s.date || '').slice(0, 4)) === year),
+    ratings: data.ratings.filter((r) => String(r.readingYear || '') === year),
+  };
+}
+
+function buildStats(data, yearFilter) {
+  const scoped = filterByYear(data, yearFilter);
+  const { library, sessions, ratings, goals, collections } = scoped;
+  const activeLibrary = library.filter((item) => !isPaused(item));
+  const completed = library.filter(isCompleted);
+  const reading = library.filter(isReading);
+  const paused = library.filter(isPaused);
+  const waiting = library.filter(isWaiting);
+
+  // Regra igual ao dashboard antigo:
+  // - Visão anual/meta usa progresso do cadastro do livro: currentPage/totalPages.
+  // - Visão geral de páginas lidas usa o histórico de sessões.
+  const libraryPagesRead = activeLibrary.reduce((acc, item) => acc + n(item.currentPage), 0);
+  const libraryTotalPages = activeLibrary.reduce((acc, item) => acc + n(item.totalPages || item.pages), 0);
   const sessionPages = sessions.reduce((acc, item) => acc + n(item.pages), 0);
   const minutes = sessions.reduce((acc, item) => acc + n(item.minutes), 0);
-  const currentYearSessions = sessions.filter((s) => n(s.year) === currentYear || String(s.date || '').startsWith(String(currentYear)));
-  const currentYearPages = currentYearSessions.reduce((acc, item) => acc + n(item.pages), 0);
-  const goal = goals.find((g) => n(g.year) === currentYear) || goals.sort((a, b) => n(b.year) - n(a.year))[0];
-  const goalYear = goal?.year || currentYear;
-  const goalBooks = n(goal?.booksGoal || goal?.raw?.total);
-  const goalPages = n(goal?.pagesGoal || goal?.raw?.paginasTotal);
-  const currentYearCompleted = completed.filter((item) => n(item.completionYear || item.targetYear) === n(goalYear));
-  const booksGoalPct = goalBooks ? clampPct((currentYearCompleted.length / goalBooks) * 100) : 0;
-  const pagesGoalPct = goalPages ? clampPct((currentYearPages / goalPages) * 100) : 0;
+
+  const currentYear = new Date().getFullYear();
+  const selectedYear = yearFilter === 'all' ? String(currentYear) : String(yearFilter);
+  const goal = data.goals.find((g) => String(g.year) === selectedYear);
+
+  // Para metas, a planilha real bate melhor pelo conjunto targetYear do que pelo resumo antigo metaPorAno.
+  const goalBooks = yearFilter === 'all' ? activeLibrary.length : activeLibrary.length || n(goal?.booksGoal || goal?.raw?.total);
+  const goalPages = yearFilter === 'all' ? libraryTotalPages : libraryTotalPages || n(goal?.pagesGoal || goal?.raw?.paginasTotal);
+  const booksGoalPct = goalBooks ? clampPct((completed.filter((item) => !isPaused(item)).length / goalBooks) * 100) : 0;
+  const pagesGoalPct = goalPages ? clampPct((libraryPagesRead / goalPages) * 100) : 0;
   const avgRating = ratings.length ? ratings.reduce((acc, r) => acc + n(r.notaPonderada || r.notaFinal), 0) / ratings.length : 0;
 
   return {
-    total: library.length,
-    completed: completed.length,
+    total: activeLibrary.length,
+    completed: completed.filter((item) => !isPaused(item)).length,
     reading: reading.length,
     paused: paused.length,
     waiting: waiting.length,
-    pagesRead,
-    totalPages,
+    pagesRead: yearFilter === 'all' ? sessionPages : libraryPagesRead,
+    libraryPagesRead,
+    libraryTotalPages,
     sessionPages,
     minutes,
     sessions: sessions.length,
     ratings: ratings.length,
-    collections: collections.length,
+    collections: yearFilter === 'all' ? data.collections.length : new Set(activeLibrary.map((i) => i.collection).filter(Boolean)).size,
     avgRating,
-    goalYear,
+    goalYear: yearFilter === 'all' ? 'Todos os anos' : selectedYear,
     goalBooks,
     goalPages,
-    currentYearCompleted: currentYearCompleted.length,
-    currentYearPages,
     booksGoalPct,
     pagesGoalPct,
   };
 }
 
 function DashboardView({ data, reload }) {
-  const stats = useMemo(() => buildStats(data), [data]);
-  const recentSessions = useMemo(() => [...data.sessions].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 8), [data.sessions]);
-  const topRatings = useMemo(() => [...data.ratings].sort((a, b) => n(b.notaPonderada || b.notaFinal) - n(a.notaPonderada || a.notaFinal)).slice(0, 8), [data.ratings]);
-  const readingNow = useMemo(() => data.library.filter((item) => ['lendo', 'em leitura'].includes(statusKey(item.status))).slice(0, 6), [data.library]);
+  const years = useMemo(() => getAvailableYears(data), [data]);
+  const defaultYear = years.includes(String(new Date().getFullYear())) ? String(new Date().getFullYear()) : (years[0] || 'all');
+  const [yearFilter, setYearFilter] = useState(defaultYear);
+
+  useEffect(() => {
+    if (yearFilter !== 'all' && years.length && !years.includes(yearFilter)) setYearFilter(defaultYear);
+  }, [years.join('|')]);
+
+  const scopedData = useMemo(() => filterByYear(data, yearFilter), [data, yearFilter]);
+  const stats = useMemo(() => buildStats(data, yearFilter), [data, yearFilter]);
+  const recentSessions = useMemo(() => [...scopedData.sessions].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 8), [scopedData.sessions]);
+  const topRatings = useMemo(() => [...scopedData.ratings].sort((a, b) => n(b.notaPonderada || b.notaFinal) - n(a.notaPonderada || a.notaFinal)).slice(0, 8), [scopedData.ratings]);
+  const readingNow = useMemo(() => scopedData.library.filter(isReading).slice(0, 6), [scopedData.library]);
 
   if (!data.library.length && !data.sessions.length) {
     return <EmptyState title="Sua base ainda não apareceu no dashboard" text="Use a aba Migração ou confira se os documentos estão dentro do seu usuário no Firestore." />;
@@ -225,20 +284,32 @@ function DashboardView({ data, reload }) {
 
   return (
     <>
+      <section className="card filter-card">
+        <div>
+          <span className="pill">Correção de dados</span>
+          <h2>Filtro principal do dashboard</h2>
+          <p className="muted">Agora os números usam a mesma lógica da planilha: por ano/meta quando selecionado, histórico quando escolher todos.</p>
+        </div>
+        <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
+          {years.map((year) => <option key={year} value={year}>{year}</option>)}
+          <option value="all">Todos os anos</option>
+        </select>
+      </section>
+
       <section className="kpi-grid">
-        <Kpi icon="📚" value={fmtNumber(stats.total)} label="Livros na biblioteca" sub={`${fmtNumber(stats.completed)} concluídos`} />
+        <Kpi icon="📚" value={fmtNumber(stats.total)} label={yearFilter === 'all' ? 'Livros ativos na biblioteca' : `Livros da meta ${yearFilter}`} sub={`${fmtNumber(stats.completed)} concluídos`} />
         <Kpi icon="📖" value={fmtNumber(stats.reading)} label="Lendo agora" sub={`${fmtNumber(stats.waiting)} aguardando`} />
-        <Kpi icon="📄" value={fmtNumber(stats.pagesRead)} label="Páginas lidas" sub={`${fmtNumber(stats.totalPages)} páginas cadastradas`} />
+        <Kpi icon="📄" value={fmtNumber(stats.pagesRead)} label="Páginas lidas" sub={yearFilter === 'all' ? `${fmtNumber(stats.sessionPages)} por sessões` : `${fmtNumber(stats.libraryTotalPages)} páginas da meta`} />
         <Kpi icon="⏱️" value={fmtNumber(stats.sessions)} label="Sessões registradas" sub={`${fmtNumber(stats.minutes)} minutos`} />
         <Kpi icon="⭐" value={stats.avgRating.toFixed(2)} label="Média das notas" sub={`${fmtNumber(stats.ratings)} avaliações`} />
-        <Kpi icon="🧩" value={fmtNumber(stats.collections)} label="Coleções/Sagas" sub="Importadas da base antiga" />
+        <Kpi icon="🧩" value={fmtNumber(stats.collections)} label="Coleções/Sagas" sub={yearFilter === 'all' ? 'Histórico importado' : `Presentes em ${yearFilter}`} />
       </section>
 
       <section className="grid2">
         <article className="card">
           <div className="card-title-row">
             <div>
-              <span className="pill">Meta {stats.goalYear}</span>
+              <span className="pill">{yearFilter === 'all' ? 'Histórico' : `Meta ${yearFilter}`}</span>
               <h2>Progresso anual</h2>
             </div>
             <button className="ghost" onClick={reload}>Atualizar</button>
@@ -246,12 +317,12 @@ function DashboardView({ data, reload }) {
           <div className="goal-box">
             <div>
               <strong>{stats.booksGoalPct}%</strong>
-              <span>{fmtNumber(stats.currentYearCompleted)} de {fmtNumber(stats.goalBooks)} livros</span>
+              <span>{fmtNumber(stats.completed)} de {fmtNumber(stats.goalBooks)} livros</span>
               <div className="progress-wrap"><div className="progress-bar" style={{ width: `${stats.booksGoalPct}%` }} /></div>
             </div>
             <div>
               <strong>{stats.pagesGoalPct}%</strong>
-              <span>{fmtNumber(stats.currentYearPages)} de {fmtNumber(stats.goalPages)} páginas</span>
+              <span>{fmtNumber(stats.libraryPagesRead)} de {fmtNumber(stats.goalPages)} páginas</span>
               <div className="progress-wrap"><div className="progress-bar alt" style={{ width: `${stats.pagesGoalPct}%` }} /></div>
             </div>
           </div>
@@ -264,19 +335,19 @@ function DashboardView({ data, reload }) {
             <StatusLine label="Concluídos" value={stats.completed} total={stats.total} />
             <StatusLine label="Lendo" value={stats.reading} total={stats.total} />
             <StatusLine label="Aguardando" value={stats.waiting} total={stats.total} />
-            <StatusLine label="Pausados" value={stats.paused} total={stats.total} />
+            <StatusLine label="Pausados" value={stats.paused} total={stats.total + stats.paused} />
           </div>
         </article>
       </section>
 
       <section className="grid3">
-        <ListCard title="Lendo agora" badge="Atual" items={readingNow} empty="Nenhum livro marcado como lendo.">
+        <ListCard title="Lendo agora" badge="Atual" items={readingNow} empty="Nenhum livro marcado como lendo neste filtro.">
           {(item) => <BookRow item={item} right={`${clampPct(n(item.progress) * 100)}%`} />}
         </ListCard>
-        <ListCard title="Últimas sessões" badge="Histórico" items={recentSessions} empty="Nenhuma sessão encontrada.">
+        <ListCard title="Últimas sessões" badge="Histórico" items={recentSessions} empty="Nenhuma sessão encontrada neste filtro.">
           {(item) => <SimpleRow title={item.title} sub={`${fmtDate(item.date)} • ${fmtNumber(item.pages)} págs • ${fmtNumber(item.minutes)} min`} right={item.collection} />}
         </ListCard>
-        <ListCard title="Top notas" badge="Ranking" items={topRatings} empty="Nenhuma nota encontrada.">
+        <ListCard title="Top notas" badge="Ranking" items={topRatings} empty="Nenhuma nota encontrada neste filtro.">
           {(item) => <SimpleRow title={item.title} sub={`Ano ${item.readingYear || '—'}`} right={Number(n(item.notaPonderada || item.notaFinal)).toFixed(2)} />}
         </ListCard>
       </section>
