@@ -1,17 +1,16 @@
 {
-  "name": "Dashboard de Leitura",
-  "short_name": "Leitura",
-  "description": "Acompanhe suas leituras",
+  "name": "BookLegacy - Controle de Leitura",
+  "short_name": "BookLegacy",
+  "description": "Controle de leitura com dashboard, metas, avaliações e modo batalha entre amigos.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0d1117",
   "theme_color": "#8b7cf8",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%238b7cf8'/><text y='130' x='96' text-anchor='middle' font-size='120'>📚</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    }
+    {"src":"/icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"/icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }
