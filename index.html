@@ -1455,15 +1455,25 @@ async function carregarDados() {
 
 function inicializar(d) {
   window._dadosD = d;
-  // Carga inicial = Milton
-  const sessoesF = (d.sessoes||[]).filter(s => !s.usuario || s.usuario === '' || s.usuario.toUpperCase() === 'MILTON');
+  // Carga inicial = usuário logado/visualizado. NUNCA usar Milton como fallback de dados.
+  const currentLabel = (window.BL && window.BL.raw && window.BL.raw.currentLabel)
+    ? String(window.BL.raw.currentLabel)
+    : (typeof usuarioAtual !== 'undefined' && usuarioAtual ? String(usuarioAtual) : '');
+  const normUser = v => String(v || '').trim().toUpperCase();
+  const isCurrentUser = obj => {
+    const u = normUser(obj && obj.usuario);
+    if (!currentLabel) return false;
+    return u === normUser(currentLabel);
+  };
+  const sessoesF = (d.sessoes||[]).filter(isCurrentUser);
   const livroMap = new Map();
   [...(d.livros||[]), ...(d.lendo||[]), ...(d.pausados||[]), ...(d.aguardando||[])]
     .filter(l => l.livro && l.livro.length > 1)
-    .filter(l => !l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
+    .filter(isCurrentUser)
     .forEach(l => { if (!livroMap.has(l.livro)) livroMap.set(l.livro, l); });
   window._livros  = [...livroMap.values()];
   window._sessoes = sessoesF;
+  if (typeof usuarioAtual !== 'undefined') usuarioAtual = currentLabel || usuarioAtual;
   recalcularDados(d, sessoesF);
 }
 
@@ -4533,6 +4543,11 @@ async function iniciarAppFirebase(){
         return;
       }
       if (overlay) overlay.style.display = 'none';
+      // Segurança: limpa qualquer dado renderizado do login anterior antes de carregar o usuário atual.
+      window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+      window._livros = [];
+      window._sessoes = [];
+      const appEl = document.getElementById('app'); if (appEl) appEl.style.display = 'none';
       const loadingEl = document.getElementById('loading');
       loadingEl.style.display = 'block';
       loadingEl.innerHTML = '⏳ Login feito. Preparando seu perfil...';
@@ -6804,21 +6819,10 @@ async function carregarLivros() {
     popularSelects();
     return;
   }
-  try {
-    const r = await fetch('/data.json');
-    const d = await r.json();
-    const u = (typeof usuarioAtual !== 'undefined' ? usuarioAtual : 'Milton');
-    const todos = [...(d.livros||[]), ...(d.lendo||[]), ...(d.pausados||[]), ...(d.aguardando||[])];
-    livrosCache = todos
-      .filter(l => l.livro && l.livro.length > 1)
-      .filter(l => u === 'Milton'
-        ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
-        : l.usuario?.toUpperCase() === u.toUpperCase())
-      .filter((l,i,arr) => arr.findIndex(x=>x.livro===l.livro)===i);
-    const cols = new Set(livrosCache.map(l=>l.colecao).filter(Boolean));
-    colecoesCache = [...cols].sort();
-    popularSelects();
-  } catch(e) { console.error('Erro ao carregar livros:', e); }
+  // Segurança: não buscar /data.json legado. Se o usuário não tem livros, mantém vazio.
+  livrosCache = [];
+  colecoesCache = [];
+  popularSelects();
 }
 
 function popularSelects() {
@@ -7729,6 +7733,20 @@ if ('serviceWorker' in navigator) {
     alert(report.join('\n'));
   };
   setTimeout(applyReadOnlyUI, 1000);
+})();
+</script>
+
+
+<script>
+// BOOKLEGACY V7.9 SECURITY PATCH — sem fallback para data.json / sem dados cruzados.
+(function(){
+  window.__BL_SECURITY_PATCH = 'v7.9-user-isolation';
+  const emptyData = () => ({geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]});
+  window.carregarDados = async function(){
+    if (window.BL && window.BL.auth && window.BL.auth.currentUser && typeof window.blRefreshAndRender === 'function') return window.blRefreshAndRender();
+    window._dadosD = emptyData();
+    return window._dadosD;
+  };
 })();
 </script>
 
