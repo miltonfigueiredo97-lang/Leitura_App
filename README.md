@@ -1,10 +1,3 @@
-# BookLegacy App - V3 Dashboard
+# BookLegacy App V5 Full
 
-Versão com:
-
-- Login Google
-- Firestore conectado
-- Usuário em `users/{uid}`
-- Dashboard lendo dados reais do Firestore
-- Biblioteca importada com busca e filtro
-- Ferramenta de migração preservada
+Versão completa inicial: dashboard, biblioteca com edição, registro de leitura, adicionar livro por API/manual, avaliações e migração guardada.
