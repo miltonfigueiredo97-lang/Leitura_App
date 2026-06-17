@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isAcceptedFriendOf(userId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid)).data.status == 'accepted';
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+
+      match /friends/{friendUid} {
+        allow read: if isOwner(userId) || request.auth.uid == friendUid;
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /library/{itemId} {
+        allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /sessions/{sessionId} {
+        allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /ratings/{ratingId} {
+        allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /goals/{goalId} {
+        allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /collections/{collectionId} {
+        allow read: if isOwner(userId) || isAcceptedFriendOf(userId);
+        allow write: if isOwner(userId);
+      }
+    }
+
+    match /books/{bookId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if false;
+    }
+  }
+}

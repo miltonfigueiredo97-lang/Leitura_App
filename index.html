@@ -525,7 +525,7 @@ body.mobile-view canvas { max-width:100% !important; width:100% !important; }
 body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
 body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
-/* BookLegacy V7 - login Firebase mantendo visual original */
+/* BookLegacy V7.2 - login Firebase estável mantendo visual original */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
@@ -569,7 +569,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     </div>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v7.2</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v7.3</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -3868,6 +3868,7 @@ window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
 try {
+  // Evita travar em alguns navegadores/rede quando o Firestore tenta usar stream/websocket.
   window.BL.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
 } catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
@@ -3896,6 +3897,19 @@ function blProfileLabel(user){
   if (src.includes('daniel')) return 'Daniel';
   if (src.includes('milton')) return 'Milton';
   return (user.displayName || user.email || 'Usuário').split(' ')[0];
+}
+
+
+function blWithTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo excedido ao carregar: ' + label)), ms))
+  ]);
+}
+
+async function blSafeGet(query, label){
+  try { return await blWithTimeout(query.get(), 14000, label); }
+  catch(e){ console.error('Falha ao ler', label, e); throw e; }
 }
 
 async function blReadUserBundle(uid, label){
@@ -3927,23 +3941,13 @@ async function blLoadFriendsForUser(uid){
   }
 }
 
-
-function blWithTimeout(promise, ms, label){
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo excedido ao carregar: ' + label)), ms))
-  ]);
-}
-async function blSafeGet(query, label){
-  return await blWithTimeout(query.get(), 14000, label);
-}
-
 async function blLoadFirestoreData(){
   const user = window.BL.auth.currentUser;
   if (!user) throw new Error('Usuário não logado');
   const uid = user.uid;
   const meLabel = blProfileLabel(user);
 
+  // Primeiro carrega o usuário logado. Assim o dashboard abre mesmo se amigos/livros globais falharem.
   const myBundle = await blReadUserBundle(uid, meLabel);
 
   let books = [];
@@ -3980,7 +3984,7 @@ function blUpdateUserButtons(raw){
   const labels = (raw.users||[]).map(u => u.label);
   if (btnMilton) {
     btnMilton.textContent = `📖 ${raw.currentLabel || 'Meus dados'}`;
-    btnMilton.setAttribute('onclick', `setUsuario('${(raw.currentLabel||'Milton').replace(/'/g,\"\\'\")}')`);
+    btnMilton.setAttribute('onclick', 'setUsuario(' + JSON.stringify(raw.currentLabel || 'Milton') + ')');
   }
   const hasDaniel = labels.some(l => String(l).toLowerCase() === 'daniel');
   if (btnDaniel) btnDaniel.style.display = hasDaniel ? '' : 'none';
@@ -5907,7 +5911,7 @@ function _applyMQ(e) {
   }
 }
 _mq.addEventListener('change', _applyMQ);
-window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 900) setTimeout(applyMobileLayout, 500); setTimeout(() => ddSetModo('mes'), 200); });
+window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 900) setTimeout(applyMobileLayout, 500); setTimeout(() => { if (typeof ddSetModo === 'function') ddSetModo('mes'); }, 200); });
 
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
