@@ -3837,7 +3837,7 @@ window.abrirLivroDetalhes = abrirLivroDetalhes;
 
 
 // ════════════════════════════════════════════════
-// BOOKLEGACY V6 — FIREBASE + ADAPTADOR PARA O DASHBOARD ORIGINAL
+// BOOKLEGACY V7.1 — FIREBASE + AMIGOS + PWA HOTFIX
 // Mantém o layout original e troca data.json por Firestore.
 // ════════════════════════════════════════════════
 const firebaseConfig = {
@@ -3850,6 +3850,19 @@ const firebaseConfig = {
 };
 
 window.BL = window.BL || {};
+function blShowFatalConfigError(msg){
+  const loading = document.getElementById('loading');
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.style.display = 'none';
+  if (loading) {
+    loading.style.display = 'block';
+    loading.innerHTML = '<div style="max-width:720px;margin:30px auto;background:#161b27;border:1px solid #f88c6a;border-radius:16px;padding:24px;color:#e2e8f0;text-align:left"><h2 style="color:#f88c6a;margin-bottom:10px">⚠️ Configuração do Firebase não carregou</h2><p>'+msg+'</p><p style="color:#8892a8;margin-top:10px">Verifique as variáveis VITE_FIREBASE_* na Vercel e faça Redeploy.</p></div>';
+  }
+}
+if (Object.values(firebaseConfig).some(v => !v || String(v).includes('%VITE_'))) {
+  blShowFatalConfigError('As variáveis do Firebase não foram substituídas no build. Isso causa carregamento infinito.');
+  throw new Error('Firebase config não substituído no build');
+}
 window.BL.app = firebase.initializeApp(firebaseConfig);
 window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
@@ -4045,6 +4058,82 @@ async function blRefreshAndRender(){
   if (footer) footer.textContent = new Date().toLocaleString('pt-BR');
 }
 
+
+function blGetInviteFromUrl(){
+  const url = new URL(window.location.href);
+  const invite = url.searchParams.get('invite') || url.hash.match(/invite=([^&]+)/)?.[1] || '';
+  const name = url.searchParams.get('name') || url.hash.match(/name=([^&]+)/)?.[1] || '';
+  return { inviteUid: decodeURIComponent(invite || ''), inviteName: decodeURIComponent(name || '') };
+}
+
+async function blAcceptInviteIfPresent(user){
+  const { inviteUid, inviteName } = blGetInviteFromUrl();
+  if (!inviteUid || inviteUid === user.uid) return;
+  const now = new Date().toISOString();
+  const myName = user.displayName || user.email || 'Amigo';
+  const inviterName = inviteName || 'Amigo';
+  const batch = window.BL.db.batch();
+  const myFriendRef = window.BL.db.collection('users').doc(user.uid).collection('friends').doc(inviteUid);
+  const inviterFriendRef = window.BL.db.collection('users').doc(inviteUid).collection('friends').doc(user.uid);
+  batch.set(myFriendRef, { uid: inviteUid, displayName: inviterName, status: 'accepted', acceptedAt: now, source: 'invite_link' }, { merge: true });
+  batch.set(inviterFriendRef, { uid: user.uid, displayName: myName, email: user.email || '', photoURL: user.photoURL || '', status: 'accepted', acceptedAt: now, source: 'invite_link' }, { merge: true });
+  await batch.commit();
+  const clean = window.location.origin + window.location.pathname;
+  window.history.replaceState({}, document.title, clean);
+  alert('✅ Amizade criada! Agora o Modo Batalha aparece para vocês dois.');
+}
+
+function blCreateInviteLink(user){
+  const base = window.location.origin + window.location.pathname;
+  const name = encodeURIComponent((user.displayName || user.email || 'Amigo').split(' ')[0]);
+  return `${base}?invite=${encodeURIComponent(user.uid)}&name=${name}`;
+}
+
+async function blCopyText(text){
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); document.body.removeChild(ta); return true; }
+    catch(err){ document.body.removeChild(ta); return false; }
+  }
+}
+
+function blOpenInviteModal(user){
+  const link = blCreateInviteLink(user);
+  const existing = document.getElementById('blInviteModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'blInviteModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  modal.innerHTML = `<div style="width:min(620px,100%);background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:22px;color:#e2e8f0;box-shadow:0 20px 70px rgba(0,0,0,.55)">
+    <h2 style="margin:0 0 8px">🤝 Convidar amigo</h2>
+    <p style="color:#8892a8;line-height:1.45;margin:0 0 14px">Envie este link para o Daniel. Quando ele abrir e entrar com Google, a amizade será criada automaticamente e o Modo Batalha será liberado para vocês dois.</p>
+    <input id="blInviteInput" value="${link.replace(/"/g,'&quot;')}" readonly style="width:100%;padding:12px;border-radius:10px;border:1px solid #2a3248;background:#0d1117;color:#e2e8f0;margin-bottom:12px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+      <button id="blInviteCopy" style="border:none;border-radius:10px;background:#8b7cf8;color:white;font-weight:800;padding:10px 14px;cursor:pointer">Copiar link</button>
+      <button id="blInviteClose" style="border:1px solid #2a3248;border-radius:10px;background:#1e2535;color:#e2e8f0;padding:10px 14px;cursor:pointer">Fechar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('blInviteClose').onclick = () => modal.remove();
+  document.getElementById('blInviteCopy').onclick = async () => {
+    const ok = await blCopyText(link);
+    document.getElementById('blInviteCopy').textContent = ok ? '✅ Link copiado' : 'Copie manualmente';
+  };
+}
+
+function blSetupLoadingWatchdog(){
+  setTimeout(() => {
+    const loading = document.getElementById('loading');
+    const app = document.getElementById('app');
+    const overlay = document.getElementById('authOverlay');
+    if (loading && loading.style.display !== 'none' && (!app || app.style.display === 'none') && (!overlay || overlay.style.display !== 'flex')) {
+      loading.innerHTML = '<div style="max-width:720px;margin:30px auto;background:#161b27;border:1px solid #f88c6a;border-radius:16px;padding:24px;color:#e2e8f0;text-align:left"><h2 style="color:#f88c6a;margin-bottom:10px">⚠️ O carregamento demorou demais</h2><p>Isso geralmente é configuração do Firebase, regra do Firestore ou erro de permissão ao ler dados.</p><p style="color:#8892a8;margin-top:10px">Abra o Console do navegador ou mande print da tela. Você também pode voltar para a versão anterior pelo histórico de deploys da Vercel.</p><button onclick="location.reload()" style="margin-top:14px;background:#8b7cf8;color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">Recarregar</button></div>';
+    }
+  }, 22000);
+}
+blSetupLoadingWatchdog();
+
 async function iniciarAppFirebase(){
   const overlay = document.getElementById('authOverlay');
   const btn = document.getElementById('authLoginBtn');
@@ -4065,6 +4154,7 @@ async function iniciarAppFirebase(){
       if (overlay) overlay.style.display = 'none';
       document.getElementById('loading').style.display = 'block';
       await blEnsureUserProfile(user);
+      await blAcceptInviteIfPresent(user);
       await blRefreshAndRender();
       blDecorateHeader(user);
     } catch(e) {
@@ -4082,8 +4172,9 @@ function blDecorateHeader(user){
   const el = document.createElement('div');
   el.id = 'blProfile';
   el.className = 'bl-profile';
-  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blLogout">Sair</button>`;
+  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blInviteBtn">Convidar amigo</button><button type="button" id="blLogout">Sair</button>`;
   headerRight.prepend(el);
+  document.getElementById('blInviteBtn').onclick = () => blOpenInviteModal(user);
   document.getElementById('blLogout').onclick = () => window.BL.auth.signOut();
 }
 

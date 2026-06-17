@@ -1,11 +1,5 @@
-# BookLegacy V7
+# BookLegacy V7.1 Hotfix
 
-Correções desta versão:
+Correção do carregamento infinito, build estático com variáveis Firebase em index/mobile e convite de amizade por link.
 
-- Login Google visível no fluxo do app.
-- O dashboard carrega os dados do usuário logado.
-- Botões de Daniel e Batalha só aparecem quando houver amizade aceita no Firestore.
-- Preparado para PWA instalável no celular com manifest, ícones e service worker.
-- Inclui regras Firestore V7 para permitir modo batalha apenas entre amigos aceitos.
-
-Importante: para puxar os dados do Daniel, ele precisa entrar uma vez com o Google para gerar o UID dele. Depois importe a base dele no UID correto e crie a amizade aceita entre Milton e Daniel.
+Suba o conteúdo da pasta no GitHub e publique as regras FIRESTORE_RULES_V7_1.txt.
