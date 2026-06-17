@@ -1,12 +1,9 @@
-# BookLegacy V7.7 - Correção sessão + API no adicionar livro
+# BookLegacy App V7.8
 
-Correções desta versão:
-- Remove os botões flutuantes "Teste API ISBNdb" e "Teste API Open Library".
-- Coloca as opções de API dentro do modal "Adicionar Livro".
-- O modo padrão é Manual.
-- Apenas uma opção pode ser marcada: Manual, Open Library API ou ISBNdb API.
-- Ao escolher uma API e digitar o nome/ISBN, os dados são buscados e preenchidos automaticamente.
-- Corrige Excluir Sessão para apagar direto do Firestore.
-- Corrige Editar Sessão para editar direto no Firestore e atualizar o progresso do livro.
-
-Suba o conteúdo desta pasta no GitHub e aguarde a Vercel atualizar.
+Correções:
+- Ações Firebase reescritas para usar sempre o usuário logado.
+- Excluir/editar sessão por ID real do Firestore.
+- Perfil de amigo somente leitura ao clicar na comunidade.
+- Modo batalha liberado para múltiplos usuários/amigos aceitos.
+- FAB escondido quando visualizar perfil de amigo.
+- Regras mantidas em FIRESTORE_RULES_V7_8.txt.
