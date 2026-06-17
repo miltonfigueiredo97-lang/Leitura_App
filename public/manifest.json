@@ -1,7 +1,7 @@
 {
   "name": "BookLegacy",
   "short_name": "BookLegacy",
-  "description": "Controle de leitura com login, metas, notas e estatísticas.",
+  "description": "Controle global de leitura",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d1117",

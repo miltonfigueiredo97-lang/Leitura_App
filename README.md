@@ -1,19 +1,18 @@
 # BookLegacy App
 
-Primeira base do app de leitura com React + Vite + Firebase.
+Base do app de leitura com React + Vite + Firebase.
 
-## Como configurar
+## Funções desta versão
 
-1. Copie `.env.example` para `.env`.
-2. Cole os dados do `firebaseConfig` do Firebase.
-3. Rode:
+- Login com Google
+- Criação automática do usuário em `users/{uid}`
+- Firestore conectado
+- Tela temporária de migração por arquivo JSON
+- Sem Storage e sem Cloudinary
 
-```bash
-npm install
-npm run dev
-```
+## Variáveis na Vercel
 
-## Variáveis de ambiente
+Use os valores do `firebaseConfig` do Firebase:
 
 ```env
 VITE_FIREBASE_API_KEY=
@@ -23,9 +22,3 @@ VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 ```
-
-## Firebase usado
-
-- Authentication com Google
-- Firestore Database
-- Sem Storage nesta fase
