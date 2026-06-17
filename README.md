@@ -1,3 +1,10 @@
-# BookLegacy App V5 Full
+# BookLegacy App - V6 Original Dashboard
 
-Versão completa inicial: dashboard, biblioteca com edição, registro de leitura, adicionar livro por API/manual, avaliações e migração guardada.
+Versão que preserva o index visual original e troca a origem dos dados para Firebase/Firestore.
+
+Inclui:
+- Login Google Firebase
+- Dashboard original preservado
+- Dados convertidos do Firestore para o formato antigo do data.json
+- Ações principais salvando no Firestore
+- PWA básico

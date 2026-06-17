@@ -1,6 +1,6 @@
 {
   "name": "booklegacy-app",
-  "version": "0.2.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,11 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "firebase": "latest"
+    "vite": "latest"
   },
   "devDependencies": {}
 }
