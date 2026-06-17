@@ -1,5 +1,3 @@
-# BookLegacy V7.1 Hotfix
+# BookLegacy App V7.2
 
-Correção do carregamento infinito, build estático com variáveis Firebase em index/mobile e convite de amizade por link.
-
-Suba o conteúdo da pasta no GitHub e publique as regras FIRESTORE_RULES_V7_1.txt.
+Hotfix estável: login Google, Firestore com long polling automático, carregamento individual antes de amigos, convite por link e mensagens de erro visíveis.
