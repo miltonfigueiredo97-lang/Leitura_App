@@ -530,6 +530,11 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
 
+
+.api-choice-row{display:flex;gap:8px;flex-wrap:wrap;}
+.api-choice{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--text);font-size:13px;cursor:pointer;}
+.api-choice input{width:auto!important;accent-color:var(--purple);}
+.api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 </head>
 <body>
@@ -4534,14 +4539,6 @@ iniciarAppFirebase();
     <span>Excluir Sessão</span>
     <button style="background:#b71c1c" onclick="abrirModal('excluirSessao')">📅</button>
   </div>
-  <div class="fab-item">
-    <span>Teste API ISBNdb</span>
-    <button style="background:#06b6d4" onclick="abrirModal('testeIsbndb')">🔍</button>
-  </div>
-  <div class="fab-item">
-    <span>Teste API Open Library</span>
-    <button style="background:#0891b2" onclick="abrirModal('testeOpenLibrary')">📚</button>
-  </div>
 </div>
 
 <!-- Modal: Excluir Sessão -->
@@ -4708,7 +4705,19 @@ iniciarAppFirebase();
     <h2>➕ Adicionar Livro</h2>
     <div class="pwa-field">
       <label>Nome do Livro *</label>
-      <input id="nl-nome" type="text" placeholder="Ex: O Caminho dos Reis">
+      <input id="nl-nome" type="text" placeholder="Ex: O Caminho dos Reis" oninput="nlAgendarBuscaApi()" onblur="nlBuscarSeApiSelecionada()">
+    </div>
+    <div class="pwa-field">
+      <label>Modo de cadastro</label>
+      <div class="api-choice-row">
+        <label class="api-choice"><input type="radio" name="nl-api-mode" value="manual" checked onchange="nlModoApiMudou()"> <span>Manual</span></label>
+        <label class="api-choice"><input type="radio" name="nl-api-mode" value="openlibrary" onchange="nlModoApiMudou()"> <span>Usar Open Library API</span></label>
+        <label class="api-choice"><input type="radio" name="nl-api-mode" value="isbndb" onchange="nlModoApiMudou()"> <span>Usar ISBNdb API</span></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+        <button type="button" id="nl-api-buscar" onclick="nlBuscarSeApiSelecionada(true)" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;cursor:pointer;">🔎 Buscar dados</button>
+        <span id="nl-api-status" style="font-size:12px;color:var(--muted);"></span>
+      </div>
     </div>
     <div class="pwa-field">
       <label>Coleção</label>
@@ -7287,7 +7296,7 @@ window.enviarNovoLivro = async function(){
   btn.disabled=true; btn.textContent='Adicionando...';
   try{
     const uid=window.BL.auth.currentUser.uid; const bookId='book_'+blSlug(nome); const now=new Date().toISOString();
-    const book={ title:nome, normalizedTitle:blSlug(nome), author:document.getElementById('nl-autor')?.value.trim()||'', pages:blNum(document.getElementById('nl-paginas')?.value), coverUrl:document.getElementById('nl-capa')?.value.trim()||'', isbn:document.getElementById('nl-isbn')?.value.trim()||'', collection:document.getElementById('nl-colecao')?.value.trim()||'', genre:document.getElementById('nl-genero')?.value.trim()||'', source:'manual', createdBy:uid, updatedAt:now };
+    const book={ title:nome, normalizedTitle:blSlug(nome), author:document.getElementById('nl-autor')?.value.trim()||'', pages:blNum(document.getElementById('nl-paginas')?.value), coverUrl:document.getElementById('nl-capa')?.value.trim()||'', isbn:document.getElementById('nl-isbn')?.value.trim()||'', collection:document.getElementById('nl-colecao')?.value.trim()||'', genre:document.getElementById('nl-genero')?.value.trim()||'', source:(window.__nlSource||nlModoSelecionado?.()||'manual'), createdBy:uid, updatedAt:now };
     await window.BL.db.collection('books').doc(bookId).set(book,{merge:true});
     await window.BL.db.collection('users').doc(uid).collection('library').doc('lib_'+blSlug(nome)).set({ bookId, title:nome, author:book.author, collection:book.collection, genre:book.genre, status:'Aguardando', targetYear:document.getElementById('nl-metaano')?.value||'', dependency:document.getElementById('nl-depende')?.value.trim()||'', collectionOrder:blNum(document.getElementById('nl-ordem')?.value), totalPages:book.pages, currentPage:0, coverUrl:book.coverUrl, isbn:book.isbn, createdAt:now, updatedAt:now },{merge:true});
     await blReloadAfterWrite('nl-msg','✅ Livro adicionado ao Firebase!'); setTimeout(()=>fecharModal('novoLivro'),1000);
@@ -7317,6 +7326,100 @@ async function blBuscarLivroPublico(prefix){
   }catch(e){ mostrarMsg(prefix+'-msg','❌ '+e.message,'err'); }
   btn.disabled=false; btn.textContent='🔍 Buscar';
 }
+
+
+
+/* ===== V7.7 - Correções sessão + adicionar livro por API integrada ===== */
+function blCurrentUid(){ return window.BL?.auth?.currentUser?.uid || null; }
+function blSessionCollection(){ const uid=blCurrentUid(); if(!uid) throw new Error('Usuário não logado.'); return window.BL.db.collection('users').doc(uid).collection('sessions'); }
+function blLibraryCollection(){ const uid=blCurrentUid(); if(!uid) throw new Error('Usuário não logado.'); return window.BL.db.collection('users').doc(uid).collection('library'); }
+async function blFindSessionDoc(s){
+  const col=blSessionCollection();
+  if(s?.id){ const ref=col.doc(s.id); const snap=await ref.get(); if(snap.exists) return {ref, data:{id:snap.id,...snap.data()}}; }
+  let q=col.where('date','==',s.data).where('pages','==',Number(s.paginas||s.pages||0)).limit(10);
+  const snap=await q.get();
+  const titleNorm=blNormalizeText(s.livro||s.title||'');
+  for(const d of snap.docs){ const data=d.data(); if(blNormalizeText(data.title||data.livro||'')===titleNorm) return {ref:d.ref, data:{id:d.id,...data}}; }
+  throw new Error('Sessão não encontrada no Firestore. Atualize a página e tente novamente.');
+}
+function blFindLibByBookOrTitle(bookId,title){
+  const raw=(window.BL?.raw?.users?.[0]?.library)||[];
+  return raw.find(l => (bookId && l.bookId===bookId) || blNormalizeText(l.title||l.livro||'')===blNormalizeText(title||''));
+}
+async function blAdjustLibraryPages(bookId,title,delta,newDate){
+  const lib=blFindLibByBookOrTitle(bookId,title); if(!lib?.id || !delta) return;
+  const ref=blLibraryCollection().doc(lib.id);
+  const current=blNum(lib.currentPage||lib.pagAtual); const total=blNum(lib.totalPages||lib.pages||lib.totalPag);
+  const next=Math.max(0, total?Math.min(total,current+delta):current+delta);
+  const upd={currentPage:next, updatedAt:new Date().toISOString()};
+  if(total && next>=total){ upd.status='Completo'; if(newDate) upd.completionYear=String(newDate).slice(0,4); upd.progress=1; }
+  else if(lib.status==='Completo' && total && next<total){ upd.status='Lendo'; upd.progress=total?next/total:0; }
+  else if(total){ upd.progress=next/total; }
+  await ref.set(upd,{merge:true});
+}
+window.renderSessoesExcluir = function(){
+  const filtro=(document.getElementById('es-filtro')?.value||'').toLowerCase();
+  const sessoes=[...(window._sessoes||[])]
+    .filter(s=>!filtro || String(s.livro||'').toLowerCase().includes(filtro))
+    .sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))).slice(0,80);
+  const lista=document.getElementById('es-lista'); if(!lista) return; lista.innerHTML='';
+  if(!sessoes.length){ lista.innerHTML='<div style="color:var(--muted);text-align:center;padding:16px;">Nenhuma sessão encontrada</div>'; return; }
+  sessoes.forEach(s=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:10px;';
+    div.innerHTML=`<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.livro||s.title||''}</div><div style="font-size:12px;color:var(--muted);">${s.data||''} · ${s.paginas||s.pages||0} págs${s.minutos?' · '+Math.round(s.minutos)+'min':''}</div></div><button class="es-edit-btn" style="background:var(--purple);border:none;color:white;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;">✏️</button><button class="es-del-btn" style="background:#e53935;border:none;color:white;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;">🗑️</button>`;
+    div.querySelector('.es-edit-btn').onclick=()=>editarSessaoDesktop(s);
+    div.querySelector('.es-del-btn').onclick=()=>excluirSessao(s);
+    lista.appendChild(div);
+  });
+};
+window.editarSessaoDesktop = function(s){
+  fecharModal('excluirSessao');
+  const ensureHidden=(id)=>{let el=document.getElementById(id); if(!el){ el=document.createElement('input'); el.type='hidden'; el.id=id; document.getElementById('modalEditarSessao')?.appendChild(el);} return el;};
+  ensureHidden('ee-session-id').value=s.id||''; ensureHidden('ee-book-id').value=s.bookId||'';
+  document.getElementById('ee-livro-original').value=s.livro||s.title||'';
+  document.getElementById('ee-data-original').value=s.data||'';
+  document.getElementById('ee-paginas-original').value=s.paginas||s.pages||0;
+  document.getElementById('ee-livro-nome').textContent=s.livro||s.title||'';
+  document.getElementById('ee-data').value=s.data||'';
+  document.getElementById('ee-paginas').value=s.paginas||s.pages||0;
+  const mins=blNum(s.minutos||s.minutes); document.getElementById('ee-horas').value=mins?Math.floor(mins/60):''; document.getElementById('ee-minutos').value=mins?Math.round(mins%60):'';
+  const msg=document.getElementById('ee-msg'); if(msg){msg.className='pwa-msg'; msg.textContent='';}
+  abrirModal('editarSessao');
+};
+window.salvarEdicaoSessao = async function(){
+  const btn=document.getElementById('ee-btn'); const oldText=btn?.textContent||'💾 Salvar alterações';
+  const sess={id:document.getElementById('ee-session-id')?.value, bookId:document.getElementById('ee-book-id')?.value, livro:document.getElementById('ee-livro-original')?.value, data:document.getElementById('ee-data-original')?.value, paginas:blNum(document.getElementById('ee-paginas-original')?.value)};
+  const novaData=document.getElementById('ee-data')?.value; const novasPaginas=blNum(document.getElementById('ee-paginas')?.value); const totalMinutos=blNum(document.getElementById('ee-horas')?.value)*60+blNum(document.getElementById('ee-minutos')?.value);
+  if(!novaData||!novasPaginas){mostrarMsg('ee-msg','⚠️ Preencha data e páginas.','err');return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const found=await blFindSessionDoc(sess); const oldPages=blNum(found.data.pages||found.data.paginas);
+    await found.ref.set({date:novaData,pages:novasPaginas,minutes:totalMinutos,year:Number(String(novaData).slice(0,4)),updatedAt:new Date().toISOString()},{merge:true});
+    await blAdjustLibraryPages(found.data.bookId||sess.bookId,found.data.title||sess.livro,novasPaginas-oldPages,novaData);
+    mostrarMsg('ee-msg','✅ Sessão editada no Firebase!','ok'); await blRefreshAndRender(); setTimeout(()=>fecharModal('editarSessao'),900);
+  }catch(e){mostrarMsg('ee-msg','❌ '+e.message,'err');}
+  if(btn){btn.disabled=false;btn.textContent=oldText;}
+};
+window.excluirSessao = async function(sOrLivro,data,paginas){
+  const s=typeof sOrLivro==='object'?sOrLivro:{livro:sOrLivro,data,paginas};
+  if(!confirm(`Excluir sessão de "${s.livro||s.title}" em ${s.data}?`)) return;
+  try{
+    const found=await blFindSessionDoc(s); await found.ref.delete();
+    await blAdjustLibraryPages(found.data.bookId||s.bookId,found.data.title||s.livro,-blNum(found.data.pages||found.data.paginas),found.data.date||s.data);
+    window._sessoes=(window._sessoes||[]).filter(x=>x.id!==found.data.id);
+    mostrarMsg('es-msg','✅ Sessão excluída no Firebase!','ok'); renderSessoesExcluir(); await blRefreshAndRender();
+  }catch(e){mostrarMsg('es-msg','❌ '+e.message,'err');}
+};
+function nlModoSelecionado(){return document.querySelector('input[name="nl-api-mode"]:checked')?.value||'manual';}
+window.nlModoApiMudou=function(){ const mode=nlModoSelecionado(); const b=document.getElementById('nl-api-buscar'); const st=document.getElementById('nl-api-status'); if(b)b.style.display=mode==='manual'?'none':'inline-block'; if(st)st.textContent=mode==='manual'?'Cadastro manual ativo.':'Digite o nome/ISBN para buscar pela API selecionada.'; if(mode!=='manual') nlBuscarSeApiSelecionada(); };
+let nlApiTimer=null; window.nlAgendarBuscaApi=function(){ clearTimeout(nlApiTimer); if(nlModoSelecionado()==='manual') return; nlApiTimer=setTimeout(()=>nlBuscarSeApiSelecionada(),900); };
+window.nlBuscarSeApiSelecionada=async function(force=false){ const mode=nlModoSelecionado(); if(mode==='manual') return; const termo=document.getElementById('nl-nome')?.value.trim(); const st=document.getElementById('nl-api-status'); const btn=document.getElementById('nl-api-buscar'); if(!termo){ if(st)st.textContent='Digite o nome/ISBN do livro.'; return; } if(btn){btn.disabled=true;btn.textContent='Buscando...';} if(st)st.textContent='Buscando dados...'; try{ const l= mode==='openlibrary'? await blFetchOpenLibraryBook(termo): await blFetchIsbndbBook(termo); blPreencherNovoLivro(l,mode); if(st)st.textContent='✅ Dados encontrados. Revise e salve.'; }catch(e){ if(st)st.textContent='⚠️ '+e.message+' Você pode preencher manualmente.'; } if(btn){btn.disabled=false;btn.textContent='🔎 Buscar dados';} };
+function blPreencherNovoLivro(l,source){ const set=(id,v)=>{const el=document.getElementById(id); if(el && (v!==undefined&&v!==null)) el.value=v||'';}; set('nl-nome',l.nome); set('nl-autor',l.autor); set('nl-paginas',l.paginas); set('nl-isbn',l.isbn); set('nl-capa',l.capa); set('nl-genero',l.genero); if(l.colecao) set('nl-colecao',l.colecao); window.__nlSource=source; }
+async function blFetchOpenLibraryBook(termo){ const isIsbn=/^[0-9Xx-]{10,17}$/.test(termo.replace(/\s/g,'')); let doc=null,isbn=''; if(isIsbn){ isbn=termo.replace(/[^0-9Xx]/g,''); const r=await fetch('https://openlibrary.org/isbn/'+isbn+'.json'); if(!r.ok) throw new Error('Open Library não encontrou esse ISBN.'); doc=await r.json(); } else { const r=await fetch('https://openlibrary.org/search.json?title='+encodeURIComponent(termo)+'&limit=1'); const j=await r.json(); const hit=j.docs?.[0]; if(!hit) throw new Error('Open Library não encontrou esse livro.'); doc=hit; isbn=(hit.isbn||[])[0]||''; } let autor=''; if(doc.authors?.[0]?.key){ try{ const ar=await fetch('https://openlibrary.org'+doc.authors[0].key+'.json'); const aj=await ar.json(); autor=aj.name||''; }catch{} } else autor=(doc.author_name||[]).join(', '); return {nome:doc.title||termo, autor, paginas:doc.number_of_pages||doc.number_of_pages_median||'', isbn, capa: isbn?`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`:(doc.cover_i?`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`:''), genero:(doc.subject||doc.subject_facet||[])[0]||'', colecao:(doc.series||[])[0]||''}; }
+async function blFetchIsbndbBook(termo){ const key=window.ISBNDB_API_KEY||window.VITE_ISBNDB_API_KEY||''; if(key){ const isIsbn=/^[0-9Xx-]{10,17}$/.test(termo.replace(/\s/g,'')); const url=isIsbn?'https://api2.isbndb.com/book/'+termo.replace(/[^0-9Xx]/g,''):'https://api2.isbndb.com/books/'+encodeURIComponent(termo)+'?page=1&pageSize=1'; const r=await fetch(url,{headers:{Authorization:key}}); if(r.ok){ const j=await r.json(); const b=j.book||(j.books||[])[0]; if(b) return {nome:b.title||termo, autor:(b.authors||[]).join(', '), paginas:b.pages||'', isbn:b.isbn13||b.isbn||'', capa:b.image||'', genero:(b.subjects||[])[0]||'', colecao:''}; } }
+  const r=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(termo)+'&maxResults=1'); const j=await r.json(); const it=j.items?.[0]?.volumeInfo; if(!it) throw new Error('ISBNdb/Google Books não encontrou esse livro.'); const ids=it.industryIdentifiers||[]; const isbn=(ids.find(x=>x.type==='ISBN_13')||ids[0]||{}).identifier||''; return {nome:it.title||termo, autor:(it.authors||[]).join(', '), paginas:it.pageCount||'', isbn, capa:(it.imageLinks?.thumbnail||'').replace('http://','https://'), genero:(it.categories||[])[0]||'', colecao:''}; }
+const _oldEnviarNovoLivro=window.enviarNovoLivro; window.enviarNovoLivro=async function(){ const source=nlModoSelecionado(); const btn=document.getElementById('nl-btn'); const nome=document.getElementById('nl-nome')?.value.trim(); if(source!=='manual' && nome && !document.getElementById('nl-autor')?.value.trim() && !document.getElementById('nl-paginas')?.value.trim()){ await nlBuscarSeApiSelecionada(true); } return _oldEnviarNovoLivro(); };
 
 
 // Service Worker para PWA

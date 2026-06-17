@@ -1,24 +1,12 @@
-# BookLegacy App v7.3 - Syntax Hotfix
+# BookLegacy V7.7 - Correção sessão + API no adicionar livro
 
-Correção do erro `Uncaught SyntaxError: Invalid or unexpected token` que travava o carregamento.
+Correções desta versão:
+- Remove os botões flutuantes "Teste API ISBNdb" e "Teste API Open Library".
+- Coloca as opções de API dentro do modal "Adicionar Livro".
+- O modo padrão é Manual.
+- Apenas uma opção pode ser marcada: Manual, Open Library API ou ISBNdb API.
+- Ao escolher uma API e digitar o nome/ISBN, os dados são buscados e preenchidos automaticamente.
+- Corrige Excluir Sessão para apagar direto do Firestore.
+- Corrige Editar Sessão para editar direto no Firestore e atualizar o progresso do livro.
 
-Também adiciona proteção para `ddSetModo` caso a função antiga não esteja disponível no momento do load.
-
-Suba o conteúdo desta pasta no GitHub e aguarde o deploy da Vercel.
-
-
-## V7.5 - Comunidade e amigos
-- Nova aba/botão Comunidade.
-- Lista de amigos aceitos.
-- Buscar usuários por nome/e-mail/UID via publicProfiles.
-- Adicionar Daniel rapidamente pelo UID informado.
-- Convite por link continua disponível.
-- Modo Batalha só aparece quando há amigo aceito.
-
-Publique FIRESTORE_RULES_V7_5.txt no Firestore Rules.
-
-
-## V7.6
-- Adiciona aba/botão 📥 Migração no próprio app.
-- Permite importar `booklegacy-daniel-migration.json` logado na conta Google do Daniel.
-- Mantém Comunidade, lista de amigos, convite por link e Modo Batalha por amizade aceita.
+Suba o conteúdo desta pasta no GitHub e aguarde a Vercel atualizar.
