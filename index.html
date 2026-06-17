@@ -355,15 +355,8 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 20px
 ═══════════════════════════════════════ */
 :root { --nav-h: 58px; }
 
-/* Toggle button — sempre visível */
-#btn-view-toggle {
-  position:fixed;bottom:10px;right:10px;z-index:3000;
-  width:32px;height:32px;border-radius:50%;
-  background:rgba(15,20,35,0.9);border:1px solid rgba(139,124,248,0.4);
-  color:var(--purple);font-size:14px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.5);
-}
+/* Botão manual desktop/mobile removido: a troca é automática pelo tamanho da tela */
+#btn-view-toggle { display:none !important; }
 
 /* Nav bar */
 #mobile-nav {
@@ -387,12 +380,6 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 20px
 @media (max-width: 600px) {
   #mobile-nav { display:flex !important; }
 
-  #btn-view-toggle {
-    bottom:auto !important; top:56px !important; right:6px !important;
-    width:26px !important; height:26px !important;
-    font-size:13px !important; z-index:1100 !important;
-    padding:0 !important; border-radius:6px !important;
-  }
 
   header {
     padding:6px 8px !important; position:sticky; top:0; z-index:1000;
@@ -465,7 +452,6 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 20px
 
 /* Quando JS ativa mobile-view no desktop */
 body.mobile-view #mobile-nav { display:flex !important; }
-body.mobile-view #btn-view-toggle { top:56px !important; bottom:auto !important; right:6px !important; }
 body.mobile-view header { padding:6px 8px !important; position:sticky; top:0; z-index:1000; }
 body.mobile-view header h1 { font-size:12px !important; }
 body.mobile-view header p, body.mobile-view .badge { display:none !important; }
@@ -576,7 +562,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v7.6</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v8.3</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -616,9 +602,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <span class="m-nav-icon">⋯</span>Mais
   </button>
 </nav>
-
-<!-- View toggle button -->
-<button id="btn-view-toggle" onclick="toggleMobileView()" title="Alternar visão mobile/desktop">📱</button>
 
 <div class="lendo-wrap">
   <div class="lendo-inner" id="lendo-cards"></div>
@@ -8016,6 +7999,269 @@ if ('serviceWorker' in navigator) {
   };
 
   window.addEventListener('load', function(){ setTimeout(applyReadOnlyState, 500); });
+})();
+</script>
+
+
+<script>
+// BOOKLEGACY V8.2 — perfil de amigo com retorno, modal fecha, batalha restaurada.
+(function(){
+  window.__BL_PATCH_FRIEND_BATTLE = 'v8.2-friends-battle-fix';
+  function esc(v){ return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function norm(v){ return String(v||'').trim().toLowerCase(); }
+  function raw(){ return window.BL && window.BL.raw ? window.BL.raw : {}; }
+  function users(){ return Array.isArray(raw().users) ? raw().users : []; }
+  function meUser(){ return users()[0] || {}; }
+  function meLabel(){
+    try { return raw().currentLabel || meUser().label || (window.BL?.auth?.currentUser?.displayName || window.BL?.auth?.currentUser?.email || 'Usuário').split(' ')[0]; }
+    catch(e){ return 'Usuário'; }
+  }
+  function friendUsers(){ return users().slice(1).filter(Boolean); }
+  function sameLabel(a,b){ return norm(a) === norm(b); }
+  function findFriend(labelOrUid){
+    const x = norm(labelOrUid);
+    return friendUsers().find(f => norm(f.uid)===x || norm(f.id)===x || norm(f.label)===x || norm(f.displayName)===x || norm(f.name)===x || norm(f.email)===x) || null;
+  }
+  function closeCommunity(){
+    const m=document.getElementById('blCommunityModal');
+    if(m) m.remove();
+  }
+  function ensureBackBar(){
+    let note=document.getElementById('bl-readonly-note');
+    if(!note){
+      note=document.createElement('div');
+      note.id='bl-readonly-note';
+      note.style.cssText='margin:12px 28px 0;background:rgba(86,207,255,.10);border:1px solid rgba(86,207,255,.35);color:#b8e8ff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;display:none;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;';
+      const app=document.getElementById('app');
+      if(app) app.prepend(note); else document.body.prepend(note);
+    }
+    return note;
+  }
+  function updateReadonlyUI(){
+    const current=window.usuarioAtual || meLabel();
+    const readonly=!!window.__BL_READONLY_VIEW && !sameLabel(current, meLabel()) && current !== 'Batalha';
+    const fab=document.querySelector('.fab');
+    const note=ensureBackBar();
+    if(readonly){
+      note.innerHTML='<span>👀 Perfil de amigo — somente leitura. Você pode visualizar, mas não editar.</span><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:9px;background:#8b7cf8;color:white;font-weight:900;padding:8px 12px;cursor:pointer">↩ Voltar para meus dados</button>';
+      note.style.display='flex';
+      if(fab) fab.style.display='none';
+    } else {
+      note.style.display='none';
+      if(fab && current !== 'Batalha') fab.style.display='flex';
+    }
+  }
+  const legacySetUsuario = window.setUsuario;
+  function setVisualUser(label){
+    if(typeof legacySetUsuario === 'function') {
+      try { legacySetUsuario(label); } catch(e){ console.warn('setUsuario antigo falhou:', e); window.usuarioAtual = label; }
+    } else window.usuarioAtual = label;
+  }
+  window.blBackToMyProfile=function(){
+    window.__BL_READONLY_VIEW=false;
+    closeCommunity();
+    setVisualUser(meLabel());
+    setTimeout(updateReadonlyUI,20);
+    setTimeout(updateReadonlyUI,250);
+  };
+  window.blOpenFriendProfile=function(labelOrUid){
+    const f=findFriend(labelOrUid) || { label: labelOrUid, displayName: labelOrUid };
+    const label=f.label || f.displayName || f.name || f.email || 'Amigo';
+    closeCommunity();
+    window.__BL_READONLY_VIEW=true;
+    setVisualUser(label);
+    setTimeout(()=>{ updateReadonlyUI(); window.scrollTo(0,0); },30);
+    setTimeout(updateReadonlyUI,250);
+  };
+  // Reescreve a linha dos amigos para permitir abrir o perfil e fechar o popup automaticamente.
+  window.blRenderFriendRow=function(f){
+    const label=esc(f.label || f.displayName || f.name || f.email || f.uid || 'Amigo');
+    const uid=esc(f.uid || f.id || label);
+    const img=f.photoURL ? `<img src="${esc(f.photoURL)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : '<div style="width:36px;height:36px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center">👤</div>';
+    return `<div style="display:flex;align-items:center;gap:10px;background:#161b27;border:1px solid #2a3248;border-radius:12px;padding:10px">${img}<div style="flex:1;min-width:0"><div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div><div style="font-size:12px;color:#8892a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.email || f.uid || '')}</div></div><button type="button" onclick="blOpenFriendProfile('${uid}')" style="border:none;border-radius:9px;background:#4ecdc4;color:#0d1117;font-weight:900;padding:8px 10px;cursor:pointer">Ver perfil</button></div>`;
+  };
+  // Batalha: garante botão, seletores e um fallback visual caso o render antigo falhe.
+  function ensureBattleButton(){
+    const btn=document.getElementById('btn-user-batalha');
+    const hasFriends=friendUsers().length>0;
+    if(btn){
+      btn.style.display = hasFriends ? '' : 'none';
+      btn.onclick=function(){ window.__BL_READONLY_VIEW=false; window.setUsuario('Batalha'); };
+    }
+  }
+  function fillBattleSelectsV82(){
+    const us=users();
+    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
+      const sel=document.getElementById(id); if(!sel || !us.length) return;
+      const old=sel.value;
+      sel.innerHTML=us.map((u,i)=>`<option value="${esc(u.label||u.displayName||('Usuário '+(i+1)))}">${esc(u.label||u.displayName||('Usuário '+(i+1)))}</option>`).join('');
+      const fallback=(us[idx]||us[0]||{}).label || (idx?friendUsers()[0]?.label:meLabel()) || meLabel();
+      sel.value=[...sel.options].some(o=>o.value===old) ? old : fallback;
+    });
+  }
+  const oldRenderBattle=window.renderBatalha;
+  function battleStats(label){
+    const d=window._dadosD || {};
+    const filter = x => norm(x.usuario || (label===meLabel()?meLabel():label)) === norm(label) || (sameLabel(label, meLabel()) && (!x.usuario || norm(x.usuario)==='milton'));
+    const sessoes=(d.sessoes||[]).filter(filter);
+    const livros=[...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filter);
+    const paginas=sessoes.reduce((a,s)=>a+(Number(s.paginas)||0),0);
+    const lidos=livros.filter(l=>String(l.status||'').toLowerCase().includes('completo')).length;
+    return {sessoes:sessoes.length, paginas, lidos, livros:livros.length};
+  }
+  function renderBattleFallback(){
+    const box=document.getElementById('batalhaContainer'); if(!box) return;
+    const a=document.getElementById('bat-playerA')?.value || meLabel();
+    const b=document.getElementById('bat-playerB')?.value || (friendUsers()[0]?.label || 'Amigo');
+    const A=battleStats(a), B=battleStats(b);
+    box.innerHTML=`<div style="padding:24px;max-width:1100px;margin:0 auto"><h2 style="margin:0 0 16px;color:#e2e8f0">⚔️ Modo Batalha</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div style="background:#161b27;border:1px solid #2a3248;border-radius:16px;padding:18px"><h3 style="color:#8b7cf8;margin-top:0">${esc(a)}</h3><p>📚 ${A.lidos} livros concluídos</p><p>📄 ${A.paginas.toLocaleString('pt-BR')} páginas lidas</p><p>⏱️ ${A.sessoes} sessões</p></div><div style="background:#161b27;border:1px solid #2a3248;border-radius:16px;padding:18px"><h3 style="color:#f88c6a;margin-top:0">${esc(b)}</h3><p>📚 ${B.lidos} livros concluídos</p><p>📄 ${B.paginas.toLocaleString('pt-BR')} páginas lidas</p><p>⏱️ ${B.sessoes} sessões</p></div></div></div>`;
+  }
+  window.renderBatalha=function(){
+    fillBattleSelectsV82();
+    try { if(typeof oldRenderBattle==='function') oldRenderBattle(); }
+    catch(e){ console.warn('renderBatalha antigo falhou; usando fallback', e); renderBattleFallback(); }
+    const box=document.getElementById('batalhaContainer');
+    if(box && !box.innerHTML.trim()) renderBattleFallback();
+  };
+  const previousSet=window.setUsuario;
+  window.setUsuario=function(usuario){
+    if(usuario==='Batalha'){
+      window.__BL_READONLY_VIEW=false;
+      window.usuarioAtual='Batalha';
+      const pd=document.getElementById('pageDashboard'), pb=document.getElementById('pageBatalha');
+      if(pd) pd.style.display='none'; if(pb) pb.style.display='block';
+      const fab=document.querySelector('.fab'); if(fab) fab.style.display='none';
+      const note=document.getElementById('bl-readonly-note'); if(note) note.style.display='none';
+      fillBattleSelectsV82(); window.renderBatalha(); window.scrollTo(0,0); ensureBattleButton(); return;
+    }
+    if(sameLabel(usuario, meLabel())) window.__BL_READONLY_VIEW=false;
+    const r=(typeof previousSet==='function') ? previousSet(usuario) : undefined;
+    setTimeout(()=>{ updateReadonlyUI(); ensureBattleButton(); },25);
+    setTimeout(()=>{ updateReadonlyUI(); ensureBattleButton(); },250);
+    return r;
+  };
+  const prevButtons=window.blUpdateUserButtons;
+  window.blUpdateUserButtons=function(rawArg){
+    if(typeof prevButtons==='function') { try{ prevButtons(rawArg); }catch(e){ console.warn('blUpdateUserButtons anterior falhou',e); } }
+    setTimeout(()=>{ ensureBattleButton(); updateReadonlyUI(); fillBattleSelectsV82(); },30);
+  };
+  window.addEventListener('load',()=>{ setTimeout(()=>{ ensureBattleButton(); updateReadonlyUI(); },800); });
+  setInterval(ensureBattleButton, 2500);
+})();
+
+
+// BOOKLEGACY V8.3 — perfil de amigo com topo próprio, botão + somente nos meus dados e remoção do alternador mobile/desktop.
+(function(){
+  window.__BL_PATCH_PROFILE_MOBILE = 'v8.3-profile-mobile-auto';
+  function esc(v){ return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function norm(v){ return String(v||'').trim().toLowerCase(); }
+  function raw(){ return window.BL && window.BL.raw ? window.BL.raw : {}; }
+  function users(){ return Array.isArray(raw().users) ? raw().users : []; }
+  function me(){ return users()[0] || {}; }
+  function meLabel(){
+    try { return raw().currentLabel || me().label || (window.BL?.auth?.currentUser?.displayName || window.BL?.auth?.currentUser?.email || 'Usuário').split(' ')[0]; }
+    catch(e){ return 'Usuário'; }
+  }
+  function same(a,b){ return norm(a) === norm(b); }
+  function friends(){ return users().slice(1).filter(Boolean); }
+  function findFriend(labelOrUid){
+    const x = norm(labelOrUid);
+    return friends().find(f => norm(f.uid)===x || norm(f.id)===x || norm(f.label)===x || norm(f.displayName)===x || norm(f.name)===x || norm(f.email)===x) || null;
+  }
+  function closeCommunity(){
+    ['blCommunityModal','blGenericModal','blInviteModal'].forEach(id => { const el=document.getElementById(id); if(el) el.remove(); });
+    document.querySelectorAll('[data-bl-modal="community"]').forEach(el => el.remove());
+  }
+  function ensureFriendHero(){
+    let hero = document.getElementById('bl-friend-profile-hero');
+    if(!hero){
+      hero = document.createElement('div');
+      hero.id = 'bl-friend-profile-hero';
+      hero.style.cssText = 'display:none;margin:0 28px 14px;background:linear-gradient(135deg,rgba(86,207,255,.16),rgba(139,124,248,.12));border:1px solid rgba(86,207,255,.38);border-radius:18px;padding:18px 20px;color:#e2e8f0;align-items:center;gap:16px;box-shadow:0 10px 34px rgba(0,0,0,.22);';
+      const app = document.getElementById('app');
+      if(app) app.parentNode.insertBefore(hero, app); else document.body.prepend(hero);
+    }
+    return hero;
+  }
+  function ensureReadonlyBar(){
+    let note = document.getElementById('bl-readonly-note');
+    if(!note){
+      note = document.createElement('div');
+      note.id = 'bl-readonly-note';
+      note.style.cssText = 'display:none;margin:12px 28px 10px;background:rgba(86,207,255,.10);border:1px solid rgba(86,207,255,.35);color:#b8e8ff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;';
+      const hero = ensureFriendHero();
+      hero.parentNode.insertBefore(note, hero.nextSibling);
+    }
+    return note;
+  }
+  function isReadonly(){
+    const current = window.usuarioAtual || meLabel();
+    return !!window.__BL_READONLY_VIEW && current !== 'Batalha' && !same(current, meLabel());
+  }
+  function currentFriend(){ return findFriend(window.__BL_VIEWING_FRIEND_UID || window.usuarioAtual) || {}; }
+  function updateProfileUI(){
+    const readonly = isReadonly();
+    const fab = document.querySelector('.fab');
+    const note = ensureReadonlyBar();
+    const hero = ensureFriendHero();
+    const toggle = document.getElementById('btn-view-toggle');
+    if(toggle) toggle.remove();
+    if(readonly){
+      const f = currentFriend();
+      const name = f.displayName || f.name || f.label || window.usuarioAtual || 'Amigo';
+      const email = f.email || '';
+      const photo = f.photoURL ? `<img src="${esc(f.photoURL)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(86,207,255,.55);box-shadow:0 0 0 4px rgba(86,207,255,.08)">` : '<div style="width:72px;height:72px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:34px;border:2px solid rgba(86,207,255,.35)">👤</div>';
+      hero.innerHTML = `${photo}<div style="min-width:0;flex:1"><div style="font-size:12px;color:#4ecdc4;text-transform:uppercase;letter-spacing:1.2px;font-weight:900;margin-bottom:4px">Perfil de amigo</div><h2 style="margin:0;font-size:26px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</h2>${email ? `<div style="color:#8892a8;font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(email)}</div>` : ''}<div style="margin-top:8px;color:#b8e8ff;font-size:13px">Somente leitura — você pode visualizar, mas não pode editar dados deste usuário.</div></div><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:11px;background:#8b7cf8;color:white;font-weight:900;padding:10px 14px;cursor:pointer;white-space:nowrap">↩ Voltar para meus dados</button>`;
+      hero.style.display='flex';
+      note.innerHTML = '<span>👀 Você está vendo um perfil de amigo em modo somente leitura.</span><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:9px;background:#8b7cf8;color:white;font-weight:900;padding:8px 12px;cursor:pointer">Voltar para meus dados</button>';
+      note.style.display='flex';
+      if(fab) fab.style.display='none';
+    } else {
+      hero.style.display='none';
+      note.style.display='none';
+      if(fab && window.usuarioAtual !== 'Batalha') fab.style.display='flex';
+    }
+  }
+  window.blBackToMyProfile = function(){
+    window.__BL_READONLY_VIEW = false;
+    window.__BL_VIEWING_FRIEND_UID = '';
+    closeCommunity();
+    if(typeof window.setUsuario === 'function') window.setUsuario(meLabel());
+    else window.usuarioAtual = meLabel();
+    setTimeout(updateProfileUI, 20);
+    setTimeout(updateProfileUI, 250);
+    window.scrollTo(0,0);
+  };
+  const prevOpen = window.blOpenFriendProfile;
+  window.blOpenFriendProfile = function(labelOrUid){
+    const f = findFriend(labelOrUid) || { label: labelOrUid, displayName: labelOrUid };
+    const label = f.label || f.displayName || f.name || f.email || 'Amigo';
+    window.__BL_READONLY_VIEW = true;
+    window.__BL_VIEWING_FRIEND_UID = f.uid || f.id || labelOrUid || '';
+    closeCommunity();
+    if(typeof window.setUsuario === 'function') window.setUsuario(label);
+    else window.usuarioAtual = label;
+    setTimeout(()=>{ closeCommunity(); updateProfileUI(); window.scrollTo(0,0); }, 30);
+    setTimeout(updateProfileUI, 250);
+  };
+  const prevSet = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha'){
+      window.__BL_READONLY_VIEW = false;
+      window.__BL_VIEWING_FRIEND_UID = '';
+    } else if(same(usuario, meLabel())) {
+      window.__BL_READONLY_VIEW = false;
+      window.__BL_VIEWING_FRIEND_UID = '';
+    }
+    const r = (typeof prevSet === 'function') ? prevSet(usuario) : (window.usuarioAtual = usuario);
+    setTimeout(updateProfileUI, 30);
+    setTimeout(updateProfileUI, 250);
+    return r;
+  };
+  // Remove o botão feio de alternar desktop/mobile. A responsividade agora é automática via CSS/media query.
+  document.addEventListener('DOMContentLoaded', () => { const b=document.getElementById('btn-view-toggle'); if(b) b.remove(); setTimeout(updateProfileUI, 500); });
+  window.addEventListener('load', () => { const b=document.getElementById('btn-view-toggle'); if(b) b.remove(); setTimeout(updateProfileUI, 800); });
+  setInterval(() => { const b=document.getElementById('btn-view-toggle'); if(b) b.remove(); updateProfileUI(); }, 3000);
 })();
 </script>
 
