@@ -4239,6 +4239,182 @@ function blOpenInviteModal(user){
   };
 }
 
+
+
+// ════════════════════════════════════════════════
+// BOOKLEGACY V7.6 — MIGRAÇÃO NO APP
+// Permite importar JSON da base antiga dentro do usuário Google logado.
+// ════════════════════════════════════════════════
+function blMigrationShell(){
+  const existing = document.getElementById('blMigrationModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'blMigrationModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  modal.innerHTML = `<div style="width:min(860px,100%);max-height:92vh;overflow:auto;background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:22px;color:#e2e8f0;box-shadow:0 20px 70px rgba(0,0,0,.55)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px">
+      <div><h2 style="margin:0 0 4px">📥 Migração de dados</h2><p style="color:#8892a8;margin:0;line-height:1.45">Importe um arquivo JSON convertido para a conta Google logada agora. Use isso para Daniel importar os dados dele logado na conta dele.</p></div>
+      <button id="blMigrationClose" style="border:1px solid #2a3248;border-radius:10px;background:#1e2535;color:#e2e8f0;padding:9px 12px;cursor:pointer">Fechar</button>
+    </div>
+    <div style="background:#0d1117;border:1px solid #2a3248;border-radius:14px;padding:16px;margin-bottom:14px">
+      <div id="blMigrationUser" style="font-size:13px;color:#8892a8;margin-bottom:12px"></div>
+      <input id="blMigrationFile" type="file" accept="application/json,.json" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;margin-bottom:12px">
+      <div id="blMigrationPreview" style="font-size:13px;color:#8892a8;line-height:1.55;margin-bottom:12px">Selecione o arquivo JSON de migração.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="blMigrationImportBtn" disabled style="border:none;border-radius:10px;background:#8b7cf8;color:white;font-weight:900;padding:10px 14px;cursor:pointer;opacity:.6">Importar para esta conta</button>
+        <button id="blMigrationReloadBtn" style="border:1px solid #4ecdc4;border-radius:10px;background:rgba(78,205,196,.12);color:#4ecdc4;font-weight:800;padding:10px 14px;cursor:pointer">Recarregar dashboard</button>
+      </div>
+    </div>
+    <div id="blMigrationLog" style="background:#0d1117;border:1px solid #2a3248;border-radius:14px;padding:14px;color:#8892a8;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap;min-height:74px">Aguardando arquivo...</div>
+  </div>`;
+  document.body.appendChild(modal);
+  const st = document.createElement('style');
+  st.textContent = '@media(max-width:800px){#blMigrationModal{align-items:flex-start!important;padding:10px!important}#blMigrationModal button{width:100%;}}';
+  modal.appendChild(st);
+  document.getElementById('blMigrationClose').onclick = () => modal.remove();
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  return modal;
+}
+
+function blMigrationLog(msg){
+  const el = document.getElementById('blMigrationLog');
+  if (el) el.textContent = msg;
+}
+
+function blMigrationCounts(d){
+  const count = (k) => Array.isArray(d && d[k]) ? d[k].length : 0;
+  return { books:count('books'), library:count('library'), sessions:count('sessions'), ratings:count('ratings'), goals:count('goals'), collections:count('collections') };
+}
+
+async function blReadMigrationFile(file){
+  const text = await file.text();
+  return JSON.parse(text);
+}
+
+function blValidateMigrationData(data, currentUser){
+  if (!data || typeof data !== 'object') throw new Error('JSON inválido.');
+  if (data.format && data.format !== 'booklegacy-migration-v1') throw new Error('Formato de migração não reconhecido: ' + data.format);
+  ['books','library','sessions','ratings','goals','collections'].forEach(k => {
+    if (!Array.isArray(data[k])) data[k] = [];
+  });
+  if (data.expectedUid && data.expectedUid !== currentUser.uid) {
+    throw new Error('Este JSON foi preparado para outro usuário. Esperado: ' + data.expectedUid + ' / logado: ' + currentUser.uid);
+  }
+  return data;
+}
+
+async function blCommitBatchChunks(writeFns, onProgress){
+  const db = window.BL.db;
+  let batch = db.batch();
+  let pending = 0;
+  let done = 0;
+  for (const fn of writeFns) {
+    fn(batch);
+    pending++;
+    done++;
+    if (pending >= 420) {
+      await batch.commit();
+      if (onProgress) onProgress(done);
+      batch = db.batch();
+      pending = 0;
+    }
+  }
+  if (pending) {
+    await batch.commit();
+    if (onProgress) onProgress(done);
+  }
+}
+
+async function blImportMigrationData(data){
+  const user = window.BL.auth.currentUser;
+  if (!user) throw new Error('Entre com Google antes de importar.');
+  data = blValidateMigrationData(data, user);
+  const uid = user.uid;
+  const db = window.BL.db;
+  const now = new Date().toISOString();
+  const writes = [];
+  const addSet = (ref, payload) => writes.push(batch => batch.set(ref, {...payload, importedAt: payload.importedAt || now}, { merge:true }));
+
+  (data.books||[]).forEach(b => {
+    const id = b.id || b.bookId || ('book_' + blSlug(b.title || b.livro || b.nome));
+    addSet(db.collection('books').doc(id), {...b, id: undefined, updatedAt: now});
+  });
+  (data.library||[]).forEach(item => {
+    const id = item.id || ('lib_' + blSlug(item.title || item.livro || item.bookId));
+    addSet(db.collection('users').doc(uid).collection('library').doc(id), {...item, id: undefined, updatedAt: now});
+  });
+  (data.sessions||[]).forEach(s => {
+    const id = s.id || ('sess_' + blSlug((s.date||'') + '_' + (s.title||s.livro||'') + '_' + Math.random().toString(36).slice(2,8)));
+    addSet(db.collection('users').doc(uid).collection('sessions').doc(id), {...s, id: undefined, updatedAt: now});
+  });
+  (data.ratings||[]).forEach(r => {
+    const id = r.id || ('rat_' + blSlug((r.title||r.livro||'') + '_' + (r.readingYear||r.ano||'')));
+    addSet(db.collection('users').doc(uid).collection('ratings').doc(id), {...r, id: undefined, updatedAt: now});
+  });
+  (data.goals||[]).forEach(g => {
+    const id = g.id || String(g.year || g.ano || 'goal_' + Date.now());
+    addSet(db.collection('users').doc(uid).collection('goals').doc(String(id)), {...g, id: undefined, updatedAt: now});
+  });
+  (data.collections||[]).forEach(c => {
+    const id = c.id || ('col_' + blSlug(c.name || c.nome || c.collection || c.colecao));
+    addSet(db.collection('users').doc(uid).collection('collections').doc(id), {...c, id: undefined, updatedAt: now});
+  });
+
+  await blCommitBatchChunks(writes, (done) => blMigrationLog(`Importando... ${done}/${writes.length} registros gravados.`));
+  return { totalWrites:writes.length, ...blMigrationCounts(data) };
+}
+
+async function blOpenMigrationModal(){
+  const user = window.BL && window.BL.auth && window.BL.auth.currentUser;
+  if (!user) return alert('Entre com Google primeiro.');
+  blMigrationShell();
+  document.getElementById('blMigrationUser').innerHTML = `Conta logada: <b style="color:#e2e8f0">${user.displayName || user.email || user.uid}</b><br><span style="font-size:12px">UID: ${user.uid}</span>`;
+  let selectedData = null;
+  const fileInput = document.getElementById('blMigrationFile');
+  const importBtn = document.getElementById('blMigrationImportBtn');
+  const preview = document.getElementById('blMigrationPreview');
+  fileInput.onchange = async () => {
+    selectedData = null;
+    importBtn.disabled = true; importBtn.style.opacity = '.6';
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    try {
+      const data = await blReadMigrationFile(file);
+      blValidateMigrationData(data, user);
+      const c = blMigrationCounts(data);
+      selectedData = data;
+      preview.innerHTML = `<b style="color:#e2e8f0">${file.name}</b><br>Livros globais: ${c.books} · Biblioteca: ${c.library} · Sessões: ${c.sessions} · Notas: ${c.ratings} · Metas: ${c.goals} · Coleções: ${c.collections}`;
+      blMigrationLog('Arquivo validado. Clique em importar.');
+      importBtn.disabled = false; importBtn.style.opacity = '1';
+    } catch(e) {
+      preview.innerHTML = '<span style="color:#f88c6a">Erro no arquivo: '+e.message+'</span>';
+      blMigrationLog('Erro: ' + e.message);
+    }
+  };
+  importBtn.onclick = async () => {
+    if (!selectedData) return;
+    const c = blMigrationCounts(selectedData);
+    const ok = confirm(`Importar para a conta logada agora?\n\nBiblioteca: ${c.library}\nSessões: ${c.sessions}\nNotas: ${c.ratings}\n\nUse isso somente na conta correta.`);
+    if (!ok) return;
+    importBtn.disabled = true; importBtn.textContent = 'Importando...';
+    try {
+      const res = await blImportMigrationData(selectedData);
+      blMigrationLog(`✅ Importação concluída.\nGravações: ${res.totalWrites}\nBiblioteca: ${res.library}\nSessões: ${res.sessions}\nNotas: ${res.ratings}\n\nRecarregando dashboard...`);
+      await blRefreshAndRender();
+      importBtn.textContent = '✅ Importado';
+    } catch(e) {
+      blMigrationLog('❌ Erro na importação: ' + e.message);
+      importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta';
+    }
+  };
+  document.getElementById('blMigrationReloadBtn').onclick = async () => {
+    blMigrationLog('Recarregando dados...');
+    try { await blRefreshAndRender(); blMigrationLog('✅ Dashboard recarregado.'); }
+    catch(e){ blMigrationLog('❌ Erro ao recarregar: ' + e.message); }
+  };
+}
+window.blOpenMigrationModal = blOpenMigrationModal;
+
 function blSetupLoadingWatchdog(){
   setTimeout(() => {
     const loading = document.getElementById('loading');

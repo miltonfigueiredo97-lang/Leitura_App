@@ -16,3 +16,9 @@ Suba o conteúdo desta pasta no GitHub e aguarde o deploy da Vercel.
 - Modo Batalha só aparece quando há amigo aceito.
 
 Publique FIRESTORE_RULES_V7_5.txt no Firestore Rules.
+
+
+## V7.6
+- Adiciona aba/botão 📥 Migração no próprio app.
+- Permite importar `booklegacy-daniel-migration.json` logado na conta Google do Daniel.
+- Mantém Comunidade, lista de amigos, convite por link e Modo Batalha por amizade aceita.
