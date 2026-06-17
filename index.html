@@ -4057,7 +4057,7 @@ function blLegacyBook(item, bookMap, userLabel){
 
 function blAdaptFirestoreToLegacy(raw){
   const bookMap = new Map((raw.books || []).map(b => [b.id, b]));
-  const bundles = raw.users || [{ label: raw.currentLabel || 'Milton', library: raw.library||[], sessions: raw.sessions||[], ratings: raw.ratings||[], goals: raw.goals||[], collections: raw.collections||[] }];
+  const bundles = raw.users || [{ label: raw.currentLabel || 'Usuário', library: raw.library||[], sessions: raw.sessions||[], ratings: raw.ratings||[], goals: raw.goals||[], collections: raw.collections||[] }];
   const legacyBooks = bundles.flatMap(u => (u.library || []).map(item => blLegacyBook(item, bookMap, u.label))).filter(l => l.livro);
   const sessoes = bundles.flatMap(u => (u.sessions || []).map(s => ({
     id: s.id,
@@ -4123,7 +4123,7 @@ async function blRefreshAndRender(){
     inicializar(d);
   } else if (typeof setUsuario === 'function') {
     window._dadosD = d;
-    setUsuario((window.BL.raw && window.BL.raw.currentLabel) || 'Milton');
+    setUsuario((window.BL.raw && window.BL.raw.currentLabel) || blProfileLabel(window.BL.auth.currentUser));
   }
   const footer = document.getElementById('footer-data');
   if (footer) footer.textContent = new Date().toLocaleString('pt-BR');
@@ -4551,6 +4551,14 @@ async function iniciarAppFirebase(){
       const loadingEl = document.getElementById('loading');
       loadingEl.style.display = 'block';
       loadingEl.innerHTML = '⏳ Login feito. Preparando seu perfil...';
+      if (window.BL.__activeUid !== user.uid) {
+        window.BL.__activeUid = user.uid;
+        window.__BL_INITIALIZED = false;
+        window.usuarioAtual = '';
+        window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+        window._livros = [];
+        window._sessoes = [];
+      }
       blDecorateHeader(user);
       await blEnsureUserProfile(user);
       loadingEl.innerHTML = '⏳ Verificando convites e amizades...';
@@ -4566,7 +4574,9 @@ async function iniciarAppFirebase(){
 
 function blDecorateHeader(user){
   const headerRight = document.querySelector('header > div:last-child');
-  if (!headerRight || document.getElementById('blProfile')) return;
+  if (!headerRight) return;
+  const existingProfile = document.getElementById('blProfile');
+  if (existingProfile) existingProfile.remove();
   const oldUserBox = headerRight.querySelector('div');
   if (oldUserBox) oldUserBox.style.display = 'none';
   const el = document.createElement('div');
@@ -5139,7 +5149,7 @@ iniciarAppFirebase();
 </style>
 <script>
 // ── Usuário ───────────────────────────────────────
-let usuarioAtual = 'Milton';
+let usuarioAtual = ''; // usuário visualizado; nunca assumir Milton por padrão
 
 function setUsuario(usuario) {
   usuarioAtual = usuario;
@@ -7747,6 +7757,164 @@ if ('serviceWorker' in navigator) {
     window._dadosD = emptyData();
     return window._dadosD;
   };
+})();
+</script>
+
+
+
+<script>
+// BOOKLEGACY V8 — correções de isolamento, mobile helper, comunidade e API.
+(function(){
+  window.__BL_PATCH = 'v8-user-friends-actions';
+
+  // Função global usada por telas antigas. Antes havia const local em alguns blocos.
+  window.isMobile = window.isMobile || function(){
+    return window.innerWidth < 900 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  };
+
+  function emptyData(){ return {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]}; }
+  function currentLabel(){
+    const u = window.BL && window.BL.auth && window.BL.auth.currentUser;
+    if (window.BL && window.BL.raw && window.BL.raw.currentLabel) return window.BL.raw.currentLabel;
+    if (typeof blProfileLabel === 'function' && u) return blProfileLabel(u);
+    return 'Usuário';
+  }
+
+  // Nunca buscar /data.json. Refresh sempre vai no UID logado.
+  window.carregarDados = async function(){
+    if (window.BL && window.BL.auth && window.BL.auth.currentUser && typeof window.blRefreshAndRender === 'function') {
+      return window.blRefreshAndRender();
+    }
+    window._dadosD = emptyData();
+    return window._dadosD;
+  };
+  window.manualRefresh = async function(){
+    const btn = document.getElementById('btn-refresh');
+    if (btn) btn.textContent = '⏳';
+    try { await window.carregarDados(); if (btn) { btn.textContent='✅'; setTimeout(()=>btn.textContent='🔄',1200); } }
+    catch(e){ console.error(e); if(btn){btn.textContent='❌'; setTimeout(()=>btn.textContent='🔄',1500);} }
+  };
+  window.recarregarDados = async function(){ return window.carregarDados(); };
+  window.recarregarAteAtualizar = async function(){ return window.carregarDados(); };
+
+  // Patch de render: ao trocar conta Google, reinicializa em vez de reaproveitar DOM do usuário anterior.
+  if (typeof window.blRefreshAndRender === 'function' && !window.__BL_V8_REFRESH_WRAPPED) {
+    window.__BL_V8_REFRESH_WRAPPED = true;
+    const oldRefresh = window.blRefreshAndRender;
+    window.blRefreshAndRender = async function(){
+      const u = window.BL && window.BL.auth && window.BL.auth.currentUser;
+      if (u && window.BL.__renderUid !== u.uid) {
+        window.BL.__renderUid = u.uid;
+        window.__BL_INITIALIZED = false;
+        window._dadosD = emptyData();
+        window._livros = [];
+        window._sessoes = [];
+      }
+      return oldRefresh();
+    };
+  }
+
+  // Garante que botões de usuário/batalha apareçam com qualquer amigo aceito.
+  if (typeof window.blUpdateUserButtons === 'function' && !window.__BL_V8_BUTTONS_WRAPPED) {
+    window.__BL_V8_BUTTONS_WRAPPED = true;
+    const oldButtons = window.blUpdateUserButtons;
+    window.blUpdateUserButtons = function(raw){
+      try { oldButtons(raw); } catch(e){ console.warn('Falha em blUpdateUserButtons antigo', e); }
+      const users = (raw && raw.users) || [];
+      const meLabel = (raw && raw.currentLabel) || currentLabel();
+      const friends = users.slice(1);
+      const btnMe = document.getElementById('btn-user-milton');
+      const btnFriend = document.getElementById('btn-user-daniel');
+      const btnBattle = document.getElementById('btn-user-batalha');
+      if (btnMe) { btnMe.textContent = '📖 ' + meLabel; btnMe.style.display=''; btnMe.onclick = () => { window.__BL_READONLY_VIEW=false; setUsuario(meLabel); }; }
+      if (btnFriend) {
+        if (friends.length) { const f=friends[0]; const label=f.label||f.displayName||'Amigo'; btnFriend.textContent='📖 '+label; btnFriend.style.display=''; btnFriend.onclick=()=>blOpenFriendProfile(label); }
+        else btnFriend.style.display='none';
+      }
+      if (btnBattle) { btnBattle.style.display = friends.length ? '' : 'none'; btnBattle.onclick=()=>setUsuario('Batalha'); }
+      if (typeof fillBattleSelects === 'function') try { fillBattleSelects(); } catch(e){}
+    };
+  }
+
+  // Voltar para meus dados quando estiver vendo amigo.
+  window.blBackToMyProfile = function(){
+    window.__BL_READONLY_VIEW = false;
+    const n = document.getElementById('bl-readonly-note'); if (n) n.style.display='none';
+    const me = currentLabel();
+    if (typeof setUsuario === 'function') setUsuario(me);
+  };
+  window.blOpenFriendProfile = function(label){
+    try { const modal=document.getElementById('blCommunityModal'); if(modal) modal.remove(); } catch(e){}
+    window.__BL_READONLY_VIEW = true;
+    if (typeof setUsuario === 'function') setUsuario(label);
+    setTimeout(()=>{
+      let note=document.getElementById('bl-readonly-note');
+      if(!note){
+        note=document.createElement('div'); note.id='bl-readonly-note';
+        note.style.cssText='margin:12px 28px 0;background:rgba(86,207,255,.10);border:1px solid rgba(86,207,255,.35);color:#b8e8ff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;';
+        const app=document.getElementById('app'); if(app) app.prepend(note);
+      }
+      note.innerHTML = '<span>👀 Perfil de amigo — somente leitura.</span><button onclick="blBackToMyProfile()" style="border:none;border-radius:9px;background:#8b7cf8;color:white;font-weight:900;padding:8px 12px;cursor:pointer">Voltar para meus dados</button>';
+      note.style.display='flex';
+      const fab=document.querySelector('.fab'); if(fab) fab.style.display='none';
+      window.scrollTo(0,0);
+    },50);
+  };
+
+  // Reforça readonly depois de setUsuario.
+  if (typeof window.setUsuario === 'function' && !window.__BL_V8_SETUSER_WRAPPED) {
+    window.__BL_V8_SETUSER_WRAPPED = true;
+    const oldSet = window.setUsuario;
+    window.setUsuario = function(usuario){
+      oldSet(usuario);
+      setTimeout(()=>{
+        const me = currentLabel();
+        const readonly = usuario && usuario !== 'Batalha' && String(usuario) !== String(me);
+        const fab=document.querySelector('.fab'); if(fab) fab.style.display = (readonly || usuario==='Batalha') ? 'none' : 'flex';
+        const note=document.getElementById('bl-readonly-note'); if(note) note.style.display = readonly ? 'flex' : 'none';
+      },0);
+    };
+  }
+
+  // Adicionar livro: API não altera o nome digitado. Só preenche campos auxiliares.
+  window.blPreencherNovoLivro = function(l, source){
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el && v!==undefined && v!==null && String(v).trim()!=='') el.value=v; };
+    set('nl-autor', l.autor);
+    set('nl-paginas', l.paginas);
+    set('nl-isbn', l.isbn);
+    set('nl-capa', l.capa);
+    set('nl-genero', l.genero);
+    if(l.colecao) set('nl-colecao', l.colecao);
+    window.__nlSource = source;
+  };
+
+  async function googleBooksFallback(termo){
+    try{
+      const r=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(termo)+'&maxResults=1');
+      const j=await r.json(); const it=j.items && j.items[0] && j.items[0].volumeInfo;
+      if(!it) return {};
+      const ids=it.industryIdentifiers||[]; const isbn=((ids.find(x=>x.type==='ISBN_13')||ids[0]||{}).identifier)||'';
+      return {autor:(it.authors||[]).join(', '), paginas:it.pageCount||'', isbn, capa:(it.imageLinks&&it.imageLinks.thumbnail||'').replace('http://','https://'), genero:(it.categories||[])[0]||'', colecao:''};
+    }catch(e){ return {}; }
+  }
+  window.blFetchOpenLibraryBook = async function(termo){
+    const keepName = termo;
+    const isIsbn=/^[0-9Xx-]{10,17}$/.test(termo.replace(/\s/g,''));
+    let doc=null,isbn='';
+    if(isIsbn){ isbn=termo.replace(/[^0-9Xx]/g,''); const r=await fetch('https://openlibrary.org/isbn/'+isbn+'.json'); if(!r.ok) throw new Error('Open Library não encontrou esse ISBN.'); doc=await r.json(); }
+    else { const r=await fetch('https://openlibrary.org/search.json?title='+encodeURIComponent(termo)+'&limit=1'); const j=await r.json(); const hit=j.docs&&j.docs[0]; if(!hit) throw new Error('Open Library não encontrou esse livro.'); doc=hit; isbn=(hit.isbn||[])[0]||''; }
+    let autor='';
+    if(doc.authors && doc.authors[0] && doc.authors[0].key){ try{ const ar=await fetch('https://openlibrary.org'+doc.authors[0].key+'.json'); const aj=await ar.json(); autor=aj.name||''; }catch(e){} }
+    else autor=(doc.author_name||[]).join(', ');
+    let out={nome:keepName, autor, paginas:doc.number_of_pages||doc.number_of_pages_median||'', isbn, capa:isbn?`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`:(doc.cover_i?`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`:''), genero:(doc.subject||doc.subject_facet||[])[0]||'', colecao:(doc.series||[])[0]||''};
+    if(!out.paginas || !out.autor || !out.capa){ const g=await googleBooksFallback(termo); out={...out, autor:out.autor||g.autor||'', paginas:out.paginas||g.paginas||'', isbn:out.isbn||g.isbn||'', capa:out.capa||g.capa||'', genero:out.genero||g.genero||'', colecao:out.colecao||g.colecao||''}; }
+    return out;
+  };
+
+  // Remove erro visual de isMobile após ações que salvam corretamente.
+  window.addEventListener('error', function(e){
+    if(String(e.message||'').includes('isMobile is not defined')){ e.preventDefault(); return true; }
+  });
 })();
 </script>
 
