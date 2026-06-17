@@ -7918,5 +7918,106 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+
+
+<script>
+// BOOKLEGACY V8.1 — correção: minha página não pode ser tratada como perfil de amigo.
+(function(){
+  window.__BL_PATCH_OWN_PROFILE = 'v8.1-own-profile-fix';
+  function norm(v){ return String(v || '').trim().toLowerCase(); }
+  function meLabel(){
+    try {
+      if (window.BL && window.BL.raw && window.BL.raw.currentLabel) return window.BL.raw.currentLabel;
+      const u = window.BL && window.BL.auth && window.BL.auth.currentUser;
+      if (u && typeof window.blProfileLabel === 'function') return window.blProfileLabel(u);
+      if (u) return (u.displayName || u.email || 'Usuário').split(' ')[0];
+    } catch(e){}
+    return 'Usuário';
+  }
+  function firstUserLabel(){
+    try { return (window.BL.raw.users[0] && window.BL.raw.users[0].label) || ''; } catch(e){ return ''; }
+  }
+  function isMyLabel(label){
+    const l = norm(label);
+    const me = norm(meLabel());
+    const first = norm(firstUserLabel());
+    return !l || l === me || (first && l === first);
+  }
+  function hideReadOnlyAndShowFab(){
+    window.__BL_READONLY_VIEW = false;
+    const note = document.getElementById('bl-readonly-note');
+    if (note) note.style.display = 'none';
+    const fab = document.querySelector('.fab');
+    if (fab && window.usuarioAtual !== 'Batalha') fab.style.display = 'flex';
+  }
+  function applyReadOnlyState(){
+    const current = window.usuarioAtual || meLabel();
+    const readonly = !!window.__BL_READONLY_VIEW && current !== 'Batalha' && !isMyLabel(current);
+    const note = document.getElementById('bl-readonly-note');
+    const fab = document.querySelector('.fab');
+    if (!readonly) {
+      if (isMyLabel(current)) window.__BL_READONLY_VIEW = false;
+      if (note) note.style.display = 'none';
+      if (fab && current !== 'Batalha') fab.style.display = 'flex';
+      return;
+    }
+    if (note) note.style.display = 'flex';
+    if (fab) fab.style.display = 'none';
+  }
+
+  const previousSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if (isMyLabel(usuario)) window.__BL_READONLY_VIEW = false;
+    const result = (typeof previousSetUsuario === 'function') ? previousSetUsuario(usuario) : undefined;
+    setTimeout(applyReadOnlyState, 30);
+    setTimeout(applyReadOnlyState, 250);
+    return result;
+  };
+
+  window.blBackToMyProfile = function(){
+    hideReadOnlyAndShowFab();
+    const me = meLabel();
+    if (typeof previousSetUsuario === 'function') previousSetUsuario(me);
+    else if (typeof window.setUsuario === 'function') window.setUsuario(me);
+    setTimeout(hideReadOnlyAndShowFab, 30);
+    setTimeout(hideReadOnlyAndShowFab, 250);
+  };
+
+  const previousOpenFriend = window.blOpenFriendProfile;
+  window.blOpenFriendProfile = function(label){
+    window.__BL_READONLY_VIEW = true;
+    if (typeof previousSetUsuario === 'function') previousSetUsuario(label);
+    else if (typeof previousOpenFriend === 'function') previousOpenFriend(label);
+    setTimeout(function(){
+      let note = document.getElementById('bl-readonly-note');
+      if (!note) {
+        note = document.createElement('div');
+        note.id = 'bl-readonly-note';
+        note.style.cssText = 'margin:12px 28px 0;background:rgba(86,207,255,.10);border:1px solid rgba(86,207,255,.35);color:#b8e8ff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;';
+        const app = document.getElementById('app');
+        if (app) app.prepend(note);
+      }
+      note.innerHTML = '<span>👀 Perfil de amigo — somente leitura.</span><button onclick="blBackToMyProfile()" style="border:none;border-radius:9px;background:#8b7cf8;color:white;font-weight:900;padding:8px 12px;cursor:pointer">Voltar para meus dados</button>';
+      applyReadOnlyState();
+      window.scrollTo(0,0);
+    }, 50);
+  };
+
+  const previousButtons = window.blUpdateUserButtons;
+  window.blUpdateUserButtons = function(raw){
+    if (typeof previousButtons === 'function') previousButtons(raw);
+    setTimeout(function(){
+      const btnMe = document.getElementById('btn-user-milton');
+      if (btnMe) {
+        btnMe.onclick = function(){ window.__BL_READONLY_VIEW=false; window.setUsuario(meLabel()); };
+      }
+      applyReadOnlyState();
+    }, 0);
+  };
+
+  window.addEventListener('load', function(){ setTimeout(applyReadOnlyState, 500); });
+})();
+</script>
+
 </body>
 </html>
