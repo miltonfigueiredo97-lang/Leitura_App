@@ -8749,5 +8749,250 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+
+
+<!-- BOOKLEGACY V8.7 HARD FIX: FAB, friend profile and battle controller -->
+<style id="bl-hard-v87-style">
+body.bl-hard-friend #fabBtn, body.bl-hard-friend .fab, body.bl-hard-friend #fabMenu, body.bl-hard-friend .fab-menu,
+body.bl-hard-battle #fabBtn, body.bl-hard-battle .fab, body.bl-hard-battle #fabMenu, body.bl-hard-battle .fab-menu { display:none !important; }
+body.bl-hard-own #fabBtn, body.bl-hard-own .fab { display:flex !important; }
+body.bl-hard-own #fabMenu:not(.bl-hard-open), body.bl-hard-own .fab-menu:not(.bl-hard-open) { display:none !important; }
+#blHardFriendHero{display:none;align-items:center;gap:16px;margin:18px auto 0;max-width:1500px;background:linear-gradient(135deg,rgba(22,27,39,.98),rgba(30,37,53,.98));border:1px solid #2a3248;border-left:4px solid #4ecdc4;border-radius:18px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35);}
+#blHardFriendHero img,#blHardFriendHero .bl-avatar{width:82px;height:82px;border-radius:50%;object-fit:cover;border:2px solid rgba(86,207,255,.75);box-shadow:0 0 0 6px rgba(86,207,255,.08);flex:0 0 auto;}
+#blHardFriendHero .bl-avatar{background:#252d40;display:flex;align-items:center;justify-content:center;font-size:38px;}
+#blHardFriendHero .bl-info{min-width:0;flex:1;}
+#blHardFriendHero .bl-kicker{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#4ecdc4;font-weight:900;margin-bottom:4px;}
+#blHardFriendHero h2{margin:0;font-size:28px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#blHardFriendHero .bl-email{color:#8892a8;font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#blHardFriendHero .bl-ro{margin-top:8px;color:#b8e8ff;font-size:13px;}
+.bl-hard-btn{border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:10px 14px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(139,124,248,.28);}
+#blHardBattleBtn{border:1px solid rgba(229,108,255,.45);border-radius:20px;background:#e56cff;color:white;font-size:12px;font-weight:900;padding:7px 16px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(229,108,255,.28);}
+#blHardBattleBack{margin:14px auto 0;max-width:1500px;display:none;justify-content:flex-end;padding:0 36px;}
+@media(max-width:700px){#blHardFriendHero{margin:10px 8px 0;padding:12px;gap:10px;align-items:flex-start}#blHardFriendHero img,#blHardFriendHero .bl-avatar{width:58px;height:58px;font-size:27px}#blHardFriendHero h2{font-size:20px}#blHardFriendHero .bl-ro{font-size:12px}.bl-hard-btn{padding:9px 10px;font-size:12px}#blHardBattleBack{padding:0 8px}}
+</style>
+<script id="bl-hard-v87-script">
+(function(){
+  'use strict';
+  window.__BL_HARD_PATCH = 'v8.7-fab-friend-battle';
+  const $ = (id) => document.getElementById(id);
+  const qsa = (s) => Array.from(document.querySelectorAll(s));
+  const norm = (v) => String(v || '').trim().toLowerCase();
+  const esc = (v) => String(v || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let fabOpen = false;
+
+  function raw(){ return window.BL && window.BL.raw ? window.BL.raw : {}; }
+  function authUser(){ return window.BL && window.BL.auth ? window.BL.auth.currentUser : null; }
+  function meLabel(){
+    const r = raw();
+    const u = authUser();
+    return String(r.currentLabel || (r.users && r.users[0] && (r.users[0].label || r.users[0].displayName || r.users[0].name)) || (u && (u.displayName || u.email || 'Meus dados')) || 'Meus dados');
+  }
+  function bundles(){ return Array.isArray(raw().users) ? raw().users : []; }
+  function friends(){ return Array.isArray(raw().friends) ? raw().friends : []; }
+  function meUid(){ return (raw().uid || (authUser() && authUser().uid) || ''); }
+  function friendUid(){ return window.__BL_VIEWING_FRIEND_UID || ''; }
+  function isBattle(){ return !!window.__BL_BATTLE_VIEW || window.usuarioAtual === 'Batalha'; }
+  function isFriendView(){ return !isBattle() && (!!window.__BL_FORCE_FRIEND_VIEW || !!window.__BL_READONLY_VIEW || !!friendUid()); }
+  function isOwnView(){ return !isBattle() && !isFriendView(); }
+
+  function findPerson(x){
+    const key = norm(x);
+    const all = [...bundles(), ...friends()];
+    return all.find(p => norm(p.uid) === key || norm(p.id) === key || norm(p.label) === key || norm(p.displayName) === key || norm(p.name) === key || norm(p.email) === key) || null;
+  }
+  function displayName(p){ return (p && (p.displayName || p.name || p.label || p.email)) || String(window.usuarioAtual || 'Amigo'); }
+  function email(p){ return (p && p.email) || ''; }
+  function photo(p){ return (p && p.photoURL) || ''; }
+
+  function ensureHero(){
+    let h = $('blHardFriendHero');
+    if(!h){
+      h = document.createElement('div');
+      h.id = 'blHardFriendHero';
+      const app = $('app');
+      if(app && app.parentNode) app.parentNode.insertBefore(h, app);
+      else document.body.prepend(h);
+    }
+    return h;
+  }
+  function hideHero(){ const h = $('blHardFriendHero'); if(h) h.style.display='none'; }
+  function showHero(p){
+    const h = ensureHero();
+    const img = photo(p) ? `<img src="${esc(photo(p))}" alt="">` : `<div class="bl-avatar">👤</div>`;
+    h.innerHTML = `${img}<div class="bl-info"><div class="bl-kicker">Perfil de amigo</div><h2>${esc(displayName(p))}</h2>${email(p)?`<div class="bl-email">${esc(email(p))}</div>`:''}<div class="bl-ro">Somente leitura — você pode visualizar, mas não pode editar, adicionar ou excluir dados deste usuário.</div></div><button type="button" class="bl-hard-btn" onclick="blBackToMyProfile()">↩ Voltar para meus dados</button>`;
+    h.style.display='flex';
+  }
+  function closeCommunity(){
+    qsa('[id*="Community"], [id*="community"], [id*="Comunidade"], [id*="comunidade"]').forEach(el=>{
+      if(!el || !el.style || el.id==='blHardFriendHero') return;
+      const cs = getComputedStyle(el);
+      if(cs.position === 'fixed' || cs.position === 'absolute' || el.getAttribute('role') === 'dialog'){
+        try { el.remove(); } catch(e){ el.style.display='none'; }
+      }
+    });
+  }
+
+  function setStateClasses(){
+    document.body.classList.toggle('bl-hard-own', isOwnView());
+    document.body.classList.toggle('bl-hard-friend', isFriendView());
+    document.body.classList.toggle('bl-hard-battle', isBattle());
+  }
+  function renderFab(){
+    setStateClasses();
+    const btn = $('fabBtn') || document.querySelector('.fab');
+    const menu = $('fabMenu') || document.querySelector('.fab-menu');
+    if(!isOwnView()){
+      fabOpen = false;
+      if(btn) btn.style.setProperty('display','none','important');
+      if(menu){ menu.classList.remove('bl-hard-open'); menu.style.setProperty('display','none','important'); }
+      return;
+    }
+    if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent = fabOpen ? '✕' : '＋'; }
+    if(menu){
+      menu.classList.toggle('bl-hard-open', fabOpen);
+      menu.style.setProperty('display', fabOpen ? 'flex' : 'none', 'important');
+    }
+  }
+  window.toggleFabMenu = function(){ if(!isOwnView()){ fabOpen=false; return renderFab(); } fabOpen=!fabOpen; renderFab(); };
+
+  function ensureBattleBack(){
+    let b = $('blHardBattleBack');
+    if(!b){
+      b=document.createElement('div');
+      b.id='blHardBattleBack';
+      b.innerHTML='<button type="button" class="bl-hard-btn" onclick="blBackToMyProfile()">↩ Voltar para meus dados</button>';
+      const pb=$('pageBatalha');
+      if(pb && pb.parentNode) pb.parentNode.insertBefore(b,pb);
+      else document.body.appendChild(b);
+    }
+    b.style.display = isBattle() ? 'flex' : 'none';
+  }
+
+  function populateBattleSelectors(){
+    const labels=[];
+    bundles().forEach(u=>{ const l=u && (u.label || u.displayName || u.name || u.email); if(l && !labels.some(x=>norm(x)===norm(l))) labels.push(l); });
+    friends().forEach(f=>{ const l=displayName(f); if(l && !labels.some(x=>norm(x)===norm(l))) labels.push(l); });
+    const me=meLabel(); if(me && !labels.some(x=>norm(x)===norm(me))) labels.unshift(me);
+    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
+      const sel=$(id); if(!sel) return;
+      const prev=sel.value;
+      sel.innerHTML=labels.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+      if(labels.some(l=>l===prev)) sel.value=prev; else if(labels[idx]) sel.value=labels[idx];
+    });
+    const ano=$('bat-ano');
+    if(ano && ano.options.length <= 1){
+      const years = new Set();
+      bundles().forEach(u=>{ (u.sessions||[]).forEach(s=>{ if(s.ano || s.year) years.add(String(s.ano||s.year)); }); (u.library||[]).forEach(l=>{ if(l.targetYear||l.ano||l.metaAno) years.add(String(l.targetYear||l.ano||l.metaAno)); }); });
+      [...years].sort().reverse().forEach(y=>{ const op=document.createElement('option'); op.value=y; op.textContent=y; ano.appendChild(op); });
+    }
+  }
+
+  function ensureBattleButton(){
+    let btn = $('blHardBattleBtn') || $('btn-user-batalha');
+    const header = document.querySelector('header > div:last-child') || document.querySelector('header') || document.body;
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id='blHardBattleBtn';
+      btn.textContent='⚔️ Batalha';
+      header.appendChild(btn);
+    }
+    if(btn.id !== 'blHardBattleBtn'){
+      btn.textContent='⚔️ Batalha';
+      btn.removeAttribute('onclick');
+    }
+    btn.onclick = window.blOpenBattleMode;
+    // Mostra o botão quando logado. Se não houver amigo, a própria tela avisa.
+    const logged = !!authUser() || !!raw().uid || bundles().length || friends().length;
+    btn.style.setProperty('display', logged ? '' : 'none', 'important');
+  }
+
+  function showBattleShell(){
+    const dash=$('pageDashboard'); if(dash) dash.style.display='none';
+    const bat=$('pageBatalha'); if(bat) bat.style.display='block';
+    qsa('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el=>{ if(el.id!=='pageBatalha') el.style.display='none'; });
+    ensureBattleBack();
+  }
+  function restoreDashboardShell(){
+    const dash=$('pageDashboard'); if(dash) dash.style.display='block';
+    const bat=$('pageBatalha'); if(bat) bat.style.display='none';
+    qsa('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el=>{ el.style.display=''; });
+    ensureBattleBack();
+  }
+
+  window.blOpenBattleMode = function(){
+    window.__BL_BATTLE_VIEW=true;
+    window.__BL_FORCE_FRIEND_VIEW=false;
+    window.__BL_READONLY_VIEW=false;
+    window.__BL_VIEWING_FRIEND_UID='';
+    window.usuarioAtual='Batalha';
+    hideHero(); closeCommunity(); fabOpen=false; renderFab(); populateBattleSelectors(); showBattleShell();
+    try { if(typeof window.renderBatalha === 'function') window.renderBatalha(); }
+    catch(e){
+      console.error('renderBatalha falhou', e);
+      const c=$('batalhaContainer'); if(c) c.innerHTML='<div class="card" style="margin:20px;color:#f88c6a">Erro ao abrir o Modo Batalha: '+esc(e.message||e)+'</div>';
+    }
+    const c=$('batalhaContainer');
+    if(c && !String(c.innerHTML||'').trim()) c.innerHTML='<div class="card" style="margin:20px;color:#8892a8">⚔️ Modo Batalha aberto. Selecione os jogadores acima.</div>';
+    setTimeout(()=>{ populateBattleSelectors(); try{ if(typeof window.renderBatalha==='function') window.renderBatalha(); }catch(e){} renderFab(); },250);
+    window.scrollTo(0,0);
+  };
+
+  window.blBackToMyProfile = function(){
+    window.__BL_BATTLE_VIEW=false;
+    window.__BL_FORCE_FRIEND_VIEW=false;
+    window.__BL_READONLY_VIEW=false;
+    window.__BL_VIEWING_FRIEND_UID='';
+    window.usuarioAtual=meLabel();
+    hideHero(); closeCommunity(); fabOpen=false; restoreDashboardShell();
+    try { if(window.__BL_ORIGINAL_SET_USUARIO__) window.__BL_ORIGINAL_SET_USUARIO__(meLabel()); }
+    catch(e){ console.warn('Voltar setUsuario original falhou', e); }
+    renderFab(); window.scrollTo(0,0);
+  };
+
+  function installSetUsuario(){
+    if(typeof window.setUsuario !== 'function') return;
+    if(!window.__BL_REAL_ORIGINAL_SET_USUARIO__) window.__BL_REAL_ORIGINAL_SET_USUARIO__ = window.__BL_ORIGINAL_SET_USUARIO__ || window.setUsuario;
+    window.setUsuario = function(usuario){
+      if(usuario === 'Batalha') return window.blOpenBattleMode();
+      const p = findPerson(usuario);
+      const label = String((p && (p.label || p.displayName || p.name || p.email)) || usuario || '');
+      const own = !p || (p.uid && meUid() && String(p.uid)===String(meUid())) || norm(label)===norm(meLabel());
+      if(own){
+        window.__BL_BATTLE_VIEW=false; window.__BL_FORCE_FRIEND_VIEW=false; window.__BL_READONLY_VIEW=false; window.__BL_VIEWING_FRIEND_UID='';
+        hideHero(); restoreDashboardShell();
+        try{ window.__BL_REAL_ORIGINAL_SET_USUARIO__(meLabel()); }catch(e){ window.usuarioAtual=meLabel(); }
+      } else {
+        window.__BL_BATTLE_VIEW=false; window.__BL_FORCE_FRIEND_VIEW=true; window.__BL_READONLY_VIEW=true; window.__BL_VIEWING_FRIEND_UID=p && p.uid || label;
+        closeCommunity(); restoreDashboardShell();
+        try{ window.__BL_REAL_ORIGINAL_SET_USUARIO__(label); }catch(e){ window.usuarioAtual=label; }
+        showHero(p || {label});
+      }
+      fabOpen=false; renderFab(); window.scrollTo(0,0);
+    };
+  }
+
+  window.blOpenFriendProfile = function(labelOrUid){
+    const p = findPerson(labelOrUid) || {label:labelOrUid, displayName:labelOrUid};
+    const label = p.label || p.displayName || p.name || p.email || labelOrUid;
+    window.__BL_BATTLE_VIEW=false; window.__BL_FORCE_FRIEND_VIEW=true; window.__BL_READONLY_VIEW=true; window.__BL_VIEWING_FRIEND_UID=p.uid || label;
+    closeCommunity(); installSetUsuario();
+    try{ window.setUsuario(label); }catch(e){ console.error('Erro ao abrir perfil de amigo', e); showHero(p); }
+    showHero(p); fabOpen=false; renderFab(); window.scrollTo(0,0);
+  };
+
+  function tick(){
+    installSetUsuario(); ensureBattleButton(); setStateClasses();
+    if(isFriendView()){
+      const p=findPerson(friendUid() || window.usuarioAtual) || {label:window.usuarioAtual, displayName:window.usuarioAtual};
+      showHero(p);
+    } else if(!isBattle()) hideHero();
+    if(isBattle()) ensureBattleBack();
+    renderFab();
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{ tick(); setInterval(tick, 300); });
+  setTimeout(tick,200); setTimeout(tick,1000); setTimeout(tick,2500);
+})();
+</script>
+
 </body>
 </html>

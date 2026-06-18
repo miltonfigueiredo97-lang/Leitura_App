@@ -1,3 +1,1 @@
-# BookLegacy App V8.6
-
-Correção definitiva do FAB, perfil de amigo e abertura do módulo Batalha original.
+BookLegacy V8.7 - FAB e Modo Batalha corrigidos
