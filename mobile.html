@@ -7707,5 +7707,145 @@ body.bl-view-friend #fabMenu, body.bl-view-battle #fabMenu{display:none!importan
 })();
 </script>
 
+
+<!-- BOOKLEGACY V9 REALFIX: friend profile single hero + battle always visible + safe FAB controller -->
+<style id="bl-v9-realfix-style">
+#blFriendHeroV9{display:none;margin:14px 28px 0;padding:16px 18px;border:1px solid rgba(86,207,255,.50);border-radius:18px;background:linear-gradient(135deg,rgba(78,205,196,.16),rgba(139,124,248,.18));align-items:center;gap:16px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+#blFriendHeroV9 .avatar{width:74px;height:74px;border-radius:50%;border:2px solid rgba(86,207,255,.75);object-fit:cover;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;overflow:hidden}
+#blFriendHeroV9 .name{font-size:28px;font-weight:900;color:#fff;line-height:1.05}
+#blFriendHeroV9 .email{font-size:13px;color:#9fb1d7;margin-top:4px}
+#blFriendHeroV9 .ro{font-size:13px;color:#b8e8ff;margin-top:8px;font-weight:800}
+#blFriendHeroV9 .back{margin-left:auto;border:0;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 16px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 18px rgba(139,124,248,.25)}
+body.bl-v9-friend #fabBtn,body.bl-v9-friend .fab,body.bl-v9-friend #fabMenu,body.bl-v9-battle #fabBtn,body.bl-v9-battle .fab,body.bl-v9-battle #fabMenu{display:none!important}
+body.bl-v9-own #fabBtn,body.bl-v9-own .fab{display:flex!important}
+#btn-user-batalha{display:inline-flex!important;align-items:center!important;gap:6px!important}
+@media(max-width:700px){#blFriendHeroV9{margin:10px 8px 0;padding:12px;align-items:flex-start;flex-wrap:wrap}#blFriendHeroV9 .avatar{width:56px;height:56px;font-size:26px}#blFriendHeroV9 .name{font-size:20px}#blFriendHeroV9 .back{width:100%;margin-left:0;margin-top:8px}}
+</style>
+<script id="bl-v9-realfix-script">
+(function(){
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v9-friend-battle-realfix';
+  const $ = id => document.getElementById(id);
+  const norm = v => String(v||'').trim().toLowerCase();
+  const esc = v => String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function raw(){ return (window.BL && window.BL.raw) ? window.BL.raw : {}; }
+  function authUser(){ return window.BL && window.BL.auth ? window.BL.auth.currentUser : null; }
+  function meUid(){ return raw().uid || authUser()?.uid || ''; }
+  function meLabel(){ return raw().currentLabel || authUser()?.displayName || authUser()?.email || 'Meus dados'; }
+  function enrichPeople(){
+    const users = Array.isArray(raw().users) ? raw().users.slice() : [];
+    const friends = Array.isArray(raw().friends) ? raw().friends : [];
+    const byUid = new Map();
+    users.forEach(u=>{ if(u && u.uid) byUid.set(u.uid,u); });
+    friends.forEach(f=>{
+      if(!f || !f.uid) return;
+      const existing = byUid.get(f.uid);
+      if(existing){ Object.assign(existing, {
+        displayName: existing.displayName || f.displayName || f.name || f.label,
+        name: existing.name || f.name || f.displayName || f.label,
+        label: existing.label || f.label || f.displayName || f.name || (f.email||'Amigo').split('@')[0],
+        email: existing.email || f.email || '',
+        photoURL: existing.photoURL || f.photoURL || ''
+      }); }
+      else users.push({ uid:f.uid, label:f.label || f.displayName || f.name || (f.email||'Amigo').split('@')[0], displayName:f.displayName || f.name || f.label || '', name:f.name || f.displayName || f.label || '', email:f.email || '', photoURL:f.photoURL || '', library:[], sessions:[], ratings:[], goals:[], collections:[] });
+    });
+    if(window.BL && window.BL.raw) window.BL.raw.users = users;
+    return users;
+  }
+  function people(){ return enrichPeople(); }
+  function findPerson(key){
+    const k = norm(key);
+    return people().find(p => norm(p.uid)===k || norm(p.id)===k || norm(p.label)===k || norm(p.displayName)===k || norm(p.name)===k || norm(p.email)===k) || null;
+  }
+  function personName(p){ return p?.displayName || p?.name || p?.label || p?.email || String(window.usuarioAtual||'Amigo'); }
+  function personEmail(p){ return p?.email || ''; }
+  function personPhoto(p){ return p?.photoURL || ''; }
+  function ownLabelNames(){
+    const u = authUser();
+    return [meLabel(), raw().currentLabel, u?.displayName, u?.email, 'Milton'].filter(Boolean).map(norm);
+  }
+  function isOwnView(label){
+    if(label === 'Batalha') return false;
+    const p = findPerson(label);
+    if(p && p.uid && meUid() && p.uid === meUid()) return true;
+    return ownLabelNames().includes(norm(label || window.usuarioAtual));
+  }
+  function closeCommunity(){ const m=$('blCommunityModal'); if(m) m.remove(); }
+  function removeOldFriendBlocks(){
+    const oldHero = $('blFriendHeroStable'); if(oldHero) oldHero.remove();
+    const oldNote = $('bl-readonly-note'); if(oldNote) oldNote.remove();
+    // Remove duplicate legacy readonly banners that were inserted as plain cards.
+    document.querySelectorAll('div').forEach(el=>{
+      const t=(el.textContent||'').trim();
+      if(t === '👀 Perfil de amigo — modo somente leitura. Você pode visualizar, mas não pode editar, adicionar ou excluir dados.' || t === 'Perfil de amigo — modo somente leitura. Você pode visualizar, mas não pode editar, adicionar ou excluir dados.') el.remove();
+    });
+  }
+  function ensureHero(){ let h=$('blFriendHeroV9'); if(!h){ h=document.createElement('div'); h.id='blFriendHeroV9'; const app=$('app'); if(app&&app.parentNode) app.parentNode.insertBefore(h, app); else document.body.prepend(h); } return h; }
+  function hideHero(){ const h=$('blFriendHeroV9'); if(h) h.style.display='none'; removeOldFriendBlocks(); }
+  function showHero(p){
+    removeOldFriendBlocks();
+    const h=ensureHero(); const photo=personPhoto(p);
+    const avatar = photo ? `<img class="avatar" src="${esc(photo)}" alt="${esc(personName(p))}">` : `<div class="avatar">👤</div>`;
+    h.innerHTML = `${avatar}<div style="min-width:0;flex:1"><div style="text-transform:uppercase;letter-spacing:1px;color:#4ecdc4;font-size:12px;font-weight:900">Perfil de amigo</div><div class="name">${esc(personName(p))}</div>${personEmail(p)?`<div class="email">${esc(personEmail(p))}</div>`:''}<div class="ro">Somente leitura — você pode visualizar, mas não pode editar, adicionar ou excluir dados deste usuário.</div></div><button class="back" type="button" onclick="blBackToMyProfile()">↩ Voltar para meus dados</button>`;
+    h.style.display='flex';
+  }
+  function setFab(mode){
+    const btn=$('fabBtn') || document.querySelector('.fab'); const menu=$('fabMenu');
+    if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu){ menu.style.setProperty('display','none','important'); menu.style.display='none'; } return; }
+    if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent = btn.textContent === '✕' ? '＋' : '＋'; }
+    if(menu) menu.style.display='none';
+    try{ window.fabOpen=false; }catch(e){}
+  }
+  function applyMode(label){
+    const isBattle = label === 'Batalha' || window.usuarioAtual === 'Batalha';
+    document.body.classList.remove('bl-v9-own','bl-v9-friend','bl-v9-battle','bl-view-own','bl-view-friend','bl-view-battle');
+    if(isBattle){ document.body.classList.add('bl-v9-battle'); hideHero(); setFab('hide'); return; }
+    if(isOwnView(label)){ document.body.classList.add('bl-v9-own'); hideHero(); setFab('show'); return; }
+    const p=findPerson(label)||{label}; document.body.classList.add('bl-v9-friend'); showHero(p); setFab('hide');
+  }
+  function fillBattleSelects(){
+    const users=people(); if(!users.length) return;
+    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel) return; const prev=sel.value; sel.innerHTML=users.map((u,i)=>{ const l=u.label||u.displayName||u.name||u.email||('Usuário '+(i+1)); return `<option value="${esc(l)}">${esc(l)}</option>`; }).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.label||users[idx]?.displayName||users[idx]?.name||users[0]?.label||''); });
+  }
+  function forceBattleButton(){
+    const btn=$('btn-user-batalha'); if(!btn) return;
+    btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=function(ev){ ev && ev.preventDefault && ev.preventDefault(); window.setUsuario('Batalha'); };
+  }
+  const previousSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    closeCommunity();
+    if(typeof previousSetUsuario === 'function'){
+      try{ previousSetUsuario(usuario); }catch(e){ console.error('setUsuario legado falhou:', e); }
+    } else window.usuarioAtual = usuario;
+    window.usuarioAtual = usuario;
+    if(usuario === 'Batalha'){
+      fillBattleSelects();
+      try{ if(typeof window.renderBatalha === 'function') window.renderBatalha(); }catch(e){ console.error('renderBatalha falhou:', e); }
+      const pDash=$('pageDashboard'), pBat=$('pageBatalha'); if(pDash) pDash.style.display='none'; if(pBat) pBat.style.display='block';
+      window.scrollTo(0,0);
+    }
+    setTimeout(()=>{ applyMode(usuario); forceBattleButton(); }, 0);
+  };
+  window.blBackToMyProfile = function(){ window.setUsuario(meLabel()); window.scrollTo(0,0); };
+  window.blOpenFriendProfile = function(labelOrUid){ const p=findPerson(labelOrUid)||{label:labelOrUid}; window.setUsuario(p.label||p.displayName||p.name||p.email||labelOrUid); window.scrollTo(0,0); };
+  const previousUpdateButtons = window.blUpdateUserButtons;
+  window.blUpdateUserButtons = function(r){
+    try{ if(typeof previousUpdateButtons === 'function') previousUpdateButtons(r); }catch(e){ console.warn('blUpdateUserButtons legado falhou:', e); }
+    people();
+    const btnMe=$('btn-user-milton'); if(btnMe){ btnMe.style.display=''; btnMe.textContent='📖 '+meLabel(); btnMe.onclick=()=>window.setUsuario(meLabel()); }
+    const btnFriend=$('btn-user-daniel'); const users=people();
+    if(btnFriend){ if(users.length>1){ const f=users.find(u=>u.uid!==meUid()) || users[1]; const l=f.label||f.displayName||f.name||'Amigo'; btnFriend.style.display=''; btnFriend.textContent='📖 '+l; btnFriend.onclick=()=>window.blOpenFriendProfile(f.uid||l); } else btnFriend.style.display='none'; }
+    fillBattleSelects(); forceBattleButton(); setTimeout(()=>applyMode(window.usuarioAtual||meLabel()),0);
+  };
+  const previousRenderBatalha = window.renderBatalha;
+  window.renderBatalha = function(){ fillBattleSelects(); if(typeof previousRenderBatalha === 'function') return previousRenderBatalha(); };
+  document.addEventListener('click',function(ev){ const viewBtn = ev.target.closest && ev.target.closest('[onclick*="blOpenFriendProfile"]'); if(viewBtn) setTimeout(closeCommunity,0); }, true);
+  function tick(){ removeOldFriendBlocks(); forceBattleButton(); applyMode(window.usuarioAtual||meLabel()); }
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(tick,500));
+  setTimeout(tick,1200); setTimeout(tick,2600);
+  window.blV9Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, meUid:meUid(), meLabel:meLabel(), people:people().map(p=>({uid:p.uid,label:p.label,name:p.name,displayName:p.displayName,email:p.email,photoURL:p.photoURL?true:false})), friends:raw().friends}; };
+})();
+</script>
+
 </body>
 </html>
