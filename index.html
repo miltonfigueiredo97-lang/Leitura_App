@@ -8512,5 +8512,333 @@ if ('serviceWorker' in navigator) {
 })();
 
 </script>
+<script>
+// BOOKLEGACY V8.5 — FIX FINAL: FAB travado, perfil de amigo real e batalha forçada.
+(function(){
+  window.__BL_PATCH_V85 = 'final-fab-friend-battle';
+
+  const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const norm = (v) => String(v ?? '').trim().toLowerCase();
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const raw = () => (window.BL && window.BL.raw) ? window.BL.raw : {};
+  const users = () => Array.isArray(raw().users) ? raw().users : [];
+  const me = () => users()[0] || {};
+  const uid = () => window.BL?.auth?.currentUser?.uid || raw().uid || me().uid || '';
+  const meLabel = () => raw().currentLabel || me().label || window.BL?.auth?.currentUser?.displayName || window.BL?.auth?.currentUser?.email || 'Meu perfil';
+  const same = (a,b) => norm(a) === norm(b);
+
+  window.__BL_VIEW_MODE = window.__BL_VIEW_MODE || 'own';
+  window.__BL_FAB_MANUAL_OPEN = false;
+  window.__BL_ACCEPTED_FRIENDS = window.__BL_ACCEPTED_FRIENDS || [];
+
+  function isOwnMode(){ return window.__BL_VIEW_MODE !== 'friend' && window.__BL_VIEW_MODE !== 'battle' && !window.__BL_FORCE_FRIEND_VIEW && window.usuarioAtual !== 'Batalha'; }
+  function isFriendMode(){ return window.__BL_VIEW_MODE === 'friend' || (!!window.__BL_FORCE_FRIEND_VIEW && window.usuarioAtual !== 'Batalha' && !same(window.usuarioAtual, meLabel())); }
+  function isBattleMode(){ return window.__BL_VIEW_MODE === 'battle' || window.usuarioAtual === 'Batalha' || !!window.__BL_BATTLE_VIEW; }
+
+  function setBodyMode(){
+    document.body.classList.toggle('bl-final-friend', isFriendMode());
+    document.body.classList.toggle('bl-final-battle', isBattleMode());
+    document.body.classList.toggle('bl-final-own', isOwnMode());
+  }
+
+  function injectFinalCss(){
+    if(document.getElementById('bl-v85-css')) return;
+    const st = document.createElement('style');
+    st.id = 'bl-v85-css';
+    st.textContent = `
+      body.bl-final-friend #fabBtn, body.bl-final-friend #fabMenu,
+      body.bl-final-friend .fab, body.bl-final-friend .fab-menu,
+      body.bl-final-battle #fabBtn, body.bl-final-battle #fabMenu,
+      body.bl-final-battle .fab, body.bl-final-battle .fab-menu { display:none !important; }
+      #blFriendHeroFinal { margin:0 28px 14px; background:linear-gradient(135deg,rgba(86,207,255,.20),rgba(139,124,248,.16)); border:1px solid rgba(86,207,255,.42); border-radius:20px; padding:18px 20px; color:#e2e8f0; align-items:center; gap:16px; box-shadow:0 14px 38px rgba(0,0,0,.25); }
+      #blBattleFinalBtn { background:linear-gradient(135deg,#8b7cf8,#e56cff); border:0; color:#fff; padding:8px 13px; border-radius:10px; cursor:pointer; font-size:13px; font-weight:900; white-space:nowrap; box-shadow:0 6px 18px rgba(139,124,248,.25); }
+      #blBattleFinalBtn[hidden] { display:none !important; }
+      @media(max-width:700px){ #blFriendHeroFinal{margin:8px;padding:14px;align-items:flex-start;flex-direction:column} #blFriendHeroFinal h2{font-size:23px!important;white-space:normal!important} }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function closeAnyPopup(){
+    ['blCommunityModal','blGenericModal','blInviteModal','modalComunidade','modal'].forEach(id => { const el=document.getElementById(id); if(el) el.remove(); });
+    $$('.modal,.modal-backdrop,[data-bl-modal="community"]').forEach(el => {
+      const txt = (el.textContent || '').toLowerCase();
+      if(txt.includes('comunidade') || txt.includes('amigo') || el.getAttribute('data-bl-modal') === 'community') el.remove();
+    });
+  }
+
+  function ensureHero(){
+    let hero = document.getElementById('blFriendHeroFinal');
+    if(!hero){
+      hero = document.createElement('div');
+      hero.id = 'blFriendHeroFinal';
+      hero.style.display = 'none';
+      const app = document.getElementById('app') || document.body.firstElementChild;
+      if(app && app.parentNode) app.parentNode.insertBefore(hero, app);
+      else document.body.prepend(hero);
+    }
+    return hero;
+  }
+
+  function hideHero(){ const h=ensureHero(); h.style.display='none'; h.innerHTML=''; }
+
+  function showFriendHero(profile){
+    const h = ensureHero();
+    const name = profile?.displayName || profile?.name || profile?.label || profile?.email || 'Amigo';
+    const email = profile?.email || '';
+    const photo = profile?.photoURL || profile?.photo || '';
+    const img = photo ? `<img src="${esc(photo)}" style="width:78px;height:78px;border-radius:50%;object-fit:cover;border:2px solid rgba(86,207,255,.65);box-shadow:0 0 0 5px rgba(86,207,255,.08)">` : `<div style="width:78px;height:78px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:36px;border:2px solid rgba(86,207,255,.45)">👤</div>`;
+    h.innerHTML = `${img}<div style="min-width:0;flex:1"><div style="font-size:12px;color:#4ecdc4;text-transform:uppercase;letter-spacing:1.3px;font-weight:900;margin-bottom:5px">Perfil de amigo</div><h2 style="margin:0;font-size:28px;color:#fff;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</h2>${email ? `<div style="color:#9aa8c7;font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(email)}</div>` : ''}<div style="margin-top:9px;color:#b8e8ff;font-size:13px;font-weight:800">Somente leitura — você pode visualizar, mas não editar, adicionar ou excluir dados.</div></div><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 15px;cursor:pointer;white-space:nowrap">↩ Voltar para meus dados</button>`;
+    h.style.display = 'flex';
+  }
+
+  function enforceFab(){
+    setBodyMode();
+    const btn = document.getElementById('fabBtn') || $('.fab');
+    const menu = document.getElementById('fabMenu') || $('.fab-menu');
+    if(isFriendMode() || isBattleMode()){
+      window.__BL_FAB_MANUAL_OPEN = false;
+      if(btn){ btn.style.setProperty('display','none','important'); btn.textContent='＋'; }
+      if(menu) menu.style.setProperty('display','none','important');
+      return;
+    }
+    if(btn){ btn.style.removeProperty('display'); btn.style.display='flex'; btn.textContent = window.__BL_FAB_MANUAL_OPEN ? '✕' : '＋'; }
+    if(menu) menu.style.display = window.__BL_FAB_MANUAL_OPEN ? 'flex' : 'none';
+  }
+
+  window.toggleFabMenu = function(){
+    if(!isOwnMode()){ window.__BL_FAB_MANUAL_OPEN=false; enforceFab(); return; }
+    window.__BL_FAB_MANUAL_OPEN = !window.__BL_FAB_MANUAL_OPEN;
+    enforceFab();
+  };
+  window.closeFabMenu = function(){ window.__BL_FAB_MANUAL_OPEN=false; enforceFab(); };
+
+  async function readUserBundle(userUid, fallbackLabel){
+    const db = window.BL?.db;
+    if(!db || !userUid) throw new Error('Firebase ou UID indisponível.');
+    if(typeof window.blReadUserBundle === 'function') return await window.blReadUserBundle(userUid, fallbackLabel || 'Amigo');
+    const [profileDoc, libSnap, sessSnap, ratSnap, goalsSnap, colSnap] = await Promise.all([
+      db.collection('users').doc(userUid).get(),
+      db.collection('users').doc(userUid).collection('library').get(),
+      db.collection('users').doc(userUid).collection('sessions').get(),
+      db.collection('users').doc(userUid).collection('ratings').get(),
+      db.collection('users').doc(userUid).collection('goals').get(),
+      db.collection('users').doc(userUid).collection('collections').get()
+    ]);
+    const profile = profileDoc.exists ? profileDoc.data() : {};
+    return {
+      uid:userUid,
+      label:fallbackLabel || profile.name || profile.displayName || profile.email || 'Amigo',
+      profile,
+      library:libSnap.docs.map(d=>({id:d.id,...d.data()})),
+      sessions:sessSnap.docs.map(d=>({id:d.id,...d.data()})),
+      ratings:ratSnap.docs.map(d=>({id:d.id,...d.data()})),
+      goals:goalsSnap.docs.map(d=>({id:d.id,...d.data()})),
+      collections:colSnap.docs.map(d=>({id:d.id,...d.data()}))
+    };
+  }
+
+  function upsertUser(bundle){
+    if(!window.BL) window.BL={};
+    if(!window.BL.raw) window.BL.raw={};
+    if(!Array.isArray(window.BL.raw.users)) window.BL.raw.users=[];
+    const arr = window.BL.raw.users;
+    const key = norm(bundle.uid || bundle.label);
+    const ix = arr.findIndex(u => norm(u.uid || u.label) === key || norm(u.label) === norm(bundle.label));
+    if(ix >= 0) arr[ix] = Object.assign({}, arr[ix], bundle);
+    else arr.push(bundle);
+  }
+
+  async function loadAcceptedFriends(){
+    const db = window.BL?.db;
+    const my = uid();
+    if(!db || !my) return window.__BL_ACCEPTED_FRIENDS || [];
+    let friends = [];
+    try{
+      const snap = await db.collection('users').doc(my).collection('friends').where('status','==','accepted').get();
+      friends = snap.docs.map(d => ({uid:d.id, id:d.id, ...d.data()}));
+    }catch(e){ console.warn('Não consegui carregar friends aceitos:', e); }
+    const rawFriends = Array.isArray(raw().friends) ? raw().friends : [];
+    const userFriends = users().slice(1).map(u => ({ uid:u.uid, id:u.uid, label:u.label, displayName:u.profile?.displayName || u.profile?.name || u.label, email:u.profile?.email || u.email, photoURL:u.profile?.photoURL || u.photoURL }));
+    const map = new Map();
+    [...rawFriends, ...userFriends, ...friends].forEach(f => { const k = String(f?.uid || f?.id || f?.email || f?.label || ''); if(k) map.set(k, Object.assign({}, map.get(k)||{}, f)); });
+    window.__BL_ACCEPTED_FRIENDS = Array.from(map.values()).filter(f => norm(f.uid || f.id) !== norm(my));
+    if(window.BL?.raw) window.BL.raw.friends = window.__BL_ACCEPTED_FRIENDS;
+    return window.__BL_ACCEPTED_FRIENDS;
+  }
+
+  function findFriend(x){
+    const n=norm(x);
+    const candidates = [...(window.__BL_ACCEPTED_FRIENDS||[]), ...(Array.isArray(raw().friends)?raw().friends:[]), ...users().slice(1)];
+    return candidates.find(f => [f.uid,f.id,f.label,f.displayName,f.name,f.email].some(v => norm(v)===n)) || null;
+  }
+
+  window.blBackToMyProfile = function(){
+    window.__BL_VIEW_MODE='own';
+    window.__BL_FORCE_FRIEND_VIEW=false;
+    window.__BL_VIEWING_FRIEND_UID='';
+    window.__BL_BATTLE_VIEW=false;
+    window.__BL_FAB_MANUAL_OPEN=false;
+    hideHero();
+    if(typeof window.setUsuario === 'function') window.setUsuario(meLabel());
+    else window.usuarioAtual = meLabel();
+    const pd=document.getElementById('pageDashboard'), pb=document.getElementById('pageBatalha');
+    if(pd) pd.style.display='block';
+    if(pb) pb.style.display='none';
+    setTimeout(()=>{ hideHero(); enforceFab(); ensureBattleButtonFinal(); },30);
+    setTimeout(()=>{ enforceFab(); },300);
+    window.scrollTo(0,0);
+  };
+
+  window.blOpenFriendProfile = async function(labelOrUid){
+    try{
+      const meta = findFriend(labelOrUid) || {uid:labelOrUid, label:labelOrUid, displayName:labelOrUid};
+      const friendUid = meta.uid || meta.id || '';
+      closeAnyPopup();
+      window.__BL_VIEW_MODE='friend';
+      window.__BL_FORCE_FRIEND_VIEW=true;
+      window.__BL_VIEWING_FRIEND_UID = friendUid || meta.label || labelOrUid;
+      window.__BL_BATTLE_VIEW=false;
+      window.__BL_FAB_MANUAL_OPEN=false;
+      let bundle = null;
+      if(friendUid){ try{ bundle = await readUserBundle(friendUid, meta.displayName || meta.name || meta.label || 'Amigo'); upsertUser(bundle); } catch(e){ console.warn('Falha ao ler amigo completo:', e); } }
+      const profile = Object.assign({}, meta, bundle?.profile || {}, { label: bundle?.label || meta.label || meta.displayName || meta.name || 'Amigo' });
+      showFriendHero(profile);
+      if(typeof window.setUsuario === 'function') window.setUsuario(bundle?.label || profile.label || profile.displayName || 'Amigo');
+      else window.usuarioAtual = bundle?.label || profile.label || 'Amigo';
+      window.__BL_VIEW_MODE='friend';
+      window.__BL_FORCE_FRIEND_VIEW=true;
+      setTimeout(()=>{ showFriendHero(profile); enforceFab(); window.scrollTo(0,0); },50);
+      setTimeout(enforceFab,350);
+    }catch(e){ alert('Erro ao abrir perfil do amigo: '+(e.message||e)); }
+  };
+
+  function metric(bundle){
+    const lib = bundle?.library || bundle?.livros || [];
+    const sess = bundle?.sessions || bundle?.sessoes || [];
+    const ratings = bundle?.ratings || bundle?.notas || [];
+    const lidos = lib.filter(x => ['lido','concluido','concluído'].includes(norm(x.status || x.Status))).length;
+    const paginas = sess.reduce((s,x)=>s+Number(x.pages || x.paginas || x.PAGINAS || 0),0);
+    const minutos = sess.reduce((s,x)=>s+Number(x.minutes || x.minutos || x.MINUTO || 0),0);
+    const media = ratings.length ? ratings.reduce((s,x)=>s+Number(x.notaFinal || x.nota || x.score || 0),0)/ratings.length : 0;
+    return {livros:lib.length,lidos,paginas,minutos,sessoes:sess.length,media};
+  }
+
+  function ensureBattlePage(){
+    let pb=document.getElementById('pageBatalha');
+    if(!pb){
+      pb=document.createElement('div');
+      pb.id='pageBatalha';
+      pb.className='page';
+      pb.style.display='none';
+      pb.innerHTML='<div id="batalhaContainer"></div>';
+      (document.getElementById('app')||document.body).appendChild(pb);
+    }
+    let box=document.getElementById('batalhaContainer');
+    if(!box){ box=document.createElement('div'); box.id='batalhaContainer'; pb.appendChild(box); }
+    return {pb,box};
+  }
+
+  async function ensureFriendBundles(){
+    const friends = await loadAcceptedFriends();
+    for(const f of friends){
+      const fuid = f.uid || f.id;
+      if(fuid && !users().some(u => norm(u.uid) === norm(fuid))){
+        try{ upsertUser(await readUserBundle(fuid, f.displayName || f.name || f.label || 'Amigo')); }
+        catch(e){ console.warn('Não carregou bundle de amigo para batalha:', fuid, e); }
+      }
+    }
+    return friends;
+  }
+
+  async function renderBattleFinal(){
+    const {box}=ensureBattlePage();
+    await ensureFriendBundles();
+    const list = users().length > 1 ? users() : [me(), ...(window.__BL_ACCEPTED_FRIENDS||[])];
+    if(list.length < 2){
+      box.innerHTML='<div style="padding:28px;color:#f88c6a;text-align:center;font-weight:900">Adicione pelo menos um amigo aceito na Comunidade para usar o Modo Batalha.</div>';
+      return;
+    }
+    const cards = list.map((u,i)=>{
+      const p=u.profile||u;
+      const name=p.name||p.displayName||u.label||p.email||(i===0?meLabel():'Amigo');
+      const photo=p.photoURL||u.photoURL||'';
+      const m=metric(u);
+      const avatar=photo?`<img src="${esc(photo)}" style="width:66px;height:66px;border-radius:50%;object-fit:cover">`:`<div style="width:66px;height:66px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:30px">👤</div>`;
+      return `<div style="background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:18px;color:#e2e8f0;box-shadow:0 10px 28px rgba(0,0,0,.25)"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${avatar}<div><h3 style="margin:0;color:${i===0?'#8b7cf8':'#f88c6a'};font-size:22px">${esc(name)}</h3><div style="color:#8892a8;font-size:12px">Battle Reader</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><b style="font-size:24px">${m.lidos}</b><br><span style="color:#8892a8;font-size:12px">livros concluídos</span></div><div><b style="font-size:24px">${m.paginas.toLocaleString('pt-BR')}</b><br><span style="color:#8892a8;font-size:12px">páginas lidas</span></div><div><b style="font-size:24px">${m.sessoes}</b><br><span style="color:#8892a8;font-size:12px">sessões</span></div><div><b style="font-size:24px">${m.media?m.media.toFixed(1):'—'}</b><br><span style="color:#8892a8;font-size:12px">média notas</span></div></div></div>`;
+    }).join('');
+    box.innerHTML=`<div style="padding:26px;max-width:1280px;margin:0 auto"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px"><div><div style="font-size:11px;letter-spacing:5px;color:#a855f7;text-transform:uppercase;font-weight:900">⚔️ Battle of Readers</div><h2 style="margin:6px 0 0;font-size:34px;color:#fff">Modo Batalha</h2><p style="margin:6px 0 0;color:#8892a8">Comparativo entre você e seus amigos aceitos.</p></div><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 15px;cursor:pointer">↩ Voltar para meus dados</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">${cards}</div></div>`;
+  }
+
+  window.blOpenBattleMode = async function(){
+    try{
+      closeAnyPopup(); hideHero();
+      window.__BL_VIEW_MODE='battle';
+      window.__BL_FORCE_FRIEND_VIEW=false;
+      window.__BL_BATTLE_VIEW=true;
+      window.__BL_FAB_MANUAL_OPEN=false;
+      window.usuarioAtual='Batalha';
+      const {pb}=ensureBattlePage();
+      const pd=document.getElementById('pageDashboard'); if(pd) pd.style.display='none';
+      $$('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el=>{ if(el.id!=='pageBatalha') el.style.display='none'; });
+      pb.style.display='block';
+      enforceFab();
+      await renderBattleFinal();
+      ensureBattleButtonFinal();
+      window.scrollTo(0,0);
+    }catch(e){ alert('Erro ao abrir Modo Batalha: '+(e.message||e)); }
+  };
+
+  function ensureBattleButtonFinal(){
+    let btn=document.getElementById('blBattleFinalBtn');
+    const holder=document.querySelector('header div[style*="flex-wrap"]') || document.querySelector('header > div:last-child') || document.querySelector('header') || document.body;
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='blBattleFinalBtn';
+      btn.type='button';
+      btn.textContent='⚔️ Batalha';
+      btn.onclick=()=>window.blOpenBattleMode();
+      holder.appendChild(btn);
+    }
+    const count = (window.__BL_ACCEPTED_FRIENDS||[]).length || Math.max(0, users().length-1) || (Array.isArray(raw().friends)?raw().friends.length:0);
+    btn.hidden = count < 1;
+  }
+  window.blEnsureBattleButtonFinal = ensureBattleButtonFinal;
+
+  const oldSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return window.blOpenBattleMode();
+    if(same(usuario, meLabel()) || same(usuario, 'Milton') && same(meLabel(),'Milton')){
+      window.__BL_VIEW_MODE='own';
+      window.__BL_FORCE_FRIEND_VIEW=false;
+      window.__BL_BATTLE_VIEW=false;
+      hideHero();
+    }
+    const result = typeof oldSetUsuario === 'function' ? oldSetUsuario(usuario) : (window.usuarioAtual=usuario);
+    setTimeout(()=>{ enforceFab(); ensureBattleButtonFinal(); },40);
+    setTimeout(()=>{ enforceFab(); ensureBattleButtonFinal(); },300);
+    return result;
+  };
+
+  async function bootFinal(){
+    injectFinalCss();
+    await loadAcceptedFriends();
+    ensureBattleButtonFinal();
+    enforceFab();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => setTimeout(bootFinal, 800));
+  window.addEventListener('load', () => setTimeout(bootFinal, 1200));
+  setInterval(async () => {
+    try{
+      injectFinalCss();
+      if(!window.__BL_LAST_FRIEND_LOAD || Date.now() - window.__BL_LAST_FRIEND_LOAD > 8000){ window.__BL_LAST_FRIEND_LOAD = Date.now(); loadAcceptedFriends().then(ensureBattleButtonFinal).catch(()=>{}); }
+      ensureBattleButtonFinal();
+      enforceFab();
+    }catch(e){}
+  }, 250);
+})();
+</script>
+
 </body>
 </html>

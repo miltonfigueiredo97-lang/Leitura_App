@@ -1,1 +1,2 @@
-BookLegacy V8.3 - perfil de amigo, botão + protegido e mobile automático.
+# BookLegacy V8.5
+Correção final de FAB, perfil de amigo e modo batalha.
