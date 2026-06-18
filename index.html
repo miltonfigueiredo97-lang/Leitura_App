@@ -567,7 +567,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         📖 Daniel
       </button>
-      <button id="btn-user-batalha" style="display:none" onclick="setUsuario('Batalha')"
+      <button id="btn-user-batalha" onclick="setUsuario('Batalha')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         ⚔️ Batalha
       </button>
@@ -8013,6 +8013,143 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function tick(){ removeMobileToggle(); forceBattleButton(); applyMode(window.usuarioAtual||meLabel()); }
   document.addEventListener('DOMContentLoaded',()=>setTimeout(tick,600)); setTimeout(tick,1400); setTimeout(tick,3200);
   window.blV10Debug=function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, meUid:meUid(), meLabel:meLabel(), people:people().map(p=>({uid:p.uid,label:p.label,name:p.name,displayName:p.displayName,email:p.email,photo:!!p.photoURL})), friends:raw().friends, battleButton:!!$('btn-user-batalha')}; };
+})();
+</script>
+
+
+
+<!-- BOOKLEGACY V11: HARD BATTLE BUTTON + NO MOBILE TOGGLE. Patch only battle visibility/opening. -->
+<style id="bl-v11-battle-style">
+  #btn-mobile-toggle, #btnViewToggle, .mobile-toggle, [data-action="toggle-mobile"], [onclick*="mobile-view"], [onclick*="desktop"] { display:none!important; visibility:hidden!important; pointer-events:none!important; }
+  #btn-user-batalha, #blBattleHardButton {
+    display:inline-flex!important; visibility:visible!important; opacity:1!important;
+    align-items:center!important; gap:6px!important;
+  }
+  body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
+  body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
+</style>
+<script>
+(function(){
+  window.__BL_PATCH_VERSION = 'v11-battle-hardfix';
+  const $ = id => document.getElementById(id);
+  const norm = v => String(v||'').trim().toLowerCase();
+  function raw(){ return window.BL?.raw || {}; }
+  function users(){
+    const map = new Map();
+    function add(u){
+      if(!u) return;
+      const label = u.label || u.name || u.displayName || u.nome || u.email || u.uid || u.id;
+      if(!label) return;
+      const key = norm(u.uid || u.id || label);
+      map.set(key, { ...u, label:String(label) });
+    }
+    (raw().users||[]).forEach(add);
+    (raw().friends||[]).forEach(add);
+    // fallback para o módulo original do seu dashboard, sem depender de detecção de amigos
+    add({ label:'Milton', uid: window.firebaseAuth?.currentUser?.uid || 'milton' });
+    add({ label:'Daniel', uid:'E6gcZlwzNTMPxmTTINCdSlmR8I63' });
+    return Array.from(map.values());
+  }
+  function ownLabels(){
+    const cu = window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
+    const out = ['milton'];
+    if(cu){ out.push(norm(cu.uid), norm(cu.email), norm(cu.displayName)); }
+    return out.filter(Boolean);
+  }
+  function isFriendMode(){
+    const u = window.usuarioAtual;
+    if(!u || u === 'Batalha') return false;
+    return !ownLabels().includes(norm(u));
+  }
+  function removeMobileToggle(){
+    document.querySelectorAll('#btn-mobile-toggle,#btnViewToggle,.mobile-toggle,[data-action="toggle-mobile"],button').forEach(el=>{
+      const t=(el.textContent||'').toLowerCase();
+      const oc=(el.getAttribute('onclick')||'').toLowerCase();
+      if(el.id==='btn-user-batalha' || el.id==='blBattleHardButton') return;
+      if(t.includes('mobile') || t.includes('desktop') || oc.includes('mobile-view') || oc.includes('desktop')){
+        el.style.setProperty('display','none','important');
+        el.style.setProperty('visibility','hidden','important');
+        el.onclick=null;
+      }
+    });
+  }
+  function getHeaderButtonWrap(){
+    const milton = $('btn-user-milton');
+    if(milton && milton.parentElement) return milton.parentElement;
+    const header = document.querySelector('header') || document.querySelector('.topbar') || document.body;
+    return header;
+  }
+  function ensureBattleButton(){
+    let btn = $('btn-user-batalha');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btn-user-batalha';
+      btn.type = 'button';
+      getHeaderButtonWrap().appendChild(btn);
+    }
+    btn.textContent = '⚔️ Batalha';
+    btn.removeAttribute('hidden');
+    btn.style.cssText += ';display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;';
+    btn.onclick = function(ev){ ev && ev.preventDefault && ev.preventDefault(); openBattle(); return false; };
+    if(isFriendMode()) btn.style.setProperty('display','none','important');
+    return btn;
+  }
+  function fillBattleSelects(){
+    const list = users();
+    const a = $('bat-playerA'), b = $('bat-playerB');
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
+  }
+  function hideDashboardForBattle(){
+    const dash=$('pageDashboard'), bat=$('pageBatalha');
+    if(dash) dash.style.display='none';
+    if(bat) bat.style.display='block';
+    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+    document.body.classList.remove('bl-v11-friend');
+    document.body.classList.add('bl-v11-battle');
+    // esconde blocos soltos que o dashboard original deixa fora de pageDashboard
+    document.querySelectorAll('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el=>{
+      if(!el.closest('#pageBatalha')) el.style.display='none';
+    });
+  }
+  function openBattle(){
+    window.usuarioAtual = 'Batalha';
+    hideDashboardForBattle();
+    fillBattleSelects();
+    try{
+      if(typeof window.renderBatalha === 'function') window.renderBatalha();
+      else throw new Error('renderBatalha não encontrado no HTML');
+    }catch(e){
+      console.error('Erro ao abrir Batalha:', e);
+      const c=$('batalhaContainer');
+      if(c) c.innerHTML = `<div class="card" style="padding:22px;color:#f88c6a"><b>Erro ao abrir o módulo original de batalha.</b><br>${String(e.message||e)}</div>`;
+    }
+    setTimeout(syncUI, 50);
+  }
+  function syncUI(){
+    removeMobileToggle();
+    ensureBattleButton();
+    const friend = isFriendMode();
+    document.body.classList.toggle('bl-v11-friend', friend);
+    if(window.usuarioAtual === 'Batalha') document.body.classList.add('bl-v11-battle'); else document.body.classList.remove('bl-v11-battle');
+    const fab=document.querySelector('.fab');
+    if(fab){
+      if(friend || window.usuarioAtual==='Batalha') fab.style.setProperty('display','none','important');
+      else fab.style.removeProperty('display');
+    }
+  }
+  const oldSet = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return openBattle();
+    if(typeof oldSet === 'function') oldSet.apply(this, arguments);
+    setTimeout(syncUI, 0); setTimeout(syncUI, 100); setTimeout(syncUI, 600);
+  };
+  const oldRender = window.renderBatalha;
+  window.renderBatalha = function(){ fillBattleSelects(); if(typeof oldRender === 'function') return oldRender.apply(this, arguments); };
+  window.blV11Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?.style?.display, users:users(), rawUsers:raw().users, rawFriends:raw().friends}; };
+  document.addEventListener('DOMContentLoaded', ()=>{ syncUI(); setTimeout(syncUI,500); setTimeout(syncUI,1500); });
+  setInterval(syncUI, 2000);
 })();
 </script>
 
