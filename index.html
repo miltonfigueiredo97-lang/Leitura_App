@@ -8994,5 +8994,83 @@ body.bl-hard-own #fabMenu:not(.bl-hard-open), body.bl-hard-own .fab-menu:not(.bl
 })();
 </script>
 
+
+
+<!-- BOOKLEGACY V8.8 FINAL CONTROLLER: own/friend/battle + FAB stable -->
+<style id="bl-final-v88-style">
+body.bl-final-own #fabBtn, body.bl-final-own .fab{display:flex!important;}
+body.bl-final-own #fabMenu:not(.bl-final-open), body.bl-final-own .fab-menu:not(.bl-final-open){display:none!important;}
+body.bl-final-own #fabMenu.bl-final-open, body.bl-final-own .fab-menu.bl-final-open{display:flex!important;}
+body.bl-final-friend #fabBtn, body.bl-final-friend .fab, body.bl-final-friend #fabMenu, body.bl-final-friend .fab-menu,
+body.bl-final-battle #fabBtn, body.bl-final-battle .fab, body.bl-final-battle #fabMenu, body.bl-final-battle .fab-menu{display:none!important;}
+#blFinalBattleBtn{display:inline-flex!important;align-items:center;gap:6px;border:1px solid rgba(229,108,255,.45);border-radius:20px;background:#e56cff;color:white;font-size:12px;font-weight:900;padding:7px 16px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(229,108,255,.28);}
+#blFinalFriendHero{display:none;align-items:center;gap:16px;margin:18px auto 0;max-width:1500px;background:linear-gradient(135deg,rgba(22,27,39,.98),rgba(30,37,53,.98));border:1px solid #2a3248;border-left:4px solid #4ecdc4;border-radius:18px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.35);}
+#blFinalFriendHero img,#blFinalFriendHero .bl-avatar{width:82px;height:82px;border-radius:50%;object-fit:cover;border:2px solid rgba(86,207,255,.75);box-shadow:0 0 0 6px rgba(86,207,255,.08);flex:0 0 auto;}
+#blFinalFriendHero .bl-avatar{background:#252d40;display:flex;align-items:center;justify-content:center;font-size:38px;}
+#blFinalFriendHero .bl-info{min-width:0;flex:1;}
+#blFinalFriendHero .bl-kicker{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#4ecdc4;font-weight:900;margin-bottom:4px;}
+#blFinalFriendHero h2{margin:0;font-size:28px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#blFinalFriendHero .bl-email{color:#8892a8;font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#blFinalFriendHero .bl-ro{margin-top:8px;color:#b8e8ff;font-size:13px;}
+.bl-final-btn{border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:10px 14px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(139,124,248,.28);}
+#blFinalBattleBack{display:none;justify-content:flex-end;margin:14px auto 0;max-width:1500px;padding:0 36px;}
+@media(max-width:700px){#blFinalFriendHero{margin:10px 8px 0;padding:12px;gap:10px;align-items:flex-start}#blFinalFriendHero img,#blFinalFriendHero .bl-avatar{width:58px;height:58px;font-size:27px}#blFinalFriendHero h2{font-size:20px}#blFinalFriendHero .bl-ro{font-size:12px}.bl-final-btn{padding:9px 10px;font-size:12px}#blFinalBattleBack{padding:0 8px}}
+</style>
+<script id="bl-final-v88-script">
+(function(){
+  'use strict';
+  window.__BL_FINAL_PATCH = 'v8.8-final-controller';
+  const $ = id => document.getElementById(id);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const norm = v => String(v||'').trim().toLowerCase();
+  const esc = v => String(v||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let finalView = window.__BL_FINAL_VIEW || 'own';
+  let fabOpen = false;
+  function raw(){ return window.BL && window.BL.raw ? window.BL.raw : {}; }
+  function authUser(){ return window.BL && window.BL.auth ? window.BL.auth.currentUser : null; }
+  function bundles(){ return Array.isArray(raw().users) ? raw().users : []; }
+  function friends(){ return Array.isArray(raw().friends) ? raw().friends : []; }
+  function meBundle(){ return bundles()[0] || {}; }
+  function meLabel(){ const u=authUser(); return String(raw().currentLabel || meBundle().label || meBundle().displayName || meBundle().name || (u && (u.displayName || u.email)) || 'Meus dados'); }
+  function meUid(){ const u=authUser(); return String(raw().uid || meBundle().uid || (u && u.uid) || ''); }
+  function allPeople(){ const arr=[...bundles(),...friends()]; const seen=new Set(); return arr.filter(p=>{ const k=String(p && (p.uid||p.id||p.label||p.displayName||p.email)||Math.random()); if(seen.has(k)) return false; seen.add(k); return true; }); }
+  function findPerson(x){ const k=norm(x); return allPeople().find(p=>norm(p.uid)===k||norm(p.id)===k||norm(p.label)===k||norm(p.displayName)===k||norm(p.name)===k||norm(p.email)===k) || null; }
+  function getName(p){ return (p && (p.displayName||p.name||p.label||p.email)) || String(window.usuarioAtual||'Amigo'); }
+  function getEmail(p){ return (p && p.email) || ''; }
+  function getPhoto(p){ return (p && p.photoURL) || ''; }
+  function baseSetUsuario(label){
+    const fn = window.__BL_REAL_ORIGINAL_SET_USUARIO__ || window.__BL_ORIGINAL_SET_USUARIO__;
+    try { if(typeof fn === 'function') return fn(label); } catch(e){ console.warn('base setUsuario falhou', e); }
+    window.usuarioAtual = label;
+  }
+  function setBody(){
+    document.body.classList.toggle('bl-final-own', finalView==='own');
+    document.body.classList.toggle('bl-final-friend', finalView==='friend');
+    document.body.classList.toggle('bl-final-battle', finalView==='battle');
+    window.__BL_FINAL_VIEW = finalView;
+  }
+  function ensureHero(){ let h=$('blFinalFriendHero'); if(!h){ h=document.createElement('div'); h.id='blFinalFriendHero'; const app=$('app'); if(app&&app.parentNode) app.parentNode.insertBefore(h,app); else document.body.prepend(h); } return h; }
+  function hideHero(){ const h=$('blFinalFriendHero'); if(h) h.style.display='none'; qsa('#blHardFriendHero,#blFriendHeroV86,#bl-readonly-note').forEach(x=>{ if(x) x.style.display='none'; }); }
+  function showHero(p){ const h=ensureHero(); const img=getPhoto(p)?`<img src="${esc(getPhoto(p))}" alt="">`:'<div class="bl-avatar">👤</div>'; h.innerHTML=`${img}<div class="bl-info"><div class="bl-kicker">Perfil de amigo</div><h2>${esc(getName(p))}</h2>${getEmail(p)?`<div class="bl-email">${esc(getEmail(p))}</div>`:''}<div class="bl-ro">Somente leitura — você pode visualizar, mas não pode editar, adicionar ou excluir dados deste usuário.</div></div><button type="button" class="bl-final-btn" onclick="blBackToMyProfile()">↩ Voltar para meus dados</button>`; h.style.display='flex'; }
+  function closeCommunity(){ qsa('[id*="Community"],[id*="community"],[id*="Comunidade"],[id*="comunidade"]').forEach(el=>{ if(!el||!el.style||el.id==='blFinalFriendHero') return; const cs=getComputedStyle(el); if(cs.position==='fixed'||cs.position==='absolute'||el.getAttribute('role')==='dialog'){ try{el.remove();}catch(e){el.style.display='none';} } }); }
+  function renderFab(){ setBody(); const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu')||document.querySelector('.fab-menu'); if(finalView!=='own'){ fabOpen=false; if(btn) btn.style.setProperty('display','none','important'); if(menu){ menu.classList.remove('bl-final-open'); menu.style.setProperty('display','none','important'); } return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu){ menu.classList.toggle('bl-final-open',fabOpen); menu.style.setProperty('display',fabOpen?'flex':'none','important'); } }
+  window.toggleFabMenu=function(){ if(finalView!=='own'){ fabOpen=false; return renderFab(); } fabOpen=!fabOpen; renderFab(); };
+  function ensureBattleButton(){ let btn=$('blFinalBattleBtn'); const old=$('btn-user-batalha'); if(old) old.style.setProperty('display','none','important'); if(!btn){ btn=document.createElement('button'); btn.id='blFinalBattleBtn'; btn.textContent='⚔️ Batalha'; const header=document.querySelector('header'); const badge=header && header.querySelector('.badge'); if(badge&&badge.parentNode) badge.parentNode.insertBefore(btn,badge); else (header||document.body).appendChild(btn); } btn.onclick=window.blOpenBattleMode; const logged=!!authUser()||!!raw().uid||bundles().length>0; btn.style.setProperty('display',logged?'inline-flex':'none','important'); }
+  function battleLabels(){ const labels=[]; const add=l=>{ l=String(l||'').trim(); if(l&&!labels.some(x=>norm(x)===norm(l))) labels.push(l); }; add(meLabel()); bundles().forEach(u=>add(u.label||u.displayName||u.name||u.email)); friends().forEach(f=>add(getName(f))); return labels; }
+  function populateBattleSelectors(){ const labels=battleLabels(); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel) return; const prev=sel.value; sel.innerHTML=labels.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join(''); sel.value=labels.some(l=>l===prev)?prev:(labels[idx]||labels[0]||''); }); }
+  function ensureBattleBack(){ let b=$('blFinalBattleBack'); if(!b){ b=document.createElement('div'); b.id='blFinalBattleBack'; b.innerHTML='<button type="button" class="bl-final-btn" onclick="blBackToMyProfile()">↩ Voltar para meus dados</button>'; const p=$('pageBatalha'); if(p&&p.parentNode) p.parentNode.insertBefore(b,p); else document.body.appendChild(b); } b.style.display=finalView==='battle'?'flex':'none'; }
+  function showBattleShell(){ const dash=$('pageDashboard'); const bat=$('pageBatalha'); if(dash) dash.style.display='none'; if(bat) bat.style.display='block'; ensureBattleBack(); }
+  function showOwnShell(){ const dash=$('pageDashboard'); const bat=$('pageBatalha'); if(dash) dash.style.display='block'; if(bat) bat.style.display='none'; ensureBattleBack(); }
+  window.blOpenBattleMode=function(){ finalView='battle'; window.__BL_BATTLE_VIEW=true; window.__BL_FORCE_FRIEND_VIEW=false; window.__BL_READONLY_VIEW=false; window.__BL_VIEWING_FRIEND_UID=''; closeCommunity(); hideHero(); fabOpen=false; populateBattleSelectors(); showBattleShell(); baseSetUsuario('Batalha'); populateBattleSelectors(); try{ if(typeof window.renderBatalha==='function') window.renderBatalha(); }catch(e){ console.error('renderBatalha falhou',e); } const box=$('batalhaContainer'); if(box&&!String(box.innerHTML||'').trim()){ box.innerHTML='<div class="card" style="margin:20px"><h2>⚔️ Modo Batalha</h2><p style="color:#8892a8">Selecione os usuários nos campos acima para comparar a leitura.</p></div>'; } renderFab(); ensureBattleButton(); window.scrollTo(0,0); };
+  window.blBackToMyProfile=function(){ finalView='own'; window.__BL_BATTLE_VIEW=false; window.__BL_FORCE_FRIEND_VIEW=false; window.__BL_READONLY_VIEW=false; window.__BL_VIEWING_FRIEND_UID=''; closeCommunity(); hideHero(); fabOpen=false; showOwnShell(); baseSetUsuario(meLabel()); renderFab(); ensureBattleButton(); window.scrollTo(0,0); };
+  window.blOpenFriendProfile=function(labelOrUid){ const p=findPerson(labelOrUid)||{label:labelOrUid,displayName:labelOrUid}; finalView='friend'; window.__BL_BATTLE_VIEW=false; window.__BL_FORCE_FRIEND_VIEW=true; window.__BL_READONLY_VIEW=true; window.__BL_VIEWING_FRIEND_UID=p.uid||p.id||String(labelOrUid||''); closeCommunity(); showOwnShell(); baseSetUsuario(p.label||p.displayName||p.name||p.email||labelOrUid); showHero(p); fabOpen=false; renderFab(); ensureBattleButton(); window.scrollTo(0,0); };
+  const previousSet=window.setUsuario;
+  window.setUsuario=function(usuario){ if(usuario==='Batalha') return window.blOpenBattleMode(); const p=findPerson(usuario); const label=String(usuario||''); const own=!p || (p.uid&&meUid()&&String(p.uid)===meUid()) || norm(label)===norm(meLabel()); if(own){ finalView='own'; window.__BL_FORCE_FRIEND_VIEW=false; window.__BL_READONLY_VIEW=false; window.__BL_VIEWING_FRIEND_UID=''; hideHero(); showOwnShell(); try{return baseSetUsuario(meLabel());}finally{fabOpen=false;renderFab();ensureBattleButton();} } return window.blOpenFriendProfile(p.uid||p.label||label); };
+  function tick(){ if(finalView==='own' && (window.__BL_FORCE_FRIEND_VIEW||window.__BL_READONLY_VIEW||window.__BL_VIEWING_FRIEND_UID)){ window.__BL_FORCE_FRIEND_VIEW=false; window.__BL_READONLY_VIEW=false; window.__BL_VIEWING_FRIEND_UID=''; } if(finalView==='friend'){ const p=findPerson(window.__BL_VIEWING_FRIEND_UID||window.usuarioAtual)||{label:window.usuarioAtual,displayName:window.usuarioAtual}; showHero(p); } if(finalView!=='friend') hideHero(); if(finalView!=='battle') ensureBattleBack(); renderFab(); ensureBattleButton(); }
+  document.addEventListener('DOMContentLoaded',()=>{ tick(); setInterval(tick,150); });
+  setTimeout(tick,200); setTimeout(tick,800); setTimeout(tick,1800);
+})();
+</script>
+
 </body>
 </html>
