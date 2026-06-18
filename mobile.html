@@ -8151,5 +8151,252 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+
+<script>
+// BOOKLEGACY V8.4 — perfil de amigo real, botão + protegido e Modo Batalha funcional.
+(function(){
+  window.__BL_PATCH_V84 = 'friend-profile-battle-final';
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const norm = (v) => String(v ?? '').trim().toLowerCase();
+  const raw = () => (window.BL && window.BL.raw) ? window.BL.raw : {};
+  const users = () => Array.isArray(raw().users) ? raw().users : [];
+  const friendsMeta = () => Array.isArray(raw().friends) ? raw().friends : [];
+  const meUser = () => users()[0] || {};
+  const meLabel = () => raw().currentLabel || meUser().label || (window.BL?.auth?.currentUser?.displayName || window.BL?.auth?.currentUser?.email || 'Milton').split(' ')[0];
+  const myUid = () => window.BL?.auth?.currentUser?.uid || raw().uid || meUser().uid || '';
+  const isMeLabel = (label) => norm(label) === norm(meLabel()) || norm(label) === norm('Milton') && norm(meLabel()) === norm('Milton');
+
+  function allFriendRecords(){
+    const byUid = new Map();
+    users().slice(1).forEach(u => { if(u && (u.uid || u.label)) byUid.set(String(u.uid || u.label), u); });
+    friendsMeta().forEach(f => { if(f && (f.uid || f.label || f.displayName)) byUid.set(String(f.uid || f.label || f.displayName), Object.assign({}, byUid.get(String(f.uid || f.label || f.displayName)) || {}, f)); });
+    return Array.from(byUid.values()).filter(f => norm(f.uid || f.label || f.displayName || f.name || f.email) && norm(f.uid) !== norm(myUid()));
+  }
+
+  function findFriend(x){
+    const n = norm(x);
+    return allFriendRecords().find(f => [f.uid, f.id, f.label, f.displayName, f.name, f.email].some(v => norm(v) === n)) || null;
+  }
+
+  function closeCommunity(){
+    ['blCommunityModal','blGenericModal','blInviteModal'].forEach(id => { const el = document.getElementById(id); if(el) el.remove(); });
+    $$('[data-bl-modal="community"]').forEach(el => el.remove());
+  }
+
+  function ensureFriendHero(){
+    let hero = document.getElementById('blFriendProfileHeroV84');
+    if(!hero){
+      hero = document.createElement('div');
+      hero.id = 'blFriendProfileHeroV84';
+      hero.style.cssText = 'display:none;margin:0 28px 14px;background:linear-gradient(135deg,rgba(86,207,255,.18),rgba(139,124,248,.16));border:1px solid rgba(86,207,255,.42);border-radius:20px;padding:18px 20px;color:#e2e8f0;align-items:center;gap:16px;box-shadow:0 14px 38px rgba(0,0,0,.25);';
+      const app = document.getElementById('app');
+      if(app && app.parentNode) app.parentNode.insertBefore(hero, app);
+      else document.body.prepend(hero);
+    }
+    return hero;
+  }
+
+  function isFriendView(){
+    return !!window.__BL_FORCE_FRIEND_VIEW && (window.usuarioAtual !== 'Batalha') && !isMeLabel(window.usuarioAtual);
+  }
+
+  function updateActionVisibility(){
+    const friend = isFriendView();
+    const battle = window.usuarioAtual === 'Batalha' || !!window.__BL_BATTLE_VIEW;
+    $$('.fab,.fab-menu').forEach(el => { el.style.display = (friend || battle) ? 'none' : ''; });
+    document.body.classList.toggle('bl-friend-profile-mode', friend);
+    document.body.classList.toggle('bl-battle-mode', battle);
+    const oldNote = document.getElementById('bl-readonly-note');
+    if(oldNote) oldNote.style.display = 'none';
+    const hero = ensureFriendHero();
+    if(!friend) hero.style.display = 'none';
+  }
+
+  function showFriendHero(friend){
+    const hero = ensureFriendHero();
+    const name = friend?.displayName || friend?.name || friend?.label || friend?.email || window.usuarioAtual || 'Amigo';
+    const email = friend?.email || '';
+    const photo = friend?.photoURL || '';
+    const img = photo
+      ? `<img src="${esc(photo)}" style="width:78px;height:78px;border-radius:50%;object-fit:cover;border:2px solid rgba(86,207,255,.6);box-shadow:0 0 0 5px rgba(86,207,255,.08)">`
+      : '<div style="width:78px;height:78px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:36px;border:2px solid rgba(86,207,255,.45)">👤</div>';
+    hero.innerHTML = `${img}<div style="min-width:0;flex:1"><div style="font-size:12px;color:#4ecdc4;text-transform:uppercase;letter-spacing:1.3px;font-weight:900;margin-bottom:5px">Perfil de amigo</div><h2 style="margin:0;font-size:28px;color:#fff;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</h2>${email ? `<div style="color:#9aa8c7;font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(email)}</div>` : ''}<div style="margin-top:9px;color:#b8e8ff;font-size:13px;font-weight:800">Somente leitura — você pode visualizar, mas não editar, adicionar ou excluir dados.</div></div><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 15px;cursor:pointer;white-space:nowrap">↩ Voltar para meus dados</button>`;
+    hero.style.display = 'flex';
+  }
+
+  async function readBundle(uid, labelFallback){
+    if(!uid) throw new Error('UID do amigo não encontrado.');
+    if(typeof window.blReadUserBundle === 'function') return await window.blReadUserBundle(uid, labelFallback || 'Amigo');
+    const db = window.BL?.db;
+    if(!db) throw new Error('Firebase não inicializado.');
+    const [profileDoc, libSnap, sessSnap, ratSnap, goalsSnap, colSnap] = await Promise.all([
+      db.collection('users').doc(uid).get(),
+      db.collection('users').doc(uid).collection('library').get(),
+      db.collection('users').doc(uid).collection('sessions').get(),
+      db.collection('users').doc(uid).collection('ratings').get(),
+      db.collection('users').doc(uid).collection('goals').get(),
+      db.collection('users').doc(uid).collection('collections').get()
+    ]);
+    const profile = profileDoc.exists ? profileDoc.data() : {};
+    return {
+      uid,
+      label: labelFallback || profile.name || profile.displayName || profile.email || 'Amigo',
+      profile,
+      library: libSnap.docs.map(d => ({ id:d.id, ...d.data() })),
+      sessions: sessSnap.docs.map(d => ({ id:d.id, ...d.data() })),
+      ratings: ratSnap.docs.map(d => ({ id:d.id, ...d.data() })),
+      goals: goalsSnap.docs.map(d => ({ id:d.id, ...d.data() })),
+      collections: colSnap.docs.map(d => ({ id:d.id, ...d.data() }))
+    };
+  }
+
+  function ensureRawUser(bundle){
+    if(!window.BL) window.BL = {};
+    if(!window.BL.raw) window.BL.raw = {};
+    if(!Array.isArray(window.BL.raw.users)) window.BL.raw.users = [];
+    const key = norm(bundle.uid || bundle.label);
+    const idx = window.BL.raw.users.findIndex(u => norm(u.uid || u.label) === key || norm(u.label) === norm(bundle.label));
+    if(idx >= 0) window.BL.raw.users[idx] = Object.assign({}, window.BL.raw.users[idx], bundle);
+    else window.BL.raw.users.push(bundle);
+  }
+
+  window.blBackToMyProfile = function(){
+    window.__BL_FORCE_FRIEND_VIEW = false;
+    window.__BL_VIEWING_FRIEND_UID = '';
+    window.__BL_BATTLE_VIEW = false;
+    closeCommunity();
+    if(typeof window.setUsuario === 'function') window.setUsuario(meLabel());
+    else window.usuarioAtual = meLabel();
+    setTimeout(updateActionVisibility, 20);
+    setTimeout(updateActionVisibility, 250);
+    window.scrollTo(0,0);
+  };
+
+  window.blOpenFriendProfile = async function(labelOrUid){
+    try{
+      const meta = findFriend(labelOrUid) || { uid:labelOrUid, label:labelOrUid, displayName:labelOrUid };
+      const uid = meta.uid || meta.id || '';
+      const label = meta.label || meta.displayName || meta.name || meta.email || 'Amigo';
+      closeCommunity();
+      window.__BL_FORCE_FRIEND_VIEW = true;
+      window.__BL_VIEWING_FRIEND_UID = uid || label;
+      if(uid){
+        try { ensureRawUser(await readBundle(uid, label)); }
+        catch(e){ console.warn('Não foi possível carregar bundle completo do amigo:', e); }
+      }
+      showFriendHero(meta);
+      if(typeof window.setUsuario === 'function') window.setUsuario(label);
+      else window.usuarioAtual = label;
+      window.__BL_FORCE_FRIEND_VIEW = true;
+      setTimeout(() => { showFriendHero(findFriend(uid || label) || meta); updateActionVisibility(); window.scrollTo(0,0); }, 50);
+      setTimeout(updateActionVisibility, 300);
+    } catch(e){ alert('Erro ao abrir perfil do amigo: ' + (e.message || e)); }
+  };
+
+  window.blRenderFriendRow = function(f){
+    const label = f.displayName || f.name || f.label || f.email || f.uid || 'Amigo';
+    const key = f.uid || f.id || label;
+    const img = f.photoURL ? `<img src="${esc(f.photoURL)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">` : '<div style="width:38px;height:38px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center">👤</div>';
+    return `<div style="display:flex;align-items:center;gap:10px;background:#161b27;border:1px solid #2a3248;border-radius:12px;padding:10px">${img}<div style="flex:1;min-width:0"><div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</div><div style="font-size:12px;color:#8892a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.email || f.uid || '')}</div></div><button type="button" onclick="blOpenFriendProfile('${esc(key)}')" style="border:none;border-radius:9px;background:#4ecdc4;color:#0d1117;font-weight:900;padding:8px 10px;cursor:pointer">Ver perfil</button></div>`;
+  };
+
+  function setupBattleButton(){
+    let btn = document.getElementById('btn-user-batalha');
+    const holder = document.querySelector('header div[style*="flex-wrap"]') || document.querySelector('header > div:last-child') || document.querySelector('header');
+    if(!btn && holder){
+      btn = document.createElement('button');
+      btn.id = 'btn-user-batalha';
+      btn.type = 'button';
+      btn.textContent = '⚔️ Batalha';
+      btn.style.cssText = 'background:transparent;border:1px solid var(--purple,#8b7cf8);color:#e2e8f0;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;white-space:nowrap;';
+      holder.appendChild(btn);
+    }
+    if(btn){
+      const hasFriends = allFriendRecords().length > 0 || users().length > 1;
+      btn.style.display = hasFriends ? '' : 'none';
+      btn.onclick = () => window.blOpenBattleMode();
+    }
+  }
+
+  function metric(bundle){
+    const lib = bundle?.library || bundle?.livros || [];
+    const sess = bundle?.sessions || bundle?.sessoes || [];
+    const ratings = bundle?.ratings || bundle?.notas || [];
+    const lidos = lib.filter(x => norm(x.status || x.Status) === 'lido' || norm(x.status || x.Status) === 'concluído' || norm(x.status || x.Status) === 'concluido').length;
+    const paginas = sess.reduce((s,x)=>s + Number(x.pages || x.paginas || x.PAGINAS || 0), 0);
+    const minutos = sess.reduce((s,x)=>s + Number(x.minutes || x.minutos || x.MINUTO || 0), 0);
+    const media = ratings.length ? ratings.reduce((s,x)=>s + Number(x.notaFinal || x.nota || x.score || 0),0) / ratings.length : 0;
+    return { livros: lib.length, lidos, paginas, sessoes: sess.length, minutos, media };
+  }
+
+  window.blOpenBattleMode = async function(){
+    try{
+      window.__BL_FORCE_FRIEND_VIEW = false;
+      window.__BL_BATTLE_VIEW = true;
+      closeCommunity();
+      const metas = allFriendRecords();
+      for(const f of metas){
+        const uid = f.uid || f.id;
+        if(uid && !users().some(u => norm(u.uid) === norm(uid))) {
+          try { ensureRawUser(await readBundle(uid, f.displayName || f.name || f.label || 'Amigo')); }
+          catch(e){ console.warn('Amigo não carregado para batalha:', uid, e); }
+        }
+      }
+      window.usuarioAtual = 'Batalha';
+      const pd = document.getElementById('pageDashboard');
+      const pb = document.getElementById('pageBatalha');
+      if(pd) pd.style.display = 'none';
+      if(pb) pb.style.display = 'block';
+      $$('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el => { if(el.id !== 'pageBatalha') el.style.display = 'none'; });
+      updateActionVisibility();
+      renderBattlePanel();
+      setupBattleButton();
+      window.scrollTo(0,0);
+    } catch(e){ alert('Erro ao abrir Modo Batalha: ' + (e.message || e)); }
+  };
+
+  function renderBattlePanel(){
+    const box = document.getElementById('batalhaContainer');
+    if(!box) return;
+    const list = users().length > 1 ? users() : [meUser(), ...allFriendRecords()];
+    if(list.length < 2){
+      box.innerHTML = '<div style="padding:28px;color:#f88c6a;text-align:center;font-weight:800">Adicione pelo menos um amigo aceito na Comunidade para usar o Modo Batalha.</div>';
+      return;
+    }
+    const cards = list.map((u,i) => {
+      const m = metric(u);
+      const p = u.profile || u;
+      const name = p.name || p.displayName || u.label || p.email || (i===0?meLabel():'Amigo');
+      const photo = p.photoURL ? `<img src="${esc(p.photoURL)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover">` : '<div style="width:62px;height:62px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center;font-size:30px">👤</div>';
+      return `<div style="background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:18px;color:#e2e8f0;box-shadow:0 10px 28px rgba(0,0,0,.25)"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${photo}<div><h3 style="margin:0;color:${i===0?'#8b7cf8':'#f88c6a'};font-size:22px">${esc(name)}</h3><div style="color:#8892a8;font-size:12px">Battle Reader</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><b style="font-size:24px">${m.lidos}</b><br><span style="color:#8892a8;font-size:12px">livros concluídos</span></div><div><b style="font-size:24px">${m.paginas.toLocaleString('pt-BR')}</b><br><span style="color:#8892a8;font-size:12px">páginas lidas</span></div><div><b style="font-size:24px">${m.sessoes}</b><br><span style="color:#8892a8;font-size:12px">sessões</span></div><div><b style="font-size:24px">${m.media ? m.media.toFixed(1) : '—'}</b><br><span style="color:#8892a8;font-size:12px">média notas</span></div></div></div>`;
+    }).join('');
+    box.innerHTML = `<div style="padding:26px;max-width:1280px;margin:0 auto"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px"><div><div style="font-size:11px;letter-spacing:5px;color:#a855f7;text-transform:uppercase;font-weight:900">⚔️ Battle of Readers</div><h2 style="margin:6px 0 0;font-size:34px;color:#fff">Modo Batalha</h2><p style="margin:6px 0 0;color:#8892a8">Comparativo entre você e seus amigos aceitos.</p></div><button type="button" onclick="blBackToMyProfile()" style="border:none;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 15px;cursor:pointer">↩ Voltar para meus dados</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">${cards}</div></div>`;
+  }
+
+  const previousSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return window.blOpenBattleMode();
+    if(isMeLabel(usuario)) { window.__BL_FORCE_FRIEND_VIEW = false; window.__BL_VIEWING_FRIEND_UID = ''; window.__BL_BATTLE_VIEW = false; }
+    const r = (typeof previousSetUsuario === 'function') ? previousSetUsuario(usuario) : (window.usuarioAtual = usuario);
+    setTimeout(() => { setupBattleButton(); updateActionVisibility(); }, 30);
+    setTimeout(() => { setupBattleButton(); updateActionVisibility(); }, 250);
+    return r;
+  };
+
+  const previousButtons = window.blUpdateUserButtons;
+  window.blUpdateUserButtons = function(rawArg){
+    if(typeof previousButtons === 'function') { try { previousButtons(rawArg); } catch(e){ console.warn(e); } }
+    setTimeout(() => { setupBattleButton(); updateActionVisibility(); }, 60);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { setupBattleButton(); updateActionVisibility(); }, 600); });
+  window.addEventListener('load', () => { setTimeout(() => { setupBattleButton(); updateActionVisibility(); }, 900); });
+  setInterval(() => { setupBattleButton(); updateActionVisibility(); }, 2500);
+})();
+
+</script>
 </body>
 </html>
