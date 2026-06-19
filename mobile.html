@@ -608,54 +608,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   #batalhaContainer > div { min-width:520px !important; }
 }
 </style>
-<script id="bl-v311-mobile-menu-js">
-(function(){
-  function call(name){ if (typeof window[name] === 'function') return window[name](); }
-  function scrollSec(id){ if (typeof window.scrollToSec === 'function') return window.scrollToSec(id); const el=document.querySelector('[data-msection="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
-  function close(){ const p=document.getElementById('blMobileMenuPanel'); if(p) p.classList.remove('open'); }
-  function ensureMenu(){
-    if (window.innerWidth > 899) return;
-    if (!document.getElementById('blMobileMenuFab')) {
-      const b=document.createElement('button'); b.id='blMobileMenuFab'; b.type='button'; b.textContent='☰'; b.onclick=function(){ const p=document.getElementById('blMobileMenuPanel'); if(p) p.classList.toggle('open'); };
-      document.body.appendChild(b);
-    }
-    if (!document.getElementById('blMobileMenuPanel')) {
-      const p=document.createElement('div'); p.id='blMobileMenuPanel';
-      p.innerHTML='<div class="blm-grid">'
-        +'<button class="primary" data-a="milton">📖 Milton</button>'
-        +'<button data-a="daniel">📖 Daniel</button>'
-        +'<button class="pink" data-a="batalha">⚔️ Batalha</button>'
-        +'<button class="cyan" data-a="comunidade">👥 Comunidade</button>'
-        +'<button class="gold" data-a="migracao">📥 Migração</button>'
-        +'<button data-a="meta">🎯 Meta</button>'
-        +'<button data-a="visao">📊 Geral</button>'
-        +'<button data-a="graficos">📈 Gráficos</button>'
-        +'<button data-a="ranking">🏅 Ranking</button>'
-        +'<button data-a="livro">📖 Livro</button>'
-        +'<button data-a="refresh">🔄 Atualizar</button>'
-        +'<button data-a="changelog">📋 v3.12</button>'
-        +'</div>';
-      p.addEventListener('click', function(e){
-        const a=e.target && e.target.getAttribute('data-a'); if(!a) return;
-        if(a==='milton' && typeof setUsuario==='function') setUsuario('Milton');
-        if(a==='daniel' && typeof setUsuario==='function') setUsuario('Daniel');
-        if(a==='batalha' && typeof setUsuario==='function') setUsuario('Batalha');
-        if(a==='comunidade') { if(typeof abrirComunidade==='function') abrirComunidade(); else if(typeof openCommunity==='function') openCommunity(); else if(typeof toggleCommunity==='function') toggleCommunity(); }
-        if(a==='migracao') { if(typeof abrirMigracao==='function') abrirMigracao(); else if(typeof openMigration==='function') openMigration(); }
-        if(['meta','visao','graficos','ranking','livro'].includes(a)) scrollSec(a);
-        if(a==='refresh' && typeof manualRefresh==='function') manualRefresh();
-        if(a==='changelog' && typeof toggleChangelog==='function') toggleChangelog();
-        close();
-      });
-      document.body.appendChild(p);
-    }
-  }
-  window.blMobileDebug=function(){ return {patch:'v3.12-mobile-layout-container-only', BL:!!window.BL, community: typeof window.abrirComunidade || typeof window.openCommunity || typeof window.toggleCommunity, battle: typeof window.setUsuario, bottomNav: getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileMenuFab'), url:location.pathname}; };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', ensureMenu); else ensureMenu();
-  setTimeout(ensureMenu,500); setTimeout(ensureMenu,2000);
-})();
-</script>
-
 </head>
 <body>
 
@@ -8917,92 +8869,135 @@ body.bl-v12-battle #blBattleBackButtonV25{
 
 
 
-<!-- BOOKLEGACY V3.12 MOBILE ONLY: menu organizado + containers dos gráficos -->
-<style id="bl-v312-mobile-final-fix">
+
+
+<!-- BOOKLEGACY V3.13 MOBILE ONLY: menu fix sem index / sem Daniel / comunidade robusta -->
+<style id="bl-v313-mobile-menu-fix">
 @media (max-width: 899px) {
   html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; background:#0d1117 !important; }
+  html.blm-menu-open, body.blm-menu-open { overflow:hidden !important; height:100% !important; touch-action:none !important; }
 
-  /* Header limpo: logo + título + botão menu. Nada de botões perdidos no topo. */
+  /* Header limpo */
   header { position:sticky !important; top:0 !important; z-index:1500 !important; min-height:64px !important; padding:10px 14px !important; display:flex !important; align-items:center !important; gap:10px !important; overflow:visible !important; }
   header .icon { font-size:24px !important; flex:0 0 auto !important; }
-  header h1 { font-size:15px !important; line-height:1.1 !important; white-space:nowrap !important; max-width:210px !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  header h1 { font-size:15px !important; line-height:1.1 !important; white-space:nowrap !important; max-width:230px !important; overflow:hidden !important; text-overflow:ellipsis !important; }
   header p, header .badge, header #header-badge { display:none !important; }
   header > div:last-child { display:none !important; }
 
-  /* Remove de verdade a barra inferior antiga. */
-  #mobile-nav, nav#mobile-nav, #btn-view-toggle { display:none !important; visibility:hidden !important; pointer-events:none !important; height:0 !important; overflow:hidden !important; }
+  /* Barra inferior antiga: removida visualmente mesmo se algum script recriar. */
+  #mobile-nav, nav#mobile-nav, #btn-view-toggle { display:none !important; visibility:hidden !important; pointer-events:none !important; height:0 !important; min-height:0 !important; max-height:0 !important; overflow:hidden !important; opacity:0 !important; }
   body { padding-bottom:0 !important; }
-  #app, .page { padding-bottom:24px !important; }
+  #app, .page { padding-bottom:26px !important; }
 
-  /* Botão de menu */
-  #blMobileMenuFab { position:fixed !important; top:18px !important; right:12px !important; z-index:3001 !important; width:44px !important; height:44px !important; border-radius:14px !important; border:1px solid rgba(139,124,248,.65) !important; background:rgba(30,37,53,.96) !important; color:#fff !important; font-size:24px !important; display:flex !important; align-items:center !important; justify-content:center !important; box-shadow:0 8px 28px rgba(0,0,0,.45) !important; }
-  #blMobileMenuPanel { position:fixed !important; top:70px !important; left:12px !important; right:12px !important; max-height:calc(100vh - 90px) !important; overflow:auto !important; z-index:3000 !important; display:none !important; background:#111827 !important; border:1px solid #2a3248 !important; border-radius:18px !important; padding:14px !important; box-shadow:0 20px 60px rgba(0,0,0,.75) !important; }
+  /* Botão hamburger */
+  #blMobileMenuFab { position:fixed !important; top:18px !important; right:12px !important; z-index:5001 !important; width:44px !important; height:44px !important; border-radius:14px !important; border:1px solid rgba(139,124,248,.75) !important; background:rgba(30,37,53,.98) !important; color:#fff !important; font-size:25px !important; display:flex !important; align-items:center !important; justify-content:center !important; box-shadow:0 8px 28px rgba(0,0,0,.5) !important; padding:0 !important; }
+
+  /* Painel ocupa a tela e rola nele mesmo, não no fundo */
+  #blMobileMenuPanel { position:fixed !important; top:72px !important; left:12px !important; right:12px !important; bottom:12px !important; max-height:none !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch !important; z-index:5000 !important; display:none !important; background:#111827 !important; border:1px solid #2a3248 !important; border-radius:18px !important; padding:14px !important; box-shadow:0 20px 70px rgba(0,0,0,.82) !important; }
   #blMobileMenuPanel.open { display:block !important; }
-  #blMobileMenuPanel .blm-menu-title { color:#e2e8f0 !important; font-size:15px !important; font-weight:900 !important; margin:2px 0 12px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #blMobileMenuPanel * { box-sizing:border-box !important; }
+  #blMobileMenuPanel .blm-menu-title { color:#e2e8f0 !important; font-size:16px !important; font-weight:900 !important; margin:2px 0 14px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
   #blMobileMenuPanel .blm-menu-title small { color:#8892a8 !important; font-size:11px !important; }
-  #blMobileMenuPanel .blm-section { margin:12px 0 6px !important; color:#8fa3ca !important; text-transform:uppercase !important; letter-spacing:1.3px !important; font-size:10px !important; font-weight:900 !important; }
-  #blMobileMenuPanel .blm-list { display:flex !important; flex-direction:column !important; gap:8px !important; }
-  #blMobileMenuPanel button { width:100% !important; display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:10px !important; min-height:44px !important; padding:11px 13px !important; border-radius:12px !important; border:1px solid #2a3248 !important; background:#1e2535 !important; color:#e2e8f0 !important; font-size:14px !important; font-weight:800 !important; text-align:left !important; }
+  #blMobileMenuPanel .blm-section { margin:14px 0 7px !important; color:#8fa3ca !important; text-transform:uppercase !important; letter-spacing:1.3px !important; font-size:10px !important; font-weight:900 !important; }
+  #blMobileMenuPanel .blm-list { display:flex !important; flex-direction:column !important; gap:8px !important; width:100% !important; }
+  #blMobileMenuPanel button { width:100% !important; min-height:46px !important; display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:10px !important; padding:12px 14px !important; border-radius:12px !important; border:1px solid #2a3248 !important; background:#1e2535 !important; color:#e2e8f0 !important; font-size:14px !important; font-weight:850 !important; text-align:left !important; cursor:pointer !important; }
   #blMobileMenuPanel button.primary { background:#8b7cf8 !important; border-color:#8b7cf8 !important; color:#fff !important; }
   #blMobileMenuPanel button.pink { background:#e56cff !important; border-color:#e56cff !important; color:#fff !important; }
-  #blMobileMenuPanel button.cyan { border-color:#56cfff !important; color:#56cfff !important; }
-  #blMobileMenuPanel button.gold { border-color:#ffd166 !important; color:#ffd166 !important; }
+  #blMobileMenuPanel button.cyan { border-color:#56cfff !important; color:#56cfff !important; background:rgba(86,207,255,.10) !important; }
+  #blMobileMenuPanel button.gold { border-color:#ffd166 !important; color:#ffd166 !important; background:rgba(255,209,102,.10) !important; }
+  #blMobileMenuPanel button.danger { border-color:#f88c6a !important; color:#f88c6a !important; background:rgba(248,140,106,.10) !important; }
 
-  /* Cards e seções: container ajusta, o conteúdo interno não é desmontado. */
+  /* Não alterar dados internos dos gráficos/listas. Só evitar corte de container. */
   .page, #pageDashboard { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
-  .card { width:100% !important; max-width:100% !important; overflow:hidden !important; border-radius:14px !important; }
+  .card { width:100% !important; max-width:100% !important; overflow-x:auto !important; overflow-y:hidden !important; border-radius:14px !important; -webkit-overflow-scrolling:touch !important; }
   .sec { max-width:100% !important; overflow:hidden !important; }
 
-  /* Ranking por Notas: não cortar selects nem lista; rola só quando precisar. */
-  #rankList, .rank-list { width:100% !important; max-width:100% !important; overflow:visible !important; }
-  .rank-item { width:100% !important; max-width:100% !important; display:flex !important; align-items:center !important; gap:8px !important; overflow:visible !important; min-height:54px !important; }
-  .rank-name { display:block !important; min-width:0 !important; max-width:100% !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; font-size:13px !important; line-height:1.15 !important; }
-  .rank-score { display:block !important; flex:0 0 42px !important; width:42px !important; text-align:right !important; }
-  .rank-bar-wrap { display:none !important; }
   #grid-rankings .ctrl, .card .ctrl { overflow-x:auto !important; flex-wrap:nowrap !important; padding-bottom:4px !important; }
   #grid-rankings .ctrl select, .card .ctrl select { flex:0 0 auto !important; min-width:145px !important; max-width:none !important; }
+  #rankList, .rank-list { min-width:360px !important; overflow:visible !important; }
+  .rank-item { min-width:350px !important; }
 
-  /* Dia da semana/livros por mês: container com rolagem horizontal, sem esmagar gráfico. */
   .wd-bars { min-width:390px !important; width:390px !important; overflow:visible !important; }
-  .card:has(.wd-bars) { overflow-x:auto !important; }
-
-  /* Calendário: não corta dias; permite rolagem horizontal dentro do card. */
   #calGrid { min-width:520px !important; width:520px !important; grid-template-columns:repeat(7,1fr) !important; }
   #calGrid .cal-day, .cal-day { min-height:58px !important; overflow:hidden !important; }
-  .card:has(#calGrid) { overflow-x:auto !important; }
-
-  /* Gêneros lidos e gráficos em canvas: preserva labels, rola o container se necessário. */
   canvas { max-width:none !important; }
   #cGeneros { width:560px !important; min-width:560px !important; height:320px !important; }
-  .card:has(#cGeneros) { overflow-x:auto !important; }
   #cMonthly, #cHeat { min-width:520px !important; width:520px !important; }
-  .card:has(#cMonthly), .card:has(#cHeat) { overflow-x:auto !important; }
 
-  /* FAB sem barra inferior */
   .fab { bottom:18px !important; right:16px !important; z-index:2600 !important; }
   .fab-menu { bottom:82px !important; right:16px !important; z-index:2601 !important; }
 }
 </style>
-<script id="bl-v312-mobile-menu-final-js">
+<script id="bl-v313-mobile-menu-fix-js">
 (function(){
-  function byId(id){ return document.getElementById(id); }
-  function removeBottomNav(){ const n=byId('mobile-nav'); if(n) n.remove(); const t=byId('btn-view-toggle'); if(t) t.remove(); }
-  function call(name){ if(typeof window[name]==='function') return window[name](); }
-  function scrollSec(id){ if(typeof window.scrollToSec==='function') return window.scrollToSec(id); const el=document.querySelector('[data-msection="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
-  function close(){ const p=byId('blMobileMenuPanel'); if(p) p.classList.remove('open'); }
+  'use strict';
+  const VERSION = 'v3.13-mobile-menu-fix-no-index';
+  const isMobile = () => window.innerWidth <= 899 || location.pathname.endsWith('/mobile.html');
+  const byId = id => document.getElementById(id);
+
+  function removeBottomNav(){
+    ['mobile-nav','btn-view-toggle'].forEach(id => { const el = byId(id); if(el) el.remove(); });
+    document.querySelectorAll('nav#mobile-nav,[id="mobile-nav"],[id="btn-view-toggle"]').forEach(el=>el.remove());
+  }
+
+  function setMenuOpen(open){
+    const panel = byId('blMobileMenuPanel');
+    if(panel) panel.classList.toggle('open', !!open);
+    document.documentElement.classList.toggle('blm-menu-open', !!open);
+    document.body.classList.toggle('blm-menu-open', !!open);
+  }
+  function closeMenu(){ setMenuOpen(false); }
+
+  function scrollSec(id){
+    if(typeof window.scrollToSec === 'function') return window.scrollToSec(id);
+    const el = document.querySelector('[data-msection="'+id+'"]');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function openCommunity(){
+    const tries = [
+      () => typeof window.blOpenCommunityModal === 'function' && window.blOpenCommunityModal(),
+      () => typeof window.abrirComunidade === 'function' && window.abrirComunidade(),
+      () => typeof window.openCommunity === 'function' && window.openCommunity(),
+      () => typeof window.toggleCommunity === 'function' && window.toggleCommunity(),
+      () => { const b = byId('btn-community') || document.querySelector('[onclick*="blOpenCommunity"],[onclick*="Comunidade"]'); if(b){ b.click(); return true; } return false; }
+    ];
+    for(const fn of tries){
+      try{ const r = fn(); if(r !== false && r !== undefined) return true; }catch(e){ console.warn('Falha comunidade:', e); }
+    }
+    alert('Comunidade ainda não carregou. Aguarde os dados terminarem de carregar e tente de novo.');
+    return false;
+  }
+
   function buildMenu(){
-    if(window.innerWidth>899) return;
+    if(!isMobile()) return;
     removeBottomNav();
-    let btn=byId('blMobileMenuFab');
-    if(!btn){ btn=document.createElement('button'); btn.id='blMobileMenuFab'; btn.type='button'; btn.textContent='☰'; btn.onclick=function(){ const p=byId('blMobileMenuPanel'); if(p) p.classList.toggle('open'); }; document.body.appendChild(btn); }
-    let p=byId('blMobileMenuPanel');
-    if(!p){ p=document.createElement('div'); p.id='blMobileMenuPanel'; document.body.appendChild(p); }
-    p.innerHTML=`
-      <div class="blm-menu-title">BookLegacy <small>v3.12</small></div>
+
+    let btn = byId('blMobileMenuFab');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'blMobileMenuFab';
+      btn.type = 'button';
+      document.body.appendChild(btn);
+    }
+    btn.textContent = '☰';
+    btn.onclick = function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      const panel = byId('blMobileMenuPanel');
+      setMenuOpen(!(panel && panel.classList.contains('open')));
+    };
+
+    let panel = byId('blMobileMenuPanel');
+    if(!panel){
+      panel = document.createElement('div');
+      panel.id = 'blMobileMenuPanel';
+      document.body.appendChild(panel);
+    }
+    panel.innerHTML = `
+      <div class="blm-menu-title">BookLegacy <small>v3.13</small></div>
       <div class="blm-section">Perfil</div>
       <div class="blm-list">
-        <button class="primary" data-a="milton">📖 Meus dados</button>
-        <button data-a="daniel">📖 Daniel</button>
+        <button class="primary" data-a="meus-dados">📖 Meus dados</button>
         <button class="pink" data-a="batalha">⚔️ Modo Batalha</button>
       </div>
       <div class="blm-section">Social e dados</div>
@@ -9022,27 +9017,53 @@ body.bl-v12-battle #blBattleBackButtonV25{
       <div class="blm-section">Sistema</div>
       <div class="blm-list">
         <button data-a="changelog">📋 Notas da versão</button>
+        <button class="danger" data-a="fechar">✕ Fechar menu</button>
       </div>`;
-    p.onclick=function(e){
-      const a=e.target && e.target.closest('button') && e.target.closest('button').getAttribute('data-a'); if(!a) return;
-      if(a==='milton' && typeof setUsuario==='function') setUsuario('Milton');
-      else if(a==='daniel' && typeof setUsuario==='function') setUsuario('Daniel');
-      else if(a==='batalha' && typeof setUsuario==='function') setUsuario('Batalha');
-      else if(a==='comunidade') { if(typeof abrirComunidade==='function') abrirComunidade(); else if(typeof openCommunity==='function') openCommunity(); else if(typeof toggleCommunity==='function') toggleCommunity(); }
-      else if(a==='migracao') { if(typeof abrirMigracao==='function') abrirMigracao(); else if(typeof openMigration==='function') openMigration(); }
+
+    panel.onclick = function(ev){
+      const button = ev.target && ev.target.closest('button[data-a]');
+      if(!button) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const a = button.getAttribute('data-a');
+      if(a === 'meus-dados' && typeof window.setUsuario === 'function') window.setUsuario('Milton');
+      else if(a === 'batalha' && typeof window.setUsuario === 'function') window.setUsuario('Batalha');
+      else if(a === 'comunidade') openCommunity();
+      else if(a === 'migracao') { if(typeof window.abrirMigracao === 'function') window.abrirMigracao(); else if(typeof window.openMigration === 'function') window.openMigration(); }
       else if(['meta','visao','graficos','ranking','livro'].includes(a)) scrollSec(a);
-      else if(a==='refresh' && typeof manualRefresh==='function') manualRefresh();
-      else if(a==='changelog' && typeof toggleChangelog==='function') toggleChangelog();
-      close();
+      else if(a === 'refresh' && typeof window.manualRefresh === 'function') window.manualRefresh();
+      else if(a === 'changelog' && typeof window.toggleChangelog === 'function') window.toggleChangelog();
+      closeMenu();
     };
+
+    // Faz o toque/scroll ficar preso no painel quando ele está aberto.
+    panel.addEventListener('touchmove', function(ev){ ev.stopPropagation(); }, {passive:true});
+    panel.addEventListener('wheel', function(ev){ ev.stopPropagation(); }, {passive:true});
   }
-  const oldDebug=window.blMobileDebug;
-  window.blMobileDebug=function(){
-    const prev=typeof oldDebug==='function'?oldDebug():{};
-    return Object.assign({}, prev, {patch:'v3.12-mobile-menu-chart-container-fix', bottomNav:!!document.getElementById('mobile-nav'), menu:!!document.getElementById('blMobileMenuPanel'), path:location.pathname});
+
+  const oldDebug = window.blMobileDebug;
+  window.blMobileDebug = function(){
+    const prev = typeof oldDebug === 'function' ? oldDebug() : {};
+    const panel = byId('blMobileMenuPanel');
+    return Object.assign({}, prev, {
+      patch: VERSION,
+      noIndex: true,
+      danielInMenu: !!(panel && panel.textContent.includes('Daniel')),
+      bottomNav: !!byId('mobile-nav'),
+      menu: !!panel,
+      menuOpen: !!(panel && panel.classList.contains('open')),
+      communityFns: {
+        blOpenCommunityModal: typeof window.blOpenCommunityModal,
+        abrirComunidade: typeof window.abrirComunidade,
+        openCommunity: typeof window.openCommunity,
+        toggleCommunity: typeof window.toggleCommunity
+      }
+    });
   };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
-  setTimeout(buildMenu,300); setTimeout(buildMenu,1200); setInterval(removeBottomNav,1500);
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
+  setTimeout(buildMenu, 300);
+  setTimeout(buildMenu, 1200);
+  setInterval(removeBottomNav, 1000);
 })();
 </script>
 
