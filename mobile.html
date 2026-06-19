@@ -7505,7 +7505,6 @@ if ('serviceWorker' in navigator) {
       sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
     });
   }
-  window.__BL_NATIVE_RENDER_BATALHA = window.renderBatalha;
   const oldRenderBatalha=window.renderBatalha;
   window.renderBatalha=function(){ fillBattleSelects(); if(typeof oldRenderBatalha==='function') oldRenderBatalha(); };
 
@@ -8440,7 +8439,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 /* BookLegacy V12.12 — botão Batalha DB-safe
    Base: V12.10. Não mexe em Firebase/Auth/Firestore/perfil. Só mantém o botão visível e liga ao Batalha existente. */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.16-battle-selector-stable';
+  window.__BL_PATCH_VERSION = 'v12.12-battle-button-minimal-dbsafe';
   window.__BL_V12_12_MARKER = true;
   const BTN_ID = 'btn-user-batalha';
   function qs(sel){ return document.querySelector(sel); }
@@ -8510,26 +8509,32 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 })();
 </script>
 
-
-<script id="bl-v12-16-battle-selector-stable">
-/* BookLegacy V12.16 — patch direto no Modo Batalha original.
-   Mantém o renderBatalha original salvo em __BL_NATIVE_RENDER_BATALHA, cria seletor pesquisável até 5 players e renderiza todos os pares. */
+<script id="bl-v12-17-battle-2players-opponent-select">
+/* BookLegacy V12.17 — Modo Batalha 2x2 original com seletor de apenas 1 adversário.
+   Base DB-safe: não toca em Firebase/Auth/Firestore. Só controla a tela #pageBatalha. */
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.16-battle-selector-stable';
-  window.__BL_V12_16_MARKER = true;
+  window.__BL_PATCH_VERSION = 'v12.17-battle-2players-opponent-select';
+  window.__BL_V12_17_MARKER = true;
 
   const $ = (id)=>document.getElementById(id);
   const esc = (v)=>String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm = (v)=>String(v ?? '').trim().toLowerCase();
+
+  // Pega o render original salvo por versões anteriores ou o render atual antes deste patch.
   const nativeRender = window.__BL_NATIVE_RENDER_BATALHA || window.renderBatalha;
+  window.__BL_NATIVE_RENDER_BATALHA = nativeRender;
   const previousSetUsuario = window.setUsuario;
 
   function raw(){ return window.BL?.raw || window._blRaw || {}; }
   function authUser(){ return window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null; }
   function labelOf(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
-  function keyOf(p){ return String(p?.uid || labelOf(p)); }
-  function meLabel(){ const u=authUser(); return raw().currentLabel || labelOf(u) || window.__BL_ME_LABEL || 'Milton'; }
+  function keyOf(p){ return String(p?.uid || p?.id || labelOf(p)); }
+  function meUid(){ return authUser()?.uid || raw().activeUid || window.BL?.__activeUid || ''; }
+  function meLabel(){
+    const u=authUser();
+    return raw().currentLabel || labelOf(u) || window.__BL_ME_LABEL || 'Milton Figueiredo';
+  }
 
   function people(){
     const map = new Map();
@@ -8546,8 +8551,24 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
     const u = authUser();
     if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
-    if(!map.size){ add({label:'Milton'}); add({label:'Daniel'}); }
+    if(!map.size){ add({label:'Milton Figueiredo'}); add({label:'Daniel Victor'}); }
     return [...map.values()].filter(p=>labelOf(p));
+  }
+
+  function isMe(p){
+    const uid = meUid();
+    if(uid && String(p?.uid||p?.id||'') === String(uid)) return true;
+    return norm(labelOf(p)).includes(norm(meLabel()).split(' ')[0] || 'milton') && /milton/i.test(labelOf(p));
+  }
+
+  function mePerson(){
+    const list=people();
+    return list.find(isMe) || list.find(p=>/milton/i.test(labelOf(p))) || list[0] || {label:meLabel()};
+  }
+
+  function opponents(){
+    const me=mePerson();
+    return people().filter(p => keyOf(p)!==keyOf(me) && norm(labelOf(p))!==norm(labelOf(me)));
   }
 
   function battleValue(p){
@@ -8558,29 +8579,30 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return label;
   }
 
-  function selectedKeys(){
-    const list = people();
-    if(!Array.isArray(window.__BL_BATTLE_SELECTED_V16) || !window.__BL_BATTLE_SELECTED_V16.length){
-      window.__BL_BATTLE_SELECTED_V16 = list.slice(0, Math.min(3, list.length)).map(keyOf);
+  function selectedOpponentKey(){
+    const opts=opponents();
+    if(!window.__BL_BATTLE_OPPONENT_V17 || !opts.some(p => keyOf(p) === String(window.__BL_BATTLE_OPPONENT_V17) || labelOf(p) === String(window.__BL_BATTLE_OPPONENT_V17))){
+      window.__BL_BATTLE_OPPONENT_V17 = keyOf(opts[0] || people()[1] || people()[0] || {label:'Daniel Victor'});
     }
-    return window.__BL_BATTLE_SELECTED_V16.map(String);
+    return String(window.__BL_BATTLE_OPPONENT_V17);
   }
-  function selectedPeople(){
-    const keys = new Set(selectedKeys());
-    return people().filter(p => keys.has(keyOf(p)) || keys.has(labelOf(p))).slice(0,5);
+
+  function opponentPerson(){
+    const key=selectedOpponentKey();
+    return opponents().find(p => keyOf(p)===key || labelOf(p)===key) || opponents()[0] || {label:'Daniel Victor'};
   }
 
   function hideOldControls(){
-    const top=$('batalha-seletor'); if(top) top.style.setProperty('display','none','important');
-    const old=$('bl-battle-multi-controls'); if(old) old.style.setProperty('display','none','important');
-    const old15=$('bl-battle-selector-v15'); if(old15) old15.style.setProperty('display','none','important');
+    const ids=['batalha-seletor','bl-battle-multi-controls','bl-battle-selector-v15','bl-battle-selector-v16'];
+    ids.forEach(id=>{ const el=$(id); if(el) el.style.setProperty('display','none','important'); });
     document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
     document.querySelectorAll('.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
   }
 
   function showBattlePage(){
     window.usuarioAtual='Batalha';
-    document.body.classList.add('bl-battle-active','bl-v16-battle');
+    document.body.classList.add('bl-battle-active','bl-v17-battle');
+    document.body.classList.remove('bl-v16-battle');
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.setProperty('display','none','important');
     if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
@@ -8588,13 +8610,13 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
 
   function restoreProfile(){
-    document.body.classList.remove('bl-battle-active','bl-v16-battle');
-    const dd=$('blBattleDropdownV16'); if(dd) dd.style.display='none';
+    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
+    const dd=$('blBattleDropdownV17'); if(dd) dd.style.display='none';
     const bat=$('pageBatalha'), dash=$('pageDashboard');
     if(bat) bat.style.display='none';
     if(dash) dash.style.display='block';
     document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.removeProperty('display'));
-    try{ if(typeof previousSetUsuario==='function') previousSetUsuario(meLabel()); else window.usuarioAtual=meLabel(); }catch(e){ window.usuarioAtual=meLabel(); console.warn('V12.16 voltar perfil:', e); }
+    try{ if(typeof previousSetUsuario==='function') previousSetUsuario(meLabel()); else window.usuarioAtual=meLabel(); }catch(e){ window.usuarioAtual=meLabel(); console.warn('V12.17 voltar perfil:', e); }
     setTimeout(()=>{ const b=$('pageBatalha'), d=$('pageDashboard'); if(b) b.style.display='none'; if(d) d.style.display='block'; ensureBattleButton(); }, 80);
     window.scrollTo(0,0);
   }
@@ -8621,87 +8643,90 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       const prev=sel.value;
       sel.innerHTML=list.map(p=>`<option value="${esc(battleValue(p))}">${esc(labelOf(p))}</option>`).join('');
       if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
-      else sel.value=battleValue(list[idx] || list[0] || {label:'Milton'});
+      else sel.value=battleValue(idx===0 ? mePerson() : opponentPerson());
     });
   }
 
-  function updateSelectedSummary(){
-    const names=$('blBattleSelectedNamesV16');
-    if(names) names.textContent = selectedPeople().map(labelOf).join(', ') || 'Nenhum player selecionado';
-    const count=$('blBattleSelectedCountV16');
-    if(count) count.textContent = selectedPeople().length + '/5';
+  function updateSummary(){
+    const me=mePerson(), op=opponentPerson();
+    const names=$('blBattleSelectedNamesV17');
+    if(names) names.textContent = `${labelOf(me)} vs ${labelOf(op)}`;
+    const count=$('blBattleSelectedCountV17');
+    if(count) count.textContent = '2/2';
   }
 
-  function ensurePicker(){
+  function ensureSelector(){
     const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let picker=$('bl-battle-selector-v16');
-    if(!picker){
-      picker=document.createElement('div'); picker.id='bl-battle-selector-v16';
-      picker.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
-      picker.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Players selecionados <span id="blBattleSelectedCountV16" style="font-size:12px;color:#94a3b8"></span></div><div id="blBattleSelectedNamesV16" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV16" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar players</button></div>`;
-      container.parentElement.insertBefore(picker, container);
-      picker.querySelector('#blBattleOpenPickerV16').addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); openDropdown(); });
+    let box=$('bl-battle-selector-v17');
+    if(!box){
+      box=document.createElement('div'); box.id='bl-battle-selector-v17';
+      box.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
+      box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span id="blBattleSelectedCountV17" style="font-size:12px;color:#94a3b8"></span></div><div id="blBattleSelectedNamesV17" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV17" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button></div>`;
+      container.parentElement.insertBefore(box, container);
+      box.querySelector('#blBattleOpenPickerV17').addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); openDropdown(); });
     }
-    updateSelectedSummary();
+    updateSummary();
   }
 
   function buildDropdown(){
-    let dd=$('blBattleDropdownV16');
-    const list=people();
-    const sel=new Set(selectedKeys());
+    let dd=$('blBattleDropdownV17');
+    const list=opponents();
+    const selected=selectedOpponentKey();
     if(!dd){
-      dd=document.createElement('div'); dd.id='blBattleDropdownV16';
+      dd=document.createElement('div'); dd.id='blBattleDropdownV17';
       dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px';
       document.body.appendChild(dd);
       dd.addEventListener('click', ev=>ev.stopPropagation());
     }
-    dd.innerHTML=`<input id="blBattleSearchV16" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Selecione de 2 até 5 players</div><div id="blBattlePickerListV16" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p); const checked=sel.has(String(key)) || sel.has(labelOf(p)); return `<label class="blBattlePickItemV16" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleCheckV16" type="checkbox" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div id="blBattleLimitMsgV16" style="display:none;color:#fb923c;font-size:12px;margin-top:9px;font-weight:800">Limite de 5 players.</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV16" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV16" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
-    const search=$('blBattleSearchV16');
-    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV16').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; }); };
-    dd.querySelectorAll('.blBattleCheckV16').forEach(ch=>{ ch.onchange=()=>{ const checked=dd.querySelectorAll('.blBattleCheckV16:checked'); const msg=$('blBattleLimitMsgV16'); if(checked.length>5){ ch.checked=false; if(msg) msg.style.display='block'; } else if(msg) msg.style.display='none'; }; });
-    $('blBattleClosePickerV16').onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
-    $('blBattleApplyPickerV16').onclick=(ev)=>{ ev.preventDefault(); const vals=[...dd.querySelectorAll('.blBattleCheckV16:checked')].map(i=>i.value); if(vals.length<2){ const msg=$('blBattleLimitMsgV16'); if(msg){ msg.textContent='Selecione pelo menos 2 players.'; msg.style.display='block'; } return; } window.__BL_BATTLE_SELECTED_V16=vals.slice(0,5); dd.style.display='none'; renderBattleMulti(); };
+    dd.innerHTML=`<input id="blBattleSearchV17" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Escolha 1 adversário</div><div id="blBattlePickerListV17" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p); const checked=String(key)===selected || labelOf(p)===selected; return `<label class="blBattlePickItemV17" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleRadioV17" name="blBattleOpponentV17" type="radio" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div id="blBattleLimitMsgV17" style="display:none;color:#fb923c;font-size:12px;margin-top:9px;font-weight:800">Escolha 1 adversário.</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV17" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV17" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
+    const search=$('blBattleSearchV17');
+    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV17').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; }); };
+    $('blBattleClosePickerV17').onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
+    $('blBattleApplyPickerV17').onclick=(ev)=>{
+      ev.preventDefault();
+      const chosen=dd.querySelector('.blBattleRadioV17:checked')?.value;
+      if(!chosen){ const msg=$('blBattleLimitMsgV17'); if(msg) msg.style.display='block'; return; }
+      window.__BL_BATTLE_OPPONENT_V17=chosen;
+      dd.style.display='none';
+      renderBattleDuel();
+    };
     return dd;
   }
 
   function openDropdown(){
     const dd=buildDropdown();
     dd.style.display='block';
-    setTimeout(()=>$('blBattleSearchV16')?.focus(),30);
+    setTimeout(()=>$('blBattleSearchV17')?.focus(),30);
   }
 
-  function renderNativePair(pa,pb){
+  function renderNativeDuel(pa,pb){
     const c=$('batalhaContainer'), a=$('bat-playerA'), b=$('bat-playerB');
-    if(!c || !a || !b || typeof nativeRender!=='function') return `<div style="padding:16px;color:#fb923c">Render original não encontrado.</div>`;
+    if(!c || !a || !b || typeof nativeRender!=='function'){
+      if(c) c.innerHTML = '<div style="padding:16px;color:#fb923c">Render original não encontrado.</div>';
+      return;
+    }
     ensureNativeSelectOptions();
-    const oldUser=window.usuarioAtual, oldA=a.value, oldB=b.value;
+    a.value=battleValue(pa);
+    b.value=battleValue(pb);
+    const oldUser=window.usuarioAtual;
     const had=document.body.classList.contains('bl-battle-active');
-    a.value=battleValue(pa); b.value=battleValue(pb);
-    window.usuarioAtual='__BL_NATIVE_PAIR__';
-    document.body.classList.remove('bl-battle-active','bl-v16-battle');
-    try{ nativeRender(); }catch(e){ c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro em ${esc(labelOf(pa))} vs ${esc(labelOf(pb))}: ${esc(e.message||e)}</div>`; }
-    const html=c.innerHTML;
-    a.value=oldA; b.value=oldB; window.usuarioAtual=oldUser;
-    if(had) document.body.classList.add('bl-battle-active','bl-v16-battle');
-    return html;
+    window.usuarioAtual='__BL_NATIVE_DUEL__';
+    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
+    try{ nativeRender(); }catch(e){ c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro no duelo: ${esc(e.message||e)}</div>`; }
+    window.usuarioAtual=oldUser;
+    if(had) document.body.classList.add('bl-battle-active','bl-v17-battle');
   }
 
-  function renderBattleMulti(){
-    showBattlePage(); ensureReturnButton(); ensurePicker(); ensureNativeSelectOptions(); hideOldControls();
-    const c=$('batalhaContainer'); if(!c) return;
-    const selected=selectedPeople();
-    if(selected.length<2){ c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#fb923c">Clique em “Selecionar players” e escolha pelo menos 2 players.</div>'; updateSelectedSummary(); return; }
-    const pairs=[];
-    for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i],selected[j]]);
-    const blocks=pairs.map(([pa,pb])=>`<section class="blBattlePairV16" style="max-width:1180px;margin:0 auto 34px"><div style="font-weight:900;color:#e2e8f0;font-size:20px;margin:0 0 12px">⚔️ ${esc(labelOf(pa))} <span style="color:#94a3b8">vs</span> ${esc(labelOf(pb))}</div>${renderNativePair(pa,pb)}</section>`);
-    c.innerHTML=blocks.join('');
-    window.__BL_BATTLE_PAIR_COUNT=pairs.length;
-    ensurePicker(); hideOldControls(); updateSelectedSummary();
+  function renderBattleDuel(){
+    showBattlePage(); ensureReturnButton(); ensureSelector(); ensureNativeSelectOptions(); hideOldControls();
+    renderNativeDuel(mePerson(), opponentPerson());
+    window.__BL_BATTLE_DUEL_COUNT=1;
+    ensureSelector(); hideOldControls(); updateSummary();
   }
 
-  function openBattle(){ showBattlePage(); renderBattleMulti(); window.scrollTo(0,0); }
+  function openBattle(){ showBattlePage(); renderBattleDuel(); window.scrollTo(0,0); }
   window.blOpenBattle = openBattle;
-  window.blOpenBattleSelectorV16 = openBattle;
+  window.blOpenBattleSelectorV17 = openBattle;
 
   function ensureBattleButton(){
     let btn=$('btn-user-batalha') || $('bl-battle-main-btn');
@@ -8715,31 +8740,31 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
 
   window.renderBatalha=function(){
-    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMulti();
+    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleDuel();
     if(typeof nativeRender==='function') return nativeRender.apply(this, arguments);
   };
+
   window.setUsuario=function(usuario){
     if(usuario==='Batalha') return openBattle();
-    document.body.classList.remove('bl-battle-active','bl-v16-battle');
-    const dd=$('blBattleDropdownV16'); if(dd) dd.style.display='none';
+    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
+    const dd=$('blBattleDropdownV17'); if(dd) dd.style.display='none';
     if(typeof previousSetUsuario==='function') return previousSetUsuario.apply(this, arguments);
     window.usuarioAtual=usuario;
   };
 
   window.blBattleDebug=window.blV12Debug=function(){
-    const sel=selectedPeople();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1216:!!window.__BL_V12_16_MARKER, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), picker:!!$('bl-battle-selector-v16'), dropdownDisplay:$('blBattleDropdownV16')?getComputedStyle($('blBattleDropdownV16')).display:null, oldTopDisplay:$('batalha-seletor')?getComputedStyle($('batalha-seletor')).display:null, selected:sel.map(labelOf), pairCount:sel.length>=2?sel.length*(sel.length-1)/2:0, renderedPairs:window.__BL_BATTLE_PAIR_COUNT||0, people:people().map(labelOf)};
+    const op=opponentPerson();
+    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1217:!!window.__BL_V12_17_MARKER, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), selector:!!$('bl-battle-selector-v17'), dropdownDisplay:$('blBattleDropdownV17')?getComputedStyle($('blBattleDropdownV17')).display:null, oldTopDisplay:$('batalha-seletor')?getComputedStyle($('batalha-seletor')).display:null, me:labelOf(mePerson()), opponent:labelOf(op), duelCount:window.__BL_BATTLE_DUEL_COUNT||0, people:people().map(labelOf), opponents:opponents().map(labelOf)};
   };
 
-  const style=document.createElement('style'); style.id='bl-v12-16-style';
-  style.textContent=`body.bl-v16-battle #batalha-seletor, body.bl-v16-battle #bl-battle-multi-controls, body.bl-v16-battle #bl-battle-selector-v15{display:none!important} body.bl-v16-battle .lendo-wrap, body.bl-v16-battle #lendoWrap{display:none!important} body.bl-v16-battle #bl-battle-selector-v16{display:block!important}`;
+  const style=document.createElement('style'); style.id='bl-v12-17-style';
+  style.textContent=`body.bl-v17-battle #batalha-seletor, body.bl-v17-battle #bl-battle-multi-controls, body.bl-v17-battle #bl-battle-selector-v15, body.bl-v17-battle #bl-battle-selector-v16{display:none!important} body.bl-v17-battle .lendo-wrap, body.bl-v17-battle #lendoWrap{display:none!important} body.bl-v17-battle #bl-battle-selector-v17{display:block!important}`;
   document.head.appendChild(style);
 
-  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){ ensureReturnButton(); ensurePicker(); hideOldControls(); } }
+  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){ ensureReturnButton(); ensureSelector(); hideOldControls(); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,600); }); else { tick(); setTimeout(tick,600); }
   setInterval(tick, 1500);
 })();
 </script>
-
 </body>
 </html>
