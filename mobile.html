@@ -538,6 +538,31 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v3-4-marker";</script>
+
+
+<style id="booklegacy-v3-5-mobile-menu-clean-css">
+@media (max-width: 900px){
+  #mobile-nav{display:none!important;visibility:hidden!important;height:0!important;pointer-events:none!important;}
+  body{padding-bottom:0!important;}
+  #app,.page{padding-bottom:24px!important;}
+  header{position:sticky!important;top:0!important;z-index:2200!important;padding:8px 10px!important;gap:8px!important;align-items:center!important;flex-wrap:nowrap!important;min-height:54px!important;}
+  header .icon{font-size:20px!important;flex:0 0 auto!important;}
+  header h1{font-size:13px!important;line-height:1.1!important;max-width:110px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  header p,.badge,#btn-refresh,button[onclick="toggleChangelog()"],#btn-user-milton,#btn-user-daniel,#btn-user-batalha{display:none!important;}
+  header > div:last-child{margin-left:auto!important;display:flex!important;gap:6px!important;flex:0 0 auto!important;}
+  #blMobileMenuBtn{display:inline-flex!important;position:static!important;white-space:nowrap!important;height:34px!important;min-width:74px!important;justify-content:center!important;align-items:center!important;padding:0 10px!important;border-radius:10px!important;font-size:12px!important;line-height:1!important;background:#8b7cf8!important;color:#fff!important;border:0!important;font-weight:900!important;box-shadow:0 6px 18px rgba(139,124,248,.22)!important;}
+  #blMobileDrawer{position:fixed!important;top:0!important;right:0!important;bottom:0!important;width:min(86vw,360px)!important;max-width:360px!important;background:#0d1117!important;border-left:1px solid #2a3248!important;z-index:2600!important;overflow-y:auto!important;padding:14px!important;box-shadow:-18px 0 45px rgba(0,0,0,.55)!important;}
+  #blMobileDrawerBackdrop{z-index:2550!important;}
+  #blMobileDrawer .blm-btn{width:100%!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:7px 0!important;padding:13px 14px!important;border-radius:12px!important;font-size:14px!important;font-weight:800!important;}
+  #blMobileDrawer .blm-head{display:flex!important;align-items:center!important;justify-content:space-between!important;margin-bottom:12px!important;padding-bottom:12px!important;border-bottom:1px solid #2a3248!important;}
+  #blMobileDrawer .blm-title{font-size:18px!important;font-weight:900!important;}
+  #blMobileDrawer .blm-mini{font-size:12px!important;color:#8892a8!important;margin-top:2px!important;}
+  #blMobileDrawer .blm-close{width:36px!important;height:36px!important;border-radius:10px!important;background:#161b27!important;color:#e2e8f0!important;border:1px solid #2a3248!important;font-size:20px!important;}
+  .lendo-wrap{padding:8px 10px!important;}
+  .card{margin-bottom:10px!important;}
+  .grid2,.grid3,.grid4,.grid6{gap:10px!important;}
+}
+</style>
 </head>
 <body>
 
@@ -6180,7 +6205,7 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
   {
-    versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
+    versao: '3.5', data: '19/06/2026', titulo: 'Mobile funcional, Comunidade e APK',
     itens: [
       'Migração oficial do dashboard para Firebase/Firestore com Google Login',
       'Dados isolados por conta: cada usuário carrega biblioteca, sessões, notas, metas e coleções pelo próprio UID',
@@ -7449,6 +7474,22 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
+<script id="booklegacy-v3-5-profile-label-fix">
+(function(){
+  'use strict';
+  if (typeof window.blProfileLabel !== 'function') {
+    window.blProfileLabel = function(user){
+      user = user || (window.BL && window.BL.auth && window.BL.auth.currentUser) || null;
+      const src = String((user && (user.displayName || user.email)) || '').toLowerCase();
+      if (src.includes('daniel')) return 'Daniel';
+      if (src.includes('milton')) return 'Milton';
+      return ((user && (user.displayName || user.email)) || 'Usuário').split(' ')[0];
+    };
+  }
+})();
+</script>
+
+
 <script>
 // ════════════════════════════════════════════════════════════════
 // BOOKLEGACY V7.8 — HOTFIX ESTÁVEL
@@ -7458,7 +7499,7 @@ if ('serviceWorker' in navigator) {
   function safeMsg(id,msg,type){ try{ if(typeof mostrarMsg==='function') mostrarMsg(id,msg,type||'ok'); else alert(msg); }catch(e){ console.log(msg); } }
   function nowISO(){ return new Date().toISOString(); }
   function uid(){ const u=window.BL?.auth?.currentUser; if(!u) throw new Error('Usuário não logado.'); return u.uid; }
-  function myLabel(){ return window.BL?.raw?.currentLabel || blProfileLabel?.(window.BL?.auth?.currentUser) || 'Milton'; }
+  function myLabel(){ const u = window.BL?.auth?.currentUser || null; return window.BL?.raw?.currentLabel || (typeof window.blProfileLabel === 'function' && u ? window.blProfileLabel(u) : (u?.displayName || u?.email || 'Milton')); }
   function ownBundle(){ return (window.BL?.raw?.users||[])[0] || {library:[], sessions:[], ratings:[], goals:[], collections:[], label:myLabel()}; }
   function ownLibrary(){ return ownBundle().library || []; }
   function ownSessions(){ return ownBundle().sessions || []; }
@@ -8236,7 +8277,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8459,7 +8500,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.0',
+      patch:'v3.5',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8503,7 +8544,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 <script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8563,7 +8604,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.5',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8605,7 +8646,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8671,7 +8712,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.5',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null

@@ -6294,7 +6294,7 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
   {
-    versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
+    versao: '3.5', data: '19/06/2026', titulo: 'Mobile funcional, Comunidade e APK',
     itens: [
       'Migração oficial do dashboard para Firebase/Firestore com Google Login',
       'Dados isolados por conta: cada usuário carrega biblioteca, sessões, notas, metas e coleções pelo próprio UID',
@@ -7572,7 +7572,7 @@ if ('serviceWorker' in navigator) {
   function safeMsg(id,msg,type){ try{ if(typeof mostrarMsg==='function') mostrarMsg(id,msg,type||'ok'); else alert(msg); }catch(e){ console.log(msg); } }
   function nowISO(){ return new Date().toISOString(); }
   function uid(){ const u=window.BL?.auth?.currentUser; if(!u) throw new Error('Usuário não logado.'); return u.uid; }
-  function myLabel(){ return window.BL?.raw?.currentLabel || blProfileLabel?.(window.BL?.auth?.currentUser) || 'Milton'; }
+  function myLabel(){ const u = window.BL?.auth?.currentUser || null; return window.BL?.raw?.currentLabel || (typeof window.blProfileLabel === 'function' && u ? window.blProfileLabel(u) : (u?.displayName || u?.email || 'Milton')); }
   function ownBundle(){ return (window.BL?.raw?.users||[])[0] || {library:[], sessions:[], ratings:[], goals:[], collections:[], label:myLabel()}; }
   function ownLibrary(){ return ownBundle().library || []; }
   function ownSessions(){ return ownBundle().sessions || []; }
@@ -8350,7 +8350,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8573,7 +8573,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.0',
+      patch:'v3.5',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8617,7 +8617,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 <script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8677,7 +8677,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.5',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8719,7 +8719,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.5';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8785,7 +8785,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.5',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null
