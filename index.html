@@ -9476,5 +9476,75 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 })();
 </script>
 
+<script id="bl-v12-22-battle-single-uid-selector">
+(function(){
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v12.22-battle-single-uid-selector';
+  window.__BL_V12_22_SINGLE_SELECTOR = true;
+  const $ = id => document.getElementById(id);
+  const isBattle = () => window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-battle-active') || (getComputedStyle($('pageBatalha')||document.body).display !== 'none' && !$('pageBatalha')?.hidden);
+
+  function cleanupBattleSelectors(){
+    // Remove patches antigos que estavam empilhando 3 seletores no topo.
+    ['bl-battle-selector-v17','bl-battle-selector-v20','bl-battle-selector-v15','bl-battle-selector-v16','bl-battle-multi-controls'].forEach(id=>{
+      const el=$(id); if(el) el.remove();
+    });
+    ['blBattleDropdownV17','blBattleDropdownV20','blBattleDropdownV15','blBattleDropdownV16'].forEach(id=>{
+      const el=$(id); if(el) el.remove();
+    });
+    const oldTop=$('batalha-seletor');
+    if(oldTop) oldTop.style.setProperty('display','none','important');
+
+    // Garante que só o seletor UID atual fique visível.
+    const v21=$('bl-battle-selector-v21');
+    if(v21){
+      v21.style.setProperty('display','block','important');
+      const title = v21.querySelector('div div div');
+      // Reescreve o card para não aparecer texto técnico como "por UID".
+      const nameLine=$('blBattleSelectedNamesV21');
+      const currentNames = nameLine?.textContent || '';
+      const btnHtml = '<button id="blBattleOpenPickerV21" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button>';
+      v21.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">1x1</span></div><div id="blBattleSelectedNamesV21" style="font-size:12px;color:#94a3b8;margin-top:4px">'+(currentNames || '')+'</div></div>'+btnHtml+'</div>';
+      const btn=$('blBattleOpenPickerV21');
+      if(btn){
+        btn.onclick=function(ev){
+          ev.preventDefault(); ev.stopPropagation();
+          // Usa a função/picker V21 já existente, se existir; senão clica no fluxo atual.
+          const dd=$('blBattleDropdownV21');
+          if(dd){
+            dd.style.display = getComputedStyle(dd).display === 'none' ? 'block' : 'none';
+            setTimeout(()=>$('blBattleSearchV21')?.focus(), 30);
+          }else if(typeof window.blOpenBattleSelectorV21 === 'function'){
+            window.blOpenBattleSelectorV21();
+            setTimeout(()=>{ const d=$('blBattleDropdownV21'); if(d) d.style.display='block'; $('blBattleSearchV21')?.focus(); }, 80);
+          }
+          return false;
+        };
+      }
+    }
+  }
+
+  const previousDebug = window.blBattleDebug;
+  window.blBattleDebug = window.blV12Debug = function(){
+    const old = typeof previousDebug === 'function' ? previousDebug() : {};
+    const visibleSelectors=[...document.querySelectorAll('[id^="bl-battle-selector"],#batalha-seletor')].filter(el=>getComputedStyle(el).display!=='none').map(el=>el.id);
+    return Object.assign({}, old, {
+      patch:'v12.22-battle-single-uid-selector',
+      marker1222:true,
+      visibleSelectors,
+      selectorCount:visibleSelectors.length,
+      dropdownDisplay:$('blBattleDropdownV21')?getComputedStyle($('blBattleDropdownV21')).display:null
+    });
+  };
+
+  function boot(){
+    if(isBattle()) cleanupBattleSelectors();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  document.addEventListener('click', ()=>setTimeout(boot, 60), true);
+  setInterval(boot, 600);
+})();
+</script>
+
 </body>
 </html>
