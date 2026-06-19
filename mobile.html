@@ -6,7 +6,7 @@
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
-  // BookLegacy V6: manter o mesmo app em desktop e mobile; sem redirecionar para mobile.html
+  // BookLegacy V12.1: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
 }
 </script>
 
@@ -18,7 +18,7 @@ if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.inner
 <meta name="apple-mobile-web-app-title" content="Leitura">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<title>📚 Dashboard de Leitura</title>
+<title>📚 BookLegacy Mobile</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
@@ -526,7 +526,7 @@ body.mobile-view canvas { max-width:100% !important; width:100% !important; }
 body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
 body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
-/* BookLegacy V6 - login Firebase mantendo visual original */
+/* BookLegacy V12.1 - login Firebase + dashboard original + batalha visível */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
@@ -537,57 +537,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
-<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v3-4-marker";</script>
-
-
-<style id="booklegacy-v3-5-mobile-menu-clean-css">
-@media (max-width: 900px){
-  #mobile-nav{display:none!important;visibility:hidden!important;height:0!important;pointer-events:none!important;}
-  body{padding-bottom:0!important;}
-  #app,.page{padding-bottom:24px!important;}
-  header{position:sticky!important;top:0!important;z-index:2200!important;padding:8px 10px!important;gap:8px!important;align-items:center!important;flex-wrap:nowrap!important;min-height:54px!important;}
-  header .icon{font-size:20px!important;flex:0 0 auto!important;}
-  header h1{font-size:13px!important;line-height:1.1!important;max-width:110px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  header p,.badge,#btn-refresh,button[onclick="toggleChangelog()"],#btn-user-milton,#btn-user-daniel,#btn-user-batalha{display:none!important;}
-  header > div:last-child{margin-left:auto!important;display:flex!important;gap:6px!important;flex:0 0 auto!important;}
-  #blMobileMenuBtn{display:inline-flex!important;position:static!important;white-space:nowrap!important;height:34px!important;min-width:74px!important;justify-content:center!important;align-items:center!important;padding:0 10px!important;border-radius:10px!important;font-size:12px!important;line-height:1!important;background:#8b7cf8!important;color:#fff!important;border:0!important;font-weight:900!important;box-shadow:0 6px 18px rgba(139,124,248,.22)!important;}
-  #blMobileDrawer{position:fixed!important;top:0!important;right:0!important;bottom:0!important;width:min(86vw,360px)!important;max-width:360px!important;background:#0d1117!important;border-left:1px solid #2a3248!important;z-index:2600!important;overflow-y:auto!important;padding:14px!important;box-shadow:-18px 0 45px rgba(0,0,0,.55)!important;}
-  #blMobileDrawerBackdrop{z-index:2550!important;}
-  #blMobileDrawer .blm-btn{width:100%!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:7px 0!important;padding:13px 14px!important;border-radius:12px!important;font-size:14px!important;font-weight:800!important;}
-  #blMobileDrawer .blm-head{display:flex!important;align-items:center!important;justify-content:space-between!important;margin-bottom:12px!important;padding-bottom:12px!important;border-bottom:1px solid #2a3248!important;}
-  #blMobileDrawer .blm-title{font-size:18px!important;font-weight:900!important;}
-  #blMobileDrawer .blm-mini{font-size:12px!important;color:#8892a8!important;margin-top:2px!important;}
-  #blMobileDrawer .blm-close{width:36px!important;height:36px!important;border-radius:10px!important;background:#161b27!important;color:#e2e8f0!important;border:1px solid #2a3248!important;font-size:20px!important;}
-  .lendo-wrap{padding:8px 10px!important;}
-  .card{margin-bottom:10px!important;}
-  .grid2,.grid3,.grid4,.grid6{gap:10px!important;}
-}
-</style>
-
-<style id="booklegacy-v3-6-mobile-layout-final">
-@media (max-width: 768px){
-  #mobile-nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important;}
-  body{padding-bottom:0!important;overflow-x:hidden!important;}
-  header{position:sticky!important;top:0!important;z-index:2200!important;padding:8px 8px!important;gap:6px!important;align-items:center!important;min-height:48px!important;}
-  header .icon{font-size:20px!important;flex:0 0 auto!important;}
-  header h1{font-size:13px!important;max-width:120px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
-  header p,.badge{display:none!important;}
-  header>div:last-child{margin-left:auto!important;display:flex!important;gap:5px!important;align-items:center!important;flex-wrap:nowrap!important;max-width:calc(100vw - 170px)!important;overflow:visible!important;}
-  #btn-user-milton,#btn-user-daniel,#btn-user-batalha{display:none!important;}
-  #blMobileMenuBtn{display:inline-flex!important;position:relative!important;z-index:2300!important;height:34px!important;min-width:78px!important;justify-content:center!important;align-items:center!important;padding:0 10px!important;border-radius:10px!important;font-size:12px!important;line-height:1!important;background:#8b7cf8!important;color:#fff!important;border:0!important;font-weight:900!important;box-shadow:0 6px 18px rgba(139,124,248,.22)!important;}
-  #blMobileDrawer{position:fixed!important;top:0!important;right:0!important;bottom:0!important;width:min(86vw,360px)!important;max-width:360px!important;background:#0d1117!important;border-left:1px solid #2a3248!important;z-index:2600!important;overflow-y:auto!important;padding:14px!important;box-shadow:-18px 0 45px rgba(0,0,0,.55)!important;}
-  #blMobileDrawerBackdrop{z-index:2550!important;}
-  #app,.page{padding:8px 10px 20px!important;max-width:100vw!important;overflow-x:hidden!important;}
-  .lendo-wrap{padding:8px 10px!important;}
-  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{grid-template-columns:1fr!important;}
-  .kpi-grid-5,#kpi-books-grid,#bookInfoStats,.meta-stats{grid-template-columns:1fr 1fr!important;}
-  .card{padding:10px!important;border-radius:12px!important;max-width:100%!important;overflow:hidden!important;}
-  canvas{max-width:100%!important;width:100%!important;}
-  .fab{bottom:16px!important;right:12px!important;}
-  .fab-menu{bottom:76px!important;right:12px!important;}
-}
-</style>
-
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 </head>
 <body>
 
@@ -595,7 +545,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <div class="auth-card">
     <div class="logo">📚</div>
     <h2>BookLegacy</h2>
-    <p>Entre com Google para acessar seu dashboard de leitura com seus dados privados no Firebase.</p>
+    <p>Entre com Google. O app carrega somente seus dados privados; dados de amigos aparecem apenas quando houver amizade aceita.</p>
     <button id="authLoginBtn" class="auth-btn">Entrar com Google</button>
     <div id="authError" class="auth-err"></div>
   </div>
@@ -615,7 +565,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
         📖 Milton
       </button>
-      <button id="btn-user-daniel" onclick="setUsuario('Daniel')"
+      <button id="btn-user-daniel" style="display:none" onclick="setUsuario('Daniel')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         📖 Daniel
       </button>
@@ -624,6 +574,9 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         ⚔️ Batalha
       </button>
     </div>
+    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
+    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
+    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
     <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.6</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
@@ -3903,7 +3856,7 @@ window.abrirLivroDetalhes = abrirLivroDetalhes;
 
 
 // ════════════════════════════════════════════════
-// BOOKLEGACY V7.1 — FIREBASE + AMIGOS + PWA HOTFIX
+// BOOKLEGACY V7.2 — FIREBASE ESTÁVEL + AMIGOS + PWA
 // Mantém o layout original e troca data.json por Firestore.
 // ════════════════════════════════════════════════
 const firebaseConfig = {
@@ -3933,6 +3886,10 @@ window.BL.app = firebase.initializeApp(firebaseConfig);
 window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
+try {
+  // Evita travar em alguns navegadores/rede quando o Firestore tenta usar stream/websocket.
+  window.BL.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+} catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 function blTxt(v){ return String(v ?? '').trim(); }
@@ -3974,32 +3931,106 @@ async function blEnsureUserProfile(user){
 
 function blMapSnap(snap){ return snap.docs.map(d => ({ id:d.id, ...d.data() })); }
 
-async function blLoadFirestoreData(){
-  const user = window.BL.auth.currentUser;
-  if (!user) throw new Error('Usuário não logado');
-  const uid = user.uid;
-  const [booksSnap, librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
-    window.BL.db.collection('books').get(),
-    window.BL.db.collection('users').doc(uid).collection('library').get(),
-    window.BL.db.collection('users').doc(uid).collection('sessions').get(),
-    window.BL.db.collection('users').doc(uid).collection('ratings').get(),
-    window.BL.db.collection('users').doc(uid).collection('goals').get(),
-    window.BL.db.collection('users').doc(uid).collection('collections').get(),
+function blProfileLabel(user){
+  const src = `${user.displayName || ''} ${user.email || ''}`.toLowerCase();
+  if (src.includes('daniel')) return 'Daniel';
+  if (src.includes('milton')) return 'Milton';
+  return (user.displayName || user.email || 'Usuário').split(' ')[0];
+}
+
+
+function blWithTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo excedido ao carregar: ' + label)), ms))
   ]);
-  const raw = {
-    uid,
-    books: blMapSnap(booksSnap),
+}
+
+async function blSafeGet(query, label){
+  try { return await blWithTimeout(query.get(), 14000, label); }
+  catch(e){ console.error('Falha ao ler', label, e); throw e; }
+}
+
+async function blReadUserBundle(uid, label){
+  const userRef = window.BL.db.collection('users').doc(uid);
+  const [librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
+    blSafeGet(userRef.collection('library'), 'library/' + label),
+    blSafeGet(userRef.collection('sessions'), 'sessions/' + label),
+    blSafeGet(userRef.collection('ratings'), 'ratings/' + label),
+    blSafeGet(userRef.collection('goals'), 'goals/' + label),
+    blSafeGet(userRef.collection('collections'), 'collections/' + label),
+  ]);
+  return {
+    uid, label,
     library: blMapSnap(librarySnap),
     sessions: blMapSnap(sessionsSnap),
     ratings: blMapSnap(ratingsSnap),
     goals: blMapSnap(goalsSnap),
     collections: blMapSnap(collectionsSnap)
   };
+}
+
+async function blLoadFriendsForUser(uid){
+  try {
+    const snap = await blSafeGet(window.BL.db.collection('users').doc(uid).collection('friends').where('status','==','accepted'), 'friends');
+    return snap.docs.map(d => ({ uid:d.id, ...(d.data()||{}) }));
+  } catch(e) {
+    console.warn('Amigos não carregados. Verifique regras do Firestore.', e);
+    return [];
+  }
+}
+
+async function blLoadFirestoreData(){
+  const user = window.BL.auth.currentUser;
+  if (!user) throw new Error('Usuário não logado');
+  const uid = user.uid;
+  const meLabel = blProfileLabel(user);
+
+  // Primeiro carrega o usuário logado. Assim o dashboard abre mesmo se amigos/livros globais falharem.
+  const myBundle = await blReadUserBundle(uid, meLabel);
+
+  let books = [];
+  try {
+    const booksSnap = await blSafeGet(window.BL.db.collection('books'), 'books');
+    books = blMapSnap(booksSnap);
+  } catch(e) {
+    console.warn('Coleção books não carregou; seguindo com dados da library.', e);
+  }
+
+  let friends = [];
+  let friendBundles = [];
+  try {
+    friends = await blLoadFriendsForUser(uid);
+    for (const f of friends) {
+      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
+      try { friendBundles.push(await blReadUserBundle(f.uid, label)); }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
+    }
+  } catch(e) {
+    console.warn('Amigos não carregados; dashboard individual será exibido.', e);
+  }
+
+  const raw = { uid, currentLabel:meLabel, books, users:[myBundle, ...friendBundles], friends };
   window.BL.raw = raw;
+  blUpdateUserButtons(raw);
   return blAdaptFirestoreToLegacy(raw);
 }
 
-function blLegacyBook(item, bookMap){
+function blUpdateUserButtons(raw){
+  const btnMilton = document.getElementById('btn-user-milton');
+  const btnDaniel = document.getElementById('btn-user-daniel');
+  const btnBatalha = document.getElementById('btn-user-batalha');
+  const labels = (raw.users||[]).map(u => u.label);
+  if (btnMilton) {
+    btnMilton.textContent = `📖 ${raw.currentLabel || 'Meus dados'}`;
+    btnMilton.setAttribute('onclick', 'setUsuario(' + JSON.stringify(raw.currentLabel || 'Milton') + ')');
+  }
+  const hasDaniel = labels.some(l => String(l).toLowerCase() === 'daniel');
+  if (btnDaniel) btnDaniel.style.display = hasDaniel ? '' : 'none';
+  if (btnBatalha) btnBatalha.style.display = (raw.users||[]).length >= 2 ? '' : 'none';
+}
+
+function blLegacyBook(item, bookMap, userLabel){
   const b = bookMap.get(item.bookId) || {};
   const title = blTxt(item.title || b.title || item.livro || b.livro);
   const total = blNum(item.totalPages || item.pages || b.pages || b.totalPages);
@@ -4021,15 +4052,16 @@ function blLegacyBook(item, bookMap){
     totalPag: total,
     pagAtual: current,
     pct: total ? Math.min(1, Math.max(0, current / total)) : blNum(item.progress),
-    usuario: 'MILTON',
+    usuario: userLabel || 'Milton',
     genero: blTxt(item.genre || b.genre || item.genero)
   };
 }
 
 function blAdaptFirestoreToLegacy(raw){
   const bookMap = new Map((raw.books || []).map(b => [b.id, b]));
-  const legacyBooks = (raw.library || []).map(item => blLegacyBook(item, bookMap)).filter(l => l.livro);
-  const sessoes = (raw.sessions || []).map(s => ({
+  const bundles = raw.users || [{ label: raw.currentLabel || 'Usuário', library: raw.library||[], sessions: raw.sessions||[], ratings: raw.ratings||[], goals: raw.goals||[], collections: raw.collections||[] }];
+  const legacyBooks = bundles.flatMap(u => (u.library || []).map(item => blLegacyBook(item, bookMap, u.label))).filter(l => l.livro);
+  const sessoes = bundles.flatMap(u => (u.sessions || []).map(s => ({
     id: s.id,
     bookId: s.bookId || '',
     livro: blTxt(s.title || s.livro),
@@ -4039,9 +4071,9 @@ function blAdaptFirestoreToLegacy(raw){
     minutos: blNum(s.minutes || s.minutos),
     segundos: blNum(s.seconds || s.segundos),
     ano: blNum(s.year || s.ano || String(s.date||'').slice(0,4)),
-    usuario: 'MILTON'
-  })).filter(s => s.livro && s.data);
-  const notas = (raw.ratings || []).map(r => {
+    usuario: u.label || 'Milton'
+  }))).filter(s => s.livro && s.data);
+  const notas = bundles.flatMap(u => (u.ratings || []).map(r => {
     const criterios = {
       'Diálogos': blNum(r.dialogos), 'Enredo': blNum(r.enredo), 'Estilo Visual': blNum(r.estiloVisual),
       'Finalização': blNum(r.finalizacao), 'Imersão': blNum(r.imersao), 'Impacto Emocional': blNum(r.impactoEmocional),
@@ -4049,10 +4081,11 @@ function blAdaptFirestoreToLegacy(raw){
     };
     const vals = Object.values(criterios).filter(v => v > 0);
     const media = blNum(r.notaFinal || r.notaPonderada) || (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0);
-    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:'MILTON' };
-  }).filter(n => n.livro);
+    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:u.label || 'Milton' };
+  })).filter(n => n.livro);
   const metasPorAno = {};
-  (raw.goals || []).forEach(g => {
+  const ownBundle = bundles[0] || {goals:[]};
+  (ownBundle.goals || []).forEach(g => {
     const y = String(g.year || g.id || '').replace(/[^0-9]/g,'') || String(g.year || '');
     if (!y) return;
     if (g.raw) metasPorAno[y] = g.raw;
@@ -4092,7 +4125,7 @@ async function blRefreshAndRender(){
     inicializar(d);
   } else if (typeof setUsuario === 'function') {
     window._dadosD = d;
-    setUsuario('Milton');
+    setUsuario((window.BL.raw && window.BL.raw.currentLabel) || blProfileLabel(window.BL.auth.currentUser));
   }
   const footer = document.getElementById('footer-data');
   if (footer) footer.textContent = new Date().toLocaleString('pt-BR');
@@ -4490,7 +4523,7 @@ function blSetupLoadingWatchdog(){
     if (loading && loading.style.display !== 'none' && (!app || app.style.display === 'none') && (!overlay || overlay.style.display !== 'flex')) {
       loading.innerHTML = '<div style="max-width:720px;margin:30px auto;background:#161b27;border:1px solid #f88c6a;border-radius:16px;padding:24px;color:#e2e8f0;text-align:left"><h2 style="color:#f88c6a;margin-bottom:10px">⚠️ O carregamento demorou demais</h2><p>Isso geralmente é configuração do Firebase, regra do Firestore ou erro de permissão ao ler dados.</p><p style="color:#8892a8;margin-top:10px">Abra o Console do navegador ou mande print da tela. Você também pode voltar para a versão anterior pelo histórico de deploys da Vercel.</p><button onclick="location.reload()" style="margin-top:14px;background:#8b7cf8;color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">Recarregar</button></div>';
     }
-  }, 22000);
+  }, 12000);
 }
 blSetupLoadingWatchdog();
 
@@ -4512,11 +4545,28 @@ async function iniciarAppFirebase(){
         return;
       }
       if (overlay) overlay.style.display = 'none';
-      document.getElementById('loading').style.display = 'block';
-      await blEnsureUserProfile(user);
-      await blAcceptInviteIfPresent(user);
-      await blRefreshAndRender();
+      // Segurança: limpa qualquer dado renderizado do login anterior antes de carregar o usuário atual.
+      window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+      window._livros = [];
+      window._sessoes = [];
+      const appEl = document.getElementById('app'); if (appEl) appEl.style.display = 'none';
+      const loadingEl = document.getElementById('loading');
+      loadingEl.style.display = 'block';
+      loadingEl.innerHTML = '⏳ Login feito. Preparando seu perfil...';
+      if (window.BL.__activeUid !== user.uid) {
+        window.BL.__activeUid = user.uid;
+        window.__BL_INITIALIZED = false;
+        window.usuarioAtual = '';
+        window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+        window._livros = [];
+        window._sessoes = [];
+      }
       blDecorateHeader(user);
+      await blEnsureUserProfile(user);
+      loadingEl.innerHTML = '⏳ Verificando convites e amizades...';
+      await blAcceptInviteIfPresent(user);
+      loadingEl.innerHTML = '⏳ Carregando sua biblioteca do Firebase...';
+      await blRefreshAndRender();
     } catch(e) {
       document.getElementById('loading').innerHTML = '<p style="color:#f88c6a;padding:40px;text-align:center">⚠️ Erro ao carregar Firebase: '+e.message+'</p>';
       console.error(e);
@@ -4534,11 +4584,25 @@ function blDecorateHeader(user){
   const el = document.createElement('div');
   el.id = 'blProfile';
   el.className = 'bl-profile';
-  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>${user.displayName || 'Usuário'}</span><button type="button" id="blLogout">Sair</button>`;
+  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blInviteBtn">Comunidade</button><button type="button" id="blLogout">Sair</button>`;
   headerRight.prepend(el);
+  document.getElementById('blInviteBtn').onclick = () => blOpenCommunityModal();
   document.getElementById('blLogout').onclick = () => window.BL.auth.signOut();
 }
 
+
+function blSetupInstallButton(){
+  let deferredPrompt = null;
+  const btn = document.getElementById('appInstallBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-flex';
+  });
+  if (btn) btn.onclick = async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; btn.style.display = 'none'; }
+    else alert('No celular: abra no Chrome/Edge e use “Adicionar à tela inicial” ou “Instalar app”. No iPhone: Compartilhar → Adicionar à Tela de Início.');
+  };
+}
+blSetupInstallButton();
 
 iniciarAppFirebase();
 </script>
@@ -6230,7 +6294,7 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
   {
-    versao: '3.5', data: '19/06/2026', titulo: 'Mobile funcional, Comunidade e APK',
+    versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
     itens: [
       'Migração oficial do dashboard para Firebase/Firestore com Google Login',
       'Dados isolados por conta: cada usuário carrega biblioteca, sessões, notas, metas e coleções pelo próprio UID',
@@ -7499,39 +7563,6 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
-<script id="booklegacy-v3-5-profile-label-fix">
-(function(){
-  'use strict';
-  if (typeof window.blProfileLabel !== 'function') {
-    window.blProfileLabel = function(user){
-      user = user || (window.BL && window.BL.auth && window.BL.auth.currentUser) || null;
-      const src = String((user && (user.displayName || user.email)) || '').toLowerCase();
-      if (src.includes('daniel')) return 'Daniel';
-      if (src.includes('milton')) return 'Milton';
-      return ((user && (user.displayName || user.email)) || 'Usuário').split(' ')[0];
-    };
-  }
-})();
-</script>
-
-
-
-<script id="booklegacy-v3-6-profile-label-global-safe">
-(function(){
-  'use strict';
-  function safeProfileLabel(user){
-    user = user || (window.BL && window.BL.auth && window.BL.auth.currentUser) || null;
-    const raw = String((user && (user.displayName || user.email)) || '').trim();
-    const low = raw.toLowerCase();
-    if (low.includes('milton')) return 'Milton';
-    if (low.includes('daniel')) return 'Daniel';
-    if (window.BL && window.BL.raw && window.BL.raw.currentLabel) return window.BL.raw.currentLabel;
-    return raw ? raw.split(' ')[0] : 'Milton';
-  }
-  window.blProfileLabel = window.blProfileLabel || safeProfileLabel;
-})();
-</script>
-
 <script>
 // ════════════════════════════════════════════════════════════════
 // BOOKLEGACY V7.8 — HOTFIX ESTÁVEL
@@ -7541,7 +7572,7 @@ if ('serviceWorker' in navigator) {
   function safeMsg(id,msg,type){ try{ if(typeof mostrarMsg==='function') mostrarMsg(id,msg,type||'ok'); else alert(msg); }catch(e){ console.log(msg); } }
   function nowISO(){ return new Date().toISOString(); }
   function uid(){ const u=window.BL?.auth?.currentUser; if(!u) throw new Error('Usuário não logado.'); return u.uid; }
-  function myLabel(){ const u = window.BL?.auth?.currentUser || null; return window.BL?.raw?.currentLabel || (typeof window.blProfileLabel === 'function' && u ? window.blProfileLabel(u) : (u?.displayName || u?.email || 'Milton')); }
+  function myLabel(){ return window.BL?.raw?.currentLabel || blProfileLabel?.(window.BL?.auth?.currentUser) || 'Milton'; }
   function ownBundle(){ return (window.BL?.raw?.users||[])[0] || {library:[], sessions:[], ratings:[], goals:[], collections:[], label:myLabel()}; }
   function ownLibrary(){ return ownBundle().library || []; }
   function ownSessions(){ return ownBundle().sessions || []; }
@@ -8319,7 +8350,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.5';
+  window.__BL_PATCH_VERSION = 'v3.6';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8542,7 +8573,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.5',
+      patch:'v3.6',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8586,7 +8617,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 <script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.5';
+  window.__BL_PATCH_VERSION = 'v3.6';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8646,7 +8677,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.5',
+      patch:'v3.6',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8688,7 +8719,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.5';
+  window.__BL_PATCH_VERSION = 'v3.6';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8754,7 +8785,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.5',
+      patch:'v3.6',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null
@@ -8766,186 +8797,145 @@ body.bl-v12-battle #blBattleBackButtonV25{
 })();
 </script>
 
-<style id="booklegacy-v34-mobile-polish">
-/* BookLegacy V3.4 — mobile polish: mesmo app, só organização visual */
-@media (max-width: 900px){
-  html,body{max-width:100vw!important;overflow-x:hidden!important;background:#0d1117!important;}
-  body{padding-bottom:0!important;}
 
-  /* Remove barra inferior inútil */
-  #mobile-nav{display:none!important;visibility:hidden!important;height:0!important;pointer-events:none!important;}
-  body.mobile-view #mobile-nav, body.booklegacy-mobile-app #mobile-nav{display:none!important;}
 
-  /* Header compacto e utilizável */
-  header{
+<!-- BookLegacy V3.7 MOBILE SAFE: mesma base do desktop, somente layout mobile -->
+<style id="booklegacy-v37-mobile-safe-css">
+html, body{max-width:100vw!important;overflow-x:hidden!important;}
+body.booklegacy-mobile-safe{background:#0d1117!important;}
+body.booklegacy-mobile-safe #mobile-nav,
+body.booklegacy-mobile-safe #btn-view-toggle{display:none!important;visibility:hidden!important;height:0!important;pointer-events:none!important;}
+@media(max-width:1400px){
+  body.booklegacy-mobile-safe header{
     position:sticky!important;top:0!important;z-index:2100!important;
-    display:flex!important;align-items:center!important;gap:8px!important;
-    min-height:56px!important;padding:8px 10px!important;
-    background:linear-gradient(135deg,#111827 0%,#161b27 100%)!important;
-    border-bottom:1px solid rgba(139,124,248,.22)!important;
-    box-shadow:0 8px 24px rgba(0,0,0,.32)!important;
-    flex-wrap:nowrap!important;overflow:visible!important;
+    padding:8px 10px!important;gap:8px!important;flex-wrap:nowrap!important;
+    min-height:54px!important;background:rgba(13,17,23,.96)!important;
+    border-bottom:1px solid var(--border)!important;backdrop-filter:blur(10px)!important;
   }
-  header .icon{font-size:24px!important;line-height:1!important;flex:0 0 auto!important;}
-  header > div:nth-child(2){min-width:0!important;flex:1 1 auto!important;}
-  header h1{font-size:15px!important;line-height:1.1!important;margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  header p{display:block!important;font-size:10px!important;color:#8892a8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin-top:2px!important;}
-  header .badge{display:none!important;}
-
-  /* Esconde a fileira antiga cheia de botões; o menu novo chama as mesmas funções */
-  header > div:last-child{display:none!important;}
-  #blMobileMenuBtn{display:flex!important;align-items:center!important;gap:6px!important;}
-
-  #app,.page{padding:8px 10px 22px!important;max-width:100%!important;width:100%!important;overflow-x:hidden!important;}
-  .lendo-wrap{padding:8px 10px!important;}
-  .lendo-inner{gap:10px!important;}
-  .lendo-card{border-radius:14px!important;padding:14px!important;}
-
-  .sec{font-size:11px!important;letter-spacing:1px!important;margin:18px 0 8px!important;}
-  .card{border-radius:14px!important;padding:12px!important;margin-bottom:10px!important;overflow:hidden!important;}
+  body.booklegacy-mobile-safe header .icon{font-size:24px!important;flex:0 0 auto!important;}
+  body.booklegacy-mobile-safe header h1{font-size:15px!important;line-height:1.1!important;white-space:nowrap!important;max-width:55vw!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  body.booklegacy-mobile-safe header p,
+  body.booklegacy-mobile-safe header .badge{display:none!important;}
+  body.booklegacy-mobile-safe header > div:last-child{display:none!important;}
+  #blMobileMenuBtn{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    margin-left:auto!important;width:40px!important;height:40px!important;border-radius:12px!important;
+    border:1px solid rgba(139,124,248,.5)!important;background:rgba(139,124,248,.15)!important;
+    color:#e2e8f0!important;font-size:23px!important;font-weight:900!important;cursor:pointer!important;z-index:2150!important;
+  }
+  #app,.page{width:100%!important;max-width:100%!important;margin:0!important;padding:8px 10px 78px 10px!important;box-sizing:border-box!important;overflow-x:hidden!important;}
+  .lendo-wrap{width:100%!important;max-width:100%!important;padding:8px 10px!important;box-sizing:border-box!important;overflow:hidden!important;}
+  .lendo-inner{flex-direction:column!important;gap:8px!important;padding:0!important;}
+  .lendo-card{min-width:unset!important;width:100%!important;padding:14px!important;border-radius:14px!important;}
+  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{grid-template-columns:1fr!important;width:100%!important;max-width:100%!important;}
+  .kpi-grid-5,.kpi-grid-5[data-desktop-grid],#kpi-books-grid,#kpi-books-grid[data-desktop-grid]{grid-template-columns:1fr 1fr!important;gap:8px!important;}
+  .card{padding:12px!important;border-radius:14px!important;width:100%!important;max-width:100%!important;overflow:hidden!important;}
   .card-title{font-size:15px!important;line-height:1.25!important;}
-  .card-sub{font-size:11px!important;line-height:1.35!important;margin-bottom:10px!important;}
-
-  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{grid-template-columns:1fr!important;gap:10px!important;}
-  .kpi-grid-5,.kpi-grid-5[data-desktop-grid],#status-kpi-grid{grid-template-columns:1fr 1fr!important;gap:8px!important;}
-  .kpi-grid-5 .kpi:nth-child(5),#status-kpi-grid .kpi:nth-child(5){grid-column:1/-1!important;max-width:none!important;margin:0!important;}
-  .kpi{padding:12px!important;border-radius:12px!important;}
-  .kpi-icon{font-size:18px!important;margin-bottom:4px!important;}
+  .card-sub{font-size:11px!important;}
+  .sec{font-size:10px!important;margin:16px 0 8px!important;letter-spacing:1px!important;}
+  .kpi{padding:12px!important;min-width:0!important;overflow:hidden!important;}
   .kpi-val{font-size:22px!important;}
-  .kpi-lbl{font-size:9px!important;line-height:1.2!important;}
+  .kpi-lbl{font-size:8px!important;}
   .kpi-sub{display:none!important;}
-
-  .meta-row{flex-direction:column!important;align-items:center!important;gap:12px!important;}
-  .meta-stats{grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;}
-  .meta-stat{padding:9px!important;border-radius:10px!important;}
-  .meta-stat-val{font-size:16px!important;}
-  .ring-wrap{width:112px!important;height:112px!important;}
-
-  canvas{max-width:100%!important;width:100%!important;}
-  #cHeat,#cMonthly{height:230px!important;}
-  #cGeneros{height:280px!important;}
-  #cDonut,#cAutores{height:200px!important;}
+  .kpi-book{flex-direction:row!important;gap:8px!important;align-items:flex-start!important;}
+  .kpi-book img,.kpi-book .fallback{width:42px!important;height:60px!important;flex-shrink:0!important;}
+  .kpi-nome,.rank-name{white-space:normal!important;word-break:break-word!important;}
   .rank-bar-wrap{display:none!important;}
-  .rank-name{font-size:13px!important;white-space:normal!important;word-break:break-word!important;}
-  .ctrl{gap:6px!important;flex-wrap:wrap!important;}
-  .ctrl select,.ctrl .btn,.btn{font-size:12px!important;padding:7px 9px!important;min-height:34px!important;}
-
-  .fab{bottom:18px!important;right:14px!important;width:52px!important;height:52px!important;z-index:1800!important;}
-  .fab-menu{bottom:78px!important;right:14px!important;z-index:1800!important;}
-
-  #pageBatalha{padding:8px 10px 22px!important;}
-  body.batalha-ativo #pageDashboard, body.batalha-ativo .lendo-wrap{display:none!important;}
+  canvas{max-width:100%!important;width:100%!important;}
+  #cGeneros{height:280px!important;} #cMonthly{height:230px!important;} #cDonut,#cAutores{height:190px!important;}
+  #heatmapGrid{grid-template-columns:1fr 1fr!important;gap:6px!important;}
+  .ctrl{flex-wrap:wrap!important;gap:6px!important;}
+  .ctrl select{font-size:12px!important;min-width:0!important;max-width:100%!important;}
+  .fab{bottom:18px!important;right:14px!important;width:52px!important;height:52px!important;font-size:24px!important;z-index:1900!important;}
+  .fab-menu{bottom:78px!important;right:14px!important;z-index:1900!important;}
+  #pageBatalha{padding:8px!important;}
+  #pageBatalha [style*="grid-template-columns"]{grid-template-columns:1fr!important;}
 }
-@media (min-width:901px){
-  #blMobileMenuBtn,#blMobileDrawer,#blMobileDrawerBackdrop{display:none!important;}
-}
-#blMobileMenuBtn{
-  position:fixed;top:10px;right:10px;z-index:2300;
-  border:1px solid rgba(139,124,248,.45);background:rgba(30,37,53,.96);color:#e2e8f0;
-  border-radius:12px;padding:9px 12px;font-size:13px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer;
-}
-#blMobileDrawerBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:2400;}
-#blMobileDrawer{
-  display:none;position:fixed;top:0;right:0;width:min(88vw,340px);height:100vh;z-index:2500;
-  background:#111827;border-left:1px solid rgba(139,124,248,.25);box-shadow:-18px 0 40px rgba(0,0,0,.45);
-  padding:16px;overflow-y:auto;color:#e2e8f0;
-}
+#blMobileDrawerBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:2400;}
+#blMobileDrawer{display:none;position:fixed;top:0;right:0;bottom:0;width:min(88vw,370px);background:#0d1117;border-left:1px solid #2a3248;z-index:2450;padding:14px;overflow-y:auto;box-shadow:-18px 0 45px rgba(0,0,0,.6);}
 #blMobileDrawer.open,#blMobileDrawerBackdrop.open{display:block!important;}
-.blm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.blm-title{font-size:18px;font-weight:900;}
-.blm-close{width:34px;height:34px;border-radius:10px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:18px;}
-.blm-section{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:#8892a8;margin:16px 0 8px;font-weight:800;}
-.blm-btn{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:7px 0;padding:12px;border-radius:12px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:14px;font-weight:800;text-align:left;}
-.blm-btn.primary{background:rgba(139,124,248,.18);border-color:rgba(139,124,248,.55);color:#fff;}
-.blm-btn.blue{background:rgba(86,207,255,.12);border-color:rgba(86,207,255,.45);}
-.blm-btn.orange{background:rgba(248,140,106,.12);border-color:rgba(248,140,106,.45);}
-.blm-mini{font-size:11px;color:#8892a8;line-height:1.35;margin-top:10px;}
+#blMobileDrawer .blm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #2a3248;}
+#blMobileDrawer .blm-title{font-size:18px;font-weight:900;color:#e2e8f0;}
+#blMobileDrawer .blm-mini{font-size:12px;color:#8892a8;margin-top:2px;}
+#blMobileDrawer .blm-close{width:38px;height:38px;border-radius:12px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:20px;}
+#blMobileDrawer .blm-btn{width:100%;display:flex;align-items:center;gap:10px;margin:7px 0;padding:13px 14px;border-radius:13px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:14px;font-weight:800;text-align:left;}
+#blMobileDrawer .blm-btn.primary{background:rgba(139,124,248,.18);border-color:rgba(139,124,248,.55);color:#fff;}
+#blMobileDrawer .blm-btn.blue{background:rgba(86,207,255,.12);border-color:rgba(86,207,255,.45);}
+#blMobileDrawer .blm-btn.orange{background:rgba(248,140,106,.12);border-color:rgba(248,140,106,.45);}
 </style>
-<script id="booklegacy-v34-mobile-menu">
+<script id="booklegacy-v37-mobile-safe-js">
 (function(){
-  window.__BOOKLEGACY_MOBILE_PATCH='v3.4-mobile-header-clean';
-  function callSafe(fnName){
+  window.__BOOKLEGACY_MOBILE_PATCH='v3.7-mobile-same-desktop-layout-only';
+  function $(id){return document.getElementById(id)}
+  function closeDrawer(){ $('blMobileDrawer')?.classList.remove('open'); $('blMobileDrawerBackdrop')?.classList.remove('open'); }
+  function openDrawer(){ ensureDrawer(); $('blMobileDrawer')?.classList.add('open'); $('blMobileDrawerBackdrop')?.classList.add('open'); }
+  function callSafe(fn,arg){ try{ if(typeof window[fn]==='function') return window[fn](arg); }catch(e){ console.error(fn,e); } }
+  function myLabel(){
     try{
-      var fn=window[fnName];
-      if(typeof fn==='function') return fn.apply(window, Array.prototype.slice.call(arguments,1));
-    }catch(e){ console.error('[BookLegacy mobile]', fnName, e); }
+      const u=window.BL?.auth?.currentUser||null;
+      if(window.BL?.raw?.currentLabel) return window.BL.raw.currentLabel;
+      if(typeof window.blProfileLabel==='function' && u) return window.blProfileLabel(u);
+      return u?.displayName || u?.email || 'Milton';
+    }catch(e){ return 'Milton'; }
   }
-  function closeDrawer(){
-    document.getElementById('blMobileDrawer')?.classList.remove('open');
-    document.getElementById('blMobileDrawerBackdrop')?.classList.remove('open');
-  }
-  function openDrawer(){
-    document.getElementById('blMobileDrawer')?.classList.add('open');
-    document.getElementById('blMobileDrawerBackdrop')?.classList.add('open');
-  }
-  function go(section){ closeDrawer(); setTimeout(function(){
-    var target=document.querySelector('[data-msection="'+section+'"]');
-    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-  },80); }
-  function build(){
-    if(document.getElementById('blMobileDrawer')) return;
-    var btn=document.createElement('button');
-    btn.id='blMobileMenuBtn';
-    btn.type='button';
-    btn.innerHTML='☰ Menu';
-    btn.onclick=openDrawer;
-    document.body.appendChild(btn);
-    var back=document.createElement('div');
-    back.id='blMobileDrawerBackdrop';
-    back.onclick=closeDrawer;
-    document.body.appendChild(back);
-    var d=document.createElement('aside');
-    d.id='blMobileDrawer';
+  function goProfile(){ closeDrawer(); try{ callSafe('setUsuario', myLabel()); }catch(e){ callSafe('setUsuario','Milton'); } }
+  function goBattle(){ closeDrawer(); callSafe('setUsuario','Batalha'); }
+  function goCommunity(){ closeDrawer(); callSafe('blOpenCommunityModal'); }
+  function goSec(sec){ closeDrawer(); if(typeof window.scrollToSec==='function') window.scrollToSec(sec); else document.querySelector('[data-msection="'+sec+'"]')?.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function ensureDrawer(){
+    document.body.classList.add('booklegacy-mobile-safe');
+    if(!$('blMobileMenuBtn')){
+      const b=document.createElement('button'); b.id='blMobileMenuBtn'; b.type='button'; b.textContent='☰'; b.title='Menu'; b.onclick=openDrawer;
+      const h=document.querySelector('header'); if(h) h.appendChild(b); else document.body.prepend(b);
+    }
+    if($('blMobileDrawer')) return;
+    const back=document.createElement('div'); back.id='blMobileDrawerBackdrop'; back.onclick=closeDrawer;
+    const d=document.createElement('aside'); d.id='blMobileDrawer';
     d.innerHTML=''
-      + '<div class="blm-head"><div><div class="blm-title">📚 BookLegacy</div><div class="blm-mini">Menu mobile</div></div><button class="blm-close" type="button">×</button></div>'
-      + '<div class="blm-section">Perfil</div>'
-      + '<button class="blm-btn primary" data-act="me">📖 Meu perfil</button>'
+      + '<div class="blm-head"><div><div class="blm-title">BookLegacy</div><div class="blm-mini">Menu mobile</div></div><button class="blm-close" type="button">×</button></div>'
+      + '<button class="blm-btn primary" data-act="profile">📖 Meu perfil</button>'
       + '<button class="blm-btn orange" data-act="battle">⚔️ Modo Batalha</button>'
       + '<button class="blm-btn blue" data-act="community">👥 Comunidade</button>'
-      + '<div class="blm-section">Dashboard</div>'
-      + '<button class="blm-btn" data-go="meta">🎯 Meta</button>'
-      + '<button class="blm-btn" data-go="visao">📊 Visão geral</button>'
-      + '<button class="blm-btn" data-go="graficos">📈 Gráficos</button>'
-      + '<button class="blm-btn" data-go="ranking">🏅 Ranking</button>'
-      + '<button class="blm-btn" data-go="livro">📚 Livro</button>'
-      + '<button class="blm-btn" data-go="mais">··· Mais</button>'
-      + '<div class="blm-section">Ações</div>'
+      + '<button class="blm-btn" data-sec="meta">🎯 Meta</button>'
+      + '<button class="blm-btn" data-sec="visao">📊 Visão geral</button>'
+      + '<button class="blm-btn" data-sec="graficos">📈 Gráficos</button>'
+      + '<button class="blm-btn" data-sec="ranking">🏅 Ranking</button>'
+      + '<button class="blm-btn" data-sec="livro">📚 Livro</button>'
+      + '<button class="blm-btn" data-sec="mais">··· Mais</button>'
       + '<button class="blm-btn" data-act="refresh">🔄 Atualizar dados</button>'
-      + '<button class="blm-btn" data-act="updates">📋 Notas V3.4</button>'
-      + '<div class="blm-mini">A barra inferior foi removida. O app mobile usa as mesmas funções do desktop; só mudou a organização da tela.</div>';
-    document.body.appendChild(d);
+      + '<button class="blm-btn" data-act="changes">📋 Notas de atualização</button>';
     d.querySelector('.blm-close').onclick=closeDrawer;
     d.addEventListener('click',function(ev){
-      var b=ev.target.closest('button'); if(!b) return;
-      var act=b.getAttribute('data-act'); var sec=b.getAttribute('data-go');
-      if(sec) return go(sec);
-      if(act==='me'){ closeDrawer(); callSafe('setUsuario','Milton'); }
-      if(act==='battle'){ closeDrawer(); callSafe('setUsuario','Batalha'); }
-      if(act==='community'){ closeDrawer(); callSafe('blOpenCommunityModal'); }
-      if(act==='refresh'){ closeDrawer(); callSafe('manualRefresh'); }
-      if(act==='updates'){ closeDrawer(); callSafe('toggleChangelog'); }
+      const btn=ev.target.closest('button'); if(!btn) return;
+      const act=btn.dataset.act, sec=btn.dataset.sec;
+      if(sec) return goSec(sec);
+      if(act==='profile') return goProfile();
+      if(act==='battle') return goBattle();
+      if(act==='community') return goCommunity();
+      if(act==='refresh'){ closeDrawer(); return callSafe('manualRefresh'); }
+      if(act==='changes'){ closeDrawer(); return callSafe('toggleChangelog'); }
     });
+    document.body.appendChild(back); document.body.appendChild(d);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
-  window.blMobileDebug=function(){return {patch:window.__BOOKLEGACY_MOBILE_PATCH, navDisplay:getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileDrawer'), community:typeof window.blOpenCommunityModal, battle:typeof window.setUsuario};};
-})();
-</script>
-
-
-<script id="booklegacy-v3-6-mobile-debug">
-(function(){
-  const prev = window.blMobileDebug;
-  window.blMobileDebug = function(){
-    const old = typeof prev === 'function' ? prev() : {};
-    return Object.assign({}, old, {
-      patch:'v3.6-mobile-fullfunc-safe',
-      profileLabel:typeof window.blProfileLabel,
-      bottomNav:document.getElementById('mobile-nav') ? getComputedStyle(document.getElementById('mobile-nav')).display : null,
-      menu:!!document.getElementById('blMobileDrawer'),
-      community:typeof window.blOpenCommunityModal,
-      users:(window.BL&&window.BL.raw&&window.BL.raw.users||[]).length
-    });
-  };
+  function removeBottomNav(){
+    const n=$('mobile-nav'); if(n) n.remove();
+    const t=$('btn-view-toggle'); if(t) t.remove();
+  }
+  function init(){ document.body.classList.add('booklegacy-mobile-safe'); removeBottomNav(); ensureDrawer(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  window.addEventListener('load',init);
+  window.blMobileDebug=function(){return {
+    patch:window.__BOOKLEGACY_MOBILE_PATCH,
+    profileLabel:typeof window.blProfileLabel,
+    BL:!!window.BL,
+    user:window.BL?.auth?.currentUser?.uid||null,
+    rawUsers:Array.isArray(window.BL?.raw?.users)?window.BL.raw.users.length:null,
+    library:Array.isArray(window.BL?.raw?.library)?window.BL.raw.library.length:null,
+    community:typeof window.blOpenCommunityModal,
+    battle:typeof window.setUsuario,
+    menu:!!$('blMobileDrawer'),
+    bottomNav:!!$('mobile-nav')
+  }};
 })();
 </script>
 
