@@ -2,8 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-v12-8-marker" content="original-battle-multi-button-fix">
-<meta name="booklegacy-version" content="v12.1-battle-visible">
+<meta name="booklegacy-version" content="v12.23-battle-one-selector-stable">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -5131,8 +5130,8 @@ function renderBatalha() {
   const d = window._dadosD;
   if (!d) return;
 
-  const pA = document.getElementById('bat-playerA')?.value || 'Milton';
-  const pB = document.getElementById('bat-playerB')?.value || 'Daniel';
+  const pA = window.__BL_BATTLE_PLAYER_A || document.getElementById('bat-playerA')?.value || 'Milton';
+  const pB = window.__BL_BATTLE_PLAYER_B || document.getElementById('bat-playerB')?.value || 'Daniel';
   const CA = '#A855F7', CB = '#FB923C';
 
   // Popula seletor de anos — guarda valor ANTES de limpar
@@ -6084,8 +6083,6 @@ function renderBatalha() {
     scales:{x:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'},beginAtZero:true}}}});}
   });
 }
-window.__BL_TRUE_ORIGINAL_RENDER_BATALHA = renderBatalha;
-
 
 // ── Mobile View System ───────────────────────────────────────────
 let _mobileView = false;
@@ -8048,7 +8045,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 /* BookLegacy V12 — BATALHA VISÍVEL E INDEPENDENTE
    Patch focado apenas em: botão Modo Batalha e abertura do módulo. */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
+  window.__BL_PATCH_VERSION = 'v12-battle-visible-independent';
   const $ = (id)=>document.getElementById(id);
   const norm = (v)=>String(v||'').trim().toLowerCase();
   const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -8218,1217 +8215,250 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<script>
-/* BookLegacy V12.8 — PATCH FINAL: mantém o Modo Batalha original, força botão, multi-player e voltar */
-(function(){
-  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
-  window.__BL_V12_8_MARKER = true;
-  const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const norm = (v)=>String(v||'').trim().toLowerCase();
-
-  function raw(){ return window.BL?.raw || window._blRaw || {}; }
-  function authUser(){ return window.firebaseAuth?.currentUser || window.auth?.currentUser || window.BL?.auth?.currentUser || null; }
-  function safeLabel(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
-  function meLabel(){
-    const cu=authUser();
-    return raw().currentLabel || safeLabel(cu) || window.__BL_ME_LABEL || 'Milton';
-  }
-  function people(){
-    const map = new Map();
-    function add(p){
-      if(!p) return;
-      const uid = p.uid || p.id || '';
-      const label = safeLabel(p);
-      if(!label && !uid) return;
-      const key = uid || label;
-      if(!map.has(String(key))) map.set(String(key), {...p, uid, label: label || uid});
-      else map.set(String(key), {...map.get(String(key)), ...p, uid: uid || map.get(String(key)).uid, label: label || map.get(String(key)).label});
-    }
-    (raw().users||[]).forEach(add);
-    (raw().friends||[]).forEach(add);
-    const cu=authUser();
-    if(cu) add({uid:cu.uid,label:cu.displayName||cu.email||'Eu',displayName:cu.displayName,email:cu.email,photoURL:cu.photoURL});
-    if(!map.size){ add({label:'Milton'}); add({label:'Daniel'}); }
-    return [...map.values()].filter(p=>safeLabel(p));
-  }
-
-  // Corrige erro de profile quando o Google ainda não terminou de carregar.
-  if(typeof window.blProfileLabel === 'function' && !window.__BL_PROFILE_NULL_SAFE_V128){
-    const oldProfileLabel = window.blProfileLabel;
-    window.blProfileLabel = function(user){
-      if(!user) return meLabel();
-      try { return oldProfileLabel(user); } catch(e){ return user.displayName || user.email || user.uid || meLabel(); }
-    };
-    window.__BL_PROFILE_NULL_SAFE_V128 = true;
-  }
-
-  const originalRenderBattle = window.renderBatalha;
-  const originalSetUsuario = window.setUsuario;
-
-  function hideTopBooksOnlyInBattle(){
-    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.setProperty('display','none','important');
-    if(bat){ bat.style.setProperty('display','block','important'); bat.hidden=false; }
-    document.querySelectorAll('#app > *').forEach(el=>{
-      if(el.id==='pageBatalha') el.style.setProperty('display','block','important');
-      else if(el.id==='pageDashboard') el.style.setProperty('display','none','important');
-      else el.style.setProperty('display','none','important');
-    });
-    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
-    document.body.classList.add('bl-battle-active');
-  }
-
-  function restoreMyProfile(){
-    document.body.classList.remove('bl-battle-active');
-    window.usuarioAtual = meLabel();
-    document.querySelectorAll('#app > *').forEach(el=>el.style.removeProperty('display'));
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.display='block';
-    if(bat) bat.style.display='none';
-    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.removeProperty('display'));
-    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
-    try{ if(typeof originalSetUsuario==='function') originalSetUsuario(meLabel()); }catch(e){ console.warn('Voltar perfil: setUsuario original falhou', e); }
-    setTimeout(()=>{ const dash=$('pageDashboard'), bat=$('pageBatalha'); if(dash) dash.style.display='block'; if(bat) bat.style.display='none'; ensureBattleButton(); },80);
-    window.scrollTo(0,0);
-  }
-  window.blBackToMyProfile = restoreMyProfile;
-  window.blExitBattle = restoreMyProfile;
-
-  function ensureBattleButton(){
-    let btn=$('btn-user-batalha');
-    const wrap = $('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='btn-user-batalha';
-      btn.type='button';
-      wrap.appendChild(btn);
-    }
-    btn.textContent='⚔️ Batalha';
-    btn.removeAttribute('hidden');
-    btn.disabled=false;
-    btn.style.cssText='display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;padding:6px 14px!important;border-radius:7px!important;border:none!important;cursor:pointer!important;font-size:13px!important;font-weight:700!important;background:transparent!important;color:var(--muted)!important;transition:all .2s!important;';
-    btn.onclick=function(ev){ ev&&ev.preventDefault&&ev.preventDefault(); ev&&ev.stopPropagation&&ev.stopPropagation(); openBattleOriginalMulti(); return false; };
-
-    // Mantém também o botão de topo, se existir em alguma versão, mas sem depender dele.
-    let main=$('bl-battle-main-btn');
-    if(main){ main.onclick=btn.onclick; main.style.setProperty('display','inline-flex','important'); }
-    return btn;
-  }
-
-  function ensureReturnButton(){
-    const page=$('pageBatalha'); if(!page) return;
-    let btn=$('bl-battle-return-original');
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='bl-battle-return-original';
-      btn.type='button';
-      btn.textContent='↩ Voltar para meus dados';
-      btn.style.cssText='margin:8px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
-      const first = page.firstElementChild;
-      page.insertBefore(btn, first || null);
-    }
-    btn.onclick=restoreMyProfile;
-    btn.style.setProperty('display','inline-flex','important');
-  }
-
-  function fillOriginalSelects(){
-    const list=people();
-    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
-      const sel=$(id); if(!sel) return;
-      const prev=sel.value;
-      sel.innerHTML=list.map(p=>`<option value="${esc(p.label)}">${esc(p.label)}</option>`).join('');
-      sel.value=[...sel.options].some(o=>o.value===prev)?prev:(list[idx]?.label || list[0]?.label || '');
-    });
-    return list;
-  }
-
-  function ensureMultiControls(){
-    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let box=$('bl-battle-multi-controls');
-    if(!box){
-      box=document.createElement('div');
-      box.id='bl-battle-multi-controls';
-      box.style.cssText='max-width:1180px;margin:0 auto 14px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(15,23,42,.72);';
-      container.parentElement.insertBefore(box, container);
-    }
-    const list=people();
-    const checkedNow = checkedLabels();
-    const selected = new Set(checkedNow.length ? checkedNow : list.slice(0, Math.min(2,list.length)).map(p=>p.label));
-    box.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-        <div style="font-weight:900;color:#e2e8f0">Selecionar players da batalha</div>
-        <button id="bl-battle-apply-original" type="button" style="background:#e56cff;color:white;border:0;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer">Atualizar batalha</button>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        ${list.map(p=>`<label style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 11px;cursor:pointer;font-weight:700;color:#cbd5e1"><input class="bl-battle-check" type="checkbox" value="${esc(p.label)}" ${selected.has(p.label)?'checked':''}> ${esc(p.label)}</label>`).join('')}
-      </div>`;
-    $('bl-battle-apply-original').onclick=()=>renderBattleMultiOriginal();
-    box.querySelectorAll('.bl-battle-check').forEach(ch=>ch.addEventListener('change',()=>renderBattleMultiOriginal()));
-  }
-
-  function checkedLabels(){
-    return [...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value).filter(Boolean);
-  }
-
-  function renderPair(a,b){
-    const selA=$('bat-playerA'), selB=$('bat-playerB'), c=$('batalhaContainer');
-    if(!selA || !selB || !c || typeof originalRenderBattle!=='function') return '';
-    selA.value=a; selB.value=b;
-    originalRenderBattle();
-    return c.innerHTML;
-  }
-
-  function renderBattleMultiOriginal(){
-    hideTopBooksOnlyInBattle();
-    ensureReturnButton();
-    fillOriginalSelects();
-    ensureMultiControls();
-    const c=$('batalhaContainer'); if(!c) return;
-    const selected=checkedLabels();
-    if(selected.length < 2){
-      c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>';
-      return;
-    }
-    if(selected.length === 2){
-      renderPair(selected[0], selected[1]);
-      return;
-    }
-    const pairs=[];
-    for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i], selected[j]]);
-    const html=[];
-    for(const [a,b] of pairs){
-      const inner=renderPair(a,b);
-      html.push(`<section class="bl-original-battle-pair" style="max-width:1180px;margin:0 auto 26px"><div style="font-weight:900;color:#e2e8f0;margin:0 0 10px;font-size:18px">⚔️ ${esc(a)} <span style="color:#94a3b8">vs</span> ${esc(b)}</div>${inner}</section>`);
-    }
-    c.innerHTML=html.join('');
-  }
-
-  function openBattleOriginalMulti(){
-    window.usuarioAtual='Batalha';
-    hideTopBooksOnlyInBattle();
-    fillOriginalSelects();
-    ensureReturnButton();
-    ensureMultiControls();
-    renderBattleMultiOriginal();
-    setTimeout(()=>{ hideTopBooksOnlyInBattle(); ensureBattleButton(); ensureReturnButton(); window.scrollTo(0,0); },50);
-  }
-  window.blOpenBattleOriginalMulti = openBattleOriginalMulti;
-
-  window.renderBatalha = function(){
-    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMultiOriginal();
-    if(typeof originalRenderBattle==='function') return originalRenderBattle.apply(this, arguments);
-  };
-  window.setUsuario = function(usuario){
-    if(usuario==='Batalha') return openBattleOriginalMulti();
-    document.body.classList.remove('bl-battle-active');
-    if(typeof originalSetUsuario==='function') return originalSetUsuario.apply(this, arguments);
-    window.usuarioAtual=usuario;
-  };
-  window.blBattleDebug = window.blV12Debug = function(){
-    return {patch:window.__BL_PATCH_VERSION, marker:!!window.__BL_V12_8_MARKER, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?getComputedStyle($('btn-user-batalha')).display:null, usuarioAtual:window.usuarioAtual, pageBatalha:!!$('pageBatalha'), bodyBattle:document.body.classList.contains('bl-battle-active'), people:people().map(p=>p.label), checked:checkedLabels()};
-  };
-
-  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha') { hideTopBooksOnlyInBattle(); ensureReturnButton(); ensureMultiControls(); } }
-  document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,400); setTimeout(tick,1200); setTimeout(tick,2500); });
-  setInterval(tick,1500);
-})();
-</script>
-
-
-<script>
-/* BookLegacy V12.12 — botão Batalha DB-safe
-   Base: V12.10. Não mexe em Firebase/Auth/Firestore/perfil. Só mantém o botão visível e liga ao Batalha existente. */
-(function(){
-  window.__BL_PATCH_VERSION = 'v12.12-battle-button-minimal-dbsafe';
-  window.__BL_V12_12_MARKER = true;
-  const BTN_ID = 'btn-user-batalha';
-  function qs(sel){ return document.querySelector(sel); }
-  function headerTarget(){
-    const known = document.getElementById('btn-user-milton') || document.getElementById('header-badge') || document.querySelector('[id*="comunidade" i]') || document.querySelector('header button');
-    return (known && known.parentElement) || document.querySelector('header .actions') || document.querySelector('header') || document.body;
-  }
-  function openBattleSafe(){
-    try{
-      if (typeof window.blOpenBattlePickerMulti === 'function') return window.blOpenBattlePickerMulti();
-      if (typeof window.blOpenBattleOriginalMulti === 'function') return window.blOpenBattleOriginalMulti();
-      if (typeof window.setUsuario === 'function') return window.setUsuario('Batalha');
-      window.usuarioAtual = 'Batalha';
-      const dash = document.getElementById('pageDashboard');
-      const bat = document.getElementById('pageBatalha');
-      if (dash) dash.style.display = 'none';
-      if (bat) bat.style.display = 'block';
-      if (typeof window.renderBatalha === 'function') window.renderBatalha();
-    }catch(e){ console.error('BookLegacy V12.12: falha ao abrir Modo Batalha', e); }
-  }
-  function ensureButton(){
-    const target = headerTarget();
-    if(!target) return null;
-    let btn = document.getElementById(BTN_ID);
-    if(!btn){
-      btn = document.createElement('button');
-      btn.id = BTN_ID;
-      btn.type = 'button';
-      btn.textContent = '⚔️ Modo Batalha';
-      btn.className = 'btn btn-battle';
-      target.appendChild(btn);
-    }
-    btn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openBattleSafe(); };
-    btn.style.setProperty('display','inline-flex','important');
-    btn.style.setProperty('visibility','visible','important');
-    btn.style.setProperty('opacity','1','important');
-    btn.style.setProperty('pointer-events','auto','important');
-    btn.style.alignItems = 'center';
-    btn.style.gap = '8px';
-    btn.style.background = 'linear-gradient(135deg,#f25cff,#8b7cf8)';
-    btn.style.color = '#fff';
-    btn.style.border = '0';
-    btn.style.borderRadius = '10px';
-    btn.style.padding = '10px 14px';
-    btn.style.fontWeight = '900';
-    btn.style.cursor = 'pointer';
-    return btn;
-  }
-  window.blBattleButtonFix = ensureButton;
-  const prevDebug = window.blBattleDebug;
-  window.blBattleDebug = function(){
-    const base = (typeof prevDebug === 'function') ? prevDebug() : {};
-    const b = document.getElementById(BTN_ID);
-    return Object.assign({}, base, {
-      patch: window.__BL_PATCH_VERSION,
-      marker1212: true,
-      button: !!b,
-      buttonDisplay: b ? getComputedStyle(b).display : null,
-      buttonVisibility: b ? getComputedStyle(b).visibility : null,
-      dbSafe: true,
-      firebaseTouched: false
-    });
-  };
-  function boot(){ ensureButton(); setTimeout(ensureButton,300); setTimeout(ensureButton,1200); setTimeout(ensureButton,3000); }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setInterval(ensureButton, 2000);
-})();
-</script>
-
-<script id="bl-v12-17-battle-2players-opponent-select">
-/* BookLegacy V12.17 — Modo Batalha 2x2 original com seletor de apenas 1 adversário.
-   Base DB-safe: não toca em Firebase/Auth/Firestore. Só controla a tela #pageBatalha. */
+<!-- BookLegacy V12.23: seletor único e estável do modo batalha -->
+<script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.17-battle-2players-opponent-select';
-  window.__BL_V12_17_MARKER = true;
-
-  const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const norm = (v)=>String(v ?? '').trim().toLowerCase();
-
-  // Pega o render original salvo por versões anteriores ou o render atual antes deste patch.
-  const nativeRender = window.__BL_NATIVE_RENDER_BATALHA || window.renderBatalha;
-  window.__BL_NATIVE_RENDER_BATALHA = nativeRender;
-  const previousSetUsuario = window.setUsuario;
-
-  function raw(){ return window.BL?.raw || window._blRaw || {}; }
-  function authUser(){ return window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null; }
-  function labelOf(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
-  function keyOf(p){ return String(p?.uid || p?.id || labelOf(p)); }
-  function meUid(){ return authUser()?.uid || raw().activeUid || window.BL?.__activeUid || ''; }
-  function meLabel(){
-    const u=authUser();
-    return raw().currentLabel || labelOf(u) || window.__BL_ME_LABEL || 'Milton Figueiredo';
-  }
-
-  function people(){
-    const map = new Map();
-    function add(p){
-      if(!p) return;
-      const label = labelOf(p);
-      const uid = p.uid || p.id || '';
-      if(!label && !uid) return;
-      const key = uid || norm(label);
-      const old = map.get(key) || {};
-      map.set(key, Object.assign({}, old, p, {uid: uid || old.uid || '', label: label || old.label || uid}));
-    }
-    (Array.isArray(raw().users) ? raw().users : []).forEach(add);
-    (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
-    const u = authUser();
-    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
-    if(!map.size){ add({label:'Milton Figueiredo'}); add({label:'Daniel Victor'}); }
-    return [...map.values()].filter(p=>labelOf(p));
-  }
-
-  function isMe(p){
-    const uid = meUid();
-    if(uid && String(p?.uid||p?.id||'') === String(uid)) return true;
-    return norm(labelOf(p)).includes(norm(meLabel()).split(' ')[0] || 'milton') && /milton/i.test(labelOf(p));
-  }
-
-  function mePerson(){
-    const list=people();
-    return list.find(isMe) || list.find(p=>/milton/i.test(labelOf(p))) || list[0] || {label:meLabel()};
-  }
-
-  function opponents(){
-    const me=mePerson();
-    return people().filter(p => keyOf(p)!==keyOf(me) && norm(labelOf(p))!==norm(labelOf(me)));
-  }
-
-  function battleValue(p){
-    const label = labelOf(p);
-    if(/milton/i.test(label)) return 'Milton';
-    if(/daniel/i.test(label)) return 'Daniel';
-    if(/roger/i.test(label)) return 'Roger';
-    return label;
-  }
-
-  function selectedOpponentKey(){
-    const opts=opponents();
-    if(!window.__BL_BATTLE_OPPONENT_V17 || !opts.some(p => keyOf(p) === String(window.__BL_BATTLE_OPPONENT_V17) || labelOf(p) === String(window.__BL_BATTLE_OPPONENT_V17))){
-      window.__BL_BATTLE_OPPONENT_V17 = keyOf(opts[0] || people()[1] || people()[0] || {label:'Daniel Victor'});
-    }
-    return String(window.__BL_BATTLE_OPPONENT_V17);
-  }
-
-  function opponentPerson(){
-    const key=selectedOpponentKey();
-    return opponents().find(p => keyOf(p)===key || labelOf(p)===key) || opponents()[0] || {label:'Daniel Victor'};
-  }
-
-  function hideOldControls(){
-    const ids=['batalha-seletor','bl-battle-multi-controls','bl-battle-selector-v15','bl-battle-selector-v16'];
-    ids.forEach(id=>{ const el=$(id); if(el) el.style.setProperty('display','none','important'); });
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
-    document.querySelectorAll('.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
-  }
-
-  function showBattlePage(){
-    window.usuarioAtual='Batalha';
-    document.body.classList.add('bl-battle-active','bl-v17-battle');
-    document.body.classList.remove('bl-v16-battle');
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.setProperty('display','none','important');
-    if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
-    hideOldControls();
-  }
-
-  function restoreProfile(){
-    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
-    const dd=$('blBattleDropdownV17'); if(dd) dd.style.display='none';
-    const bat=$('pageBatalha'), dash=$('pageDashboard');
-    if(bat) bat.style.display='none';
-    if(dash) dash.style.display='block';
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.removeProperty('display'));
-    try{ if(typeof previousSetUsuario==='function') previousSetUsuario(meLabel()); else window.usuarioAtual=meLabel(); }catch(e){ window.usuarioAtual=meLabel(); console.warn('V12.17 voltar perfil:', e); }
-    setTimeout(()=>{ const b=$('pageBatalha'), d=$('pageDashboard'); if(b) b.style.display='none'; if(d) d.style.display='block'; ensureBattleButton(); }, 80);
-    window.scrollTo(0,0);
-  }
-  window.blBackToMyProfile = restoreProfile;
-  window.blExitBattle = restoreProfile;
-
-  function ensureReturnButton(){
-    const page=$('pageBatalha'); if(!page) return;
-    let btn=$('bl-battle-return-original');
-    if(!btn){
-      btn=document.createElement('button'); btn.id='bl-battle-return-original'; btn.type='button';
-      btn.textContent='↩ Voltar para meus dados';
-      btn.style.cssText='margin:18px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
-      page.insertBefore(btn, page.firstElementChild || null);
-    }
-    btn.onclick=restoreProfile;
-    btn.style.setProperty('display','inline-flex','important');
-  }
-
-  function ensureNativeSelectOptions(){
-    const list=people();
-    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
-      const sel=$(id); if(!sel) return;
-      const prev=sel.value;
-      sel.innerHTML=list.map(p=>`<option value="${esc(battleValue(p))}">${esc(labelOf(p))}</option>`).join('');
-      if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
-      else sel.value=battleValue(idx===0 ? mePerson() : opponentPerson());
-    });
-  }
-
-  function updateSummary(){
-    const me=mePerson(), op=opponentPerson();
-    const names=$('blBattleSelectedNamesV17');
-    if(names) names.textContent = `${labelOf(me)} vs ${labelOf(op)}`;
-    const count=$('blBattleSelectedCountV17');
-    if(count) count.textContent = '2/2';
-  }
-
-  function ensureSelector(){
-    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let box=$('bl-battle-selector-v17');
-    if(!box){
-      box=document.createElement('div'); box.id='bl-battle-selector-v17';
-      box.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
-      box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span id="blBattleSelectedCountV17" style="font-size:12px;color:#94a3b8"></span></div><div id="blBattleSelectedNamesV17" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV17" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button></div>`;
-      container.parentElement.insertBefore(box, container);
-      box.querySelector('#blBattleOpenPickerV17').addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); openDropdown(); });
-    }
-    updateSummary();
-  }
-
-  function buildDropdown(){
-    let dd=$('blBattleDropdownV17');
-    const list=opponents();
-    const selected=selectedOpponentKey();
-    if(!dd){
-      dd=document.createElement('div'); dd.id='blBattleDropdownV17';
-      dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px';
-      document.body.appendChild(dd);
-      dd.addEventListener('click', ev=>ev.stopPropagation());
-    }
-    dd.innerHTML=`<input id="blBattleSearchV17" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Escolha 1 adversário</div><div id="blBattlePickerListV17" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p); const checked=String(key)===selected || labelOf(p)===selected; return `<label class="blBattlePickItemV17" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleRadioV17" name="blBattleOpponentV17" type="radio" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div id="blBattleLimitMsgV17" style="display:none;color:#fb923c;font-size:12px;margin-top:9px;font-weight:800">Escolha 1 adversário.</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV17" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV17" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
-    const search=$('blBattleSearchV17');
-    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV17').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; }); };
-    $('blBattleClosePickerV17').onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
-    $('blBattleApplyPickerV17').onclick=(ev)=>{
-      ev.preventDefault();
-      const chosen=dd.querySelector('.blBattleRadioV17:checked')?.value;
-      if(!chosen){ const msg=$('blBattleLimitMsgV17'); if(msg) msg.style.display='block'; return; }
-      window.__BL_BATTLE_OPPONENT_V17=chosen;
-      dd.style.display='none';
-      renderBattleDuel();
-    };
-    return dd;
-  }
-
-  function openDropdown(){
-    const dd=buildDropdown();
-    dd.style.display='block';
-    setTimeout(()=>$('blBattleSearchV17')?.focus(),30);
-  }
-
-  function renderNativeDuel(pa,pb){
-    const c=$('batalhaContainer'), a=$('bat-playerA'), b=$('bat-playerB');
-    if(!c || !a || !b || typeof nativeRender!=='function'){
-      if(c) c.innerHTML = '<div style="padding:16px;color:#fb923c">Render original não encontrado.</div>';
-      return;
-    }
-    ensureNativeSelectOptions();
-    a.value=battleValue(pa);
-    b.value=battleValue(pb);
-    const oldUser=window.usuarioAtual;
-    const had=document.body.classList.contains('bl-battle-active');
-    window.usuarioAtual='__BL_NATIVE_DUEL__';
-    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
-    try{ nativeRender(); }catch(e){ c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro no duelo: ${esc(e.message||e)}</div>`; }
-    window.usuarioAtual=oldUser;
-    if(had) document.body.classList.add('bl-battle-active','bl-v17-battle');
-  }
-
-  function renderBattleDuel(){
-    showBattlePage(); ensureReturnButton(); ensureSelector(); ensureNativeSelectOptions(); hideOldControls();
-    renderNativeDuel(mePerson(), opponentPerson());
-    window.__BL_BATTLE_DUEL_COUNT=1;
-    ensureSelector(); hideOldControls(); updateSummary();
-  }
-
-  function openBattle(){ showBattlePage(); renderBattleDuel(); window.scrollTo(0,0); }
-  window.blOpenBattle = openBattle;
-  window.blOpenBattleSelectorV17 = openBattle;
-
-  function ensureBattleButton(){
-    let btn=$('btn-user-batalha') || $('bl-battle-main-btn');
-    if(!btn){
-      const target=$('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
-      btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; target.appendChild(btn);
-    }
-    btn.textContent='⚔️ Modo Batalha'; btn.hidden=false; btn.disabled=false;
-    btn.style.setProperty('display','inline-flex','important'); btn.style.setProperty('visibility','visible','important'); btn.style.setProperty('opacity','1','important');
-    btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
-  }
-
-  window.renderBatalha=function(){
-    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleDuel();
-    if(typeof nativeRender==='function') return nativeRender.apply(this, arguments);
-  };
-
-  window.setUsuario=function(usuario){
-    if(usuario==='Batalha') return openBattle();
-    document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v16-battle');
-    const dd=$('blBattleDropdownV17'); if(dd) dd.style.display='none';
-    if(typeof previousSetUsuario==='function') return previousSetUsuario.apply(this, arguments);
-    window.usuarioAtual=usuario;
-  };
-
-  window.blBattleDebug=window.blV12Debug=function(){
-    const op=opponentPerson();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1217:!!window.__BL_V12_17_MARKER, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), selector:!!$('bl-battle-selector-v17'), dropdownDisplay:$('blBattleDropdownV17')?getComputedStyle($('blBattleDropdownV17')).display:null, oldTopDisplay:$('batalha-seletor')?getComputedStyle($('batalha-seletor')).display:null, me:labelOf(mePerson()), opponent:labelOf(op), duelCount:window.__BL_BATTLE_DUEL_COUNT||0, people:people().map(labelOf), opponents:opponents().map(labelOf)};
-  };
-
-  const style=document.createElement('style'); style.id='bl-v12-17-style';
-  style.textContent=`body.bl-v17-battle #batalha-seletor, body.bl-v17-battle #bl-battle-multi-controls, body.bl-v17-battle #bl-battle-selector-v15, body.bl-v17-battle #bl-battle-selector-v16{display:none!important} body.bl-v17-battle .lendo-wrap, body.bl-v17-battle #lendoWrap{display:none!important} body.bl-v17-battle #bl-battle-selector-v17{display:block!important}`;
-  document.head.appendChild(style);
-
-  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){ ensureReturnButton(); ensureSelector(); hideOldControls(); } }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,600); }); else { tick(); setTimeout(tick,600); }
-  setInterval(tick, 1500);
-})();
-</script>
-
-
-<script id="bl-v12-18-battle-opponent-instant-fix">
-/* BookLegacy V12.19 — Corrige troca de adversário + chave real dos dados no Batalha 2x2.
-   Não mexe em Firebase/Auth/Firestore. Só ajusta o seletor do modo batalha. */
-(function(){
-  'use strict';
-  window.__BL_PATCH_VERSION = 'v12.19-battle-opponent-datakey-fix';
-  window.__BL_V12_18_MARKER = true;
-  window.__BL_V12_19_MARKER = true;
-
-  const $ = id => document.getElementById(id);
-  const norm = v => String(v ?? '').trim().toLowerCase();
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const labelOf = p => String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim();
-  const keyOf = p => String(p?.uid || p?.id || labelOf(p));
-  const raw = () => window.BL?.raw || window._blRaw || {};
-  const authUser = () => window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
-
-  function people(){
-    const map = new Map();
-    function add(p){
-      if(!p) return;
-      const label = labelOf(p);
-      const uid = p.uid || p.id || '';
-      if(!label && !uid) return;
-      const key = uid || norm(label);
-      const old = map.get(key) || {};
-      map.set(key, Object.assign({}, old, p, {uid:uid || old.uid || '', label:label || old.label || uid}));
-    }
-    (Array.isArray(raw().users) ? raw().users : []).forEach(add);
-    (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
-    const u = authUser();
-    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
-    if(!map.size){ add({label:'Milton Figueiredo'}); add({label:'Daniel Victor'}); }
-    return [...map.values()].filter(p=>labelOf(p));
-  }
-
-  function mePerson(){
-    const uid = authUser()?.uid || raw().activeUid || window.BL?.__activeUid || '';
-    const list = people();
-    return list.find(p => uid && String(p.uid||p.id||'')===String(uid)) || list.find(p=>/milton/i.test(labelOf(p))) || list[0] || {label:'Milton Figueiredo'};
-  }
-  function opponents(){
-    const me = mePerson();
-    return people().filter(p => keyOf(p)!==keyOf(me) && norm(labelOf(p))!==norm(labelOf(me)));
-  }
-  function selectedOpponent(){
-    const opts = opponents();
-    const current = String(window.__BL_BATTLE_OPPONENT_V18 || window.__BL_BATTLE_OPPONENT_V17 || '');
-    return opts.find(p => keyOf(p)===current || labelOf(p)===current) || opts[0] || {label:'Daniel Victor'};
-  }
-  function valueForA(p){ return /milton/i.test(labelOf(p)) ? 'Milton' : labelOf(p); }
-  function valueForB(p){
-    const label = labelOf(p);
-    if(/roger/i.test(label)) return 'Roger';
-    if(/daniel/i.test(label)) return 'Daniel';
-    if(/milton/i.test(label)) return 'Milton';
-    return label;
-  }
-
-  function fillSelects(op){
-    const list = people();
-    const a = $('bat-playerA'), b = $('bat-playerB');
-    if(a){
-      a.innerHTML = list.map(p => `<option value="${esc(valueForA(p))}">${esc(labelOf(p))}</option>`).join('');
-      a.value = valueForA(mePerson());
-    }
-    if(b){
-      b.innerHTML = opponents().map(p => `<option value="${esc(valueForB(p))}">${esc(labelOf(p))}</option>`).join('');
-      const val = valueForB(op || selectedOpponent());
-      if(![...b.options].some(o=>o.value===val)) b.insertAdjacentHTML('beforeend', `<option value="${esc(val)}">${esc(val)}</option>`);
-      b.value = val;
-    }
-  }
-
-  function updateSummary(op){
-    const names = $('blBattleSelectedNamesV17');
-    if(names) names.textContent = `${labelOf(mePerson())} vs ${labelOf(op || selectedOpponent())}`;
-    const count = $('blBattleSelectedCountV17');
-    if(count) count.textContent = '2/2';
-  }
-
-  function renderDuel(op){
-    op = op || selectedOpponent();
-    window.__BL_BATTLE_OPPONENT_V18 = keyOf(op);
-    window.__BL_BATTLE_OPPONENT_V17 = keyOf(op);
-    window.usuarioAtual = 'Batalha';
-    document.body.classList.add('bl-battle-active','bl-v17-battle','bl-v18-battle');
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.setProperty('display','none','important');
-    if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
-    document.querySelectorAll('#batalha-seletor,#bl-battle-multi-controls,#bl-battle-selector-v15,#bl-battle-selector-v16').forEach(el=>el.style.setProperty('display','none','important'));
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
-    fillSelects(op);
-    updateSummary(op);
-    const native = window.__BL_NATIVE_RENDER_BATALHA;
-    if(typeof native === 'function'){
-      const had = document.body.classList.contains('bl-battle-active');
-      // Evita que wrappers antigos interceptem o render original.
-      document.body.classList.remove('bl-battle-active','bl-v17-battle','bl-v18-battle','bl-v16-battle');
-      const old = window.usuarioAtual;
-      window.usuarioAtual='__BL_RENDER_NATIVE_DUEL__';
-      try{ native(); }catch(e){ console.error('V12.18 render nativo falhou:', e); }
-      window.usuarioAtual=old;
-      if(had) document.body.classList.add('bl-battle-active','bl-v17-battle','bl-v18-battle');
-    } else if(typeof window.renderBatalha === 'function'){
-      try{ window.renderBatalha(); }catch(e){ console.error('V12.18 renderBatalha falhou:', e); }
-    }
-    // Depois do render original, reaplica o painel seletor e resumo por cima.
-    setTimeout(()=>{ updateSummary(op); const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.setProperty('display','none','important'); }, 20);
-    window.__BL_BATTLE_DUEL_COUNT = 1;
-  }
-
-  function buildDropdown(){
-    let dd = $('blBattleDropdownV17');
-    if(!dd) return null;
-    const list = opponents();
-    const selected = keyOf(selectedOpponent());
-    dd.innerHTML = `<input id="blBattleSearchV17" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Escolha 1 adversário</div><div id="blBattlePickerListV17" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p); const checked=key===selected; return `<label class="blBattlePickItemV17" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleRadioV17" name="blBattleOpponentV17" type="radio" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV17" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV17" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
-    const search=$('blBattleSearchV17');
-    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV17').forEach(el=>{ el.style.display=!q || norm(el.dataset.name).includes(q)?'flex':'none'; }); };
-    dd.querySelectorAll('.blBattleRadioV17').forEach(r=>{
-      r.onchange=()=>{
-        const op = opponents().find(p=>keyOf(p)===r.value) || selectedOpponent();
-        renderDuel(op); // troca na hora ao selecionar
-      };
-    });
-    const close=$('blBattleClosePickerV17'); if(close) close.onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
-    const apply=$('blBattleApplyPickerV17'); if(apply) apply.onclick=(ev)=>{ ev.preventDefault(); const val=dd.querySelector('.blBattleRadioV17:checked')?.value; const op=opponents().find(p=>keyOf(p)===val) || selectedOpponent(); renderDuel(op); dd.style.display='none'; };
-    return dd;
-  }
-
-  function openDropdown(){
-    let dd = $('blBattleDropdownV17');
-    if(!dd){
-      dd=document.createElement('div'); dd.id='blBattleDropdownV17';
-      dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px';
-      document.body.appendChild(dd);
-      dd.addEventListener('click', ev=>ev.stopPropagation());
-    }
-    buildDropdown();
-    dd.style.display='block';
-    setTimeout(()=>$('blBattleSearchV17')?.focus(),30);
-  }
-
-  function hookPickerButton(){
-    const btn = $('blBattleOpenPickerV17');
-    if(btn && !btn.__bl18){
-      btn.__bl18 = true;
-      btn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openDropdown(); return false; };
-    }
-  }
-
-  function openBattle(){
-    if(typeof window.blOpenBattleSelectorV17 === 'function'){
-      try{ window.blOpenBattleSelectorV17(); }catch(e){ console.warn('V12.18 abriu sem helper v17:', e); }
-    }
-    renderDuel(selectedOpponent());
-    hookPickerButton();
-    window.scrollTo(0,0);
-  }
-
-  const prevDebug = window.blBattleDebug;
-  window.blBattleDebug = window.blV12Debug = function(){
-    const op=selectedOpponent();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1218:true, marker1219:true, usuarioAtual:window.usuarioAtual, opponent:labelOf(op), bSelect:$('bat-playerB')?.value || null, bText:$('bat-playerB')?.selectedOptions?.[0]?.textContent || null, dropdownDisplay:$('blBattleDropdownV17')?getComputedStyle($('blBattleDropdownV17')).display:null, people:people().map(labelOf), opponents:opponents().map(labelOf), oldDebug: typeof prevDebug==='function' ? prevDebug() : null};
-  };
-
-  const oldSet = window.setUsuario;
-  window.setUsuario = function(usuario){ if(usuario==='Batalha') return openBattle(); return oldSet ? oldSet.apply(this, arguments) : (window.usuarioAtual=usuario); };
-  const oldOpen = window.blOpenBattle;
-  window.blOpenBattle = window.blOpenBattleSelectorV17 = openBattle;
-
-  function tick(){
-    hookPickerButton();
-    const btn=$('btn-user-batalha');
-    if(btn){ btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; }; }
-    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){
-      fillSelects(selectedOpponent()); updateSummary(selectedOpponent());
-      const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.setProperty('display','none','important');
-    }
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,800); }); else { tick(); setTimeout(tick,800); }
-  setInterval(tick, 1000);
-})();
-</script>
-
-
-<script id="bl-v12-20-battle-true-original-select">
-/* BookLegacy V12.20 — Fix real do Batalha 2x2.
-   Usa a função original real capturada logo após sua declaração, não wrappers antigos.
-   Não toca Firebase/Auth/Firestore. */
-(function(){
-  'use strict';
-  window.__BL_PATCH_VERSION = 'v12.20-battle-true-original-select';
-  window.__BL_V12_20_MARKER = true;
-
-  const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const norm = (v)=>String(v ?? '').trim().toLowerCase();
-  const labelOf = (p)=>String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim();
-  const keyOf = (p)=>String(p?.uid || p?.id || labelOf(p));
-  const raw = ()=>window.BL?.raw || window._blRaw || {};
-  const authUser = ()=>window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
-  const trueRender = window.__BL_TRUE_ORIGINAL_RENDER_BATALHA || window.__BL_NATIVE_RENDER_BATALHA || window.renderBatalha;
-  const previousSetUsuario = window.setUsuario;
-
-  function people(){
-    const map = new Map();
-    function add(p){
-      if(!p) return;
-      const label = labelOf(p);
-      const uid = p.uid || p.id || '';
-      if(!label && !uid) return;
-      const key = uid || norm(label);
-      const old = map.get(key) || {};
-      map.set(key, Object.assign({}, old, p, {uid:uid || old.uid || '', label:label || old.label || uid}));
-    }
-    (Array.isArray(raw().users) ? raw().users : []).forEach(add);
-    (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
-    const u=authUser();
-    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
-    if(!map.size){ add({label:'Milton Figueiredo'}); add({label:'Daniel Victor'}); add({label:'Roger Bezerra'}); }
-    return [...map.values()].filter(p=>labelOf(p));
-  }
-
-  function mePerson(){
-    const uid = authUser()?.uid || raw().activeUid || window.BL?.__activeUid || '';
-    const list = people();
-    return list.find(p => uid && String(p.uid||p.id||'')===String(uid)) || list.find(p=>/milton/i.test(labelOf(p))) || list[0] || {label:'Milton Figueiredo'};
-  }
-  function opponents(){
-    const me=mePerson();
-    return people().filter(p=> keyOf(p)!==keyOf(me) && norm(labelOf(p))!==norm(labelOf(me)));
-  }
-  function internalValue(p){
-    const label=labelOf(p);
-    if(/milton/i.test(label)) return 'Milton';
-    if(/daniel/i.test(label)) return 'Daniel';
-    if(/roger/i.test(label)) return 'Roger';
-    return label.split(' ')[0] || label;
-  }
-  function selectedOpponent(){
-    const list=opponents();
-    let key = String(window.__BL_BATTLE_OPPONENT_V20 || window.__BL_BATTLE_OPPONENT_V18 || window.__BL_BATTLE_OPPONENT_V17 || '');
-    let found = list.find(p=> keyOf(p)===key || labelOf(p)===key || internalValue(p)===key);
-    if(!found) found = list[0] || {label:'Daniel Victor'};
-    window.__BL_BATTLE_OPPONENT_V20 = keyOf(found);
-    window.__BL_BATTLE_OPPONENT_V18 = keyOf(found);
-    window.__BL_BATTLE_OPPONENT_V17 = keyOf(found);
-    return found;
-  }
-
-  function showBattleShell(){
-    window.usuarioAtual='Batalha';
-    document.body.classList.add('bl-battle-active','bl-v20-battle');
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.setProperty('display','none','important');
-    if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
-  }
-  function hideOldBattleControls(){
-    ['batalha-seletor','bl-battle-multi-controls','bl-battle-selector-v15','bl-battle-selector-v16'].forEach(id=>{ const el=$(id); if(el) el.style.setProperty('display','none','important'); });
-  }
-  function ensureReturnButton(){
-    const page=$('pageBatalha'); if(!page) return;
-    let btn=$('bl-battle-return-original');
-    if(!btn){
-      btn=document.createElement('button'); btn.id='bl-battle-return-original'; btn.type='button'; btn.textContent='↩ Voltar para meus dados';
-      btn.style.cssText='margin:18px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
-      page.insertBefore(btn, page.firstElementChild || null);
-    }
-    btn.onclick=(ev)=>{ ev.preventDefault(); backToProfile(); };
-    btn.style.setProperty('display','inline-flex','important');
-  }
-  function backToProfile(){
-    document.body.classList.remove('bl-battle-active','bl-v20-battle','bl-v17-battle','bl-v18-battle');
-    const dd=$('blBattleDropdownV20'); if(dd) dd.style.display='none';
-    const bat=$('pageBatalha'), dash=$('pageDashboard');
-    if(bat) bat.style.display='none';
-    if(dash) dash.style.display='block';
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.removeProperty('display'));
-    try{ if(typeof previousSetUsuario==='function') previousSetUsuario(labelOf(mePerson())); else window.usuarioAtual=labelOf(mePerson()); }catch(e){ window.usuarioAtual=labelOf(mePerson()); }
-    ensureBattleButton();
-    window.scrollTo(0,0);
-  }
-  window.blBackToMyProfile = backToProfile;
-  window.blExitBattle = backToProfile;
-
-  function ensureNativeOptions(op){
-    const a=$('bat-playerA'), b=$('bat-playerB');
-    if(a){
-      const me=mePerson();
-      const val=internalValue(me);
-      a.innerHTML = `<option value="${esc(val)}">${esc(labelOf(me))}</option>`;
-      a.value = val;
-    }
-    if(b){
-      const list=opponents();
-      b.innerHTML = list.map(p=>`<option value="${esc(internalValue(p))}">${esc(labelOf(p))}</option>`).join('');
-      const val=internalValue(op || selectedOpponent());
-      if(![...b.options].some(o=>o.value===val)) b.insertAdjacentHTML('beforeend', `<option value="${esc(val)}">${esc(labelOf(op||selectedOpponent()))}</option>`);
-      b.value = val;
-    }
-  }
-
-  function ensureSelector(){
-    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let box=$('bl-battle-selector-v20');
-    if(!box){
-      box=document.createElement('div'); box.id='bl-battle-selector-v20';
-      box.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
-      box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">1x1</span></div><div id="blBattleSelectedNamesV20" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV20" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button></div>`;
-      container.parentElement.insertBefore(box, container);
-    }
-    const btn=$('blBattleOpenPickerV20'); if(btn) btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openDropdown(); return false; };
-    updateSummary();
-  }
-  function updateSummary(){
-    const el=$('blBattleSelectedNamesV20'); if(el) el.textContent=`${labelOf(mePerson())} vs ${labelOf(selectedOpponent())}`;
-  }
-
-  function buildDropdown(){
-    let dd=$('blBattleDropdownV20');
-    if(!dd){
-      dd=document.createElement('div'); dd.id='blBattleDropdownV20';
-      dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px';
-      document.body.appendChild(dd);
-      dd.addEventListener('click', ev=>ev.stopPropagation());
-    }
-    const list=opponents(), selectedKey=keyOf(selectedOpponent());
-    dd.innerHTML=`<input id="blBattleSearchV20" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Escolha 1 adversário</div><div id="blBattlePickerListV20" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p), checked=key===selectedKey; return `<label class="blBattlePickItemV20" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleRadioV20" name="blBattleOpponentV20" type="radio" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV20" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV20" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
-    const search=$('blBattleSearchV20');
-    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV20').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; }); };
-    dd.querySelectorAll('.blBattleRadioV20').forEach(r=>{ r.onchange=()=>{ const op=list.find(p=>keyOf(p)===r.value) || selectedOpponent(); renderDuel(op); }; });
-    $('blBattleClosePickerV20').onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
-    $('blBattleApplyPickerV20').onclick=(ev)=>{ ev.preventDefault(); const val=dd.querySelector('.blBattleRadioV20:checked')?.value; const op=list.find(p=>keyOf(p)===val) || selectedOpponent(); dd.style.display='none'; renderDuel(op); };
-    return dd;
-  }
-  function openDropdown(){ const dd=buildDropdown(); dd.style.display='block'; setTimeout(()=>$('blBattleSearchV20')?.focus(),30); }
-
-  function renderDuel(op){
-    op = op || selectedOpponent();
-    window.__BL_BATTLE_OPPONENT_V20 = keyOf(op);
-    window.__BL_BATTLE_OPPONENT_V18 = keyOf(op);
-    window.__BL_BATTLE_OPPONENT_V17 = keyOf(op);
-    showBattleShell(); ensureReturnButton(); ensureSelector(); hideOldBattleControls(); ensureNativeOptions(op);
-    if(typeof trueRender === 'function'){
-      const oldUser=window.usuarioAtual;
-      const oldClasses=['bl-battle-active','bl-v20-battle','bl-v17-battle','bl-v18-battle','bl-v16-battle'].filter(c=>document.body.classList.contains(c));
-      oldClasses.forEach(c=>document.body.classList.remove(c));
-      window.usuarioAtual='__BL_TRUE_RENDER__';
-      try{ trueRender(); }catch(e){ const c=$('batalhaContainer'); if(c) c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro no render original: ${esc(e.message||e)}</div>`; console.error('V12.20 render true original falhou:',e); }
-      window.usuarioAtual=oldUser;
-      oldClasses.forEach(c=>document.body.classList.add(c));
-    }
-    hideOldBattleControls(); ensureSelector(); updateSummary();
-    window.__BL_BATTLE_DUEL_COUNT=1;
-  }
-  function openBattle(){ renderDuel(selectedOpponent()); window.scrollTo(0,0); }
-  window.blOpenBattle = window.blOpenBattleSelectorV17 = window.blOpenBattleSelectorV20 = openBattle;
-
-  function ensureBattleButton(){
-    let btn=$('btn-user-batalha') || $('bl-battle-main-btn');
-    if(!btn){ const target=$('btn-user-milton')?.parentElement || document.querySelector('header') || document.body; btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; target.appendChild(btn); }
-    btn.textContent='⚔️ Modo Batalha'; btn.hidden=false; btn.disabled=false;
-    btn.style.setProperty('display','inline-flex','important'); btn.style.setProperty('visibility','visible','important'); btn.style.setProperty('opacity','1','important');
-    btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
-  }
-
-  window.renderBatalha=function(){
-    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderDuel(selectedOpponent());
-    if(typeof trueRender==='function') return trueRender.apply(this, arguments);
-  };
-  window.setUsuario=function(usuario){ if(usuario==='Batalha') return openBattle(); if(typeof previousSetUsuario==='function') return previousSetUsuario.apply(this, arguments); window.usuarioAtual=usuario; };
-
-  const prevDebug=window.blBattleDebug;
-  window.blBattleDebug = window.blV12Debug = function(){
-    const op=selectedOpponent();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1220:true, trueOriginal:typeof trueRender, usuarioAtual:window.usuarioAtual, opponent:labelOf(op), bSelect:$('bat-playerB')?.value||null, bText:$('bat-playerB')?.selectedOptions?.[0]?.textContent||null, renderedName:document.querySelector('#batalhaContainer')?.innerText?.match(/DANIEL|ROGER|MILTON/i)?.[0]||null, dropdownDisplay:$('blBattleDropdownV20')?getComputedStyle($('blBattleDropdownV20')).display:null, people:people().map(labelOf), opponents:opponents().map(labelOf), oldDebug: typeof prevDebug==='function' ? prevDebug() : null};
-  };
-
-  function boot(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha') { hideOldBattleControls(); ensureSelector(); updateSummary(); } }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setInterval(boot, 1200);
-})();
-</script>
-
-
-<script id="bl-v12-21-battle-uid-data-fix">
-/* BookLegacy V12.21 — Batalha por UID real.
-   Nome é só texto. Dados vêm do bundle do usuário pelo uid do Firestore. */
-(function(){
-  'use strict';
-  window.__BL_PATCH_VERSION = 'v12.21-battle-uid-data-fix';
-  window.__BL_V12_21_MARKER = true;
+  window.__BL_PATCH_VERSION = 'v12.23-battle-one-selector-stable';
+  window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm = v => String(v ?? '').trim().toLowerCase();
-  const txt = v => (typeof window.blTxt === 'function' ? window.blTxt(v) : String(v ?? '').trim());
-  const num = v => (typeof window.blNum === 'function' ? window.blNum(v) : (Number.isFinite(Number(v)) ? Number(v) : 0));
-  const done = v => (typeof window.blIsDone === 'function' ? window.blIsDone(v) : ['completo','lido','finalizado','concluido','concluído'].includes(norm(v)));
-  const labelOf = p => String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim();
-  const uidOf = p => String(p?.uid || p?.id || '').trim();
-  const raw = () => window.BL?.raw || window._blRaw || {};
-  const authUser = () => window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
-  const trueRender = window.__BL_TRUE_ORIGINAL_RENDER_BATALHA || window.__BL_NATIVE_RENDER_BATALHA || window.renderBatalha;
-  const prevSetUsuario = window.setUsuario;
+  let selectedOpponentUid = localStorage.getItem('blBattleOpponentUid') || '';
+  let pickerOpen = false;
 
-  function users(){
-    const list = Array.isArray(raw().users) ? raw().users.slice() : [];
+  function raw(){ return window.BL?.raw || {}; }
+  function authUser(){ return window.BL?.auth?.currentUser || null; }
+  function myUid(){ return raw().uid || window.BL?.__activeUid || authUser()?.uid || ''; }
+  function labelOf(p){ return p?.label || p?.displayName || p?.name || (p?.email ? p.email.split('@')[0] : '') || 'Usuário'; }
+  function legacyKeyOf(p){
+    const label = labelOf(p).trim();
+    const first = label.split(/\s+/)[0] || label;
+    return first || 'Daniel';
+  }
+  function mergePeople(){
+    const users = Array.isArray(raw().users) ? raw().users.slice() : [];
+    const friends = Array.isArray(raw().friends) ? raw().friends.slice() : [];
     const map = new Map();
-    list.forEach(u => { const uid = uidOf(u); if(uid) map.set(uid, u); });
-    (Array.isArray(raw().friends) ? raw().friends : []).forEach(f => { const uid=uidOf(f); if(uid && !map.has(uid)) map.set(uid, f); });
-    const au = authUser();
-    if(au && !map.has(au.uid)) map.set(au.uid, {uid:au.uid,label:au.displayName||au.email||'Eu',displayName:au.displayName,email:au.email,photoURL:au.photoURL});
-    return [...map.values()].filter(u => uidOf(u) || labelOf(u));
+    users.forEach(u => { if(u){ map.set(u.uid || labelOf(u), u); } });
+    friends.forEach(f => {
+      if(!f) return;
+      const key = f.uid || labelOf(f);
+      const old = map.get(key) || {};
+      map.set(key, Object.assign({}, old, f, {
+        uid: old.uid || f.uid || key,
+        label: old.label || f.label || f.displayName || f.name || (f.email ? f.email.split('@')[0] : 'Amigo')
+      }));
+    });
+    return [...map.values()].filter(Boolean);
   }
   function me(){
-    const uid = authUser()?.uid || raw().uid || raw().activeUid || window.BL?.__activeUid || '';
-    const list = users();
-    return list.find(u => uid && uidOf(u) === uid) || list[0] || {uid:'me',label:'Milton'};
+    const uid = myUid();
+    const people = mergePeople();
+    return people.find(p => p.uid && p.uid === uid) || people[0] || {uid:uid,label:raw().currentLabel || authUser()?.displayName || 'Milton Figueiredo'};
   }
   function opponents(){
-    const myUid = uidOf(me());
-    return users().filter(u => uidOf(u) && uidOf(u) !== myUid);
+    const uid = myUid();
+    return mergePeople().filter(p => (p.uid || '') !== uid);
   }
   function selectedOpponent(){
     const list = opponents();
-    const saved = String(window.__BL_BATTLE_OPPONENT_UID_V21 || window.__BL_BATTLE_OPPONENT_V20 || window.__BL_BATTLE_OPPONENT_V18 || '');
-    let op = list.find(u => uidOf(u) === saved) || list.find(u => labelOf(u) === saved) || list[0];
-    if(!op) op = {uid:'',label:'Adversário',library:[],sessions:[],ratings:[],goals:[]};
-    if(uidOf(op)) {
-      window.__BL_BATTLE_OPPONENT_UID_V21 = uidOf(op);
-      window.__BL_BATTLE_OPPONENT_V20 = uidOf(op);
-      window.__BL_BATTLE_OPPONENT_V18 = uidOf(op);
-      window.__BL_BATTLE_OPPONENT_V17 = uidOf(op);
-    }
+    if(!list.length) return null;
+    let op = selectedOpponentUid ? list.find(p => p.uid === selectedOpponentUid) : null;
+    if(!op) op = list[0];
+    selectedOpponentUid = op.uid || selectedOpponentUid;
+    localStorage.setItem('blBattleOpponentUid', selectedOpponentUid);
     return op;
   }
-
-  function bookMap(){ return new Map((raw().books || []).map(b => [b.id, b])); }
-  function legacyBook(item, map, label){
-    if(typeof window.blLegacyBook === 'function') return window.blLegacyBook(item, map, label);
-    const b = map.get(item.bookId) || {};
-    const total = num(item.totalPages || item.pages || b.pages || b.totalPages);
-    const current = num(item.currentPage || item.pagAtual || (done(item.status) ? total : 0));
-    return { id:item.id, bookId:item.bookId||b.id||'', livro:txt(item.title||b.title||item.livro||b.livro), autor:txt(item.author||b.author||item.autor), coverUrl:txt(item.coverUrl||b.coverUrl||item.capa), colecao:txt(item.collection||b.collection||item.colecao), genero:txt(item.genre||b.genre||item.genero), status:txt(item.status||'Aguardando'), totalPag:total, pagAtual:current, pct:total?Math.min(1,Math.max(0,current/total)):num(item.progress), usuario:label };
+  function syncHiddenSelects(){
+    const a = $('bat-playerA'), b = $('bat-playerB');
+    const m = me(), op = selectedOpponent();
+    if(!op) return;
+    const keyA = legacyKeyOf(m);
+    const keyB = legacyKeyOf(op);
+    window.__BL_BATTLE_PLAYER_A = keyA;
+    window.__BL_BATTLE_PLAYER_B = keyB;
+    if(a){ a.innerHTML = `<option value="${esc(keyA)}">${esc(labelOf(m))}</option>`; a.value = keyA; }
+    if(b){ b.innerHTML = `<option value="${esc(keyB)}">${esc(labelOf(op))}</option>`; b.value = keyB; }
   }
-  function bundleToLegacy(bundle, label){
-    const map = bookMap();
-    const books = (bundle.library || []).map(item => legacyBook(item, map, label)).filter(l => l.livro);
-    const sessions = (bundle.sessions || []).map(s => ({
-      id:s.id, bookId:s.bookId||'', livro:txt(s.title||s.livro), colecao:txt(s.collection||s.colecao), data:txt(s.date||s.data), paginas:num(s.pages||s.paginas), minutos:num(s.minutes||s.minutos), segundos:num(s.seconds||s.segundos), ano:num(s.year||s.ano||String(s.date||'').slice(0,4)), usuario:label
-    })).filter(s => s.livro && s.data);
-    const ratings = (bundle.ratings || []).map(r => {
-      const criterios = {'Diálogos':num(r.dialogos),'Enredo':num(r.enredo),'Estilo Visual':num(r.estiloVisual),'Finalização':num(r.finalizacao),'Imersão':num(r.imersao),'Impacto Emocional':num(r.impactoEmocional),'Originalidade':num(r.originalidade),'Personagens':num(r.personagens),'Ritmo':num(r.ritmo),'Temas':num(r.temas)};
-      const vals = Object.values(criterios).filter(v => v > 0);
-      const media = num(r.notaFinal || r.notaPonderada) || (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0);
-      return { id:r.id, bookId:r.bookId||'', livro:txt(r.title||r.livro), ano:num(r.readingYear||r.ano), media, criterios, usuario:label };
-    }).filter(n => n.livro);
-    return {books, sessions, ratings};
+  function hideOldBattleSelector(){
+    const old = $('batalha-seletor');
+    if(old) old.style.setProperty('display','none','important');
   }
-  function splitBooks(all){
-    return {
-      livros: all.filter(l => done(l.status) || norm(l.status) === 'completo'),
-      lendo: all.filter(l => ['lendo','em leitura','reading'].includes(norm(l.status))),
-      pausados: all.filter(l => ['pausado','pausados','paused'].includes(norm(l.status))),
-      aguardando: all.filter(l => !(done(l.status) || ['lendo','em leitura','reading','pausado','pausados','paused'].includes(norm(l.status))))
-    };
+  function removeOldPatchControllers(){
+    [
+      'blBattleSelectorBoxV15','blBattleSelectorBoxV16','blBattleSelectorBoxV17','blBattleSelectorBoxV20','blBattleSelectorBoxV21',
+      'blBattleDropdownV15','blBattleDropdownV16','blBattleDropdownV17','blBattleDropdownV20','blBattleDropdownV21','blBattleSingleSelectorV22'
+    ].forEach(id => { const el = $(id); if(el) el.remove(); });
+    document.querySelectorAll('[id^="blBattleSelectorBoxV"],[id^="blBattleDropdownV"],[id^="blBattleSingleSelector"]').forEach(el=>el.remove());
   }
-  function buildBattleData(aBundle, bBundle){
-    const aLabel = labelOf(aBundle) || 'Eu';
-    const bLabel = labelOf(bBundle) || 'Adversário';
-    const A = bundleToLegacy(aBundle, aLabel);
-    const B = bundleToLegacy(bBundle, bLabel);
-    const books = [...A.books, ...B.books];
-    const split = splitBooks(books);
-    return Object.assign({}, split, {
-      sessoes: [...A.sessions, ...B.sessions],
-      notas: [...A.ratings, ...B.ratings],
-      metasPorAno: window._dadosD?.metasPorAno || {},
-      __battleUidMode: true,
-      __battleAUid: uidOf(aBundle),
-      __battleBUid: uidOf(bBundle),
-      __battleALabel: aLabel,
-      __battleBLabel: bLabel
+  function renderPickerList(filter=''){
+    const body = $('blBattlePickerBodyV23'); if(!body) return;
+    const q = norm(filter);
+    const ops = opponents().filter(p => !q || norm(labelOf(p)).includes(q) || norm(p.email).includes(q) || norm(p.uid).includes(q));
+    if(!ops.length){ body.innerHTML = '<div style="color:#94a3b8;padding:10px">Nenhum amigo encontrado.</div>'; return; }
+    body.innerHTML = ops.map(p => {
+      const uid = p.uid || labelOf(p);
+      const active = uid === selectedOpponentUid;
+      return `<button type="button" class="blBattleOpponentItemV23" data-uid="${esc(uid)}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin:8px 0;border-radius:10px;border:1px solid ${active?'#8b7cf8':'rgba(255,255,255,.08)'};background:${active?'rgba(139,124,248,.18)':'rgba(255,255,255,.06)'};color:#f8fafc;cursor:pointer;text-align:left;font-weight:900;">
+        <span>${active?'●':'○'} ${esc(labelOf(p))}</span>
+        <small style="color:#94a3b8;font-size:10px">${esc(String(uid).slice(0,6))}</small>
+      </button>`;
+    }).join('');
+    body.querySelectorAll('.blBattleOpponentItemV23').forEach(btn => {
+      btn.addEventListener('click', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        selectedOpponentUid = btn.dataset.uid || selectedOpponentUid;
+        localStorage.setItem('blBattleOpponentUid', selectedOpponentUid);
+        renderPickerList($('blBattleSearchV23')?.value || '');
+      });
     });
   }
-
-  function showShell(){
-    window.usuarioAtual = 'Batalha';
-    document.body.classList.add('bl-battle-active','bl-v21-battle');
-    const dash=$('pageDashboard'), bat=$('pageBatalha');
-    if(dash) dash.style.setProperty('display','none','important');
-    if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
+  function openPicker(){
+    pickerOpen = true;
+    buildController();
+    const dd = $('blBattleDropdownV23');
+    if(dd){ dd.style.display = 'block'; dd.style.visibility = 'visible'; }
+    setTimeout(()=> $('blBattleSearchV23')?.focus(), 30);
   }
-  function hideOld(){ ['batalha-seletor','bl-battle-multi-controls','bl-battle-selector-v15','bl-battle-selector-v16'].forEach(id=>{ const el=$(id); if(el) el.style.setProperty('display','none','important'); }); }
-  function ensureReturn(){
-    const page=$('pageBatalha'); if(!page) return;
-    let btn=$('bl-battle-return-original');
-    if(!btn){ btn=document.createElement('button'); btn.id='bl-battle-return-original'; btn.type='button'; btn.textContent='↩ Voltar para meus dados'; btn.style.cssText='margin:18px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);'; page.insertBefore(btn,page.firstElementChild||null); }
-    btn.onclick = ev => { ev.preventDefault(); back(); };
-    btn.style.setProperty('display','inline-flex','important');
+  function closePicker(){
+    pickerOpen = false;
+    const dd = $('blBattleDropdownV23');
+    if(dd) dd.style.display = 'none';
   }
-  function back(){
-    document.body.classList.remove('bl-battle-active','bl-v21-battle','bl-v20-battle');
-    const dd=$('blBattleDropdownV21'); if(dd) dd.style.display='none';
-    if($('pageBatalha')) $('pageBatalha').style.display='none';
-    if($('pageDashboard')) $('pageDashboard').style.display='block';
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.removeProperty('display'));
-    try{ if(typeof prevSetUsuario==='function') prevSetUsuario(labelOf(me())); else window.usuarioAtual=labelOf(me()); }catch(e){ window.usuarioAtual=labelOf(me()); }
-    ensureButton();
-    window.scrollTo(0,0);
-  }
-  window.blBackToMyProfile = back; window.blExitBattle = back;
-
-  function ensureOptions(op){
-    const a=$('bat-playerA'), b=$('bat-playerB');
-    const my = me(); op = op || selectedOpponent();
-    const aLabel = labelOf(my) || 'Eu', bLabel = labelOf(op) || 'Adversário';
-    if(a){ a.innerHTML = `<option value="${esc(aLabel)}" data-uid="${esc(uidOf(my))}">${esc(aLabel)}</option>`; a.value = aLabel; }
-    if(b){ b.innerHTML = `<option value="${esc(bLabel)}" data-uid="${esc(uidOf(op))}">${esc(bLabel)}</option>`; b.value = bLabel; }
-  }
-  function ensureSelector(){
-    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let box=$('bl-battle-selector-v21') || $('bl-battle-selector-v20');
-    if(!box){
-      box=document.createElement('div'); box.id='bl-battle-selector-v21';
-      box.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
-      container.parentElement.insertBefore(box, container);
-    }
-    box.id='bl-battle-selector-v21';
-    box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">por UID</span></div><div id="blBattleSelectedNamesV21" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV21" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button></div>`;
-    $('blBattleOpenPickerV21').onclick = ev => { ev.preventDefault(); ev.stopPropagation(); openDropdown(); return false; };
+  function applyOpponent(){
+    syncHiddenSelects();
     updateSummary();
+    closePicker();
+    callOriginalRender();
   }
-  function updateSummary(){ const el=$('blBattleSelectedNamesV21'); if(el) el.textContent = `${labelOf(me())} vs ${labelOf(selectedOpponent())}`; }
-  function buildDropdown(){
-    let dd=$('blBattleDropdownV21');
-    if(!dd){ dd=document.createElement('div'); dd.id='blBattleDropdownV21'; dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px'; document.body.appendChild(dd); dd.addEventListener('click',ev=>ev.stopPropagation()); }
-    const list=opponents(), selectedUid=uidOf(selectedOpponent());
-    dd.innerHTML = `<input id="blBattleSearchV21" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Escolha 1 adversário</div><div id="blBattlePickerListV21" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>`<label class="blBattlePickItemV21" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleRadioV21" name="blBattleOpponentV21" type="radio" value="${esc(uidOf(p))}" ${uidOf(p)===selectedUid?'checked':''}><span>${esc(labelOf(p))}</span><small style="margin-left:auto;color:#64748b;font-size:10px">${esc(uidOf(p).slice(0,6))}</small></label>`).join('')}</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV21" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV21" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
-    $('blBattleSearchV21').oninput = ev => { const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV21').forEach(el=>el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'); };
-    dd.querySelectorAll('.blBattleRadioV21').forEach(r => { r.onchange = () => { const op=list.find(p=>uidOf(p)===r.value) || selectedOpponent(); renderDuel(op); }; });
-    $('blBattleClosePickerV21').onclick = ev => { ev.preventDefault(); dd.style.display='none'; };
-    $('blBattleApplyPickerV21').onclick = ev => { ev.preventDefault(); const val=dd.querySelector('.blBattleRadioV21:checked')?.value; const op=list.find(p=>uidOf(p)===val) || selectedOpponent(); dd.style.display='none'; renderDuel(op); };
-    return dd;
+  function updateSummary(){
+    const m = me(), op = selectedOpponent();
+    const label = $('blBattleSelectedNamesV23');
+    if(label && op) label.textContent = `${labelOf(m)} vs ${labelOf(op)}`;
   }
-  function openDropdown(){ const old=$('blBattleDropdownV20'); if(old) old.style.display='none'; const dd=buildDropdown(); dd.style.display='block'; setTimeout(()=>$('blBattleSearchV21')?.focus(),30); }
-
-  function renderDuel(op){
-    op = op || selectedOpponent();
-    if(uidOf(op)) window.__BL_BATTLE_OPPONENT_UID_V21 = uidOf(op);
-    showShell(); ensureReturn(); hideOld(); ensureOptions(op); ensureSelector();
-    const originalD = window._dadosD;
-    const tempD = buildBattleData(me(), op);
-    window._dadosD = tempD;
-    try{
-      if(typeof trueRender === 'function') trueRender();
-      else if(typeof window.__BL_NATIVE_RENDER_BATALHA === 'function') window.__BL_NATIVE_RENDER_BATALHA();
-    }catch(e){
-      const c=$('batalhaContainer'); if(c) c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro no render por UID: ${esc(e.message||e)}</div>`; console.error('V12.21 render UID falhou', e);
-    }finally{
-      window._dadosD = originalD;
+  function buildController(){
+    const page = $('pageBatalha'), container = $('batalhaContainer');
+    if(!page || !container) return;
+    hideOldBattleSelector();
+    removeOldPatchControllers();
+    let box = $('blBattleSelectorBoxV23');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'blBattleSelectorBoxV23';
+      box.style.cssText = 'max-width:1200px;margin:22px auto 16px;padding:14px 16px;border-radius:14px;background:#111827;border:1px solid rgba(148,163,184,.22);position:relative;z-index:50;';
+      container.parentNode.insertBefore(box, container);
     }
-    hideOld(); ensureSelector(); updateSummary(); window.__BL_BATTLE_DUEL_COUNT = 1;
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">1x1</span></div>
+          <div id="blBattleSelectedNamesV23" style="font-size:12px;color:#94a3b8;margin-top:4px"></div>
+        </div>
+        <button id="blBattleOpenPickerV23" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:11px 16px;font-weight:900;cursor:pointer;">Selecionar adversário</button>
+      </div>
+      <div id="blBattleDropdownV23" style="display:${pickerOpen?'block':'none'};position:absolute;right:12px;top:calc(100% + 8px);width:min(430px,calc(100vw - 32px));background:#111827;border:1px solid rgba(148,163,184,.28);border-radius:14px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);z-index:999999;">
+        <input id="blBattleSearchV23" type="text" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#0b1220;border:1px solid rgba(148,163,184,.25);border-radius:10px;color:#fff;padding:12px;margin-bottom:10px;outline:none;">
+        <div style="color:#94a3b8;font-size:11px;margin:4px 0 8px;">Escolha 1 adversário</div>
+        <div id="blBattlePickerBodyV23"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+          <button id="blBattleClosePickerV23" type="button" style="background:#1f2937;color:#fff;border:0;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer">Fechar</button>
+          <button id="blBattleApplyPickerV23" type="button" style="background:#8b7cf8;color:#fff;border:0;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer">Aplicar</button>
+        </div>
+      </div>`;
+    updateSummary();
+    renderPickerList();
+    $('blBattleOpenPickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); pickerOpen ? closePicker() : openPicker(); });
+    $('blBattleClosePickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); closePicker(); });
+    $('blBattleApplyPickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); applyOpponent(); });
+    $('blBattleSearchV23')?.addEventListener('input', ev => { renderPickerList(ev.target.value || ''); });
+    $('blBattleDropdownV23')?.addEventListener('click', ev => ev.stopPropagation());
   }
-  function openBattle(){ renderDuel(selectedOpponent()); window.scrollTo(0,0); }
-  window.blOpenBattle = window.blOpenBattleSelectorV21 = openBattle;
-
-  function ensureButton(){
-    let btn=$('btn-user-batalha') || $('bl-battle-main-btn');
-    if(!btn){ const target=$('btn-user-milton')?.parentElement || document.querySelector('header') || document.body; btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; target.appendChild(btn); }
-    btn.textContent='⚔️ Modo Batalha'; btn.hidden=false; btn.disabled=false;
-    btn.style.setProperty('display','inline-flex','important'); btn.style.setProperty('visibility','visible','important'); btn.style.setProperty('opacity','1','important');
-    btn.onclick=ev=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
-  }
-  window.renderBatalha = function(){ if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderDuel(selectedOpponent()); if(typeof trueRender==='function') return trueRender.apply(this, arguments); };
-  window.setUsuario = function(usuario){ if(usuario==='Batalha') return openBattle(); if(typeof prevSetUsuario==='function') return prevSetUsuario.apply(this, arguments); window.usuarioAtual=usuario; };
-  const prevDebug = window.blBattleDebug;
-  window.blBattleDebug = window.blV12Debug = function(){
-    const op=selectedOpponent(), my=me();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1221:true, uidMode:true, usuarioAtual:window.usuarioAtual, meUid:uidOf(my), meLabel:labelOf(my), opponentUid:uidOf(op), opponent:labelOf(op), bSelect:$('bat-playerB')?.value||null, bUid:$('bat-playerB')?.selectedOptions?.[0]?.dataset?.uid||null, renderedName:document.querySelector('#batalhaContainer')?.innerText?.match(/DANIEL|ROGER|MILTON/i)?.[0]||null, dropdownDisplay:$('blBattleDropdownV21')?getComputedStyle($('blBattleDropdownV21')).display:null, opponents:opponents().map(p=>({uid:uidOf(p),label:labelOf(p),library:(p.library||[]).length,sessions:(p.sessions||[]).length,ratings:(p.ratings||[]).length})), oldDebug:typeof prevDebug==='function'?prevDebug():null};
-  };
-  function boot(){ ensureButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) { hideOld(); ensureSelector(); updateSummary(); } }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setInterval(boot, 1400);
-})();
-</script>
-
-<script id="bl-v12-22-battle-single-uid-selector">
-(function(){
-  'use strict';
-  window.__BL_PATCH_VERSION = 'v12.22-battle-single-uid-selector';
-  window.__BL_V12_22_SINGLE_SELECTOR = true;
-  const $ = id => document.getElementById(id);
-  const isBattle = () => window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-battle-active') || (getComputedStyle($('pageBatalha')||document.body).display !== 'none' && !$('pageBatalha')?.hidden);
-
-  function cleanupBattleSelectors(){
-    // Remove patches antigos que estavam empilhando 3 seletores no topo.
-    ['bl-battle-selector-v17','bl-battle-selector-v20','bl-battle-selector-v15','bl-battle-selector-v16','bl-battle-multi-controls'].forEach(id=>{
-      const el=$(id); if(el) el.remove();
-    });
-    ['blBattleDropdownV17','blBattleDropdownV20','blBattleDropdownV15','blBattleDropdownV16'].forEach(id=>{
-      const el=$(id); if(el) el.remove();
-    });
-    const oldTop=$('batalha-seletor');
-    if(oldTop) oldTop.style.setProperty('display','none','important');
-
-    // Garante que só o seletor UID atual fique visível.
-    const v21=$('bl-battle-selector-v21');
-    if(v21){
-      v21.style.setProperty('display','block','important');
-      const title = v21.querySelector('div div div');
-      // Reescreve o card para não aparecer texto técnico como "por UID".
-      const nameLine=$('blBattleSelectedNamesV21');
-      const currentNames = nameLine?.textContent || '';
-      const btnHtml = '<button id="blBattleOpenPickerV21" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar adversário</button>';
-      v21.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">1x1</span></div><div id="blBattleSelectedNamesV21" style="font-size:12px;color:#94a3b8;margin-top:4px">'+(currentNames || '')+'</div></div>'+btnHtml+'</div>';
-      const btn=$('blBattleOpenPickerV21');
-      if(btn){
-        btn.onclick=function(ev){
-          ev.preventDefault(); ev.stopPropagation();
-          // Usa a função/picker V21 já existente, se existir; senão clica no fluxo atual.
-          const dd=$('blBattleDropdownV21');
-          if(dd){
-            dd.style.display = getComputedStyle(dd).display === 'none' ? 'block' : 'none';
-            setTimeout(()=>$('blBattleSearchV21')?.focus(), 30);
-          }else if(typeof window.blOpenBattleSelectorV21 === 'function'){
-            window.blOpenBattleSelectorV21();
-            setTimeout(()=>{ const d=$('blBattleDropdownV21'); if(d) d.style.display='block'; $('blBattleSearchV21')?.focus(); }, 80);
-          }
-          return false;
-        };
-      }
+  function callOriginalRender(){
+    syncHiddenSelects();
+    const render = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.__BL_ORIGINAL_RENDER_BATALHA || window.renderBatalha;
+    if(typeof render === 'function'){
+      try { return render(); } catch(e){ console.error('Batalha original falhou:', e); }
     }
   }
-
-  const previousDebug = window.blBattleDebug;
-  window.blBattleDebug = window.blV12Debug = function(){
-    const old = typeof previousDebug === 'function' ? previousDebug() : {};
-    const visibleSelectors=[...document.querySelectorAll('[id^="bl-battle-selector"],#batalha-seletor')].filter(el=>getComputedStyle(el).display!=='none').map(el=>el.id);
-    return Object.assign({}, old, {
-      patch:'v12.22-battle-single-uid-selector',
-      marker1222:true,
-      visibleSelectors,
-      selectorCount:visibleSelectors.length,
-      dropdownDisplay:$('blBattleDropdownV21')?getComputedStyle($('blBattleDropdownV21')).display:null
-    });
+  // captura o render atual antes de sobrescrever nesta versão, mas depois o código fonte foi ajustado para respeitar __BL_BATTLE_PLAYER_A/B.
+  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.renderBatalha;
+  window.renderBatalha = function(){
+    if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-v10-battle') || document.body.classList.contains('bl-v12-battle')){
+      syncHiddenSelects();
+      const oldOpen = pickerOpen;
+      const r = window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
+      pickerOpen = oldOpen;
+      buildController();
+      if(oldOpen) openPicker();
+      return r;
+    }
+    return window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
   };
-
-  function boot(){
-    if(isBattle()) cleanupBattleSelectors();
+  function ensureBattleButton(){
+    let btn = $('btn-user-batalha') || $('bl-battle-main-btn');
+    if(!btn){
+      const anchor = $('btn-user-milton')?.parentElement || document.querySelector('header .top-actions') || document.querySelector('header');
+      if(anchor){ btn = document.createElement('button'); btn.id='btn-user-batalha'; anchor.appendChild(btn); }
+    }
+    if(btn){
+      btn.id = 'btn-user-batalha';
+      btn.type = 'button';
+      btn.textContent = '⚔️ Modo Batalha';
+      btn.hidden = false;
+      btn.style.setProperty('display','inline-flex','important');
+      btn.style.alignItems='center'; btn.style.gap='6px';
+      btn.style.background='#e56cff'; btn.style.color='#fff';
+      btn.style.border='0'; btn.style.borderRadius='10px'; btn.style.padding='8px 14px'; btn.style.fontWeight='900'; btn.style.cursor='pointer';
+      btn.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); window.setUsuario('Batalha'); setTimeout(()=>{ buildController(); syncHiddenSelects(); callOriginalRender(); },80); };
+    }
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  document.addEventListener('click', ()=>setTimeout(boot, 60), true);
-  setInterval(boot, 600);
+  const oldSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(typeof oldSetUsuario === 'function') oldSetUsuario(usuario); else window.usuarioAtual = usuario;
+    if(usuario === 'Batalha'){
+      document.body.classList.add('bl-v12-battle');
+      const lw = document.querySelector('.lendo-wrap'); if(lw) lw.style.setProperty('display','none','important');
+      const fab = document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+      setTimeout(()=>{ hideOldBattleSelector(); buildController(); syncHiddenSelects(); callOriginalRender(); window.scrollTo(0,0); },60);
+    } else {
+      document.body.classList.remove('bl-v12-battle');
+      closePicker();
+    }
+    setTimeout(ensureBattleButton, 80);
+  };
+  document.addEventListener('click', ev => {
+    const dd = $('blBattleDropdownV23'), bt = $('blBattleOpenPickerV23');
+    if(!pickerOpen || !dd) return;
+    if(dd.contains(ev.target) || bt?.contains(ev.target)) return;
+    closePicker();
+  }, true);
+  window.blBackToMyProfile = function(){
+    const label = raw().currentLabel || authUser()?.displayName || 'Milton';
+    window.setUsuario(label);
+    window.scrollTo(0,0);
+  };
+  window.blBattleDebug = window.blV12Debug = function(){
+    const op = selectedOpponent();
+    return {
+      patch:'v12.23-battle-one-selector-stable',
+      marker:true,
+      selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
+      dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
+      pickerOpen,
+      usuarioAtual:window.usuarioAtual,
+      meUid:myUid(),
+      meKey:window.__BL_BATTLE_PLAYER_A,
+      opponentUid:op?.uid || null,
+      opponent:op ? labelOf(op) : null,
+      opponentKey:window.__BL_BATTLE_PLAYER_B,
+      people:mergePeople().map(p=>({uid:p.uid,label:labelOf(p)})),
+      oldSelectorHidden:$('batalha-seletor') ? getComputedStyle($('batalha-seletor')).display : null
+    };
+  };
+  setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 250);
+  setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 1200);
 })();
 </script>
 
