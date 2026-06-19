@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="booklegacy-version" content="v12.1-battle-visible">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -536,6 +537,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 </head>
 <body>
 
@@ -8208,6 +8210,189 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
   document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
   setInterval(tick,1500);
+})();
+</script>
+
+
+<script>
+/* BookLegacy V12.2 — FIX ISOLADO DO MODO BATALHA MULTIPLAYER
+   Não mexe em dashboard, amigos, biblioteca ou ações do +.
+   Substitui apenas a abertura/renderização do modo batalha para suportar 2+ players e botão de voltar. */
+(function(){
+  window.__BL_PATCH_VERSION = 'v12.2-battle-multiplayer-fix';
+  const $ = (id)=>document.getElementById(id);
+  const esc = (v)=>String(v??'').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const norm = (s)=>String(s||'').trim();
+  function raw(){ return window.BL?.raw || window._dadosD || {}; }
+  function meUid(){ return window.BL?.__activeUid || window.BL?.auth?.currentUser?.uid || ''; }
+  function meName(){ return window.BL?.auth?.currentUser?.displayName || window.BL?.raw?.currentUser?.name || 'Milton'; }
+  function allPeople(){
+    const r = raw();
+    const by = new Map();
+    const add = (p)=>{
+      if(!p) return;
+      const uid = norm(p.uid || p.id || p.userId || '');
+      const label = norm(p.label || p.displayName || p.name || p.email || uid || 'Usuário');
+      const key = uid || label.toLowerCase();
+      if(!key) return;
+      const prev = by.get(key) || {};
+      by.set(key, {...prev, ...p, uid: uid || prev.uid, label: label || prev.label, displayName: p.displayName || p.name || prev.displayName || label});
+    };
+    (r.users||[]).forEach(add);
+    (r.friends||[]).forEach(add);
+    const u = window.BL?.auth?.currentUser;
+    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL,library:r.library||[],sessions:r.sessions||[],ratings:r.ratings||[]});
+    return [...by.values()].map((p,i)=>({
+      uid: p.uid || `p${i}`,
+      label: p.label || p.displayName || p.name || p.email || `Player ${i+1}`,
+      email: p.email || '',
+      photoURL: p.photoURL || p.photo || '',
+      library: p.library || [],
+      sessions: p.sessions || [],
+      ratings: p.ratings || [],
+      goals: p.goals || [],
+      collections: p.collections || []
+    }));
+  }
+  function yearsFrom(people){
+    const set = new Set();
+    people.forEach(p => (p.sessions||[]).forEach(s=>{ const y=s.ano || (s.data?String(s.data).slice(0,4):''); if(Number(y)>2000) set.add(String(y)); }));
+    return [...set].sort();
+  }
+  function sessionsFor(p, year){
+    return (p.sessions||[]).filter(s => year==='total' || String(s.ano || (s.data?String(s.data).slice(0,4):'')) === String(year));
+  }
+  function completedBooks(p, year){
+    const sess = sessionsFor(p, year);
+    const titles = new Set(sess.map(s=>String(s.livro||s.title||'').toLowerCase()).filter(Boolean));
+    return (p.library||[]).filter(l=>{
+      const status = String(l.status || l.situacao || '').toLowerCase();
+      const done = /completo|lido|conclu|finaliz/.test(status);
+      if(!done) return false;
+      if(year==='total') return true;
+      const meta = String(l.metaAno || l.targetYear || l.ano || '');
+      return meta===String(year) || titles.has(String(l.livro||l.title||'').toLowerCase());
+    }).length;
+  }
+  function pagesFor(p, year){ return sessionsFor(p, year).reduce((a,s)=>a+(Number(s.paginas||s.pages||0)||0),0); }
+  function minutesFor(p, year){ return sessionsFor(p, year).reduce((a,s)=>a+(Number(s.minutos||s.minutes||0)||0),0); }
+  function ratingsFor(p, year){
+    return (p.ratings||[]).filter(r => year==='total' || String(r.ano || r.readingYear || r.anoLeitura || '') === String(year));
+  }
+  function avgRating(p, year){
+    const arr = ratingsFor(p, year).map(r=>Number(r.notaFinal||r.nota||r.media||r.score||0)).filter(Boolean);
+    return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  }
+  function daysRead(p, year){ return new Set(sessionsFor(p, year).map(s=>s.data).filter(Boolean)).size; }
+  function power(p, year){ return pagesFor(p,year)*0.4 + completedBooks(p,year)*220 + sessionsFor(p,year).length*15 + avgRating(p,year)*120 + daysRead(p,year)*8; }
+  function avatar(p){
+    return p.photoURL ? `<img src="${esc(p.photoURL)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #4ecdc4">` : `<div style="width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#1e2535;border:2px solid #4ecdc4;font-size:26px">👤</div>`;
+  }
+  function hideFab(){ const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important'); }
+  function showFabIfOwn(){ const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display'); }
+  function removeDesktopMobileToggle(){
+    document.querySelectorAll('button,a,div').forEach(el=>{
+      const t=(el.innerText||'').toLowerCase();
+      if((t.includes('mobile') && t.includes('desktop')) || t.includes('📱')) el.style.setProperty('display','none','important');
+    });
+  }
+  function ensureBattleButton(){
+    let btn = $('btn-user-batalha') || $('blBattleHardButton') || $('bl-battle-main-btn');
+    const anchor = $('btn-user-milton')?.parentElement || document.querySelector('header .badge')?.parentElement || document.querySelector('header');
+    if(!btn && anchor){
+      btn=document.createElement('button');
+      btn.id='btn-user-batalha';
+      anchor.appendChild(btn);
+    }
+    if(btn){
+      btn.type='button';
+      btn.textContent='⚔️ Batalha';
+      btn.style.cssText='display:inline-flex!important;visibility:visible!important;align-items:center;gap:6px;background:transparent;color:#e2e8f0;border:1px solid #8b7cf8;border-radius:9px;padding:7px 14px;font-weight:800;cursor:pointer;margin-left:8px;';
+      btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
+    }
+    return btn;
+  }
+  function selectedIds(){
+    return [...document.querySelectorAll('.bl-battle-player-check:checked')].map(i=>i.value);
+  }
+  function renderBattle(){
+    const people = allPeople();
+    const year = $('blBattleYear')?.value || 'total';
+    let ids = selectedIds();
+    if(ids.length < 2) ids = people.slice(0, Math.min(2, people.length)).map(p=>p.uid);
+    const chosen = people.filter(p=>ids.includes(p.uid));
+    const cont = $('batalhaContainer');
+    if(!cont) return;
+    if(chosen.length < 2){ cont.innerHTML = `<div class="card" style="margin:20px;padding:24px">Adicione pelo menos um amigo para comparar no Modo Batalha.</div>`; return; }
+    const rows = chosen.map(p=>({p,pages:pagesFor(p,year),books:completedBooks(p,year),sess:sessionsFor(p,year).length,min:minutesFor(p,year),avg:avgRating(p,year),days:daysRead(p,year),pow:power(p,year)})).sort((a,b)=>b.pow-a.pow);
+    const max = Math.max(...rows.map(r=>r.pow),1);
+    const stat = (icon, label, val)=>`<div style="background:#1e2535;border:1px solid #2a3248;border-radius:10px;padding:10px"><div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:800">${icon} ${label}</div><div style="font-size:22px;font-weight:900;margin-top:4px">${val}</div></div>`;
+    cont.innerHTML = `
+      <section style="padding:18px 18px 70px;max-width:1280px;margin:0 auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:12px 0 18px">
+          <div><div style="font-size:12px;letter-spacing:3px;color:#8b7cf8;font-weight:900;text-transform:uppercase">⚔️ Modo Batalha Multiplayer</div><h2 style="font-size:32px;margin:4px 0 0">${chosen.length} leitores na arena</h2></div>
+          <button type="button" onclick="window.blBattleExit()" style="background:#8b7cf8;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer">↩ Voltar para meus dados</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+          ${rows.map((r,idx)=>`
+            <article style="background:linear-gradient(135deg,rgba(139,124,248,.12),rgba(22,27,39,.96));border:1px solid ${idx===0?'#ffd166':'#2a3248'};border-radius:18px;padding:18px;box-shadow:${idx===0?'0 0 28px rgba(255,209,102,.16)':'none'}">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${avatar(r.p)}<div><div style="font-size:12px;color:${idx===0?'#ffd166':'#4ecdc4'};font-weight:900;letter-spacing:2px">#${idx+1} ${idx===0?'CAMPEÃO DA ARENA':'COMPETIDOR'}</div><div style="font-size:24px;font-weight:900">${esc(r.p.label)}</div><div style="color:#8892a8;font-size:12px">${esc(r.p.email||'')}</div></div></div>
+              <div style="height:10px;background:#252d40;border-radius:999px;overflow:hidden;margin:8px 0 14px"><div style="width:${Math.round(r.pow/max*100)}%;height:100%;background:linear-gradient(90deg,#8b7cf8,#4ecdc4);border-radius:999px"></div></div>
+              <div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:800">Poder de Leitura</div><div style="font-size:30px;font-weight:900;margin-bottom:12px">${Math.round(r.pow).toLocaleString('pt-BR')}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                ${stat('📚','Livros',r.books)}${stat('📄','Páginas',r.pages.toLocaleString('pt-BR'))}${stat('🎯','Sessões',r.sess)}${stat('⭐','Média',r.avg?r.avg.toFixed(2):'—')}${stat('📅','Dias',r.days)}${stat('⏱️','Horas',Math.round(r.min/60))}
+              </div>
+            </article>`).join('')}
+        </div>
+      </section>`;
+  }
+  function renderControls(){
+    const people = allPeople();
+    const years = yearsFrom(people);
+    const sel = people.map((p,i)=>`<label style="display:flex;align-items:center;gap:7px;background:#161b27;border:1px solid #2a3248;border-radius:999px;padding:7px 12px;font-weight:800"><input class="bl-battle-player-check" type="checkbox" value="${esc(p.uid)}" ${i<Math.min(3,people.length)?'checked':''} onchange="window.blBattleRender()"> ${esc(p.label)}</label>`).join('');
+    const yearOpts = `<option value="total">Todos os anos</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    const page = $('pageBatalha');
+    if(!page) return;
+    page.innerHTML = `<div style="padding:16px 18px 0;max-width:1280px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#161b27;border:1px solid #2a3248;border-radius:16px;padding:14px 16px;margin-bottom:10px">
+        <div><div style="font-size:12px;color:#8b7cf8;font-weight:900;letter-spacing:2px;text-transform:uppercase">Selecione 2 ou mais jogadores</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px">${sel}</div></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="color:#8892a8;font-weight:800">Ano</span><select id="blBattleYear" onchange="window.blBattleRender()" style="background:#1e2535;color:#e2e8f0;border:1px solid #2a3248;border-radius:8px;padding:8px 10px;font-weight:800">${yearOpts}</select><button type="button" onclick="window.blBattleExit()" style="background:#8b7cf8;color:white;border:0;border-radius:10px;padding:9px 14px;font-weight:900;cursor:pointer">↩ Voltar</button></div>
+      </div>
+    </div><div id="batalhaContainer"></div>`;
+    renderBattle();
+  }
+  function openBattle(){
+    window.usuarioAtual = 'Batalha';
+    removeDesktopMobileToggle();
+    const app=$('app'); if(app) app.style.display='block';
+    document.querySelectorAll('#app > *').forEach(el=>{
+      if(el.id==='pageBatalha') el.style.setProperty('display','block','important');
+      else el.style.setProperty('display','none','important');
+    });
+    const b=$('pageBatalha'); if(b){ b.hidden=false; b.style.setProperty('display','block','important'); }
+    hideFab();
+    renderControls();
+    window.scrollTo(0,0);
+  }
+  function exitBattle(){
+    window.usuarioAtual = meName();
+    document.querySelectorAll('#app > *').forEach(el=>{ el.style.removeProperty('display'); });
+    const d=$('pageDashboard'), b=$('pageBatalha');
+    if(d) d.style.display='block';
+    if(b) b.style.display='none';
+    showFabIfOwn();
+    ensureBattleButton();
+    window.scrollTo(0,0);
+  }
+  window.blBattleOpen = openBattle;
+  window.blBattleExit = exitBattle;
+  window.blBattleRender = renderBattle;
+  window.blBattleDebug = function(){ return {patch:window.__BL_PATCH_VERSION, marker:document.documentElement.innerHTML.includes('booklegacy-v12-2-marker'), usuarioAtual:window.usuarioAtual, people:allPeople().map(p=>({uid:p.uid,label:p.label,lib:p.library.length,sessions:p.sessions.length,ratings:p.ratings.length})), button:!!$('btn-user-batalha')}; };
+  const oldSet = window.setUsuario;
+  window.setUsuario = function(usuario){ if(usuario==='Batalha') return openBattle(); return typeof oldSet==='function' ? oldSet.apply(this, arguments) : undefined; };
+  function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
+  document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
+  setInterval(tick,2000);
 })();
 </script>
 
