@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.booklegacy.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.booklegacy.app'
+        minSdk 23
+        targetSdk 35
+        versionCode 30
+        versionName '3.0'
+    }
+}

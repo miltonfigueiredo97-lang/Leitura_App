@@ -2,11 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.2">
+<meta name="booklegacy-version" content="v3.0">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
-  // BookLegacy V6: manter o mesmo app em desktop e mobile; sem redirecionar para mobile.html
+  // BookLegacy V12.1: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
 }
 </script>
 
@@ -526,7 +526,7 @@ body.mobile-view canvas { max-width:100% !important; width:100% !important; }
 body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
 body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
-/* BookLegacy V6 - login Firebase mantendo visual original */
+/* BookLegacy V12.1 - login Firebase + dashboard original + batalha visível */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
@@ -537,854 +537,90 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
-<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
-
-
-<style id="booklegacy-mobile-format-reference-v32">
-/* BookLegacy V3.2 — restauração de formatação mobile baseada no arquivo mobile de referência enviado. */
-
-:root {
-  --bg: #0d1117; --bg2: #161b27; --bg3: #1e2535; --bg4: #252d40;
-  --purple: #8b7cf8; --orange: #f88c6a; --teal: #4ecdc4; --yellow: #ffd166;
-  --pink: #e56cff; --blue: #56cfff;
-  --text: #e2e8f0; --muted: #8892a8; --border: #2a3248;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
-body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 1rem; }
-
-/* ── Header ── */
-header {
-  background: linear-gradient(135deg, #161b27 0%, #1e2535 100%);
-  border-bottom: 1px solid var(--border);
-  padding: 24px 36px;
-  display: flex; align-items: center; gap: 16px;
-}
-header .icon { font-size: 44px; }
-header h1 { font-size: 26px; font-weight: 700; }
-header p { color: var(--muted); font-size: 13px; margin-top: 3px; }
-header .badge {
-  margin-left: auto;
-  background: var(--purple); color: #fff;
-  padding: 7px 16px; border-radius: 20px;
-  font-size: 12px; font-weight: 600; white-space: nowrap;
-}
-
-/* ── Layout ── */
-.page { padding: 6px 10px 80px 10px; max-width: 100%; margin: 0; width: 100%; box-sizing: border-box; overflow-x: hidden; }
-.sec { font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--muted); display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 28px; }
-.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.sec:first-child { margin-top: 0; }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
-.grid6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
-
-/* ── KPI Cards ── */
-.kpi {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 14px; padding: 18px;
-  position: relative; overflow: visible;
-  transition: transform .15s;
-}
-.kpi:hover { transform: translateY(-2px); }
-.kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; background: var(--accent, var(--purple)); }
-.kpi-icon { font-size: 22px; margin-bottom: 8px; display: block; }
-.kpi-val { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
-.kpi-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin-top: 4px; font-weight: 600; }
-.kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-/* book KPI */
-.kpi-book { display: flex; gap: 10px; align-items: flex-start; }
-.kpi-book img { width: 60px; height: 84px; object-fit: cover; border-radius: 4px; box-shadow: 2px 2px 8px rgba(0,0,0,.5); flex-shrink: 0; }
-.kpi-book .fallback { width: 44px; height: 62px; background: var(--bg4); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.cover-img { transition: transform 0.2s ease, box-shadow 0.2s ease; transform-origin: left center; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; cursor: zoom-in; }
-.cover-img:hover { transform: scale(5); box-shadow: 0 8px 32px rgba(0,0,0,0.7); z-index: 9999; position: relative; }
-.cal-day { border-radius:4px;padding:2px;min-height:0;aspect-ratio:1;cursor:pointer;transition:background 0.15s;position:relative;background:var(--bg3);overflow:hidden; }
-.cal-day:hover { background:var(--bg4); }
-.cal-day.active { background:rgba(139,124,248,0.15);border:1px solid rgba(139,124,248,0.4); }
-.cal-day.selected { background:rgba(139,124,248,0.3);border:1px solid var(--purple); }
-.cal-day-num { font-size:10px;color:var(--muted);font-weight:600; }
-.cal-day-pag { font-size:10px;color:var(--teal);font-weight:700;margin-top:2px; }
-.cal-day-bar { height:3px;border-radius:2px;margin-top:3px;background:var(--purple); }
-.cal-empty { min-height:52px; }
-.heat-cell { width:16px;height:16px;border-radius:3px;display:inline-block;cursor:pointer;transition:transform 0.1s;flex-shrink:0; }
-.heat-cell:hover { transform:scale(1.3); }
-
-/* ── Cards ── */
-.card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 10px;
-  overflow: hidden; box-sizing: border-box; width: 100%;
-}
-.card-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-.card-sub { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
-
-/* ── Controls ── */
-.ctrl { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; font-size: 15px; }
-.ctrl select { font-size: 15px; padding: 5px 10px; }
-.ctrl label { font-size: 15px; }
-.btn { font-size: 14px; padding: 5px 12px; }
-.ctrl label { font-size: 11px; color: var(--muted); }
-select {
-  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
-  padding: 4px 8px; border-radius: 7px; font-size: 11px; cursor: pointer; outline: none;
-}
-select:focus { border-color: var(--purple); }
-.btn {
-  padding: 4px 11px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--bg3); color: var(--muted); font-size: 11px; cursor: pointer; transition: all .15s;
-}
-.btn.on { background: var(--purple); border-color: var(--purple); color: #fff; }
-
-/* ── Year bars ── */
-.yr-list { display: flex; flex-direction: column; gap: 13px; }
-.yr-item { display: flex; flex-direction: column; gap: 4px; }
-.yr-top { display: flex; justify-content: space-between; }
-.yr-name { font-size: 14px; font-weight: 700; }
-.yr-pag { font-size: 12px; color: var(--muted); }
-.bar-bg { background: var(--bg3); border-radius: 5px; height: 8px; overflow: hidden; }
-.bar-fg { height: 100%; border-radius: 5px; }
-.yr-stats { display: flex; gap: 14px; }
-.yr-stats span { font-size: 10px; color: var(--muted); }
-.yr-stats b { color: var(--text); }
-
-/* ── Book ranking ── */
-.rank-list { display: flex; flex-direction: column; gap: 7px; }
-.rank-item { display: flex; align-items: center; gap: 6px; }
-.rank-num { font-size: 10px; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
-.rank-medal { font-size: 13px; width: 16px; flex-shrink: 0; }
-.rank-name { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rank-year { font-size: 12px; color: var(--muted); display: block; }
-.rank-bar-wrap { flex: 1; min-width: 40px; }
-.rank-bar { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.rank-bar-fill { height: 100%; border-radius: 3px; }
-.rank-score { font-size: 11px; font-weight: 700; width: 32px; text-align: right; flex-shrink: 0; }
-
-/* ── Weekday bars ── */
-.wd-bars { display: flex; gap: 2px; align-items: flex-end; height: 80px; overflow: hidden; width: 100%; box-sizing: border-box; }
-.wd-col { display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; justify-content: flex-end; min-width: 0; }
-.wd-bar { width: 100%; border-radius: 4px 4px 2px 2px; }
-.wd-lbl { font-size: 8px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.wd-val { font-size: 8px; color: var(--muted); }
-
-/* ── Donut legend ── */
-.donut-leg { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
-.donut-leg-item { display: flex; align-items: center; gap: 6px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.donut-leg-name { font-size: 10px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.donut-leg-pct { font-size: 10px; color: var(--muted); }
-
-/* ── Meta ── */
-.meta-row { display: flex; gap: 16px; align-items: center; }
-.ring-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
-.ring-wrap svg { transform: rotate(-90deg); }
-.ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-.ring-pct { font-size: 22px; font-weight: 800; color: var(--purple); }
-.ring-sub { font-size: 9px; color: var(--muted); }
-.meta-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; flex: 1; }
-.meta-stat { background: var(--bg3); border-radius: 8px; padding: 8px 10px; }
-.meta-stat-val { font-size: 15px; font-weight: 700; }
-.meta-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
-.meta-date { background: var(--bg3); border-radius: 9px; padding: 10px 13px;
-  display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--purple); margin-top: 12px; }
-.meta-date-icon { font-size: 18px; }
-.meta-date-txt { font-size: 12px; font-weight: 600; }
-.meta-date-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-footer { text-align: center; color: var(--muted); font-size: 11px; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px; }
-
-@media(max-width:1400px) {
-  .page { padding: 12px; }
-  header { padding: 12px 16px; }
-  header h1 { font-size: 18px; }
-  header p  { font-size: 11px; }
-  .grid2,.grid3,.grid4,.grid6 { grid-template-columns: 1fr 1fr; }
-  .kpi-val { font-size: 28px !important; }
-  .card { padding: 12px; }
-  .sec  { font-size: 9px; margin: 16px 0 8px; }
-}
-@media(max-width:1400px) {
-  .page { padding: 8px; }
-  .grid2,.grid3,.grid4,.grid6 { grid-template-columns: 1fr; }
-  .kpi-grid-5 { grid-template-columns: 1fr 1fr !important; }
-  .grid6 { grid-template-columns: 1fr 1fr !important; }
-  .grid4 { grid-template-columns: 1fr 1fr !important; }
-  /* Meta stats — 2 colunas no mobile */
-  .meta-stats { grid-template-columns: 1fr 1fr !important; }
-  /* Meta row — empilha anel e stats */
-  .meta-row { flex-direction: column; align-items: center; }
-  .ring-wrap { margin-bottom: 12px; }
-
-  /* Calendário mobile — células compactas, sem nome do livro */
-  .cal-day-num { font-size: 11px; }
-
-  /* Heatmap mobile — 2 colunas de meses */
-  #heatmapGrid > div { grid-template-columns: repeat(2,1fr) !important; }
-
-  /* Ranking */
-  .rank-item { gap: 4px; }
-  .rank-name { font-size: 13px; }
-  .rank-bar-wrap { display: none; }
-
-  /* Book info */
-  #bookInfoNome { font-size: 15px !important; }
-
-  /* Lendo cards */
-  .lendo-inner { flex-direction: column; }
-  .lendo-card  { min-width: unset; }
-
-  /* KPI book cards */
-  .kpi-book { flex-direction: column; align-items: flex-start; gap: 8px; }
-
-  /* Streak */
-  #streakList > div { flex-direction: column; gap: 4px; }
-
-  /* Ctrl seletores */
-  .ctrl { flex-wrap: wrap; gap: 6px; }
-  .ctrl select { font-size: 13px; }
-}
-
-/* ── Lendo Atualmente ── */
-.lendo-wrap {
-  background: linear-gradient(135deg, #1e2535 0%, #1a2030 100%);
-  border-bottom: 1px solid var(--border);
-  padding: 20px 36px;
-}
-.lendo-inner {
-  max-width: 1500px;
-  margin: 0 auto;
-  display: flex;
-  gap: 20px;
-  align-items: stretch;
-  flex-wrap: wrap;
-}
-.lendo-tag {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.lendo-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 22px;
-  flex: 1;
-  min-width: 280px;
-  position: relative;
-  overflow: visible;
-}
-.lendo-card.pausado { border-left: 3px solid var(--orange); }
-.lendo-card.dica    { border-left: 3px solid var(--teal); }
-.lendo-book-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  line-height: 1.3;
-}
-.lendo-stats {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.lendo-stat { display: flex; flex-direction: column; gap: 2px; }
-.lendo-stat-val { font-size: 18px; font-weight: 700; }
-.lendo-stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-.lendo-progress-wrap { display: flex; align-items: center; gap: 10px; }
-.lendo-bar-bg { flex: 1; background: var(--bg3); border-radius: 6px; height: 8px; overflow: hidden; }
-.lendo-bar-fg { height: 100%; border-radius: 6px; }
-.lendo-pct-label { font-size: 12px; font-weight: 700; color: var(--orange); white-space: nowrap; }
-.lendo-pct-label.teal { color: var(--teal); }
-.lendo-meta { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
-.lendo-meta span { font-size: 11px; color: var(--muted); }
-.lendo-meta b { color: var(--text); }
-
-/* Batalha — tooltip nas conquistas */
-.bat-medal { display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin:3px;cursor:default;position:relative; }
-.bat-medal::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e2535;color:#e2e8f0;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:400;white-space:nowrap;border:1px solid #2a3248;z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.5);opacity:0;transition:opacity .15s; }
-.bat-medal::before { content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2a3248;z-index:9999;opacity:0;transition:opacity .15s; }
-.bat-medal:hover::after, .bat-medal:hover::before { opacity:1; }
-/* ═══════════════════════════════════════════
-   BATALHA V3 — PREMIUM DARK RPG VISUAL
-═══════════════════════════════════════════ */
-:root {
-  --bat-bg:     #070B14;
-  --bat-bg2:    #0B1020;
-  --bat-bg3:    #0F172A;
-  --bat-glass:  rgba(15,23,42,0.72);
-  --bat-border: rgba(255,255,255,0.07);
-  --bat-A:      #A855F7;
-  --bat-A2:     #7C3AED;
-  --bat-A-glow: rgba(168,85,247,0.5);
-  --bat-B:      #FB923C;
-  --bat-B2:     #EA580C;
-  --bat-B-glow: rgba(249,115,22,0.5);
-  --bat-gold:   #FACC15;
-  --bat-white:  #F8FAFC;
-  --bat-muted:  rgba(248,250,252,0.55);
-}
-#batalhaContainer { background:var(--bat-bg); }
-.bat-section-hdr { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:4px;color:var(--bat-muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bat-border);text-transform:uppercase; }
-.bat-glass { background:var(--bat-glass);backdrop-filter:blur(12px);border:1px solid var(--bat-border);border-radius:16px; }
-.bat-conquista { display:flex;flex-direction:column;align-items:center;gap:5px;cursor:default;position:relative;flex:1;min-width:70px; }
-.bat-conquista-icon { width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;transition:transform .2s,box-shadow .2s; }
-.bat-conquista-icon:hover { transform:scale(1.12); }
-.bat-conquista-icon::after { content:'';position:absolute;top:5px;left:13px;width:14px;height:7px;background:rgba(255,255,255,0.18);border-radius:50%;transform:rotate(-30deg);pointer-events:none; }
-.bat-cq-gold   { background:radial-gradient(circle at 35% 35%,#2a2010,#0d0d0a);border:2px solid #b8960c;box-shadow:0 0 20px rgba(184,150,12,0.5),inset 0 1px 0 rgba(255,215,0,0.2); }
-.bat-cq-purple { background:radial-gradient(circle at 35% 35%,#1a1030,#0d0d1a);border:2px solid #A855F7;box-shadow:0 0 20px rgba(168,85,247,0.5),inset 0 1px 0 rgba(168,85,247,0.2); }
-.bat-cq-teal   { background:radial-gradient(circle at 35% 35%,#0a2020,#0d0d1a);border:2px solid #4ecdc4;box-shadow:0 0 18px rgba(78,205,196,0.4); }
-.bat-cq-orange { background:radial-gradient(circle at 35% 35%,#2a1810,#0d0d1a);border:2px solid #FB923C;box-shadow:0 0 18px rgba(249,115,22,0.5); }
-.bat-cq-blue   { background:radial-gradient(circle at 35% 35%,#102030,#0d0d1a);border:2px solid #6eb5ff;box-shadow:0 0 18px rgba(110,181,255,0.4); }
-.bat-cq-red    { background:radial-gradient(circle at 35% 35%,#2a0d0d,#0d0d1a);border:2px solid #ff6384;box-shadow:0 0 18px rgba(255,99,132,0.4); }
-.bat-cq-grey   { background:radial-gradient(circle at 35% 35%,#1a1a1a,#0d0d0d);border:2px solid #444;box-shadow:none; }
-.bat-conquista-name { font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;color:#F8FAFC;letter-spacing:1px;text-align:center;text-transform:uppercase; }
-.bat-conquista-sub  { font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.55);text-align:center; }
-@keyframes bat-pulse { 0%,100%{box-shadow:0 0 24px rgba(147,51,234,0.7),0 0 8px rgba(250,204,21,0.5);}50%{box-shadow:0 0 36px rgba(147,51,234,0.9),0 0 16px rgba(250,204,21,0.8);} }
-@keyframes bat-mestre {
-  0%   { box-shadow:0 0 0 2px #9333EA, 0 0 0 3px #FACC15, 0 0 28px rgba(147,51,234,0.9), 0 0 12px rgba(250,204,21,0.6); }
-  33%  { box-shadow:0 0 0 2px #FACC15, 0 0 0 3px #38BDF8, 0 0 28px rgba(250,204,21,0.9), 0 0 12px rgba(56,189,248,0.6); }
-  66%  { box-shadow:0 0 0 2px #38BDF8, 0 0 0 3px #9333EA, 0 0 28px rgba(56,189,248,0.9), 0 0 12px rgba(147,51,234,0.6); }
-  100% { box-shadow:0 0 0 2px #9333EA, 0 0 0 3px #FACC15, 0 0 28px rgba(147,51,234,0.9), 0 0 12px rgba(250,204,21,0.6); }
-}
-.bat-conquista::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0B1020;color:#F8FAFC;padding:7px 12px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:11px;white-space:normal;max-width:200px;width:max-content;text-align:center;border:1px solid rgba(168,85,247,0.3);z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.8);opacity:0;transition:opacity .15s; }
-.bat-conquista:hover::after { opacity:1; }
-.bat-medal { display:inline-block;padding:4px 12px;border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;margin:3px;cursor:default;position:relative; }
-.bat-medal::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0B1020;color:#F8FAFC;padding:7px 12px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:11px;white-space:normal;max-width:200px;width:max-content;text-align:center;border:1px solid rgba(168,85,247,0.3);z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.8);opacity:0;transition:opacity .15s; }
-.bat-medal::before { content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(168,85,247,0.3);z-index:9999;opacity:0;transition:opacity .15s; }
-.bat-medal:hover::after, .bat-medal:hover::before { opacity:1; }
-.bat-art-card { border-radius:12px;overflow:visible;position:relative;cursor:pointer;transition:transform .25s,box-shadow .25s;background:#0B1020; }
-.bat-art-card .bat-art-capa { border-radius:12px;overflow:hidden; }
-.bat-art-card:hover { transform:scale(1.08);z-index:100;box-shadow:0 16px 48px rgba(0,0,0,0.9); }
-.bat-art-capa { position:relative;width:100%;padding-top:145%;overflow:hidden;background:#0F172A; }
-.bat-art-capa img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s; }
-.bat-art-card:hover .bat-art-capa img { transform:scale(1.05); }
-.bat-art-rank { position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;font-family:'Orbitron',sans-serif;z-index:2; }
-.bat-art-overlay { position:absolute;bottom:0;left:0;right:0;padding:28px 10px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.96)); }
-.bat-boss-cover { width:44px;height:60px;border-radius:4px;object-fit:cover;cursor:zoom-in;transition:transform .25s;transform-origin:center center;flex-shrink:0;position:relative;z-index:1; }
-.bat-boss-cover:hover { transform:scale(5);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.9); }
-
-
-/* ═══════════════════════════════════════
-   MOBILE — media query pura, sem JS
-═══════════════════════════════════════ */
-:root { --nav-h: 58px; }
-
-/* Toggle button — sempre visível */
-#btn-view-toggle {
-  position:fixed;bottom:10px;right:10px;z-index:3000;
-  width:32px;height:32px;border-radius:50%;
-  background:rgba(15,20,35,0.9);border:1px solid rgba(139,124,248,0.4);
-  color:var(--purple);font-size:14px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.5);
-}
-
-/* Nav bar */
-#mobile-nav {
-  display:none;position:fixed;bottom:0;left:0;right:0;z-index:2000;
-  background:var(--bg2);border-top:1px solid var(--border);
-  height:var(--nav-h);flex-direction:row;align-items:stretch;
-  box-shadow:0 -2px 16px rgba(0,0,0,0.5);
-}
-.m-nav-btn {
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:2px;border:none;background:transparent;
-  cursor:pointer;color:var(--muted);font-size:9px;font-weight:700;
-  padding:4px 0;transition:all .15s;-webkit-tap-highlight-color:transparent;
-  text-transform:uppercase;letter-spacing:0.3px;
-}
-.m-nav-btn .m-nav-icon { font-size:20px;line-height:1.2; }
-.m-nav-btn.active { color:var(--purple);background:rgba(139,124,248,0.08); }
-.m-nav-btn.active .m-nav-icon { filter:drop-shadow(0 0 5px var(--purple)); }
-
-/* ── MOBILE MEDIA QUERY ─────────────────────── */
-@media (max-width: 1400px) {
-  #mobile-nav { display:flex !important; }
-
-  #btn-view-toggle {
-    bottom:auto !important; top:56px !important; right:6px !important;
-    width:26px !important; height:26px !important;
-    font-size:13px !important; z-index:1100 !important;
-    padding:0 !important; border-radius:6px !important;
-  }
-
-  header {
-    padding:6px 8px !important; position:sticky; top:0; z-index:1000;
-    gap:4px !important; flex-wrap:nowrap !important;
-  }
-  header .icon { font-size:18px; }
-  header h1 { font-size:12px !important; white-space:nowrap; }
-  header p, .badge { display:none !important; }
-  header > div:last-child { gap:3px !important; flex-wrap:nowrap !important; }
-  #btn-user-milton, #btn-user-daniel, #btn-user-batalha {
-    padding:4px 7px !important; font-size:11px !important;
-  }
-  button[onclick="toggleChangelog()"],
-  button[onclick="manualRefresh()"] { padding:3px 7px !important; font-size:11px !important; }
-
-  #app, .page {
-    width:100% !important; max-width:100% !important; margin:0 !important;
-    padding:6px 8px calc(var(--nav-h) + 12px) 8px !important;
-    box-sizing:border-box !important; overflow-x:hidden !important;
-  }
-
-  .lendo-wrap { width:100% !important; max-width:100% !important; padding:0 8px !important; }
-  .lendo-inner { flex-direction:column !important; gap:8px !important; padding:8px 0 !important; }
-  .lendo-card { min-width:unset !important; width:100% !important; }
-
-  .grid2, .grid3, .grid4, .grid6 { grid-template-columns:1fr !important; }
-  .kpi-grid-5 { grid-template-columns:repeat(2,1fr) !important; }
-  #kpi-books-grid { grid-template-columns:1fr 1fr !important; }
-
-  #grid-rankings { grid-template-columns:1fr !important; }
-  #grid-rankings > div:last-child { flex-direction:column !important; }
-
-  .card { padding:10px !important; border-radius:10px !important; overflow:hidden !important; }
-  .sec { font-size:9px !important; margin:12px 0 6px !important; }
-
-  .kpi { overflow:hidden !important; }
-  .kpi-book { flex-direction:row !important; align-items:flex-start !important; gap:8px !important; }
-  .kpi-book img, .kpi-book .fallback { width:44px !important; height:62px !important; flex-shrink:0 !important; }
-  .kpi-nome { font-size:14px !important; line-height:1.3 !important; white-space:normal !important; word-break:break-word !important; }
-  .kpi-autor { font-size:11px !important; white-space:normal !important; }
-  .kpi-val { font-size:24px !important; }
-
-  .rank-bar-wrap { display:none !important; }
-  .rank-name { font-size:12px !important; white-space:normal !important; word-break:break-word !important; }
-  .rank-item { flex-wrap:wrap !important; }
-
-  canvas { max-width:100% !important; width:100% !important; }
-  #cGeneros { height:300px !important; }
-  #cMonthly { height:240px !important; }
-  #cDonut, #cAutores { height:180px !important; }
-
-  #heatmapGrid { display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important; }
-
-  .fab { bottom:calc(var(--nav-h) + 14px) !important; right:10px !important;
-         width:48px !important; height:48px !important; font-size:22px !important; }
-  .fab-menu { bottom:calc(var(--nav-h) + 70px) !important; right:10px !important; }
-
-  [data-msection] { scroll-margin-top:60px; }
-  #bookInfoStats { grid-template-columns:1fr 1fr !important; }
-  .ctrl { flex-wrap:wrap !important; gap:6px !important; }
-  .ctrl select { font-size:12px !important; max-width:100% !important; }
-
-  #pageBatalha { padding:8px !important; }
-  #pageBatalha [style*="grid-template-columns"] { grid-template-columns:1fr !important; }
-
-  #painelMeta { width:96vw !important; max-height:80vh !important; }
-  #painelMetaLista { gap:6px !important; }
-}
-
-/* Quando JS ativa mobile-view no desktop */
-body.mobile-view-disabled #mobile-nav { display:flex !important; }
-body.mobile-view-disabled #btn-view-toggle { top:56px !important; bottom:auto !important; right:6px !important; }
-body.mobile-view-disabled header { padding:6px 8px !important; position:sticky; top:0; z-index:1000; }
-body.mobile-view-disabled header h1 { font-size:12px !important; }
-body.mobile-view-disabled header p, body.mobile-view-disabled .badge { display:none !important; }
-body.mobile-view-disabled #btn-user-milton,
-body.mobile-view-disabled #btn-user-daniel,
-body.mobile-view-disabled #btn-user-batalha { padding:4px 7px !important; font-size:11px !important; }
-body.mobile-view-disabled #app, body.mobile-view-disabled .page {
-  width:100% !important; max-width:100% !important; margin:0 !important;
-  padding:6px 8px calc(var(--nav-h) + 12px) 8px !important;
-  box-sizing:border-box !important;
-}
-body.mobile-view-disabled .lendo-wrap { width:100% !important; max-width:100% !important; }
-body.mobile-view-disabled .lendo-inner { flex-direction:column !important; gap:8px !important; }
-body.mobile-view-disabled .lendo-card { min-width:unset !important; width:100% !important; }
-body.mobile-view-disabled .grid2, body.mobile-view-disabled .grid3,
-body.mobile-view-disabled .grid4, body.mobile-view-disabled .grid6 { grid-template-columns:1fr !important; }
-body.mobile-view-disabled .kpi-grid-5 { grid-template-columns:repeat(2,1fr) !important; }
-body.mobile-view-disabled #kpi-books-grid { grid-template-columns:1fr 1fr !important; }
-body.mobile-view-disabled #grid-rankings { grid-template-columns:1fr !important; }
-body.mobile-view-disabled .kpi { overflow:hidden !important; }
-body.mobile-view-disabled .kpi-nome { white-space:normal !important; word-break:break-word !important; }
-body.mobile-view-disabled .rank-bar-wrap { display:none !important; }
-body.mobile-view-disabled .fab { bottom:calc(var(--nav-h) + 14px) !important; right:10px !important; }
-body.mobile-view-disabled .fab-menu { bottom:calc(var(--nav-h) + 70px) !important; right:10px !important; }
-
-/* ── Mobile: força todos inline grids para 1 coluna ── */
-@media (max-width: 1400px) {
-  [data-desktop-grid] {
-    grid-template-columns: 1fr !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  #kpi-books-grid[data-desktop-grid],
-  #bookInfoStats[data-desktop-grid],
-  #heatmapGrid[data-desktop-grid],
-  .kpi-grid-5[data-desktop-grid] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  canvas { max-width:100% !important; width:100% !important; }
-  #cGeneros { min-height:320px !important; }
-  #cMonthly  { min-height:240px !important; }
-  .pwa-row   { grid-template-columns:1fr !important; }
-  .meta-stats{ grid-template-columns:1fr 1fr !important; }
-}
-body.mobile-view-disabled [data-desktop-grid] {
-  grid-template-columns: 1fr !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-body.mobile-view-disabled #kpi-books-grid[data-desktop-grid],
-body.mobile-view-disabled #bookInfoStats[data-desktop-grid],
-body.mobile-view-disabled #heatmapGrid[data-desktop-grid],
-body.mobile-view-disabled .kpi-grid-5[data-desktop-grid] {
-  grid-template-columns: 1fr 1fr !important;
-}
-body.mobile-view-disabled canvas { max-width:100% !important; width:100% !important; }
-body.mobile-view-disabled .pwa-row { grid-template-columns:1fr !important; }
-body.mobile-view-disabled .meta-stats { grid-template-columns:1fr 1fr !important; }
-
-/* ═══════════════════════════════════════════
-   MOBILE STYLES — scroll infinito
-   ═══════════════════════════════════════════ */
-@media (max-width: 1400px) {
-
-  /* Reset */
-  * { box-sizing: border-box !important; }
-  body { overflow-x: hidden !important; }
-
-  /* Header */
-  header { padding:8px 10px !important; position:sticky !important; top:0 !important; z-index:1000 !important; gap:4px !important; flex-wrap:nowrap !important; }
-  header .icon { font-size:18px !important; }
-  header h1 { font-size:12px !important; white-space:nowrap !important; }
-  header p, .badge { display:none !important; }
-  header > div:last-child { gap:3px !important; flex-wrap:nowrap !important; }
-  #btn-user-milton, #btn-user-daniel, #btn-user-batalha { padding:5px 8px !important; font-size:11px !important; }
-  button[onclick="toggleChangelog()"], button[onclick="manualRefresh()"] { display:none !important; }
-  #btn-view-toggle { display:none !important; }
-
-  /* App + page */
-  #app, .page { width:100% !important; max-width:100% !important; margin:0 !important; padding:6px 10px 80px 10px !important; overflow-x:hidden !important; }
-
-  /* Lendo */
-  .lendo-wrap { width:100% !important; max-width:100% !important; padding:8px 10px !important; }
-  .lendo-inner { flex-direction:column !important; gap:8px !important; padding:0 !important; }
-  .lendo-card { min-width:unset !important; width:100% !important; }
-  /* Capas nas lendo cards — proporcionais */
-  .lendo-card .cover-img { width:52px !important; height:72px !important; }
-  .lendo-card .fallback  { width:52px !important; height:72px !important; }
-
-  /* Grids */
-  .grid2, .grid3, .grid4, .grid6 { grid-template-columns:1fr !important; }
-  [data-desktop-grid] { grid-template-columns:1fr !important; }
-  #kpi-books-grid, #kpi-books-grid[data-desktop-grid] { grid-template-columns:1fr 1fr !important; }
-  .kpi-grid-5, .kpi-grid-5[data-desktop-grid] { grid-template-columns:1fr 1fr !important; }
-  #bookInfoStats { grid-template-columns:1fr 1fr !important; }
-
-  /* Cards */
-  .card { padding:10px !important; border-radius:12px !important; }
-  .sec { font-size:10px !important; margin:14px 0 5px !important; }
-  .card-title { font-size:14px !important; }
-
-  /* KPI books — capas menores e proporcionais */
-  .kpi { overflow:hidden !important; cursor:pointer !important; }
-  .kpi-book { flex-direction:row !important; align-items:flex-start !important; gap:8px !important; }
-  .kpi-book img  { width:40px !important; height:56px !important; flex-shrink:0 !important; object-fit:cover !important; }
-  .kpi-book .fallback { width:40px !important; height:56px !important; flex-shrink:0 !important; }
-  .kpi-nome  { font-size:12px !important; line-height:1.3 !important; white-space:normal !important; word-break:break-word !important; }
-  .kpi-autor { font-size:10px !important; white-space:normal !important; }
-  .kpi-val   { font-size:20px !important; }
-  .kpi-lbl   { font-size:8px !important; }
-
-  /* Visão Geral — kpi-grid-5 bem distribuída */
-  .kpi-grid-5 .kpi { min-height: unset !important; padding:10px !important; }
-  .kpi-grid-5 .kpi-val { font-size:18px !important; }
-
-  /* Ranking */
-  .rank-bar-wrap { display:none !important; }
-  .rank-name { font-size:13px !important; white-space:normal !important; word-break:break-word !important; }
-  .rank-item { cursor:pointer !important; }
-  .rank-item img { width:36px !important; height:50px !important; }
-
-  /* Donut legend items */
-  .donut-leg-item { cursor:pointer !important; }
-
-  /* Canvas — 100% largura */
-  canvas { max-width:100% !important; width:100% !important; }
-
-  /* Calendário */
-  .cal-day-num { font-size:10px !important; }
-  .cal-day-pag { font-size:10px !important; }
-  #calGrid { gap:2px !important; }
-
-  /* Heatmap — 2 meses por linha */
-  #heatmapGrid { display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px !important; }
-
-  /* Streak */
-  #streakList > div { flex-direction:column !important; gap:4px !important; }
-
-  /* Ctrl */
-  .ctrl { flex-wrap:wrap !important; gap:6px !important; }
-  .ctrl select { font-size:12px !important; }
-
-  /* Book info */
-  #bookInfoNome { font-size:14px !important; }
-
-  /* FAB acima da nav */
-  .fab { bottom:68px !important; right:12px !important; width:50px !important; height:50px !important; font-size:22px !important; }
-  .fab-menu { bottom:126px !important; right:12px !important; }
-
-  /* Nav bar */
-  #mobile-nav { display:flex !important; }
-
-  /* Batalha — capas de artefatos/maldições menores */
-  #bat-artefatos img, #bat-maldicoes img { width:44px !important; height:62px !important; }
-  #bat-artefatos .cover-img, #bat-maldicoes .cover-img { width:44px !important; height:62px !important; }
-  #pageBatalha [data-desktop-grid] { grid-template-columns:1fr !important; }
-
-  /* Painéis overlay */
-  #painelGenero, #painelMeta, #painelStatus { width:95vw !important; max-height:82vh !important; }
-  #painelMetaLista { gap:6px !important; }
-
-  /* PWA forms */
-  .pwa-row { grid-template-columns:1fr 1fr !important; }
-  .pwa-field input, .pwa-field select { font-size:14px !important; }
-
-  /* ── Calendário: células menores, não overflow ── */
-  #calGrid { gap:2px !important; overflow:hidden !important; }
-  .cal-day-num { font-size:9px !important; }
-  .cal-day-pag { font-size:10px !important; margin-top:1px !important; }
-  .cal-day-livro { display:none !important; }
-  .cal-day-bar { height:2px !important; margin-top:2px !important; }
-  #calWrap { overflow:hidden !important; }
-  /* Calendário header dias da semana */
-  #calGrid ~ div, .cal-header { font-size:9px !important; }
-
-  /* ── Heatmap: compacto ── */
-  #heatmapGrid { grid-template-columns:1fr 1fr !important; gap:6px !important; }
-  #heatmapGrid > div { overflow:hidden !important; }
-  /* Mini calendários dentro do heatmap */
-  #heatmapGrid .heat-month { font-size:9px !important; }
-  #heatmapGrid .heat-day { width:10px !important; height:10px !important; }
-
-  /* ── Gêneros: barra horizontal sem overflow ── */
-  #cGeneros { height:280px !important; }
-
-  /* ── Dia da Semana: barras cortadas ── */
-  #wdAvg canvas, #wdSum canvas { max-width:100% !important; }
-  #wdAvg, #wdSum { overflow:hidden !important; }
-  /* Wd bars container */
-  .wd-bars { overflow-x:hidden !important; }
-  .wd-bar { min-width:0 !important; }
-
-  /* ── Ranking ── */
-  #rankList .rank-item img { width:36px !important; height:50px !important; }
-  .ctrl { flex-wrap:wrap !important; gap:4px !important; }
-  .ctrl select { min-width:0 !important; flex:1 !important; font-size:11px !important; padding:4px 6px !important; }
-  .btn { white-space:nowrap !important; font-size:12px !important; padding:6px 10px !important; }
-  /* Ranking dois selects por linha */
-  .ctrl select:nth-child(3) { flex:0 0 100% !important; }
-
-  /* ── Tendência Mensal ── */
-  #cMonthly { height:220px !important; }
-  #selFrom, #selTo { font-size:11px !important; padding:3px 6px !important; }
-
-  /* ── Overflow fix global: NADA deve vazar da tela ── */
-  .card, .sec, #app, .page, .lendo-wrap {
-    overflow:hidden !important;
-    max-width:100% !important;
-  }
-  /* Exceções: painéis sobrepostos devem rolar */
-  #painelGenero, #painelStatus, #painelMeta, #painelColecao, #painelAutor {
-    overflow-y:auto !important;
-    overflow-x:hidden !important;
-  }
-
-  /* ── Calendário: forçar células quadradas compactas ── */
-  #calGrid {
-    display:grid !important;
-    grid-template-columns:repeat(7,minmax(0,1fr)) !important;
-    gap:2px !important;
-    width:100% !important;
-    overflow:hidden !important;
-  }
-  .cal-day {
-    min-height:0 !important;
-    aspect-ratio:1 !important;
-    padding:2px !important;
-    font-size:9px !important;
-    overflow:hidden !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:flex-start !important;
-  }
-  .cal-day-num { font-size:9px !important; line-height:1 !important; }
-  .cal-day-pag { font-size:9px !important; line-height:1.1 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
-  .cal-day-livro { display:none !important; }
-  .cal-day-bar { height:2px !important; margin-top:auto !important; }
-
-  /* ── Dia da Semana: barras dentro do container ── */
-  .wd-bars { width:100% !important; overflow:hidden !important; gap:3px !important; }
-  .wd-col { min-width:0 !important; }
-  .wd-val { font-size:8px !important; }
-  .wd-lbl { font-size:8px !important; }
-
-  /* ── Gêneros: canvas 100% ── */
-  #cGeneros { height:260px !important; width:100% !important; }
-
-  /* ── Ranking: card sem overflow ── */
-  #rankList { width:100% !important; overflow:hidden !important; }
-  .rank-item { width:100% !important; overflow:hidden !important; }
-  .rank-bar-wrap { display:none !important; }
-  .rank-name { white-space:normal !important; overflow:hidden !important; font-size:13px !important; }
-
-  /* ── Charts: forçar dentro do card ── */
-  canvas { display:block !important; box-sizing:border-box !important; }
-
-  /* Batalha sempre escondida a não ser quando ativo */
-  #pageBatalha { display:none; }
-  body.batalha-ativo #pageBatalha { display:block !important; }
-  body.batalha-ativo #pageDashboard { display:none !important; }
-  body.batalha-ativo .lendo-wrap { display:none !important; }
-
-  /* Scroll targets */
-  [data-msection] { scroll-margin-top:65px !important; }
-
-  /* Status kpi grid - 3 colunas no mobile */
-  /* ── Visão Geral: grid 2-2-1 centralizado ── */
-  .kpi-grid-5, .kpi-grid-5[data-desktop-grid] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .kpi-grid-5 .kpi:nth-child(5) {
-    grid-column: 1 / -1 !important;
-    max-width: 55% !important;
-    margin: 0 auto !important;
-    width: 100% !important;
-  }
-  .kpi-grid-5 .kpi-sub { display:none !important; }
-  .kpi-grid-5 .kpi { padding:12px !important; }
-  .kpi-grid-5 .kpi-val { font-size:20px !important; }
-
-  #status-kpi-grid { grid-template-columns:1fr 1fr !important; }
-  #status-kpi-grid .kpi:nth-child(5) {
-    grid-column: 1 / -1 !important;
-    max-width: 55% !important;
-    margin: 0 auto !important;
-  }
-  #status-kpi-grid .kpi { padding:10px !important; }
-  #status-kpi-grid .kpi-val { font-size:18px !important; }
-  #status-kpi-grid .kpi-lbl { font-size:10px !important; }
-  #status-kpi-grid .kpi-sub { display:none !important; }
-  #status-kpi-grid .kpi-icon { font-size:18px !important; }
-
-  /* Batalha — artefatos/maldições menores no mobile */
-  .bat-art-card { min-width:unset !important; }
-  .bat-art-capa { padding-top:100% !important; }
-  #bat-artefatos, #bat-maldicoes { grid-template-columns:1fr 1fr !important; }
-
-  /* Conquistas batalha */
-  #bat-conquistas-wrap { grid-template-columns:1fr !important; }
-}
-/* Mobile nav scroll */
-@media (max-width: 1400px) {
-  #mobile-nav { display: flex !important; }
-  .m-nav-btn {
-    flex: 0 0 auto !important;
-    min-width: 60px !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 6px 10px !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    color: var(--muted) !important;
-    background: none !important;
-    border: none !important;
-    cursor: pointer !important;
-    gap: 2px !important;
-  }
-  .m-nav-icon { font-size: 20px !important; display: block !important; }
-}
-
-
-
-/* MOBILE OVERRIDE */
-html, body { max-width: 100vw !important; overflow-x: hidden !important; }
-.card { width: 100% !important; overflow: hidden !important; box-sizing: border-box !important; }
-.card-title { white-space: normal !important; overflow: hidden !important; box-sizing: border-box !important; }
-.ctrl { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; }
-.ctrl select { flex: 1 !important; min-width: 0 !important; width: auto !important; }
-#grid-rankings { display: grid !important; grid-template-columns: minmax(0,1fr) !important; width: 100% !important; }
-#rankList { overflow: hidden !important; width: 100% !important; }
-.rank-item { overflow: hidden !important; max-width: 100% !important; box-sizing: border-box !important; }
-.rank-bar-wrap { display: none !important; }
-.wd-bars { overflow: hidden !important; width: 100% !important; box-sizing: border-box !important; }
-.wd-col { min-width: 0 !important; box-sizing: border-box !important; }
-canvas { max-width: 100% !important; }
-#pageDashboard { overflow-x: hidden !important; max-width: 100% !important; }
-/* Heatmap */
-#heatmapGrid { overflow: hidden !important; width: 100% !important; }
-#heatmapGrid > div > div { width: 100% !important; }
-
-
-
-.fab { position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--purple);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(139,124,248,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;transition:transform .2s; }
-.fab:hover { transform:scale(1.1); }
-.fab-menu { position:fixed;bottom:96px;right:24px;display:flex;flex-direction:column;gap:12px;z-index:1000; }
-.fab-item { display:flex;align-items:center;gap:10px;justify-content:flex-end; }
-.fab-item button { width:48px;height:48px;border-radius:50%;border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.3); }
-.fab-item span { background:rgba(0,0,0,0.7);color:white;padding:4px 10px;border-radius:6px;font-size:13px;white-space:nowrap; }
-.pwa-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:none;align-items:flex-end;justify-content:center; }
-.pwa-overlay.open { display:flex; }
-.pwa-modal { background:var(--bg2);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto; }
-.pwa-modal h2 { font-size:20px;font-weight:700;margin-bottom:18px;color:var(--text); }
-.pwa-field { margin-bottom:14px; }
-.pwa-field label { display:block;font-size:13px;color:var(--muted);margin-bottom:5px; }
-.pwa-field input,.pwa-field select,.pwa-field textarea { width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;box-sizing:border-box; }
-.pwa-field input[type=number] { -moz-appearance:textfield; }
-.pwa-row { display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px; }
-.pwa-criterio { display:flex;flex-direction:column;gap:4px; }
-.pwa-criterio label { font-size:12px;color:var(--muted); }
-.pwa-criterio input { text-align:center; }
-.pwa-btn { width:100%;padding:14px;background:var(--purple);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px; }
-.pwa-btn:disabled { opacity:.5;cursor:not-allowed; }
-.pwa-btn-cancel { width:100%;padding:12px;background:var(--bg3);border:none;border-radius:12px;color:var(--muted);font-size:15px;cursor:pointer;margin-top:6px; }
-.pwa-msg { padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-top:10px;display:none; }
-.pwa-msg.ok { background:rgba(78,205,196,0.15);color:var(--teal);display:block; }
-.pwa-msg.err { background:rgba(248,140,106,0.15);color:var(--orange);display:block; }
-
-
-
-@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-
-
-/* V3.2 final mobile safety overrides */
-html, body { max-width:100vw !important; overflow-x:hidden !important; background:#0d1117 !important; }
-#app, .page, #pageDashboard { max-width:100% !important; overflow-x:hidden !important; box-sizing:border-box !important; }
-@media (max-width: 1400px) {
-  header { position:sticky !important; top:0 !important; z-index:1000 !important; }
-  #mobile-nav { display:flex !important; }
-  .lendo-wrap { display:block; }
-  body.batalha-ativo .lendo-wrap { display:none !important; }
-  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid] { grid-template-columns:1fr !important; }
-  #kpi-books-grid, #kpi-books-grid[data-desktop-grid], .kpi-grid-5, .kpi-grid-5[data-desktop-grid], #bookInfoStats { grid-template-columns:1fr 1fr !important; }
-  .card, .kpi, .lendo-card { max-width:100% !important; overflow:hidden !important; }
-  canvas { max-width:100% !important; }
-  #pageBatalha { overflow-x:hidden !important; }
-}
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v3-3-full-mobile"; window.__BOOKLEGACY_PUBLIC_VERSION="3.3-mobile-full";</script>
+
+<style id="booklegacy-mobile-v33-functional-format">
+/* BookLegacy V3.3 — mobile é o mesmo app funcional do desktop, só com formatação mobile */
+html,body{max-width:100vw!important;overflow-x:hidden!important;background:#0d1117!important;}
+body.booklegacy-mobile-app{font-size:14px!important;}
+body.booklegacy-mobile-app #authOverlay{padding:14px!important;}
+body.booklegacy-mobile-app .auth-card{padding:22px!important;border-radius:18px!important;}
+body.booklegacy-mobile-app header{position:sticky!important;top:0!important;z-index:1200!important;display:grid!important;grid-template-columns:auto 1fr!important;gap:6px 8px!important;padding:8px 10px!important;align-items:center!important;background:linear-gradient(135deg,#161b27 0%,#1e2535 100%)!important;}
+body.booklegacy-mobile-app header .icon{font-size:22px!important;line-height:1!important;}
+body.booklegacy-mobile-app header h1{font-size:14px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+body.booklegacy-mobile-app header p,body.booklegacy-mobile-app .badge{display:none!important;}
+body.booklegacy-mobile-app header>div:last-child{grid-column:1/-1!important;display:flex!important;gap:6px!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;max-width:100%!important;padding:2px 0 4px!important;-webkit-overflow-scrolling:touch!important;}
+body.booklegacy-mobile-app header>div:last-child::-webkit-scrollbar{display:none!important;}
+body.booklegacy-mobile-app header button{flex:0 0 auto!important;white-space:nowrap!important;font-size:11px!important;padding:6px 9px!important;border-radius:8px!important;}
+body.booklegacy-mobile-app #btn-user-milton,body.booklegacy-mobile-app #btn-user-daniel,body.booklegacy-mobile-app #btn-user-batalha{font-size:11px!important;padding:6px 9px!important;}
+body.booklegacy-mobile-app #app,body.booklegacy-mobile-app .page{width:100%!important;max-width:100%!important;margin:0!important;padding:8px 10px 82px!important;box-sizing:border-box!important;overflow-x:hidden!important;}
+body.booklegacy-mobile-app .lendo-wrap{width:100%!important;max-width:100%!important;padding:8px 10px!important;box-sizing:border-box!important;overflow:hidden!important;}
+body.booklegacy-mobile-app .lendo-inner{flex-direction:column!important;gap:8px!important;padding:0!important;}
+body.booklegacy-mobile-app .lendo-card{min-width:0!important;width:100%!important;padding:12px!important;border-radius:12px!important;}
+body.booklegacy-mobile-app .lendo-book-title{font-size:15px!important;line-height:1.25!important;}
+body.booklegacy-mobile-app .grid2,body.booklegacy-mobile-app .grid3,body.booklegacy-mobile-app .grid4,body.booklegacy-mobile-app .grid6,body.booklegacy-mobile-app [data-desktop-grid]{grid-template-columns:1fr!important;width:100%!important;}
+body.booklegacy-mobile-app .kpi-grid-5,body.booklegacy-mobile-app .kpi-grid-5[data-desktop-grid],body.booklegacy-mobile-app #status-kpi-grid,body.booklegacy-mobile-app #bookInfoStats{grid-template-columns:1fr 1fr!important;}
+body.booklegacy-mobile-app .kpi-grid-5 .kpi:nth-child(5),body.booklegacy-mobile-app #status-kpi-grid .kpi:nth-child(5){grid-column:1/-1!important;max-width:58%!important;margin:0 auto!important;width:100%!important;}
+body.booklegacy-mobile-app #kpi-books-grid,body.booklegacy-mobile-app #kpi-books-grid[data-desktop-grid]{grid-template-columns:1fr 1fr!important;}
+body.booklegacy-mobile-app .card{width:100%!important;max-width:100%!important;padding:10px!important;border-radius:12px!important;overflow:hidden!important;box-sizing:border-box!important;}
+body.booklegacy-mobile-app .sec{font-size:10px!important;margin:14px 0 6px!important;letter-spacing:1px!important;}
+body.booklegacy-mobile-app .card-title{font-size:15px!important;white-space:normal!important;line-height:1.25!important;}
+body.booklegacy-mobile-app .card-sub{font-size:11px!important;margin-bottom:8px!important;}
+body.booklegacy-mobile-app .kpi{padding:11px!important;overflow:hidden!important;}
+body.booklegacy-mobile-app .kpi-icon{font-size:18px!important;margin-bottom:5px!important;}
+body.booklegacy-mobile-app .kpi-val{font-size:22px!important;}
+body.booklegacy-mobile-app .kpi-lbl{font-size:8px!important;}
+body.booklegacy-mobile-app .kpi-sub{display:none!important;}
+body.booklegacy-mobile-app .kpi-book{flex-direction:row!important;align-items:flex-start!important;gap:8px!important;}
+body.booklegacy-mobile-app .kpi-book img,body.booklegacy-mobile-app .kpi-book .fallback{width:40px!important;height:56px!important;object-fit:cover!important;flex-shrink:0!important;}
+body.booklegacy-mobile-app .kpi-nome{font-size:12px!important;line-height:1.25!important;white-space:normal!important;word-break:break-word!important;}
+body.booklegacy-mobile-app .kpi-autor{font-size:10px!important;white-space:normal!important;}
+body.booklegacy-mobile-app .meta-row{flex-direction:column!important;align-items:center!important;gap:10px!important;}
+body.booklegacy-mobile-app .meta-stats{grid-template-columns:1fr 1fr!important;width:100%!important;}
+body.booklegacy-mobile-app .meta-stat{padding:8px!important;}
+body.booklegacy-mobile-app .meta-stat-val{font-size:15px!important;}
+body.booklegacy-mobile-app .rank-bar-wrap{display:none!important;}
+body.booklegacy-mobile-app .rank-item{width:100%!important;max-width:100%!important;overflow:hidden!important;gap:5px!important;}
+body.booklegacy-mobile-app .rank-name{font-size:13px!important;white-space:normal!important;word-break:break-word!important;}
+body.booklegacy-mobile-app .ctrl{display:flex!important;flex-wrap:wrap!important;gap:6px!important;}
+body.booklegacy-mobile-app .ctrl select{flex:1 1 45%!important;min-width:0!important;max-width:100%!important;font-size:12px!important;padding:5px 7px!important;}
+body.booklegacy-mobile-app .btn{font-size:12px!important;padding:6px 10px!important;white-space:nowrap!important;}
+body.booklegacy-mobile-app canvas{display:block!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important;}
+body.booklegacy-mobile-app #cGeneros{height:270px!important;} body.booklegacy-mobile-app #cMonthly{height:230px!important;} body.booklegacy-mobile-app #cDonut,body.booklegacy-mobile-app #cAutores{height:190px!important;}
+body.booklegacy-mobile-app #heatmapGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;width:100%!important;overflow:hidden!important;}
+body.booklegacy-mobile-app #calGrid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:2px!important;width:100%!important;overflow:hidden!important;}
+body.booklegacy-mobile-app .cal-day{min-height:0!important;aspect-ratio:1!important;padding:2px!important;overflow:hidden!important;}
+body.booklegacy-mobile-app .cal-day-num,body.booklegacy-mobile-app .cal-day-pag{font-size:9px!important;line-height:1.05!important;}
+body.booklegacy-mobile-app .cal-day-livro{display:none!important;}
+body.booklegacy-mobile-app .wd-bars{overflow:hidden!important;width:100%!important;gap:3px!important;}
+body.booklegacy-mobile-app .wd-col{min-width:0!important;}
+body.booklegacy-mobile-app .wd-lbl,body.booklegacy-mobile-app .wd-val{font-size:8px!important;}
+body.booklegacy-mobile-app #mobile-nav{display:flex!important;position:fixed!important;bottom:0!important;left:0!important;right:0!important;height:60px!important;z-index:2000!important;background:#161b27!important;border-top:1px solid #2a3248!important;overflow-x:auto!important;padding:0 4px!important;box-shadow:0 -2px 16px rgba(0,0,0,.5)!important;}
+body.booklegacy-mobile-app .m-nav-btn{flex:0 0 auto!important;min-width:60px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;border:none!important;background:transparent!important;color:#8892a8!important;font-size:10px!important;font-weight:700!important;padding:6px 9px!important;text-transform:uppercase!important;}
+body.booklegacy-mobile-app .m-nav-btn.active{color:#8b7cf8!important;background:rgba(139,124,248,.08)!important;}
+body.booklegacy-mobile-app .m-nav-icon{font-size:20px!important;display:block!important;}
+body.booklegacy-mobile-app #btn-view-toggle{display:none!important;}
+body.booklegacy-mobile-app .fab{bottom:72px!important;right:12px!important;width:50px!important;height:50px!important;font-size:22px!important;}
+body.booklegacy-mobile-app .fab-menu{bottom:130px!important;right:12px!important;}
+body.booklegacy-mobile-app #pageBatalha{padding:8px 10px 82px!important;}
+body.booklegacy-mobile-app #pageBatalha [style*="grid-template-columns"],body.booklegacy-mobile-app #pageBatalha [data-desktop-grid]{grid-template-columns:1fr!important;}
+body.booklegacy-mobile-app #bat-artefatos,body.booklegacy-mobile-app #bat-maldicoes{grid-template-columns:1fr 1fr!important;}
+body.booklegacy-mobile-app .bat-art-capa{padding-top:110%!important;}
+body.booklegacy-mobile-app body.batalha-ativo #pageDashboard{display:none!important;}
+body.booklegacy-mobile-app.batalha-ativo .lendo-wrap{display:none!important;}
+body.booklegacy-mobile-app [data-msection]{scroll-margin-top:82px!important;}
+body.booklegacy-mobile-app #painelGenero,body.booklegacy-mobile-app #painelMeta,body.booklegacy-mobile-app #painelStatus,body.booklegacy-mobile-app #painelColecao,body.booklegacy-mobile-app #painelAutor{width:95vw!important;max-height:82vh!important;overflow-y:auto!important;overflow-x:hidden!important;}
+@media(max-width:900px){body:not(.booklegacy-mobile-app) #mobile-nav{display:flex!important}}
 </style>
 
 </head>
-<body>
+<body class="mobile-view booklegacy-mobile-app">
 
 <div id="authOverlay">
   <div class="auth-card">
     <div class="logo">📚</div>
     <h2>BookLegacy</h2>
-    <p>Entre com Google para acessar seu dashboard de leitura com seus dados privados no Firebase.</p>
+    <p>Entre com Google. O app carrega somente seus dados privados; dados de amigos aparecem apenas quando houver amizade aceita.</p>
     <button id="authLoginBtn" class="auth-btn">Entrar com Google</button>
     <div id="authError" class="auth-err"></div>
   </div>
@@ -1404,7 +640,7 @@ html, body { max-width:100vw !important; overflow-x:hidden !important; backgroun
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
         📖 Milton
       </button>
-      <button id="btn-user-daniel" onclick="setUsuario('Daniel')"
+      <button id="btn-user-daniel" style="display:none" onclick="setUsuario('Daniel')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         📖 Daniel
       </button>
@@ -1413,8 +649,11 @@ html, body { max-width:100vw !important; overflow-x:hidden !important; backgroun
         ⚔️ Batalha
       </button>
     </div>
+    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
+    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
+    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.2</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.3</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -4692,7 +3931,7 @@ window.abrirLivroDetalhes = abrirLivroDetalhes;
 
 
 // ════════════════════════════════════════════════
-// BOOKLEGACY V7.1 — FIREBASE + AMIGOS + PWA HOTFIX
+// BOOKLEGACY V7.2 — FIREBASE ESTÁVEL + AMIGOS + PWA
 // Mantém o layout original e troca data.json por Firestore.
 // ════════════════════════════════════════════════
 const firebaseConfig = {
@@ -4722,6 +3961,10 @@ window.BL.app = firebase.initializeApp(firebaseConfig);
 window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
+try {
+  // Evita travar em alguns navegadores/rede quando o Firestore tenta usar stream/websocket.
+  window.BL.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+} catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 function blTxt(v){ return String(v ?? '').trim(); }
@@ -4763,32 +4006,106 @@ async function blEnsureUserProfile(user){
 
 function blMapSnap(snap){ return snap.docs.map(d => ({ id:d.id, ...d.data() })); }
 
-async function blLoadFirestoreData(){
-  const user = window.BL.auth.currentUser;
-  if (!user) throw new Error('Usuário não logado');
-  const uid = user.uid;
-  const [booksSnap, librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
-    window.BL.db.collection('books').get(),
-    window.BL.db.collection('users').doc(uid).collection('library').get(),
-    window.BL.db.collection('users').doc(uid).collection('sessions').get(),
-    window.BL.db.collection('users').doc(uid).collection('ratings').get(),
-    window.BL.db.collection('users').doc(uid).collection('goals').get(),
-    window.BL.db.collection('users').doc(uid).collection('collections').get(),
+function blProfileLabel(user){
+  const src = `${user.displayName || ''} ${user.email || ''}`.toLowerCase();
+  if (src.includes('daniel')) return 'Daniel';
+  if (src.includes('milton')) return 'Milton';
+  return (user.displayName || user.email || 'Usuário').split(' ')[0];
+}
+
+
+function blWithTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo excedido ao carregar: ' + label)), ms))
   ]);
-  const raw = {
-    uid,
-    books: blMapSnap(booksSnap),
+}
+
+async function blSafeGet(query, label){
+  try { return await blWithTimeout(query.get(), 14000, label); }
+  catch(e){ console.error('Falha ao ler', label, e); throw e; }
+}
+
+async function blReadUserBundle(uid, label){
+  const userRef = window.BL.db.collection('users').doc(uid);
+  const [librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
+    blSafeGet(userRef.collection('library'), 'library/' + label),
+    blSafeGet(userRef.collection('sessions'), 'sessions/' + label),
+    blSafeGet(userRef.collection('ratings'), 'ratings/' + label),
+    blSafeGet(userRef.collection('goals'), 'goals/' + label),
+    blSafeGet(userRef.collection('collections'), 'collections/' + label),
+  ]);
+  return {
+    uid, label,
     library: blMapSnap(librarySnap),
     sessions: blMapSnap(sessionsSnap),
     ratings: blMapSnap(ratingsSnap),
     goals: blMapSnap(goalsSnap),
     collections: blMapSnap(collectionsSnap)
   };
+}
+
+async function blLoadFriendsForUser(uid){
+  try {
+    const snap = await blSafeGet(window.BL.db.collection('users').doc(uid).collection('friends').where('status','==','accepted'), 'friends');
+    return snap.docs.map(d => ({ uid:d.id, ...(d.data()||{}) }));
+  } catch(e) {
+    console.warn('Amigos não carregados. Verifique regras do Firestore.', e);
+    return [];
+  }
+}
+
+async function blLoadFirestoreData(){
+  const user = window.BL.auth.currentUser;
+  if (!user) throw new Error('Usuário não logado');
+  const uid = user.uid;
+  const meLabel = blProfileLabel(user);
+
+  // Primeiro carrega o usuário logado. Assim o dashboard abre mesmo se amigos/livros globais falharem.
+  const myBundle = await blReadUserBundle(uid, meLabel);
+
+  let books = [];
+  try {
+    const booksSnap = await blSafeGet(window.BL.db.collection('books'), 'books');
+    books = blMapSnap(booksSnap);
+  } catch(e) {
+    console.warn('Coleção books não carregou; seguindo com dados da library.', e);
+  }
+
+  let friends = [];
+  let friendBundles = [];
+  try {
+    friends = await blLoadFriendsForUser(uid);
+    for (const f of friends) {
+      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
+      try { friendBundles.push(await blReadUserBundle(f.uid, label)); }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
+    }
+  } catch(e) {
+    console.warn('Amigos não carregados; dashboard individual será exibido.', e);
+  }
+
+  const raw = { uid, currentLabel:meLabel, books, users:[myBundle, ...friendBundles], friends };
   window.BL.raw = raw;
+  blUpdateUserButtons(raw);
   return blAdaptFirestoreToLegacy(raw);
 }
 
-function blLegacyBook(item, bookMap){
+function blUpdateUserButtons(raw){
+  const btnMilton = document.getElementById('btn-user-milton');
+  const btnDaniel = document.getElementById('btn-user-daniel');
+  const btnBatalha = document.getElementById('btn-user-batalha');
+  const labels = (raw.users||[]).map(u => u.label);
+  if (btnMilton) {
+    btnMilton.textContent = `📖 ${raw.currentLabel || 'Meus dados'}`;
+    btnMilton.setAttribute('onclick', 'setUsuario(' + JSON.stringify(raw.currentLabel || 'Milton') + ')');
+  }
+  const hasDaniel = labels.some(l => String(l).toLowerCase() === 'daniel');
+  if (btnDaniel) btnDaniel.style.display = hasDaniel ? '' : 'none';
+  if (btnBatalha) btnBatalha.style.display = (raw.users||[]).length >= 2 ? '' : 'none';
+}
+
+function blLegacyBook(item, bookMap, userLabel){
   const b = bookMap.get(item.bookId) || {};
   const title = blTxt(item.title || b.title || item.livro || b.livro);
   const total = blNum(item.totalPages || item.pages || b.pages || b.totalPages);
@@ -4810,15 +4127,16 @@ function blLegacyBook(item, bookMap){
     totalPag: total,
     pagAtual: current,
     pct: total ? Math.min(1, Math.max(0, current / total)) : blNum(item.progress),
-    usuario: 'MILTON',
+    usuario: userLabel || 'Milton',
     genero: blTxt(item.genre || b.genre || item.genero)
   };
 }
 
 function blAdaptFirestoreToLegacy(raw){
   const bookMap = new Map((raw.books || []).map(b => [b.id, b]));
-  const legacyBooks = (raw.library || []).map(item => blLegacyBook(item, bookMap)).filter(l => l.livro);
-  const sessoes = (raw.sessions || []).map(s => ({
+  const bundles = raw.users || [{ label: raw.currentLabel || 'Usuário', library: raw.library||[], sessions: raw.sessions||[], ratings: raw.ratings||[], goals: raw.goals||[], collections: raw.collections||[] }];
+  const legacyBooks = bundles.flatMap(u => (u.library || []).map(item => blLegacyBook(item, bookMap, u.label))).filter(l => l.livro);
+  const sessoes = bundles.flatMap(u => (u.sessions || []).map(s => ({
     id: s.id,
     bookId: s.bookId || '',
     livro: blTxt(s.title || s.livro),
@@ -4828,9 +4146,9 @@ function blAdaptFirestoreToLegacy(raw){
     minutos: blNum(s.minutes || s.minutos),
     segundos: blNum(s.seconds || s.segundos),
     ano: blNum(s.year || s.ano || String(s.date||'').slice(0,4)),
-    usuario: 'MILTON'
-  })).filter(s => s.livro && s.data);
-  const notas = (raw.ratings || []).map(r => {
+    usuario: u.label || 'Milton'
+  }))).filter(s => s.livro && s.data);
+  const notas = bundles.flatMap(u => (u.ratings || []).map(r => {
     const criterios = {
       'Diálogos': blNum(r.dialogos), 'Enredo': blNum(r.enredo), 'Estilo Visual': blNum(r.estiloVisual),
       'Finalização': blNum(r.finalizacao), 'Imersão': blNum(r.imersao), 'Impacto Emocional': blNum(r.impactoEmocional),
@@ -4838,10 +4156,11 @@ function blAdaptFirestoreToLegacy(raw){
     };
     const vals = Object.values(criterios).filter(v => v > 0);
     const media = blNum(r.notaFinal || r.notaPonderada) || (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0);
-    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:'MILTON' };
-  }).filter(n => n.livro);
+    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:u.label || 'Milton' };
+  })).filter(n => n.livro);
   const metasPorAno = {};
-  (raw.goals || []).forEach(g => {
+  const ownBundle = bundles[0] || {goals:[]};
+  (ownBundle.goals || []).forEach(g => {
     const y = String(g.year || g.id || '').replace(/[^0-9]/g,'') || String(g.year || '');
     if (!y) return;
     if (g.raw) metasPorAno[y] = g.raw;
@@ -4881,7 +4200,7 @@ async function blRefreshAndRender(){
     inicializar(d);
   } else if (typeof setUsuario === 'function') {
     window._dadosD = d;
-    setUsuario('Milton');
+    setUsuario((window.BL.raw && window.BL.raw.currentLabel) || blProfileLabel(window.BL.auth.currentUser));
   }
   const footer = document.getElementById('footer-data');
   if (footer) footer.textContent = new Date().toLocaleString('pt-BR');
@@ -5279,7 +4598,7 @@ function blSetupLoadingWatchdog(){
     if (loading && loading.style.display !== 'none' && (!app || app.style.display === 'none') && (!overlay || overlay.style.display !== 'flex')) {
       loading.innerHTML = '<div style="max-width:720px;margin:30px auto;background:#161b27;border:1px solid #f88c6a;border-radius:16px;padding:24px;color:#e2e8f0;text-align:left"><h2 style="color:#f88c6a;margin-bottom:10px">⚠️ O carregamento demorou demais</h2><p>Isso geralmente é configuração do Firebase, regra do Firestore ou erro de permissão ao ler dados.</p><p style="color:#8892a8;margin-top:10px">Abra o Console do navegador ou mande print da tela. Você também pode voltar para a versão anterior pelo histórico de deploys da Vercel.</p><button onclick="location.reload()" style="margin-top:14px;background:#8b7cf8;color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">Recarregar</button></div>';
     }
-  }, 22000);
+  }, 12000);
 }
 blSetupLoadingWatchdog();
 
@@ -5301,11 +4620,28 @@ async function iniciarAppFirebase(){
         return;
       }
       if (overlay) overlay.style.display = 'none';
-      document.getElementById('loading').style.display = 'block';
-      await blEnsureUserProfile(user);
-      await blAcceptInviteIfPresent(user);
-      await blRefreshAndRender();
+      // Segurança: limpa qualquer dado renderizado do login anterior antes de carregar o usuário atual.
+      window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+      window._livros = [];
+      window._sessoes = [];
+      const appEl = document.getElementById('app'); if (appEl) appEl.style.display = 'none';
+      const loadingEl = document.getElementById('loading');
+      loadingEl.style.display = 'block';
+      loadingEl.innerHTML = '⏳ Login feito. Preparando seu perfil...';
+      if (window.BL.__activeUid !== user.uid) {
+        window.BL.__activeUid = user.uid;
+        window.__BL_INITIALIZED = false;
+        window.usuarioAtual = '';
+        window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+        window._livros = [];
+        window._sessoes = [];
+      }
       blDecorateHeader(user);
+      await blEnsureUserProfile(user);
+      loadingEl.innerHTML = '⏳ Verificando convites e amizades...';
+      await blAcceptInviteIfPresent(user);
+      loadingEl.innerHTML = '⏳ Carregando sua biblioteca do Firebase...';
+      await blRefreshAndRender();
     } catch(e) {
       document.getElementById('loading').innerHTML = '<p style="color:#f88c6a;padding:40px;text-align:center">⚠️ Erro ao carregar Firebase: '+e.message+'</p>';
       console.error(e);
@@ -5323,11 +4659,25 @@ function blDecorateHeader(user){
   const el = document.createElement('div');
   el.id = 'blProfile';
   el.className = 'bl-profile';
-  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>${user.displayName || 'Usuário'}</span><button type="button" id="blLogout">Sair</button>`;
+  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blInviteBtn">Comunidade</button><button type="button" id="blLogout">Sair</button>`;
   headerRight.prepend(el);
+  document.getElementById('blInviteBtn').onclick = () => blOpenCommunityModal();
   document.getElementById('blLogout').onclick = () => window.BL.auth.signOut();
 }
 
+
+function blSetupInstallButton(){
+  let deferredPrompt = null;
+  const btn = document.getElementById('appInstallBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-flex';
+  });
+  if (btn) btn.onclick = async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; btn.style.display = 'none'; }
+    else alert('No celular: abra no Chrome/Edge e use “Adicionar à tela inicial” ou “Instalar app”. No iPhone: Compartilhar → Adicionar à Tela de Início.');
+  };
+}
+blSetupInstallButton();
 
 iniciarAppFirebase();
 </script>
@@ -7018,19 +6368,8 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
-
   {
-    versao: '3.2', data: '19/06/2026', titulo: 'Mobile formatado para APK Android',
-    itens: [
-      'Mobile restaurado usando a base visual do app mobile de referência enviado pelo Milton',
-      'Layout mobile em scroll infinito com cards compactos e grids adaptados para celular',
-      'Nav inferior mobile preservada para atalhos de Meta, Geral, Gráficos, Ranking, Livro e Mais',
-      'Ajustes de responsividade para evitar estouro lateral, cards quebrados e gráficos fora da tela',
-      'Preparação da rota mobile.html para ser carregada diretamente pelo APK Android',
-    ]
-  },
-  {
-    versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
+    versao: '3.3', data: '19/06/2026', titulo: 'Mobile funcional + APK unificado',
     itens: [
       'Migração oficial do dashboard para Firebase/Firestore com Google Login',
       'Dados isolados por conta: cada usuário carrega biblioteca, sessões, notas, metas e coleções pelo próprio UID',
@@ -9082,11 +8421,11 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<!-- BookLegacy V3.0: seletor único e estável do modo batalha -->
+<!-- BookLegacy V3.3: seletor único e estável do modo batalha -->
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.2-mobile-format';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -9309,7 +8648,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.2-mobile-format',
+      patch:'v3.0',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -9353,7 +8692,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 <script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.2-mobile-format';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -9413,7 +8752,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.2-mobile-format',
+      patch:'v3.0',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -9427,7 +8766,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 
-<!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
+<!-- BookLegacy V3.3: Mobile funcional + APK unificado -->
 <style id="booklegacy-v12-25-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
@@ -9455,7 +8794,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.2-mobile-format';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -9521,7 +8860,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.2-mobile-format',
+      patch:'v3.0',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null
