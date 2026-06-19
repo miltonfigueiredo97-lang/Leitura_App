@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v12.23-battle-one-selector-stable">
+<meta name="booklegacy-version" content="v12.24-battle-top-clean">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -8329,11 +8329,11 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<!-- BookLegacy V12.23: seletor único e estável do modo batalha -->
+<!-- BookLegacy V12.24: seletor único e estável do modo batalha -->
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.23-battle-one-selector-stable';
+  window.__BL_PATCH_VERSION = 'v12.24-battle-top-clean';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8556,7 +8556,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v12.23-battle-one-selector-stable',
+      patch:'v12.24-battle-top-clean',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8573,6 +8573,102 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   };
   setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 250);
   setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 1200);
+})();
+</script>
+
+
+
+<style id="booklegacy-v12-24-battle-top-clean-css">
+body.bl-v12-battle #pageDashboard,
+body.bl-v12-battle .lendo-wrap {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+body.bl-v12-battle #pageBatalha {
+  display: block !important;
+  visibility: visible !important;
+}
+body.bl-v12-battle #pageBatalha .lendo-wrap {
+  display: none !important;
+}
+</style>
+<script id="booklegacy-v12-24-battle-top-clean">
+(function(){
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v12.24-battle-top-clean';
+  window.__BL_V12_24_MARKER = true;
+  const $ = id => document.getElementById(id);
+  function forceBattleOnly(){
+    if(window.usuarioAtual !== 'Batalha' && !document.body.classList.contains('bl-v12-battle')) return;
+    document.body.classList.add('bl-v12-battle');
+    const dash = $('pageDashboard');
+    const battle = $('pageBatalha');
+    if(dash){ dash.style.setProperty('display','none','important'); dash.style.setProperty('visibility','hidden','important'); }
+    if(battle){ battle.style.setProperty('display','block','important'); battle.style.setProperty('visibility','visible','important'); }
+    document.querySelectorAll('.lendo-wrap').forEach(el=>{
+      el.style.setProperty('display','none','important');
+      el.style.setProperty('visibility','hidden','important');
+      el.style.setProperty('height','0','important');
+      el.style.setProperty('min-height','0','important');
+      el.style.setProperty('overflow','hidden','important');
+      el.style.setProperty('margin','0','important');
+      el.style.setProperty('padding','0','important');
+    });
+    const fab = document.querySelector('.fab');
+    if(fab) fab.style.setProperty('display','none','important');
+  }
+  function restoreDashboardTop(){
+    document.body.classList.remove('bl-v12-battle');
+    const dash = $('pageDashboard');
+    if(dash){ dash.style.removeProperty('visibility'); }
+    document.querySelectorAll('.lendo-wrap').forEach(el=>{
+      el.style.removeProperty('visibility');
+      el.style.removeProperty('height');
+      el.style.removeProperty('min-height');
+      el.style.removeProperty('overflow');
+      el.style.removeProperty('margin');
+      el.style.removeProperty('padding');
+    });
+  }
+  const previousSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    const r = typeof previousSetUsuario === 'function' ? previousSetUsuario.apply(this, arguments) : (window.usuarioAtual = usuario);
+    if(usuario === 'Batalha'){
+      window.usuarioAtual = 'Batalha';
+      forceBattleOnly();
+      setTimeout(forceBattleOnly, 50);
+      setTimeout(forceBattleOnly, 250);
+      setTimeout(forceBattleOnly, 900);
+    } else {
+      restoreDashboardTop();
+    }
+    return r;
+  };
+  const previousBack = window.blBackToMyProfile;
+  window.blBackToMyProfile = function(){
+    restoreDashboardTop();
+    if(typeof previousBack === 'function') return previousBack.apply(this, arguments);
+    const label = window.BL?.raw?.currentLabel || window.BL?.auth?.currentUser?.displayName || 'Milton';
+    return window.setUsuario(label);
+  };
+  const previousDebug = window.blBattleDebug || window.blV12Debug;
+  window.blBattleDebug = window.blV12Debug = function(){
+    const old = typeof previousDebug === 'function' ? previousDebug() : {};
+    return Object.assign({}, old, {
+      patch:'v12.24-battle-top-clean',
+      marker1224:true,
+      dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
+      lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
+      bodyBattle:document.body.classList.contains('bl-v12-battle')
+    });
+  };
+  setInterval(forceBattleOnly, 700);
+  document.addEventListener('DOMContentLoaded', ()=>setTimeout(forceBattleOnly, 100));
 })();
 </script>
 
