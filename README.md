@@ -1,6 +1,8 @@
-# BookLegacy V3.8 — Desktop estável + Mobile layout-only
+# BookLegacy V3.9
 
-- `index.html` restaurado da base desktop V3.0 estável.
-- `mobile.html` usa a mesma base funcional do desktop, com CSS/menu mobile aplicado por cima.
-- Sem alterações em Firebase, login, banco, comunidade ou Modo Batalha.
-- Android/APK continua dentro de `/android` no mesmo repositório.
+- `index.html` restaurado/copied from V3.0 stable. Do not modify desktop for mobile fixes.
+- `mobile.html` uses the same functional desktop base, with mobile-only CSS/menu appended at the end.
+- Bottom mobile nav removed.
+- Mobile top actions moved into ☰ menu.
+- Firebase/login/community/battle logic not changed.
+- Android project remains in `/android` in the same repository.
