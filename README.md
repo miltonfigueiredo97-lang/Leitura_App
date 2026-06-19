@@ -1,3 +1,3 @@
-# BookLegacy V12.4 - Battle Absolute Standalone
+# BookLegacy V12.6
 
-Patch isolado: modo batalha em tela própria independente do módulo antigo.
+Patch cirúrgico: mantém o Modo Batalha no `#pageBatalha` original, adiciona comparação multi-player por checkbox, botão voltar e esconde os livros do dashboard apenas durante a batalha.

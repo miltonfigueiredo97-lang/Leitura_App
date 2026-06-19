@@ -6,7 +6,7 @@
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
-  // BookLegacy V12.2 BATTLE MULTIPLAYER FIX: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
+  // BookLegacy V12.6: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
 }
 </script>
 
@@ -526,7 +526,7 @@ body.mobile-view canvas { max-width:100% !important; width:100% !important; }
 body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
 body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
-/* BookLegacy V12.2 BATTLE MULTIPLAYER FIX - login Firebase + dashboard original + batalha visível */
+/* BookLegacy V12.6 - login Firebase + dashboard original + batalha visível */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
@@ -537,7 +537,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
-<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-4-marker booklegacy-v12-marker";</script>
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 </head>
 <body>
 
@@ -8328,247 +8328,202 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 </script>
 
 
-<script>
-/* BookLegacy V12.2 — FIX ISOLADO DO MODO BATALHA MULTIPLAYER
-   Não mexe em dashboard, amigos, biblioteca ou ações do +.
-   Substitui apenas a abertura/renderização do modo batalha para suportar 2+ players e botão de voltar. */
+
+<!-- booklegacy-v12-6-original-battle-multi-marker -->
+<style id="bl-battle-v126-style">
+  body.bl-battle-mode #pageDashboard,
+  body.bl-battle-mode .lendo-wrap,
+  body.bl-battle-mode .fab,
+  body.bl-battle-mode #fabBtn,
+  body.bl-battle-mode #fabMenu,
+  body.bl-battle-mode .friend-profile-hero,
+  body.bl-battle-mode #blFriendHero,
+  body.bl-battle-mode #bl-friend-hero,
+  body.bl-battle-mode .bl-friend-hero { display:none !important; }
+  body.bl-battle-mode #pageBatalha { display:block !important; }
+  body.bl-battle-mode #app > .sec,
+  body.bl-battle-mode #app > .card,
+  body.bl-battle-mode #app > .grid2,
+  body.bl-battle-mode #app > .grid3,
+  body.bl-battle-mode #app > .grid4,
+  body.bl-battle-mode #app > .grid6 { display:none !important; }
+  body:not(.bl-battle-mode) #pageBatalha { display:none !important; }
+  .bl-battle-player-check{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:8px 12px;color:#e2e8f0;font-weight:800;cursor:pointer;user-select:none}
+  .bl-battle-player-check input{accent-color:#8b7cf8;width:16px;height:16px}
+  .bl-battle-back{border:none;border-radius:12px;background:#8b7cf8;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer;box-shadow:0 8px 24px rgba(139,124,248,.22)}
+  .bl-battle-panel{background:rgba(15,23,42,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .bl-battle-card{background:linear-gradient(135deg,rgba(139,124,248,.12),rgba(15,23,42,.9));border:1px solid rgba(139,124,248,.30);border-radius:16px;padding:16px;text-align:center;box-shadow:0 0 28px rgba(139,124,248,.12)}
+  .bl-battle-card:nth-child(2n){background:linear-gradient(135deg,rgba(248,140,106,.12),rgba(15,23,42,.9));border-color:rgba(248,140,106,.30);box-shadow:0 0 28px rgba(248,140,106,.10)}
+  .bl-battle-name{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;color:#e2e8f0;text-transform:uppercase;margin:8px 0 4px}
+  .bl-battle-power{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#fff;text-shadow:0 0 16px rgba(139,124,248,.35)}
+  .bl-battle-sub{font-size:10px;color:#8892a8;text-transform:uppercase;letter-spacing:2px}
+  .bl-battle-table{width:100%;border-collapse:collapse;font-family:'Rajdhani',sans-serif;color:#e2e8f0}
+  .bl-battle-table th,.bl-battle-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:center}
+  .bl-battle-table th{text-transform:uppercase;font-size:11px;letter-spacing:1px;color:#8892a8}
+  .bl-battle-table td:first-child,.bl-battle-table th:first-child{text-align:left;font-weight:900;color:#fff}
+  .bl-battle-winner{color:#ffd166!important;text-shadow:0 0 12px rgba(255,209,102,.35)}
+  @media(max-width:700px){.bl-battle-card-grid{grid-template-columns:1fr!important}.bl-battle-table-wrap{overflow-x:auto}.bl-battle-table{min-width:720px}.bl-battle-player-check{flex:1 1 140px}.bl-battle-back{width:100%}}
+</style>
+<script id="bl-battle-v126-script">
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.2-battle-multiplayer-fix';
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v12.6-original-battle-multi';
   const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v??'').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const norm = (s)=>String(s||'').trim();
-  function raw(){ return window.BL?.raw || window._dadosD || {}; }
-  function meUid(){ return window.BL?.__activeUid || window.BL?.auth?.currentUser?.uid || ''; }
-  function meName(){ return window.BL?.auth?.currentUser?.displayName || window.BL?.raw?.currentUser?.name || 'Milton'; }
-  function allPeople(){
+  const safe = (v)=>String(v ?? '').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const raw = ()=> window.BL?.raw || window._dadosD || {};
+  const meUid = ()=> window.BL?.__activeUid || window.firebase?.auth?.().currentUser?.uid || '';
+  const unique = (arr)=>{const m=new Map(); arr.filter(Boolean).forEach(p=>{const key=p.uid||p.label||p.displayName||p.name||p.email; if(key&&!m.has(key))m.set(key,p)}); return [...m.values()]};
+  function labelOf(p){ return p?.label || p?.displayName || p?.name || p?.email || (p?.uid ? p.uid.slice(0,6) : 'Leitor'); }
+  function normalizePerson(p){
+    const label = labelOf(p);
+    return Object.assign({}, p, {label, usuarioKey: String(label).toUpperCase()});
+  }
+  function people(){
     const r = raw();
-    const by = new Map();
-    const add = (p)=>{
-      if(!p) return;
-      const uid = norm(p.uid || p.id || p.userId || '');
-      const label = norm(p.label || p.displayName || p.name || p.email || uid || 'Usuário');
-      const key = uid || label.toLowerCase();
-      if(!key) return;
-      const prev = by.get(key) || {};
-      by.set(key, {...prev, ...p, uid: uid || prev.uid, label: label || prev.label, displayName: p.displayName || p.name || prev.displayName || label});
-    };
-    (r.users||[]).forEach(add);
-    (r.friends||[]).forEach(add);
-    const u = window.BL?.auth?.currentUser;
-    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL,library:r.library||[],sessions:r.sessions||[],ratings:r.ratings||[]});
-    return [...by.values()].map((p,i)=>({
-      uid: p.uid || `p${i}`,
-      label: p.label || p.displayName || p.name || p.email || `Player ${i+1}`,
-      email: p.email || '',
-      photoURL: p.photoURL || p.photo || '',
-      library: p.library || [],
-      sessions: p.sessions || [],
-      ratings: p.ratings || [],
-      goals: p.goals || [],
-      collections: p.collections || []
-    }));
+    const list=[];
+    (r.users||[]).forEach(u=>list.push(normalizePerson(u)));
+    (r.friends||[]).forEach(f=>list.push(normalizePerson(f)));
+    if(!list.some(p=>String(p.uid||'')===String(meUid())) && r.currentLabel) list.unshift({uid:meUid(),label:r.currentLabel,usuarioKey:String(r.currentLabel).toUpperCase()});
+    return unique(list).map(normalizePerson);
   }
-  function yearsFrom(people){
-    const set = new Set();
-    people.forEach(p => (p.sessions||[]).forEach(s=>{ const y=s.ano || (s.data?String(s.data).slice(0,4):''); if(Number(y)>2000) set.add(String(y)); }));
-    return [...set].sort();
+  function allData(){ return raw(); }
+  function belongsTo(item, p){
+    if(!item) return false;
+    if(p.uid && item.uid && String(item.uid)===String(p.uid)) return true;
+    if(p.uid && item.userId && String(item.userId)===String(p.uid)) return true;
+    if(p.uid && item.ownerUid && String(item.ownerUid)===String(p.uid)) return true;
+    const u = String(item.usuario || item.user || item.owner || '').trim().toUpperCase();
+    const lab = String(p.label||'').trim().toUpperCase();
+    if(u && lab && u===lab) return true;
+    // dados legados sem usuario pertencem ao primeiro usuário logado/importado (Milton)
+    if(!u && (String(p.uid||'')===String(meUid()) || lab==='MILTON')) return true;
+    return false;
   }
-  function sessionsFor(p, year){
-    return (p.sessions||[]).filter(s => year==='total' || String(s.ano || (s.data?String(s.data).slice(0,4):'')) === String(year));
+  function getPersonCollections(p){
+    if(Array.isArray(p.library) || Array.isArray(p.sessions) || Array.isArray(p.ratings)){
+      return {library:p.library||[], sessions:p.sessions||[], ratings:p.ratings||[]};
+    }
+    const d=allData();
+    const library=[...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(x=>belongsTo(x,p));
+    const sessions=(d.sessoes||[]).filter(x=>belongsTo(x,p));
+    const ratings=(d.notas||d.ratings||[]).filter(x=>belongsTo(x,p));
+    return {library,sessions,ratings};
   }
-  function completedBooks(p, year){
-    const sess = sessionsFor(p, year);
-    const titles = new Set(sess.map(s=>String(s.livro||s.title||'').toLowerCase()).filter(Boolean));
-    return (p.library||[]).filter(l=>{
-      const status = String(l.status || l.situacao || '').toLowerCase();
-      const done = /completo|lido|conclu|finaliz/.test(status);
-      if(!done) return false;
-      if(year==='total') return true;
-      const meta = String(l.metaAno || l.targetYear || l.ano || '');
-      return meta===String(year) || titles.has(String(l.livro||l.title||'').toLowerCase());
-    }).length;
-  }
-  function pagesFor(p, year){ return sessionsFor(p, year).reduce((a,s)=>a+(Number(s.paginas||s.pages||0)||0),0); }
-  function minutesFor(p, year){ return sessionsFor(p, year).reduce((a,s)=>a+(Number(s.minutos||s.minutes||0)||0),0); }
-  function ratingsFor(p, year){
-    return (p.ratings||[]).filter(r => year==='total' || String(r.ano || r.readingYear || r.anoLeitura || '') === String(year));
-  }
-  function avgRating(p, year){
-    const arr = ratingsFor(p, year).map(r=>Number(r.notaFinal||r.nota||r.media||r.score||0)).filter(Boolean);
-    return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
-  }
-  function daysRead(p, year){ return new Set(sessionsFor(p, year).map(s=>s.data).filter(Boolean)).size; }
-  function power(p, year){ return pagesFor(p,year)*0.4 + completedBooks(p,year)*220 + sessionsFor(p,year).length*15 + avgRating(p,year)*120 + daysRead(p,year)*8; }
-  function avatar(p){
-    return p.photoURL ? `<img src="${esc(p.photoURL)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #4ecdc4">` : `<div style="width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#1e2535;border:2px solid #4ecdc4;font-size:26px">👤</div>`;
-  }
-  function hideFab(){ const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important'); }
-  function showFabIfOwn(){ const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display'); }
-  function removeDesktopMobileToggle(){
-    document.querySelectorAll('button,a,div').forEach(el=>{
-      const t=(el.innerText||'').toLowerCase();
-      if((t.includes('mobile') && t.includes('desktop')) || t.includes('📱')) el.style.setProperty('display','none','important');
-    });
+  function calc(p, year){
+    const {library,sessions,ratings}=getPersonCollections(p);
+    const sess=sessions.filter(s=>year==='total'||String(s.ano||String(s.data||'').slice(0,4))===String(year));
+    const bookNames=new Set(sess.map(s=>s.livro||s.title).filter(Boolean));
+    const books=library.filter(l=>year==='total'||String(l.metaAno||l.targetYear||'')===String(year)||bookNames.has(l.livro||l.title));
+    const lidos=books.filter(l=>String(l.status||'').toLowerCase().includes('completo')||String(l.status||'').toLowerCase().includes('conclu'));
+    const pags=sess.reduce((a,s)=>a+Number(s.paginas||s.pages||0),0);
+    const minutos=sess.reduce((a,s)=>a+Number(s.minutos||s.minutes||0),0);
+    const dias=new Set(sess.map(s=>s.data||s.date).filter(Boolean));
+    const notas=ratings.filter(n=>year==='total'||String(n.ano||n.readingYear||n.anoLeitura||'')===String(year));
+    const notaVals=notas.map(n=>Number(n.media||n.notaFinal||n.nota||n.notaPonderada)).filter(Number.isFinite);
+    const notaMedia=notaVals.length?notaVals.reduce((a,b)=>a+b,0)/notaVals.length:0;
+    const bosses=lidos.filter(l=>Number(l.totalPag||l.pages||l.paginas||0)>=1000).length;
+    const colSet=new Set(books.map(l=>l.colecao||l.collection).filter(Boolean));
+    const poder=pags*0.4+lidos.length*200+(minutos/60)*10+dias.size*18+notaMedia*100+bosses*120+colSet.size*35;
+    return {p,books,lidos,sess,ratings:notas,pags,minutos,dias,notaMedia,bosses,colSet,poder};
   }
   function ensureBattleButton(){
-    let btn = $('btn-user-batalha') || $('blBattleHardButton') || $('bl-battle-main-btn');
-    const anchor = $('btn-user-milton')?.parentElement || document.querySelector('header .badge')?.parentElement || document.querySelector('header');
-    if(!btn && anchor){
-      btn=document.createElement('button');
-      btn.id='btn-user-batalha';
-      anchor.appendChild(btn);
+    let btn=$('btn-user-batalha');
+    const wrap=$('btn-user-milton')?.parentElement || document.querySelector('header .badge')?.parentElement || document.querySelector('header');
+    if(!btn && wrap){
+      btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.textContent='⚔️ Batalha';
+      btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;';
+      wrap.appendChild(btn);
     }
-    if(btn){
-      btn.type='button';
-      btn.textContent='⚔️ Batalha';
-      btn.style.cssText='display:inline-flex!important;visibility:visible!important;align-items:center;gap:6px;background:transparent;color:#e2e8f0;border:1px solid #8b7cf8;border-radius:9px;padding:7px 14px;font-weight:800;cursor:pointer;margin-left:8px;';
-      btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
-    }
-    return btn;
+    if(btn){btn.style.display='inline-flex'; btn.onclick=(ev)=>{ev.preventDefault(); ev.stopPropagation(); openBattle();};}
   }
-  function selectedIds(){
-    return [...document.querySelectorAll('.bl-battle-player-check:checked')].map(i=>i.value);
-  }
-  function renderBattle(){
-    const people = allPeople();
-    const year = $('blBattleYear')?.value || 'total';
-    let ids = selectedIds();
-    if(ids.length < 2) ids = people.slice(0, Math.min(2, people.length)).map(p=>p.uid);
-    const chosen = people.filter(p=>ids.includes(p.uid));
-    const cont = $('batalhaContainer');
-    if(!cont) return;
-    if(chosen.length < 2){ cont.innerHTML = `<div class="card" style="margin:20px;padding:24px">Adicione pelo menos um amigo para comparar no Modo Batalha.</div>`; return; }
-    const rows = chosen.map(p=>({p,pages:pagesFor(p,year),books:completedBooks(p,year),sess:sessionsFor(p,year).length,min:minutesFor(p,year),avg:avgRating(p,year),days:daysRead(p,year),pow:power(p,year)})).sort((a,b)=>b.pow-a.pow);
-    const max = Math.max(...rows.map(r=>r.pow),1);
-    const stat = (icon, label, val)=>`<div style="background:#1e2535;border:1px solid #2a3248;border-radius:10px;padding:10px"><div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:800">${icon} ${label}</div><div style="font-size:22px;font-weight:900;margin-top:4px">${val}</div></div>`;
-    cont.innerHTML = `
-      <section style="padding:18px 18px 70px;max-width:1280px;margin:0 auto">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:12px 0 18px">
-          <div><div style="font-size:12px;letter-spacing:3px;color:#8b7cf8;font-weight:900;text-transform:uppercase">⚔️ Modo Batalha Multiplayer</div><h2 style="font-size:32px;margin:4px 0 0">${chosen.length} leitores na arena</h2></div>
-          <button type="button" onclick="window.blBattleExit()" style="background:#8b7cf8;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer">↩ Voltar para meus dados</button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
-          ${rows.map((r,idx)=>`
-            <article style="background:linear-gradient(135deg,rgba(139,124,248,.12),rgba(22,27,39,.96));border:1px solid ${idx===0?'#ffd166':'#2a3248'};border-radius:18px;padding:18px;box-shadow:${idx===0?'0 0 28px rgba(255,209,102,.16)':'none'}">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${avatar(r.p)}<div><div style="font-size:12px;color:${idx===0?'#ffd166':'#4ecdc4'};font-weight:900;letter-spacing:2px">#${idx+1} ${idx===0?'CAMPEÃO DA ARENA':'COMPETIDOR'}</div><div style="font-size:24px;font-weight:900">${esc(r.p.label)}</div><div style="color:#8892a8;font-size:12px">${esc(r.p.email||'')}</div></div></div>
-              <div style="height:10px;background:#252d40;border-radius:999px;overflow:hidden;margin:8px 0 14px"><div style="width:${Math.round(r.pow/max*100)}%;height:100%;background:linear-gradient(90deg,#8b7cf8,#4ecdc4);border-radius:999px"></div></div>
-              <div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:800">Poder de Leitura</div><div style="font-size:30px;font-weight:900;margin-bottom:12px">${Math.round(r.pow).toLocaleString('pt-BR')}</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                ${stat('📚','Livros',r.books)}${stat('📄','Páginas',r.pages.toLocaleString('pt-BR'))}${stat('🎯','Sessões',r.sess)}${stat('⭐','Média',r.avg?r.avg.toFixed(2):'—')}${stat('📅','Dias',r.days)}${stat('⏱️','Horas',Math.round(r.min/60))}
-              </div>
-            </article>`).join('')}
-        </div>
-      </section>`;
-  }
-  function renderControls(){
-    const people = allPeople();
-    const years = yearsFrom(people);
-    const sel = people.map((p,i)=>`<label style="display:flex;align-items:center;gap:7px;background:#161b27;border:1px solid #2a3248;border-radius:999px;padding:7px 12px;font-weight:800"><input class="bl-battle-player-check" type="checkbox" value="${esc(p.uid)}" ${i<Math.min(3,people.length)?'checked':''} onchange="window.blBattleRender()"> ${esc(p.label)}</label>`).join('');
-    const yearOpts = `<option value="total">Todos os anos</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join('');
-    const page = $('pageBatalha');
-    if(!page) return;
-    page.innerHTML = `<div style="padding:16px 18px 0;max-width:1280px;margin:0 auto">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#161b27;border:1px solid #2a3248;border-radius:16px;padding:14px 16px;margin-bottom:10px">
-        <div><div style="font-size:12px;color:#8b7cf8;font-weight:900;letter-spacing:2px;text-transform:uppercase">Selecione 2 ou mais jogadores</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px">${sel}</div></div>
-        <div style="display:flex;align-items:center;gap:8px"><span style="color:#8892a8;font-weight:800">Ano</span><select id="blBattleYear" onchange="window.blBattleRender()" style="background:#1e2535;color:#e2e8f0;border:1px solid #2a3248;border-radius:8px;padding:8px 10px;font-weight:800">${yearOpts}</select><button type="button" onclick="window.blBattleExit()" style="background:#8b7cf8;color:white;border:0;border-radius:10px;padding:9px 14px;font-weight:900;cursor:pointer">↩ Voltar</button></div>
+  function setupControls(){
+    const sel=$('batalha-seletor'); if(!sel) return;
+    const ps=people();
+    const years=[...new Set((raw().sessoes||[]).map(s=>s.ano||String(s.data||'').slice(0,4)).filter(y=>Number(y)>2000))].sort();
+    const prevYear=$('bat-ano')?.value || localStorage.getItem('bl-battle-year') || 'total';
+    const selected=new Set(JSON.parse(localStorage.getItem('bl-battle-selected')||'[]'));
+    if(!selected.size) ps.forEach((p,i)=>{ if(i<Math.max(2,ps.length)) selected.add(p.uid||p.label); });
+    sel.innerHTML=`
+      <button class="bl-battle-back" type="button" id="bl-battle-back">↩ Voltar para meus dados</button>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+        <span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
+        <select id="bat-ano" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">
+          <option value="total">Todos os anos</option>${years.map(y=>`<option value="${safe(y)}">⚔️ Season ${safe(y)}</option>`).join('')}
+        </select>
       </div>
-    </div><div id="batalhaContainer"></div>`;
-    renderBattle();
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:900px;">
+        ${ps.map(p=>{const id=safe(p.uid||p.label); const checked=selected.has(p.uid||p.label)||selected.has(p.label); return `<label class="bl-battle-player-check"><input type="checkbox" class="bl-battle-check" value="${id}" ${checked?'checked':''}> ${safe(labelOf(p))}</label>`}).join('')}
+      </div>`;
+    const ano=$('bat-ano'); if(ano){ if([...ano.options].some(o=>o.value===prevYear)) ano.value=prevYear; ano.onchange=()=>{localStorage.setItem('bl-battle-year',ano.value); renderBatalha();}; }
+    $('bl-battle-back')?.addEventListener('click', backToMe);
+    document.querySelectorAll('.bl-battle-check').forEach(ch=>ch.addEventListener('change',()=>{const vals=[...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value); localStorage.setItem('bl-battle-selected',JSON.stringify(vals)); renderBatalha();}));
+  }
+  function selectedPeople(){
+    const ps=people(); const vals=[...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value);
+    const arr=ps.filter(p=>vals.includes(String(p.uid||p.label))||vals.includes(String(p.label)));
+    return arr.length>=2?arr:ps.slice(0,Math.min(ps.length,2));
+  }
+  function renderBatalha(){
+    setupControls();
+    const cont=$('batalhaContainer'); if(!cont) return;
+    const year=$('bat-ano')?.value || 'total';
+    const stats=selectedPeople().map(p=>calc(p,year)).sort((a,b)=>b.poder-a.poder);
+    if(stats.length<2){cont.innerHTML='<div class="card" style="padding:20px;color:#f88c6a">Selecione pelo menos 2 jogadores para comparar.</div>'; return;}
+    const maxP=Math.max(...stats.map(s=>s.poder),1);
+    const maxPages=Math.max(...stats.map(s=>s.pags),1), maxBooks=Math.max(...stats.map(s=>s.lidos.length),1), maxSess=Math.max(...stats.map(s=>s.sess.length),1), maxNota=Math.max(...stats.map(s=>s.notaMedia),1);
+    const leader=stats[0];
+    cont.innerHTML=`<div style="padding:0 12px 60px;max-width:1200px;margin:0 auto;font-family:'Rajdhani',sans-serif;">
+      <div style="text-align:center;padding:16px 0 24px;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:10px;letter-spacing:6px;color:rgba(168,85,247,.6);text-transform:uppercase;margin-bottom:6px;">⚔️ Battle of Readers</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:clamp(24px,5vw,40px);font-weight:900;background:linear-gradient(135deg,#A855F7,#F8FAFC,#FB923C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;letter-spacing:4px;">BATALHA DE LEITORES</div>
+        <div style="display:inline-block;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:20px;padding:5px 20px;font-family:'Orbitron',sans-serif;font-size:10px;color:rgba(248,250,252,.6);letter-spacing:3px;margin-top:8px;">${year==='total'?'TODOS OS ANOS':'SEASON '+safe(year)}</div>
+      </div>
+      <div class="bl-battle-card-grid" style="display:grid;grid-template-columns:repeat(${Math.min(stats.length,4)},1fr);gap:14px;margin-bottom:20px;">
+        ${stats.map((s,i)=>`<div class="bl-battle-card"><div style="font-size:34px">${i===0?'👑':'⚔️'}</div><div class="bl-battle-name ${i===0?'bl-battle-winner':''}">${safe(labelOf(s.p))}</div><div class="bl-battle-power">${Math.round(s.poder).toLocaleString('pt-BR')}</div><div class="bl-battle-sub">Poder de leitura</div><div style="height:8px;background:rgba(255,255,255,.08);border-radius:8px;margin-top:12px;overflow:hidden"><div style="height:100%;width:${Math.max(3,Math.round(s.poder/maxP*100))}%;background:linear-gradient(90deg,#8b7cf8,#f88c6a);border-radius:8px"></div></div></div>`).join('')}
+      </div>
+      <div class="bl-battle-panel bl-battle-table-wrap" style="margin-bottom:20px"><table class="bl-battle-table"><thead><tr><th>Jogador</th><th>Livros</th><th>Páginas</th><th>Sessões</th><th>Dias</th><th>Horas</th><th>Nota média</th><th>Bosses</th><th>Coleções</th></tr></thead><tbody>
+        ${stats.map((s,i)=>`<tr><td class="${i===0?'bl-battle-winner':''}">${i===0?'👑 ':''}${safe(labelOf(s.p))}</td><td>${s.lidos.length}</td><td>${s.pags.toLocaleString('pt-BR')}</td><td>${s.sess.length}</td><td>${s.dias.size}</td><td>${Math.round(s.minutos/60)}</td><td>${s.notaMedia?s.notaMedia.toFixed(2):'—'}</td><td>${s.bosses}</td><td>${s.colSet.size}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="bat-section-hdr">⚡ ATRIBUTOS DE COMBATE</div>
+      <div data-desktop-grid="1" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+        ${[['Páginas',maxPages,s=>s.pags],['Livros',maxBooks,s=>s.lidos.length],['Sessões',maxSess,s=>s.sess.length],['Nota',maxNota,s=>s.notaMedia]].map(([name,max,fn])=>`<div class="bl-battle-panel"><div style="font-family:'Orbitron';font-size:11px;color:#8892a8;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">${name}</div>${stats.map(s=>`<div style="display:flex;align-items:center;gap:8px;margin:8px 0"><span style="width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800">${safe(labelOf(s.p))}</span><div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden"><div style="height:100%;width:${Math.max(2,Math.round(fn(s)/max*100))}%;background:linear-gradient(90deg,#8b7cf8,#4ecdc4)"></div></div><b style="min-width:42px;text-align:right">${name==='Nota'?(fn(s)?fn(s).toFixed(1):'—'):Math.round(fn(s)).toLocaleString('pt-BR')}</b></div>`).join('')}</div>`).join('')}
+      </div>
+      <div class="bl-battle-panel" style="text-align:center;color:#8892a8;font-size:12px">Modo Batalha original preservado: usa a página <b>#pageBatalha</b>, esconde os livros do dashboard e adiciona comparação multi-player.</div>
+    </div>`;
   }
   function openBattle(){
-    window.usuarioAtual = 'Batalha';
-    removeDesktopMobileToggle();
-    const app=$('app'); if(app) app.style.display='block';
-    document.querySelectorAll('#app > *').forEach(el=>{
-      if(el.id==='pageBatalha') el.style.setProperty('display','block','important');
-      else el.style.setProperty('display','none','important');
-    });
-    const b=$('pageBatalha'); if(b){ b.hidden=false; b.style.setProperty('display','block','important'); }
-    hideFab();
-    renderControls();
-    window.scrollTo(0,0);
+    document.querySelectorAll('#blBattleStandaloneRoot').forEach(e=>e.remove());
+    setupControls();
+    window.usuarioAtual='Batalha';
+    document.body.classList.add('bl-battle-mode');
+    document.body.classList.remove('bl-view-friend','bl-v10-friend','bl-v11-friend');
+    const dash=$('pageDashboard'), bat=$('pageBatalha'); if(dash) dash.style.setProperty('display','none','important'); if(bat) bat.style.setProperty('display','block','important');
+    const wrap=document.querySelector('.lendo-wrap'); if(wrap) wrap.style.setProperty('display','none','important');
+    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+    const btn=$('btn-user-batalha'); if(btn){btn.style.background='#e56cff'; btn.style.color='white';}
+    renderBatalha(); setTimeout(()=>window.scrollTo(0,0),0);
   }
-  function exitBattle(){
-    window.usuarioAtual = meName();
-    document.querySelectorAll('#app > *').forEach(el=>{ el.style.removeProperty('display'); });
-    const d=$('pageDashboard'), b=$('pageBatalha');
-    if(d) d.style.display='block';
-    if(b) b.style.display='none';
-    showFabIfOwn();
-    ensureBattleButton();
-    window.scrollTo(0,0);
+  function backToMe(){
+    document.body.classList.remove('bl-battle-mode');
+    const bat=$('pageBatalha'), dash=$('pageDashboard'); if(bat) bat.style.setProperty('display','none','important'); if(dash) dash.style.setProperty('display','block','important');
+    document.querySelectorAll('#app > *').forEach(el=>{ if(el.id!=='pageBatalha') el.style.removeProperty('display'); });
+    const wrap=document.querySelector('.lendo-wrap'); if(wrap) wrap.style.removeProperty('display');
+    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
+    const me=(raw().currentLabel||people()[0]?.label||'Milton'); window.usuarioAtual=me;
+    try{ if(typeof window.blBackToMyProfile==='function') window.blBackToMyProfile(); }catch(e){}
+    try{ if(typeof window.setUsuario==='function') setTimeout(()=>window.setUsuario(me),0); }catch(e){}
+    setTimeout(()=>{document.body.classList.remove('bl-battle-mode'); if(bat) bat.style.setProperty('display','none','important'); if(dash) dash.style.setProperty('display','block','important');},100);
   }
-  window.blBattleOpen = openBattle;
-  window.blBattleExit = exitBattle;
-  window.blBattleRender = renderBattle;
-  window.blBattleDebug = function(){ return {patch:window.__BL_PATCH_VERSION, marker:document.documentElement.innerHTML.includes('booklegacy-v12-2-marker'), usuarioAtual:window.usuarioAtual, people:allPeople().map(p=>({uid:p.uid,label:p.label,lib:p.library.length,sessions:p.sessions.length,ratings:p.ratings.length})), button:!!$('btn-user-batalha')}; };
-  const oldSet = window.setUsuario;
-  window.setUsuario = function(usuario){ if(usuario==='Batalha') return openBattle(); return typeof oldSet==='function' ? oldSet.apply(this, arguments) : undefined; };
-  function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
-  document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
-  setInterval(tick,2000);
-})();
-</script>
-
-
-
-<script>
-/* booklegacy-v12-4-marker | ABSOLUTE standalone battle controller
-   ÚNICO objetivo: abrir o Modo Batalha em tela própria, sem depender da pageBatalha antiga. */
-(function(){
-  window.__BL_PATCH_VERSION = 'v12.4-battle-absolute-standalone';
-  const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num = (v)=>Number(v||0)||0;
-  function raw(){ return window.BL?.raw || window._blRaw || {}; }
-  function currentUser(){ return window.firebaseAuth?.currentUser || window.auth?.currentUser || window.BL?.auth?.currentUser || null; }
-  function uniq(arr){ const m=new Map(); arr.filter(Boolean).forEach(p=>{ const uid=String(p.uid||p.id||p.email||p.label||p.displayName||'').trim(); if(!uid) return; const prev=m.get(uid)||{}; m.set(uid,{...prev,...p,uid,label:p.label||p.displayName||p.name||p.nome||p.email||uid}); }); return [...m.values()]; }
-  function allPeople(){
-    const cu=currentUser();
-    const list=[];
-    (raw().users||[]).forEach(u=>list.push(u));
-    (raw().friends||[]).forEach(f=>list.push(f));
-    if(cu) list.push({uid:cu.uid,label:cu.displayName||cu.email||'Eu',displayName:cu.displayName,email:cu.email,photoURL:cu.photoURL,library:window.BL?.data?.library||[],sessions:window.BL?.data?.sessions||[],ratings:window.BL?.data?.ratings||[]});
-    return uniq(list).map(p=>({
-      ...p,
-      label:p.label||p.displayName||p.name||p.nome||p.email||p.uid,
-      library:Array.isArray(p.library)?p.library:[],
-      sessions:Array.isArray(p.sessions)?p.sessions:[],
-      ratings:Array.isArray(p.ratings)?p.ratings:[]
-    }));
-  }
-  function yearsFrom(people){ const s=new Set(); people.forEach(p=>{ (p.sessions||[]).forEach(x=>{ const y=String(x.ano||x.year||String(x.data||'').slice(0,4)||''); if(/^\d{4}$/.test(y)) s.add(y); }); (p.library||[]).forEach(x=>{ const y=String(x.metaAno||x.targetYear||x.ano||''); if(/^\d{4}$/.test(y)) s.add(y); }); }); return [...s].sort((a,b)=>b-a); }
-  function sessionsFor(p,year){ return (p.sessions||[]).filter(s=> year==='total' || String(s.ano||s.year||String(s.data||'').slice(0,4))===String(year)); }
-  function completedBooks(p,year){ const lib=p.library||[]; if(year==='total') return lib.filter(l=>/lido|conclu|finaliz/i.test(String(l.status||l.situacao||''))).length; const sessTitles=new Set(sessionsFor(p,year).map(s=>String(s.livro||s.title||'').toLowerCase()).filter(Boolean)); return lib.filter(l=>{ const meta=String(l.metaAno||l.targetYear||l.ano||''); const st=/lido|conclu|finaliz/i.test(String(l.status||l.situacao||'')); return st && (meta===String(year) || sessTitles.has(String(l.livro||l.title||'').toLowerCase())); }).length; }
-  function pagesFor(p,year){ return sessionsFor(p,year).reduce((a,s)=>a+num(s.paginas||s.pages),0); }
-  function minutesFor(p,year){ return sessionsFor(p,year).reduce((a,s)=>a+num(s.minutos||s.minutes),0); }
-  function ratingsFor(p,year){ return (p.ratings||[]).filter(r=> year==='total' || String(r.ano||r.year||r.readingYear||r.anoLeitura||'')===String(year)); }
-  function avgRating(p,year){ const arr=ratingsFor(p,year).map(r=>num(r.notaFinal||r.nota||r.media||r.score)).filter(Boolean); return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0; }
-  function daysRead(p,year){ return new Set(sessionsFor(p,year).map(s=>s.data).filter(Boolean)).size; }
-  function power(p,year){ return pagesFor(p,year)*0.4 + completedBooks(p,year)*220 + sessionsFor(p,year).length*15 + avgRating(p,year)*120 + daysRead(p,year)*8; }
-  function avatar(p){ return p.photoURL?`<img src="${esc(p.photoURL)}" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid #4ecdc4">`:`<div style="width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#1e2535;border:2px solid #4ecdc4;font-size:28px">👤</div>`; }
-  function ensureRoot(){ let r=$('blBattleStandaloneRoot'); if(!r){ r=document.createElement('main'); r.id='blBattleStandaloneRoot'; r.style.display='none'; r.style.padding='22px'; r.style.maxWidth='1400px'; r.style.margin='0 auto'; document.body.insertBefore(r, document.querySelector('footer')||null); } return r; }
-  function hideNormal(){ ['app','loading'].forEach(id=>{ const el=$(id); if(el) el.style.setProperty('display','none','important'); }); document.querySelectorAll('.lendo-wrap').forEach(el=>el.style.setProperty('display','none','important')); const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important'); document.body.classList.add('bl-battle-active'); }
-  function showNormal(){ const root=$('blBattleStandaloneRoot'); if(root) root.style.display='none'; const app=$('app'); if(app) app.style.removeProperty('display'); document.querySelectorAll('.lendo-wrap').forEach(el=>el.style.removeProperty('display')); const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display'); document.body.classList.remove('bl-battle-active'); window.usuarioAtual = currentUser()?.displayName || 'Milton'; if(typeof window.setUsuario==='function'){ try{ window.setUsuario(window.usuarioAtual); }catch(e){} } window.scrollTo(0,0); }
-  function selectedIds(){ return [...document.querySelectorAll('.bl-v124-player:checked')].map(x=>x.value); }
-  function renderBattle(){ const people=allPeople(); const year=$('blV124Year')?.value||'total'; let ids=selectedIds(); if(ids.length<2) ids=people.slice(0,Math.min(3,people.length)).map(p=>p.uid); const chosen=people.filter(p=>ids.includes(p.uid)); const root=ensureRoot(); if(chosen.length<2){ root.innerHTML=`<section class="card" style="padding:26px"><h2>⚔️ Modo Batalha</h2><p>Você precisa de pelo menos 2 jogadores carregados para comparar.</p><button onclick="blBattleExit()" class="btn on">↩ Voltar para meus dados</button></section>`; return; } const rows=chosen.map(p=>({p,pages:pagesFor(p,year),books:completedBooks(p,year),sess:sessionsFor(p,year).length,min:minutesFor(p,year),avg:avgRating(p,year),days:daysRead(p,year),pow:power(p,year)})).sort((a,b)=>b.pow-a.pow); const max=Math.max(...rows.map(r=>r.pow),1); const stat=(icon,label,val)=>`<div style="background:#1e2535;border:1px solid #2a3248;border-radius:12px;padding:12px"><div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:900">${icon} ${label}</div><div style="font-size:24px;font-weight:900;margin-top:5px">${val}</div></div>`; root.innerHTML=`
-    <section style="background:linear-gradient(135deg,#161b27,#1e2535);border:1px solid #2a3248;border-radius:20px;padding:18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-      <div><div style="font-size:12px;color:#e56cff;font-weight:900;letter-spacing:3px;text-transform:uppercase">⚔️ Modo Batalha Multiplayer</div><h1 style="margin:4px 0 0;font-size:34px">${chosen.length} leitores na arena</h1></div>
-      <button type="button" onclick="window.blBattleExit()" style="background:#8b7cf8;color:white;border:0;border-radius:12px;padding:12px 18px;font-weight:900;cursor:pointer">↩ Voltar para meus dados</button>
-    </section>
-    <section style="background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-      <div><div style="font-size:12px;color:#8892a8;font-weight:900;text-transform:uppercase;margin-bottom:8px">Participantes</div><div style="display:flex;gap:8px;flex-wrap:wrap">${people.map((p,i)=>`<label style="display:flex;align-items:center;gap:7px;background:#1e2535;border:1px solid #2a3248;border-radius:999px;padding:8px 12px;font-weight:800"><input class="bl-v124-player" type="checkbox" value="${esc(p.uid)}" ${ids.includes(p.uid)||i<2?'checked':''} onchange="window.blBattleRender()"> ${esc(p.label)}</label>`).join('')}</div></div>
-      <div style="display:flex;gap:8px;align-items:center"><span style="color:#8892a8;font-weight:900">Ano</span><select id="blV124Year" onchange="window.blBattleRender()" style="background:#1e2535;color:#e2e8f0;border:1px solid #2a3248;border-radius:8px;padding:9px 12px;font-weight:800"><option value="total">Todos os anos</option>${yearsFrom(people).map(y=>`<option value="${y}" ${String(y)===String(year)?'selected':''}>${y}</option>`).join('')}</select></div>
-    </section>
-    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">${rows.map((r,idx)=>`<article style="background:linear-gradient(135deg,rgba(139,124,248,.13),rgba(22,27,39,.96));border:1px solid ${idx===0?'#ffd166':'#2a3248'};border-radius:20px;padding:18px;box-shadow:${idx===0?'0 0 30px rgba(255,209,102,.15)':'none'}"> <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${avatar(r.p)}<div><div style="font-size:12px;color:${idx===0?'#ffd166':'#4ecdc4'};font-weight:900;letter-spacing:2px">#${idx+1} ${idx===0?'CAMPEÃO':'COMPETIDOR'}</div><div style="font-size:25px;font-weight:900">${esc(r.p.label)}</div><div style="font-size:12px;color:#8892a8">${esc(r.p.email||'')}</div></div></div><div style="height:10px;background:#252d40;border-radius:999px;overflow:hidden;margin:8px 0 14px"><div style="width:${Math.round(r.pow/max*100)}%;height:100%;background:linear-gradient(90deg,#8b7cf8,#4ecdc4)"></div></div><div style="font-size:11px;color:#8892a8;text-transform:uppercase;font-weight:900">Poder de Leitura</div><div style="font-size:30px;font-weight:900;margin-bottom:12px">${Math.round(r.pow).toLocaleString('pt-BR')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${stat('📚','Livros',r.books)}${stat('📄','Páginas',r.pages.toLocaleString('pt-BR'))}${stat('🎯','Sessões',r.sess)}${stat('⭐','Média',r.avg?r.avg.toFixed(2):'—')}${stat('📅','Dias',r.days)}${stat('⏱️','Horas',Math.round(r.min/60))}</div></article>`).join('')}</section>`; }
-  function openBattle(){ window.usuarioAtual='Batalha'; hideNormal(); const root=ensureRoot(); root.style.display='block'; renderBattle(); window.scrollTo(0,0); }
-  function ensureButton(){ let btn=$('btn-user-batalha')||$('bl-battle-main-btn')||$('bl-battle-v124'); const wrap=$('btn-user-milton')?.parentElement || document.querySelector('header div[style*="display:flex"]') || document.querySelector('header'); if(!btn && wrap){ btn=document.createElement('button'); btn.id='bl-battle-v124'; wrap.appendChild(btn); } if(btn){ btn.textContent='⚔️ Modo Batalha'; btn.type='button'; btn.style.cssText='display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;gap:6px;background:#e56cff!important;border:1px solid #e56cff!important;color:white!important;padding:7px 14px!important;border-radius:9px!important;font-weight:900!important;cursor:pointer!important;white-space:nowrap!important'; btn.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();openBattle();return false;}; } return btn; }
-  function removeMobileDesktop(){ document.querySelectorAll('button,a').forEach(el=>{ const t=String(el.textContent||'').toLowerCase(); if((t.includes('mobile')&&t.includes('desktop'))||t.includes('📱')) el.style.setProperty('display','none','important'); }); }
-  document.addEventListener('click', function(ev){ const el=ev.target.closest('button,a'); if(!el) return; const t=String(el.textContent||'').toLowerCase(); if(t.includes('batalha')){ ev.preventDefault(); ev.stopPropagation(); openBattle(); } }, true);
-  window.blBattleOpen=openBattle; window.blBattleExit=showNormal; window.blBattleRender=renderBattle; window.blBattleDebug=function(){ return {patch:window.__BL_PATCH_VERSION, marker:document.documentElement.innerHTML.includes('booklegacy-v12-4-marker'), usuarioAtual:window.usuarioAtual, people:allPeople().map(p=>({uid:p.uid,label:p.label,lib:p.library.length,sessions:p.sessions.length,ratings:p.ratings.length})), standalone:$('blBattleStandaloneRoot')?.style.display==='block', button:!!ensureButton()}; };
-  function tick(){ removeMobileDesktop(); ensureButton(); }
-  document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,400); setTimeout(tick,1200); });
-  setInterval(tick,1500);
+  const oldSet=window.setUsuario;
+  window.setUsuario=function(usuario){ if(usuario==='Batalha') return openBattle(); return oldSet ? oldSet.apply(this,arguments) : undefined; };
+  window.renderBatalha=renderBatalha;
+  window.blOpenBattleOriginalMulti=openBattle;
+  window.blBackFromBattle=backToMe;
+  window.blBattleDebug=function(){return {patch:window.__BL_PATCH_VERSION, marker:document.documentElement.innerHTML.includes('booklegacy-v12-6-original-battle-multi-marker'), usuarioAtual:window.usuarioAtual, people:people().map(p=>({uid:p.uid,label:p.label,lib:(p.library||[]).length,sess:(p.sessions||[]).length,ratings:(p.ratings||[]).length})), selected:[...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value), pageBatalha:getComputedStyle($('pageBatalha')||document.body).display, battleMode:document.body.classList.contains('bl-battle-mode')};};
+  document.addEventListener('click', function(ev){const el=ev.target.closest('button,a'); if(!el) return; const txt=(el.innerText||el.textContent||'').toLowerCase(); if(el.id==='btn-user-batalha'||txt.includes('batalha')){ev.preventDefault(); ev.stopPropagation(); openBattle();}}, true);
+  function boot(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha') openBattle(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  setTimeout(boot,1200); setTimeout(boot,3000);
 })();
 </script>
 
