@@ -6,6 +6,6 @@
 
       Sem isso o APK abre, mas o login Google nativo não autentica.
     -->
-    <string name="booklegacy_web_client_id">PASTE_FIREBASE_WEB_CLIENT_ID_HERE.apps.googleusercontent.com</string>
+    <string name="booklegacy_web_client_id">938470924015-ndsdslvicth7ltqtdqh6und79ua1ed6n.apps.googleusercontent.com</string>
     <string name="booklegacy_app_url">https://leitura-app-theta.vercel.app/mobile.html?app=android&amp;v=3.17</string>
 </resources>
