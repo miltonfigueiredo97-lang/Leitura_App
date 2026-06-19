@@ -1,11 +1,6 @@
-# BookLegacy V3.7
+# BookLegacy V3.8 — Desktop estável + Mobile layout-only
 
-Correção segura do mobile.
-
-- `index.html` preservado como desktop estável.
-- `mobile.html` agora usa a mesma base funcional do desktop.
-- Alterações do mobile são somente layout/menu.
-- Barra inferior removida.
-- Menu superior compacto mantido.
-- Firebase, login, banco, comunidade e batalha não foram separados do desktop.
-- Android/APK permanece no mesmo repositório.
+- `index.html` restaurado da base desktop V3.0 estável.
+- `mobile.html` usa a mesma base funcional do desktop, com CSS/menu mobile aplicado por cima.
+- Sem alterações em Firebase, login, banco, comunidade ou Modo Batalha.
+- Android/APK continua dentro de `/android` no mesmo repositório.

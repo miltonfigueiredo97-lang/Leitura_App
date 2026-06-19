@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.0">
+<meta name="booklegacy-version" content="v3.8">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -578,7 +578,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.6</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.8</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -8350,7 +8350,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.6';
+  window.__BL_PATCH_VERSION = 'v3.8-desktop-stable';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8573,7 +8573,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.6',
+      patch:'v3.8-desktop-stable',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8617,7 +8617,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 <script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.6';
+  window.__BL_PATCH_VERSION = 'v3.8-desktop-stable';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8677,7 +8677,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.6',
+      patch:'v3.8-desktop-stable',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8691,7 +8691,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 
-<!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
+<!-- BookLegacy V3.8: Desktop estável + mobile layout-only -->
 <style id="booklegacy-v12-25-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
@@ -8719,7 +8719,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.6';
+  window.__BL_PATCH_VERSION = 'v3.8-desktop-stable';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8785,7 +8785,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.6',
+      patch:'v3.8-desktop-stable',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null
