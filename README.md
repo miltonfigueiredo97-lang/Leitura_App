@@ -1,1 +1,1 @@
-BookLegacy V12.12 — base V12.10 + botão Batalha DB-safe. Não altera Firebase/Auth/Firestore.
+BookLegacy V12.14 - patch não destrutivo do Modo Batalha: picker pesquisável e multi-pares sobre V12.12 estável.

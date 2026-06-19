@@ -8509,5 +8509,299 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 })();
 </script>
 
+<script id="bl-v12-14-battle-picker-nondestructive">
+/* BookLegacy V12.14 — Batalha original + picker real, sem tocar no banco/login.
+   Base segura: V12.12. Não usa reload, não usa loop agressivo, não mexe em Firebase. */
+(function(){
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v12.14-battle-picker-nondestructive';
+  window.__BL_V12_14_MARKER = true;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm = (v) => String(v ?? '').trim().toLowerCase();
+  const prevRender = window.renderBatalha;
+  const prevSetUsuario = window.setUsuario;
+
+  function raw(){ return (window.BL && window.BL.raw) ? window.BL.raw : {}; }
+  function authUser(){ return (window.BL && window.BL.auth) ? window.BL.auth.currentUser : null; }
+  function meUid(){ return raw().uid || authUser()?.uid || ''; }
+  function meLabel(){ return raw().currentLabel || authUser()?.displayName || authUser()?.email || 'Milton'; }
+
+  function people(){
+    const out = [];
+    const add = (p) => {
+      if(!p) return;
+      const uid = p.uid || p.id || '';
+      const label = p.label || p.displayName || p.name || (p.email ? String(p.email).split('@')[0] : '') || uid || 'Usuário';
+      const key = uid || norm(label);
+      if(!key || out.some(x => (x.uid || norm(x.label)) === key)) return;
+      out.push(Object.assign({}, p, { uid, label }));
+    };
+    (Array.isArray(raw().users) ? raw().users : []).forEach(add);
+    (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
+    const uid = meUid();
+    if(uid && !out.some(x=>x.uid===uid)) add({uid, label:meLabel(), displayName:authUser()?.displayName, email:authUser()?.email, photoURL:authUser()?.photoURL});
+    if(!out.length) { add({uid:'milton-local', label:'Milton'}); add({uid:'daniel-local', label:'Daniel'}); }
+    return out;
+  }
+
+  function valueFor(p){
+    // Mantém compatibilidade com o módulo original, que historicamente entende Milton/Daniel por texto.
+    const label = p.label || p.displayName || p.name || p.email || p.uid || '';
+    if(/milton/i.test(label)) return 'Milton';
+    if(/daniel/i.test(label)) return 'Daniel';
+    return label;
+  }
+
+  function ensureBaseSelects(){
+    const list = people();
+    ['bat-playerA','bat-playerB'].forEach((id, idx) => {
+      const sel = $(id); if(!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = list.map(p => `<option value="${esc(valueFor(p))}">${esc(p.label)}</option>`).join('');
+      const wanted = idx === 0 ? (list.find(p=>p.uid===meUid()) || list[0]) : (list.find(p=>p.uid!==meUid()) || list[1] || list[0]);
+      const wantedVal = valueFor(wanted || list[idx] || list[0]);
+      sel.value = [...sel.options].some(o=>o.value===prev) ? prev : wantedVal;
+    });
+  }
+
+  function hideBattleJunk(){
+    const top = $('batalha-seletor');
+    if(top) top.style.setProperty('display','none','important');
+    const old = $('bl-battle-multi-controls');
+    if(old) old.style.setProperty('display','none','important');
+    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el => el.style.setProperty('display','none','important'));
+    const fab = document.querySelector('.fab,#fabBtn');
+    if(fab) fab.style.setProperty('display','none','important');
+  }
+
+  function showBattlePage(){
+    window.usuarioAtual = 'Batalha';
+    document.body.classList.add('bl-battle-active');
+    const dash = $('pageDashboard'), bat = $('pageBatalha');
+    if(dash) dash.style.setProperty('display','none','important');
+    if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
+    document.querySelectorAll('#app > *').forEach(el => {
+      if(el.id === 'pageBatalha') el.style.setProperty('display','block','important');
+      else el.style.setProperty('display','none','important');
+    });
+    hideBattleJunk();
+  }
+
+  function restoreMyProfile(){
+    document.body.classList.remove('bl-battle-active');
+    const picker = $('bl-battle-picker-v14'); if(picker) picker.remove();
+    const dash = $('pageDashboard'), bat = $('pageBatalha');
+    document.querySelectorAll('#app > *').forEach(el => el.style.removeProperty('display'));
+    if(bat) bat.style.display = 'none';
+    if(dash) dash.style.display = 'block';
+    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el => el.style.removeProperty('display'));
+    const fab = document.querySelector('.fab,#fabBtn'); if(fab) fab.style.removeProperty('display');
+    try { if(typeof prevSetUsuario === 'function') prevSetUsuario(meLabel()); } catch(e) { console.warn('V12.14: voltar perfil falhou no controlador antigo', e); }
+    setTimeout(()=>{
+      const bat2=$('pageBatalha'), dash2=$('pageDashboard');
+      if(bat2) bat2.style.display='none';
+      if(dash2) dash2.style.display='block';
+      ensureBattleButton();
+    }, 80);
+  }
+  window.blBackToMyProfile = restoreMyProfile;
+  window.blExitBattle = restoreMyProfile;
+
+  function selectedKeys(){
+    const list = people();
+    if(!Array.isArray(window.__BL_BATTLE_SELECTED_V14) || !window.__BL_BATTLE_SELECTED_V14.length){
+      // Por padrão seleciona todos os players carregados, para não ficar preso em Milton x Daniel.
+      window.__BL_BATTLE_SELECTED_V14 = list.map(p => p.uid || p.label).filter(Boolean);
+    }
+    return window.__BL_BATTLE_SELECTED_V14;
+  }
+
+  function selectedPeople(){
+    const keys = new Set(selectedKeys().map(String));
+    return people().filter(p => keys.has(String(p.uid || p.label)) || keys.has(String(p.label)));
+  }
+
+  function setSelectedFromChecks(){
+    window.__BL_BATTLE_SELECTED_V14 = [...document.querySelectorAll('#blBattlePickerListV14 input[type="checkbox"]:checked')].map(i => i.value);
+  }
+
+  function ensureReturnButton(){
+    const page = $('pageBatalha'); if(!page) return;
+    let btn = $('bl-battle-return-original');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'bl-battle-return-original';
+      btn.type = 'button';
+      btn.textContent = '↩ Voltar para meus dados';
+      btn.style.cssText = 'margin:18px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
+      page.insertBefore(btn, page.firstElementChild || null);
+    }
+    btn.onclick = restoreMyProfile;
+    btn.style.setProperty('display','inline-flex','important');
+  }
+
+  function ensurePicker(){
+    const page = $('pageBatalha'), container = $('batalhaContainer');
+    if(!page || !container) return;
+    let picker = $('bl-battle-picker-v14');
+    if(!picker){
+      picker = document.createElement('div');
+      picker.id = 'bl-battle-picker-v14';
+      picker.style.cssText = 'max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.76);position:relative;';
+      container.parentElement.insertBefore(picker, container);
+    }
+    const list = people();
+    const selected = new Set(selectedKeys().map(String));
+    const selectedNames = selectedPeople().map(p=>p.label).join(', ') || 'nenhum';
+    picker.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:900;color:#fff;font-size:16px">Players da batalha</div>
+          <div id="blBattleSelectedNamesV14" style="font-size:12px;color:#94a3b8;margin-top:3px">${esc(selectedNames)}</div>
+        </div>
+        <button id="blBattleOpenPickerV14" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar players</button>
+      </div>
+      <div id="blBattleDropdownV14" style="display:none;position:absolute;z-index:9999;right:14px;top:64px;width:min(360px,calc(100vw - 40px));background:#0f172a;border:1px solid rgba(255,255,255,.16);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.45);padding:12px">
+        <input id="blBattleSearchV14" placeholder="Pesquisar player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none">
+        <div id="blBattlePickerListV14" style="max-height:280px;overflow:auto;display:grid;gap:8px">
+          ${list.map(p=>{
+            const key = p.uid || p.label;
+            return `<label class="blBattlePickItemV14" data-name="${esc((p.label||'').toLowerCase())}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.05);cursor:pointer;color:#e2e8f0;font-weight:800">
+              <input type="checkbox" value="${esc(key)}" ${selected.has(String(key)) || selected.has(String(p.label)) ? 'checked' : ''}>
+              <span>${esc(p.label)}</span>
+            </label>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button id="blBattleClosePickerV14" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button>
+          <button id="blBattleApplyPickerV14" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Atualizar batalha</button>
+        </div>
+      </div>`;
+
+    const dd = $('blBattleDropdownV14');
+    $('blBattleOpenPickerV14').onclick = () => { dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; setTimeout(()=>$('blBattleSearchV14')?.focus(), 30); };
+    $('blBattleClosePickerV14').onclick = () => { dd.style.display = 'none'; };
+    $('blBattleApplyPickerV14').onclick = () => { setSelectedFromChecks(); dd.style.display = 'none'; renderBattleMulti(); };
+    $('blBattleSearchV14').oninput = (ev) => {
+      const q = norm(ev.target.value);
+      document.querySelectorAll('.blBattlePickItemV14').forEach(el => {
+        el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex' : 'none';
+      });
+    };
+  }
+
+  function renderPair(pA, pB){
+    const a = $('bat-playerA'), b = $('bat-playerB'), c = $('batalhaContainer');
+    if(!a || !b || !c || typeof prevRender !== 'function') return '';
+    const saveUser = window.usuarioAtual;
+    const wasActive = document.body.classList.contains('bl-battle-active');
+    const saveA = a.value, saveB = b.value;
+    ensureBaseSelects();
+    a.value = valueFor(pA);
+    b.value = valueFor(pB);
+    // Chama o render antigo como se fosse uma batalha A x B comum, evitando o wrapper multi antigo.
+    window.usuarioAtual = '__BL_PAIR_RENDER__';
+    document.body.classList.remove('bl-battle-active');
+    try { prevRender(); } catch(e){
+      c.innerHTML = `<div class="card" style="padding:18px;color:#fb923c">Erro ao renderizar ${esc(pA.label)} vs ${esc(pB.label)}: ${esc(e.message||e)}</div>`;
+    }
+    const html = c.innerHTML;
+    a.value = saveA; b.value = saveB;
+    window.usuarioAtual = saveUser;
+    if(wasActive) document.body.classList.add('bl-battle-active');
+    return html;
+  }
+
+  function renderBattleMulti(){
+    showBattlePage();
+    ensureReturnButton();
+    hideBattleJunk();
+    ensureBaseSelects();
+    ensurePicker();
+    const c = $('batalhaContainer'); if(!c) return;
+    const selected = selectedPeople();
+    if(selected.length < 2){
+      c.innerHTML = '<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#fb923c">Selecione pelo menos 2 players.</div>';
+      return;
+    }
+    const pairs = [];
+    for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i], selected[j]]);
+    const chunks = pairs.map(([a,b]) => {
+      const inner = renderPair(a,b);
+      return `<section class="blBattlePairV14" style="max-width:1180px;margin:0 auto 30px">
+        <div style="font-weight:900;color:#e2e8f0;font-size:20px;margin:0 0 12px">⚔️ ${esc(a.label)} <span style="color:#94a3b8">vs</span> ${esc(b.label)}</div>
+        ${inner}
+      </section>`;
+    });
+    c.innerHTML = chunks.join('');
+    hideBattleJunk();
+  }
+
+  function openBattle(){
+    showBattlePage();
+    renderBattleMulti();
+    window.scrollTo(0,0);
+  }
+  window.blOpenBattlePickerFinal = openBattle;
+
+  function ensureBattleButton(){
+    let btn = $('btn-user-batalha') || $('bl-battle-main-btn');
+    if(!btn){
+      const target = $('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
+      btn = document.createElement('button');
+      btn.id = 'btn-user-batalha';
+      btn.type = 'button';
+      target.appendChild(btn);
+    }
+    btn.textContent = '⚔️ Modo Batalha';
+    btn.hidden = false;
+    btn.disabled = false;
+    btn.style.setProperty('display','inline-flex','important');
+    btn.style.setProperty('visibility','visible','important');
+    btn.style.setProperty('opacity','1','important');
+    btn.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
+  }
+
+  window.renderBatalha = function(){
+    if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMulti();
+    if(typeof prevRender === 'function') return prevRender.apply(this, arguments);
+  };
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return openBattle();
+    if(typeof prevSetUsuario === 'function') return prevSetUsuario.apply(this, arguments);
+    window.usuarioAtual = usuario;
+  };
+  window.blBattleDebug = window.blV12Debug = function(){
+    const sel = selectedPeople();
+    return {
+      patch: window.__BL_PATCH_VERSION,
+      marker: !!window.__BL_V12_14_MARKER,
+      usuarioAtual: window.usuarioAtual,
+      button: !!($('btn-user-batalha') || $('bl-battle-main-btn')),
+      oldTopHidden: $('batalha-seletor') ? getComputedStyle($('batalha-seletor')).display : null,
+      picker: !!$('bl-battle-picker-v14'),
+      selected: sel.map(p=>p.label),
+      pairCount: sel.length >= 2 ? sel.length * (sel.length - 1) / 2 : 0,
+      people: people().map(p=>p.label)
+    };
+  };
+
+  const style = document.createElement('style');
+  style.id = 'bl-v12-14-style';
+  style.textContent = `
+    body.bl-battle-active #batalha-seletor{display:none!important}
+    body.bl-battle-active #bl-battle-multi-controls{display:none!important}
+    body.bl-battle-active .lendo-wrap, body.bl-battle-active #lendoWrap{display:none!important}
+  `;
+  document.head.appendChild(style);
+
+  document.addEventListener('DOMContentLoaded', () => { ensureBattleButton(); });
+  setTimeout(ensureBattleButton, 500);
+  setTimeout(ensureBattleButton, 1500);
+})();
+</script>
+
 </body>
 </html>
