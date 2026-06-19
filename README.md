@@ -1,25 +1,39 @@
-# BookLegacy V3.13 — PATCH MOBILE ONLY (SEM INDEX)
+# BookLegacy V3.14 — MOBILE ONLY / NO INDEX
 
-Este pacote NÃO contém `index.html`.
+Este patch é somente para `mobile.html`.
 
-Arquivos alterados:
-- `mobile.html`
+Arquivos incluídos:
+- mobile.html
+- README.md
+
+Não inclui `index.html`.
+Não altera desktop.
+Não altera Firebase, banco, comunidade, Batalha ou lógica de dados.
 
 Correções:
-- remove Daniel do menu mobile;
-- remove barra inferior mobile;
-- menu agora é lista organizada, não grade bagunçada;
-- quando o menu abre, quem rola é o menu, não o fundo;
-- botão Comunidade tenta `blOpenCommunityModal`, `abrirComunidade`, `openCommunity`, `toggleCommunity` e fallback no botão real;
-- não mexe no desktop;
-- não mexe no Firebase, login, dados, comunidade ou batalha.
+- menu mobile: o fundo não deve mais rolar quando o menu está aberto;
+- botões de navegação do menu corrigidos para scroll direto por `[data-msection]`;
+- barra inferior antiga removida por HTML/CSS/JS;
+- Ranking por Notas: formatação mobile ajustada sem alterar dados internos;
+- Dia da Semana & Livros por Mês: barras mantidas dentro do card;
+- Calendário: grid compacto sem corte lateral;
+- Gêneros Lidos: canvas responsivo sem largura gigante;
+- referência usada: mobile(2).html apenas para padrão visual desses blocos.
 
-Teste:
+Debug esperado no mobile:
+
 ```js
 blMobileDebug()
 ```
-Esperado:
-- `patch: "v3.13-mobile-menu-fix-no-index"`
-- `noIndex: true`
-- `danielInMenu: false`
-- `bottomNav: false`
+
+Retorno esperado:
+
+```js
+{
+  patch: "v3.14-mobile-menu-scroll-chart-fix-no-index",
+  noIndex: true,
+  bottomNav: false,
+  danielInMenu: false,
+  cards: { ranking: true, week: true, generos: true, calendario: true }
+}
+```

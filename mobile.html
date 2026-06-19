@@ -667,28 +667,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   </div>
 </div>
 
-<!-- Mobile nav bar -->
-<nav id="mobile-nav">
-  <button class="m-nav-btn active" id="mnav-meta"     onclick="mNavTo('meta')"     >
-    <span class="m-nav-icon">🎯</span>Meta
-  </button>
-  <button class="m-nav-btn" id="mnav-visao"    onclick="mNavTo('visao')"    >
-    <span class="m-nav-icon">📊</span>Geral
-  </button>
-  <button class="m-nav-btn" id="mnav-graficos" onclick="mNavTo('graficos')" >
-    <span class="m-nav-icon">📈</span>Gráficos
-  </button>
-  <button class="m-nav-btn" id="mnav-ranking"  onclick="mNavTo('ranking')"  >
-    <span class="m-nav-icon">🏅</span>Ranking
-  </button>
-  <button class="m-nav-btn" id="mnav-livro"    onclick="mNavTo('livro')"    >
-    <span class="m-nav-icon">📖</span>Livro
-  </button>
-  <button class="m-nav-btn" id="mnav-mais"     onclick="mNavTo('mais')"     >
-    <span class="m-nav-icon">⋯</span>Mais
-  </button>
-</nav>
-
 <!-- View toggle button -->
 
 
@@ -8871,29 +8849,35 @@ body.bl-v12-battle #blBattleBackButtonV25{
 
 
 
-<!-- BOOKLEGACY V3.13 MOBILE ONLY: menu fix sem index / sem Daniel / comunidade robusta -->
-<style id="bl-v313-mobile-menu-fix">
+
+<!-- BOOKLEGACY V3.14 MOBILE ONLY: menu scroll + targeted chart/layout fix / NO index.html -->
+<style id="bl-v314-mobile-menu-chart-fix">
 @media (max-width: 899px) {
   html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; background:#0d1117 !important; }
-  html.blm-menu-open, body.blm-menu-open { overflow:hidden !important; height:100% !important; touch-action:none !important; }
+  html.blm-menu-open { overflow:hidden !important; }
+  body.blm-menu-open { overflow:hidden !important; }
 
-  /* Header limpo */
+  /* Desktop/mobile antigo: remover barra inferior e botão de toggle, sem tocar no desktop. */
+  #mobile-nav, nav#mobile-nav, #btn-view-toggle,
+  .m-nav-btn, .m-nav-icon {
+    display:none !important; visibility:hidden !important; pointer-events:none !important;
+    width:0 !important; height:0 !important; min-height:0 !important; max-height:0 !important;
+    overflow:hidden !important; opacity:0 !important;
+  }
+  body { padding-bottom:0 !important; }
+  #app, .page { padding-bottom:28px !important; }
+
+  /* Header compacto + menu, sem deixar a faixa superior virar uma grade confusa. */
   header { position:sticky !important; top:0 !important; z-index:1500 !important; min-height:64px !important; padding:10px 14px !important; display:flex !important; align-items:center !important; gap:10px !important; overflow:visible !important; }
   header .icon { font-size:24px !important; flex:0 0 auto !important; }
   header h1 { font-size:15px !important; line-height:1.1 !important; white-space:nowrap !important; max-width:230px !important; overflow:hidden !important; text-overflow:ellipsis !important; }
   header p, header .badge, header #header-badge { display:none !important; }
   header > div:last-child { display:none !important; }
 
-  /* Barra inferior antiga: removida visualmente mesmo se algum script recriar. */
-  #mobile-nav, nav#mobile-nav, #btn-view-toggle { display:none !important; visibility:hidden !important; pointer-events:none !important; height:0 !important; min-height:0 !important; max-height:0 !important; overflow:hidden !important; opacity:0 !important; }
-  body { padding-bottom:0 !important; }
-  #app, .page { padding-bottom:26px !important; }
-
-  /* Botão hamburger */
   #blMobileMenuFab { position:fixed !important; top:18px !important; right:12px !important; z-index:5001 !important; width:44px !important; height:44px !important; border-radius:14px !important; border:1px solid rgba(139,124,248,.75) !important; background:rgba(30,37,53,.98) !important; color:#fff !important; font-size:25px !important; display:flex !important; align-items:center !important; justify-content:center !important; box-shadow:0 8px 28px rgba(0,0,0,.5) !important; padding:0 !important; }
 
-  /* Painel ocupa a tela e rola nele mesmo, não no fundo */
-  #blMobileMenuPanel { position:fixed !important; top:72px !important; left:12px !important; right:12px !important; bottom:12px !important; max-height:none !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch !important; z-index:5000 !important; display:none !important; background:#111827 !important; border:1px solid #2a3248 !important; border-radius:18px !important; padding:14px !important; box-shadow:0 20px 70px rgba(0,0,0,.82) !important; }
+  /* Menu: rolagem dentro dele; fundo travado via JS. */
+  #blMobileMenuPanel { position:fixed !important; top:72px !important; left:12px !important; right:12px !important; bottom:12px !important; max-height:none !important; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch !important; touch-action:pan-y !important; z-index:5000 !important; display:none !important; background:#111827 !important; border:1px solid #2a3248 !important; border-radius:18px !important; padding:14px !important; box-shadow:0 20px 70px rgba(0,0,0,.82) !important; }
   #blMobileMenuPanel.open { display:block !important; }
   #blMobileMenuPanel * { box-sizing:border-box !important; }
   #blMobileMenuPanel .blm-menu-title { color:#e2e8f0 !important; font-size:16px !important; font-weight:900 !important; margin:2px 0 14px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
@@ -8907,79 +8891,148 @@ body.bl-v12-battle #blBattleBackButtonV25{
   #blMobileMenuPanel button.gold { border-color:#ffd166 !important; color:#ffd166 !important; background:rgba(255,209,102,.10) !important; }
   #blMobileMenuPanel button.danger { border-color:#f88c6a !important; color:#f88c6a !important; background:rgba(248,140,106,.10) !important; }
 
-  /* Não alterar dados internos dos gráficos/listas. Só evitar corte de container. */
+  /* Base dos cards: sem alterar cálculo/dados internos. */
   .page, #pageDashboard { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
-  .card { width:100% !important; max-width:100% !important; overflow-x:auto !important; overflow-y:hidden !important; border-radius:14px !important; -webkit-overflow-scrolling:touch !important; }
+  .card { width:100% !important; max-width:100% !important; border-radius:14px !important; box-sizing:border-box !important; }
   .sec { max-width:100% !important; overflow:hidden !important; }
 
-  #grid-rankings .ctrl, .card .ctrl { overflow-x:auto !important; flex-wrap:nowrap !important; padding-bottom:4px !important; }
-  #grid-rankings .ctrl select, .card .ctrl select { flex:0 0 auto !important; min-width:145px !important; max-width:none !important; }
-  #rankList, .rank-list { min-width:360px !important; overflow:visible !important; }
-  .rank-item { min-width:350px !important; }
+  /* RANKING POR NOTAS — estilo do mobile de referência: filtros empilhados e linhas completas. */
+  .blm-card-ranking { overflow:visible !important; }
+  .blm-card-ranking .ctrl { display:grid !important; grid-template-columns:1fr !important; gap:6px !important; overflow:visible !important; padding-bottom:0 !important; }
+  .blm-card-ranking .ctrl select,
+  .blm-card-ranking .ctrl button,
+  .blm-card-ranking .btn { width:100% !important; min-width:0 !important; max-width:100% !important; flex:initial !important; font-size:12px !important; padding:7px 9px !important; box-sizing:border-box !important; }
+  #rankList, .rank-list { width:100% !important; min-width:0 !important; overflow:visible !important; }
+  #rankList .rank-item { min-width:0 !important; width:100% !important; display:flex !important; align-items:center !important; gap:8px !important; flex-wrap:nowrap !important; padding:4px 0 !important; overflow:visible !important; }
+  #rankList .rank-item img { width:42px !important; height:58px !important; object-fit:cover !important; flex:0 0 42px !important; border-radius:4px !important; }
+  #rankList .rank-num { width:24px !important; flex:0 0 24px !important; text-align:right !important; }
+  #rankList .rank-medal { width:18px !important; flex:0 0 18px !important; }
+  #rankList .rank-name { display:block !important; flex:1 1 auto !important; min-width:0 !important; max-width:none !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; word-break:normal !important; font-size:13px !important; line-height:1.2 !important; }
+  #rankList .rank-year { display:block !important; font-size:11px !important; color:var(--muted) !important; }
+  #rankList .rank-bar-wrap { display:none !important; }
+  #rankList .rank-score { width:36px !important; flex:0 0 36px !important; text-align:right !important; font-size:12px !important; }
 
-  .wd-bars { min-width:390px !important; width:390px !important; overflow:visible !important; }
-  #calGrid { min-width:520px !important; width:520px !important; grid-template-columns:repeat(7,1fr) !important; }
-  #calGrid .cal-day, .cal-day { min-height:58px !important; overflow:hidden !important; }
-  canvas { max-width:none !important; }
-  #cGeneros { width:560px !important; min-width:560px !important; height:320px !important; }
-  #cMonthly, #cHeat { min-width:520px !important; width:520px !important; }
+  /* DIA DA SEMANA + LIVROS POR MÊS — mantém gráfico inteiro dentro do card. */
+  .blm-card-week { overflow:hidden !important; }
+  .blm-card-week .ctrl { display:flex !important; flex-wrap:wrap !important; overflow:visible !important; gap:6px !important; }
+  .blm-card-week .ctrl select { flex:0 0 auto !important; min-width:80px !important; }
+  .blm-card-week .wd-bars { min-width:0 !important; width:100% !important; max-width:100% !important; overflow:hidden !important; gap:4px !important; height:92px !important; }
+  .blm-card-week .wd-col { min-width:0 !important; flex:1 1 0 !important; }
+  .blm-card-week .wd-bar { min-width:0 !important; width:100% !important; }
+  .blm-card-week .wd-lbl, .blm-card-week .wd-val { font-size:8px !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  #livrosMes { width:100% !important; max-width:100% !important; overflow:hidden !important; }
+  #livrosMes .wd-bars, #livrosMes > div { max-width:100% !important; overflow:hidden !important; }
 
-  .fab { bottom:18px !important; right:16px !important; z-index:2600 !important; }
+  /* GÊNEROS LIDOS — gráfico usa o container, sem largura forçada gigante. */
+  .blm-card-generos { overflow:hidden !important; }
+  .blm-card-generos canvas,
+  #cGeneros { width:100% !important; max-width:100% !important; min-width:0 !important; height:300px !important; display:block !important; }
+
+  /* CALENDÁRIO — 7 colunas compactas, sem rolagem lateral e sem cortar o card. */
+  .blm-card-calendar { overflow:hidden !important; }
+  #calGrid { width:100% !important; max-width:100% !important; min-width:0 !important; display:grid !important; grid-template-columns:repeat(7,minmax(0,1fr)) !important; gap:4px !important; overflow:hidden !important; }
+  #calGrid .cal-day, .cal-day { min-height:54px !important; aspect-ratio:auto !important; padding:4px !important; overflow:hidden !important; border-radius:7px !important; }
+  .cal-day-num { font-size:9px !important; line-height:1 !important; }
+  .cal-day-pag { font-size:9px !important; line-height:1.1 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  .cal-day-livro { display:block !important; font-size:8px !important; line-height:1.05 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; max-width:100% !important; }
+  .cal-day-bar { height:2px !important; margin-top:3px !important; }
+
+  /* FAB sem barra inferior. */
+  .fab { bottom:18px !important; right:16px !important; z-index:2600 !important; width:54px !important; height:54px !important; font-size:24px !important; }
   .fab-menu { bottom:82px !important; right:16px !important; z-index:2601 !important; }
 }
 </style>
-<script id="bl-v313-mobile-menu-fix-js">
+<script id="bl-v314-mobile-menu-chart-fix-js">
 (function(){
   'use strict';
-  const VERSION = 'v3.13-mobile-menu-fix-no-index';
-  const isMobile = () => window.innerWidth <= 899 || location.pathname.endsWith('/mobile.html');
+  const VERSION = 'v3.14-mobile-menu-scroll-chart-fix-no-index';
   const byId = id => document.getElementById(id);
+  const isMobile = () => window.innerWidth <= 899 || location.pathname.endsWith('/mobile.html');
+  let lockedY = 0;
 
   function removeBottomNav(){
     ['mobile-nav','btn-view-toggle'].forEach(id => { const el = byId(id); if(el) el.remove(); });
-    document.querySelectorAll('nav#mobile-nav,[id="mobile-nav"],[id="btn-view-toggle"]').forEach(el=>el.remove());
+    document.querySelectorAll('nav#mobile-nav,[id="mobile-nav"],[id="btn-view-toggle"]').forEach(el => el.remove());
   }
 
+  function lockBody(){
+    lockedY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('blm-menu-open');
+    document.body.classList.add('blm-menu-open');
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lockedY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  }
+  function unlockBody(){
+    document.documentElement.classList.remove('blm-menu-open');
+    document.body.classList.remove('blm-menu-open');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, lockedY || 0);
+  }
   function setMenuOpen(open){
     const panel = byId('blMobileMenuPanel');
-    if(panel) panel.classList.toggle('open', !!open);
-    document.documentElement.classList.toggle('blm-menu-open', !!open);
-    document.body.classList.toggle('blm-menu-open', !!open);
+    if(!panel) return;
+    const isOpen = panel.classList.contains('open');
+    if(open && !isOpen){ panel.classList.add('open'); lockBody(); }
+    if(!open && isOpen){ panel.classList.remove('open'); unlockBody(); }
   }
   function closeMenu(){ setMenuOpen(false); }
 
-  function scrollSec(id){
-    if(typeof window.scrollToSec === 'function') return window.scrollToSec(id);
-    const el = document.querySelector('[data-msection="'+id+'"]');
-    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  function findSection(id){
+    return document.querySelector(`[data-msection="${id}"]`) || byId(id) || document.querySelector(`#${CSS.escape(id)}`);
+  }
+  function goSection(id){
+    const target = findSection(id);
+    closeMenu();
+    setTimeout(() => {
+      if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 80);
   }
 
   function openCommunity(){
-    const tries = [
-      () => typeof window.blOpenCommunityModal === 'function' && window.blOpenCommunityModal(),
-      () => typeof window.abrirComunidade === 'function' && window.abrirComunidade(),
-      () => typeof window.openCommunity === 'function' && window.openCommunity(),
-      () => typeof window.toggleCommunity === 'function' && window.toggleCommunity(),
-      () => { const b = byId('btn-community') || document.querySelector('[onclick*="blOpenCommunity"],[onclick*="Comunidade"]'); if(b){ b.click(); return true; } return false; }
-    ];
-    for(const fn of tries){
-      try{ const r = fn(); if(r !== false && r !== undefined) return true; }catch(e){ console.warn('Falha comunidade:', e); }
-    }
-    alert('Comunidade ainda não carregou. Aguarde os dados terminarem de carregar e tente de novo.');
-    return false;
+    closeMenu();
+    setTimeout(() => {
+      const tries = [
+        () => typeof window.blOpenCommunityModal === 'function' && window.blOpenCommunityModal(),
+        () => typeof window.abrirComunidade === 'function' && window.abrirComunidade(),
+        () => typeof window.openCommunity === 'function' && window.openCommunity(),
+        () => typeof window.toggleCommunity === 'function' && window.toggleCommunity(),
+        () => {
+          const candidates = [...document.querySelectorAll('button,a')];
+          const btn = candidates.find(b => (b.textContent||'').toLowerCase().includes('comunidade'));
+          if(btn){ btn.click(); return true; }
+          return false;
+        }
+      ];
+      for(const fn of tries){
+        try{ const r = fn(); if(r !== false && r !== undefined) return; }catch(e){ console.warn('Comunidade falhou:', e); }
+      }
+      alert('Comunidade ainda não carregou. Aguarde o carregamento dos dados e tente novamente.');
+    }, 80);
+  }
+
+  function markCards(){
+    try {
+      const rank = byId('rankList'); if(rank) rank.closest('.card')?.classList.add('blm-card-ranking');
+      const week = byId('wdAvg') || byId('wdSum') || byId('livrosMes'); if(week) week.closest('.card')?.classList.add('blm-card-week');
+      const gen = byId('cGeneros'); if(gen) gen.closest('.card')?.classList.add('blm-card-generos');
+      const cal = byId('calGrid'); if(cal) cal.closest('.card')?.classList.add('blm-card-calendar');
+    } catch(e) { console.warn('markCards mobile:', e); }
   }
 
   function buildMenu(){
     if(!isMobile()) return;
     removeBottomNav();
+    markCards();
 
     let btn = byId('blMobileMenuFab');
-    if(!btn){
-      btn = document.createElement('button');
-      btn.id = 'blMobileMenuFab';
-      btn.type = 'button';
-      document.body.appendChild(btn);
-    }
+    if(!btn){ btn = document.createElement('button'); btn.id = 'blMobileMenuFab'; btn.type='button'; document.body.appendChild(btn); }
     btn.textContent = '☰';
     btn.onclick = function(ev){
       ev.preventDefault(); ev.stopPropagation();
@@ -8988,13 +9041,9 @@ body.bl-v12-battle #blBattleBackButtonV25{
     };
 
     let panel = byId('blMobileMenuPanel');
-    if(!panel){
-      panel = document.createElement('div');
-      panel.id = 'blMobileMenuPanel';
-      document.body.appendChild(panel);
-    }
+    if(!panel){ panel = document.createElement('div'); panel.id = 'blMobileMenuPanel'; document.body.appendChild(panel); }
     panel.innerHTML = `
-      <div class="blm-menu-title">BookLegacy <small>v3.13</small></div>
+      <div class="blm-menu-title">BookLegacy <small>v3.14</small></div>
       <div class="blm-section">Perfil</div>
       <div class="blm-list">
         <button class="primary" data-a="meus-dados">📖 Meus dados</button>
@@ -9013,6 +9062,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
         <button data-a="graficos">📈 Gráficos</button>
         <button data-a="ranking">🏅 Ranking</button>
         <button data-a="livro">📖 Livro</button>
+        <button data-a="mais">📆 Calendário / Mais</button>
       </div>
       <div class="blm-section">Sistema</div>
       <div class="blm-list">
@@ -9025,37 +9075,42 @@ body.bl-v12-battle #blBattleBackButtonV25{
       if(!button) return;
       ev.preventDefault(); ev.stopPropagation();
       const a = button.getAttribute('data-a');
-      if(a === 'meus-dados' && typeof window.setUsuario === 'function') window.setUsuario('Milton');
-      else if(a === 'batalha' && typeof window.setUsuario === 'function') window.setUsuario('Batalha');
+      if(a === 'meus-dados') { closeMenu(); setTimeout(()=>{ if(typeof window.setUsuario==='function') window.setUsuario('Milton'); },80); }
+      else if(a === 'batalha') { closeMenu(); setTimeout(()=>{ if(typeof window.setUsuario==='function') window.setUsuario('Batalha'); },80); }
       else if(a === 'comunidade') openCommunity();
-      else if(a === 'migracao') { if(typeof window.abrirMigracao === 'function') window.abrirMigracao(); else if(typeof window.openMigration === 'function') window.openMigration(); }
-      else if(['meta','visao','graficos','ranking','livro'].includes(a)) scrollSec(a);
-      else if(a === 'refresh' && typeof window.manualRefresh === 'function') window.manualRefresh();
-      else if(a === 'changelog' && typeof window.toggleChangelog === 'function') window.toggleChangelog();
-      closeMenu();
+      else if(a === 'migracao') { closeMenu(); setTimeout(()=>{ if(typeof window.abrirMigracao==='function') window.abrirMigracao(); else if(typeof window.openMigration==='function') window.openMigration(); },80); }
+      else if(['meta','visao','graficos','ranking','livro','mais'].includes(a)) goSection(a);
+      else if(a === 'refresh') { closeMenu(); setTimeout(()=>{ if(typeof window.manualRefresh==='function') window.manualRefresh(); },80); }
+      else if(a === 'changelog') { closeMenu(); setTimeout(()=>{ if(typeof window.toggleChangelog==='function') window.toggleChangelog(); },80); }
+      else if(a === 'fechar') closeMenu();
     };
 
-    // Faz o toque/scroll ficar preso no painel quando ele está aberto.
-    panel.addEventListener('touchmove', function(ev){ ev.stopPropagation(); }, {passive:true});
-    panel.addEventListener('wheel', function(ev){ ev.stopPropagation(); }, {passive:true});
+    // Impede o toque dentro do painel de chegar ao fundo, mas não bloqueia a rolagem do painel.
+    panel.addEventListener('wheel', ev => ev.stopPropagation(), {passive:true});
+    panel.addEventListener('touchstart', ev => ev.stopPropagation(), {passive:true});
+    panel.addEventListener('touchmove', ev => ev.stopPropagation(), {passive:true});
   }
 
   const oldDebug = window.blMobileDebug;
   window.blMobileDebug = function(){
     const prev = typeof oldDebug === 'function' ? oldDebug() : {};
     const panel = byId('blMobileMenuPanel');
+    const rankCard = byId('rankList')?.closest('.card');
+    const weekCard = (byId('wdAvg') || byId('wdSum') || byId('livrosMes'))?.closest('.card');
     return Object.assign({}, prev, {
       patch: VERSION,
       noIndex: true,
-      danielInMenu: !!(panel && panel.textContent.includes('Daniel')),
       bottomNav: !!byId('mobile-nav'),
       menu: !!panel,
       menuOpen: !!(panel && panel.classList.contains('open')),
-      communityFns: {
-        blOpenCommunityModal: typeof window.blOpenCommunityModal,
-        abrirComunidade: typeof window.abrirComunidade,
-        openCommunity: typeof window.openCommunity,
-        toggleCommunity: typeof window.toggleCommunity
+      bodyLocked: document.body.classList.contains('blm-menu-open'),
+      danielInMenu: !!(panel && panel.textContent.includes('Daniel')),
+      navWorks: 'native-scrollIntoView',
+      cards: {
+        ranking: !!(rankCard && rankCard.classList.contains('blm-card-ranking')),
+        week: !!(weekCard && weekCard.classList.contains('blm-card-week')),
+        generos: !!(byId('cGeneros')?.closest('.card')?.classList.contains('blm-card-generos')),
+        calendario: !!(byId('calGrid')?.closest('.card')?.classList.contains('blm-card-calendar'))
       }
     });
   };
@@ -9063,7 +9118,8 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
   setTimeout(buildMenu, 300);
   setTimeout(buildMenu, 1200);
-  setInterval(removeBottomNav, 1000);
+  setInterval(removeBottomNav, 1200);
+  setInterval(markCards, 1500);
 })();
 </script>
 
