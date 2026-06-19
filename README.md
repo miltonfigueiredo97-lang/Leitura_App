@@ -1,1 +1,1 @@
-BookLegacy V12.19 - corrige troca real do adversário no Batalha usando a chave de dados correta (Daniel/Roger), sem mexer em banco/login.
+BookLegacy V12.21 - Batalha 1x1 por UID real do Firestore.
