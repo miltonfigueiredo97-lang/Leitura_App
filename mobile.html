@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.11">
+<meta name="booklegacy-version" content="v3.12">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -633,7 +633,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         +'<button data-a="ranking">🏅 Ranking</button>'
         +'<button data-a="livro">📖 Livro</button>'
         +'<button data-a="refresh">🔄 Atualizar</button>'
-        +'<button data-a="changelog">📋 v3.11</button>'
+        +'<button data-a="changelog">📋 v3.12</button>'
         +'</div>';
       p.addEventListener('click', function(e){
         const a=e.target && e.target.getAttribute('data-a'); if(!a) return;
@@ -650,7 +650,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
       document.body.appendChild(p);
     }
   }
-  window.blMobileDebug=function(){ return {patch:'v3.11-mobile-layout-container-only', BL:!!window.BL, community: typeof window.abrirComunidade || typeof window.openCommunity || typeof window.toggleCommunity, battle: typeof window.setUsuario, bottomNav: getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileMenuFab'), url:location.pathname}; };
+  window.blMobileDebug=function(){ return {patch:'v3.12-mobile-layout-container-only', BL:!!window.BL, community: typeof window.abrirComunidade || typeof window.openCommunity || typeof window.toggleCommunity, battle: typeof window.setUsuario, bottomNav: getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileMenuFab'), url:location.pathname}; };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', ensureMenu); else ensureMenu();
   setTimeout(ensureMenu,500); setTimeout(ensureMenu,2000);
 })();
@@ -696,7 +696,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.11</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.12</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -8912,6 +8912,137 @@ body.bl-v12-battle #blBattleBackButtonV25{
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(ensureBackButton, 200));
   setTimeout(ensureBackButton, 500);
   setTimeout(ensureBackButton, 1500);
+})();
+</script>
+
+
+
+<!-- BOOKLEGACY V3.12 MOBILE ONLY: menu organizado + containers dos gráficos -->
+<style id="bl-v312-mobile-final-fix">
+@media (max-width: 899px) {
+  html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; background:#0d1117 !important; }
+
+  /* Header limpo: logo + título + botão menu. Nada de botões perdidos no topo. */
+  header { position:sticky !important; top:0 !important; z-index:1500 !important; min-height:64px !important; padding:10px 14px !important; display:flex !important; align-items:center !important; gap:10px !important; overflow:visible !important; }
+  header .icon { font-size:24px !important; flex:0 0 auto !important; }
+  header h1 { font-size:15px !important; line-height:1.1 !important; white-space:nowrap !important; max-width:210px !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  header p, header .badge, header #header-badge { display:none !important; }
+  header > div:last-child { display:none !important; }
+
+  /* Remove de verdade a barra inferior antiga. */
+  #mobile-nav, nav#mobile-nav, #btn-view-toggle { display:none !important; visibility:hidden !important; pointer-events:none !important; height:0 !important; overflow:hidden !important; }
+  body { padding-bottom:0 !important; }
+  #app, .page { padding-bottom:24px !important; }
+
+  /* Botão de menu */
+  #blMobileMenuFab { position:fixed !important; top:18px !important; right:12px !important; z-index:3001 !important; width:44px !important; height:44px !important; border-radius:14px !important; border:1px solid rgba(139,124,248,.65) !important; background:rgba(30,37,53,.96) !important; color:#fff !important; font-size:24px !important; display:flex !important; align-items:center !important; justify-content:center !important; box-shadow:0 8px 28px rgba(0,0,0,.45) !important; }
+  #blMobileMenuPanel { position:fixed !important; top:70px !important; left:12px !important; right:12px !important; max-height:calc(100vh - 90px) !important; overflow:auto !important; z-index:3000 !important; display:none !important; background:#111827 !important; border:1px solid #2a3248 !important; border-radius:18px !important; padding:14px !important; box-shadow:0 20px 60px rgba(0,0,0,.75) !important; }
+  #blMobileMenuPanel.open { display:block !important; }
+  #blMobileMenuPanel .blm-menu-title { color:#e2e8f0 !important; font-size:15px !important; font-weight:900 !important; margin:2px 0 12px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #blMobileMenuPanel .blm-menu-title small { color:#8892a8 !important; font-size:11px !important; }
+  #blMobileMenuPanel .blm-section { margin:12px 0 6px !important; color:#8fa3ca !important; text-transform:uppercase !important; letter-spacing:1.3px !important; font-size:10px !important; font-weight:900 !important; }
+  #blMobileMenuPanel .blm-list { display:flex !important; flex-direction:column !important; gap:8px !important; }
+  #blMobileMenuPanel button { width:100% !important; display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:10px !important; min-height:44px !important; padding:11px 13px !important; border-radius:12px !important; border:1px solid #2a3248 !important; background:#1e2535 !important; color:#e2e8f0 !important; font-size:14px !important; font-weight:800 !important; text-align:left !important; }
+  #blMobileMenuPanel button.primary { background:#8b7cf8 !important; border-color:#8b7cf8 !important; color:#fff !important; }
+  #blMobileMenuPanel button.pink { background:#e56cff !important; border-color:#e56cff !important; color:#fff !important; }
+  #blMobileMenuPanel button.cyan { border-color:#56cfff !important; color:#56cfff !important; }
+  #blMobileMenuPanel button.gold { border-color:#ffd166 !important; color:#ffd166 !important; }
+
+  /* Cards e seções: container ajusta, o conteúdo interno não é desmontado. */
+  .page, #pageDashboard { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
+  .card { width:100% !important; max-width:100% !important; overflow:hidden !important; border-radius:14px !important; }
+  .sec { max-width:100% !important; overflow:hidden !important; }
+
+  /* Ranking por Notas: não cortar selects nem lista; rola só quando precisar. */
+  #rankList, .rank-list { width:100% !important; max-width:100% !important; overflow:visible !important; }
+  .rank-item { width:100% !important; max-width:100% !important; display:flex !important; align-items:center !important; gap:8px !important; overflow:visible !important; min-height:54px !important; }
+  .rank-name { display:block !important; min-width:0 !important; max-width:100% !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; font-size:13px !important; line-height:1.15 !important; }
+  .rank-score { display:block !important; flex:0 0 42px !important; width:42px !important; text-align:right !important; }
+  .rank-bar-wrap { display:none !important; }
+  #grid-rankings .ctrl, .card .ctrl { overflow-x:auto !important; flex-wrap:nowrap !important; padding-bottom:4px !important; }
+  #grid-rankings .ctrl select, .card .ctrl select { flex:0 0 auto !important; min-width:145px !important; max-width:none !important; }
+
+  /* Dia da semana/livros por mês: container com rolagem horizontal, sem esmagar gráfico. */
+  .wd-bars { min-width:390px !important; width:390px !important; overflow:visible !important; }
+  .card:has(.wd-bars) { overflow-x:auto !important; }
+
+  /* Calendário: não corta dias; permite rolagem horizontal dentro do card. */
+  #calGrid { min-width:520px !important; width:520px !important; grid-template-columns:repeat(7,1fr) !important; }
+  #calGrid .cal-day, .cal-day { min-height:58px !important; overflow:hidden !important; }
+  .card:has(#calGrid) { overflow-x:auto !important; }
+
+  /* Gêneros lidos e gráficos em canvas: preserva labels, rola o container se necessário. */
+  canvas { max-width:none !important; }
+  #cGeneros { width:560px !important; min-width:560px !important; height:320px !important; }
+  .card:has(#cGeneros) { overflow-x:auto !important; }
+  #cMonthly, #cHeat { min-width:520px !important; width:520px !important; }
+  .card:has(#cMonthly), .card:has(#cHeat) { overflow-x:auto !important; }
+
+  /* FAB sem barra inferior */
+  .fab { bottom:18px !important; right:16px !important; z-index:2600 !important; }
+  .fab-menu { bottom:82px !important; right:16px !important; z-index:2601 !important; }
+}
+</style>
+<script id="bl-v312-mobile-menu-final-js">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function removeBottomNav(){ const n=byId('mobile-nav'); if(n) n.remove(); const t=byId('btn-view-toggle'); if(t) t.remove(); }
+  function call(name){ if(typeof window[name]==='function') return window[name](); }
+  function scrollSec(id){ if(typeof window.scrollToSec==='function') return window.scrollToSec(id); const el=document.querySelector('[data-msection="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function close(){ const p=byId('blMobileMenuPanel'); if(p) p.classList.remove('open'); }
+  function buildMenu(){
+    if(window.innerWidth>899) return;
+    removeBottomNav();
+    let btn=byId('blMobileMenuFab');
+    if(!btn){ btn=document.createElement('button'); btn.id='blMobileMenuFab'; btn.type='button'; btn.textContent='☰'; btn.onclick=function(){ const p=byId('blMobileMenuPanel'); if(p) p.classList.toggle('open'); }; document.body.appendChild(btn); }
+    let p=byId('blMobileMenuPanel');
+    if(!p){ p=document.createElement('div'); p.id='blMobileMenuPanel'; document.body.appendChild(p); }
+    p.innerHTML=`
+      <div class="blm-menu-title">BookLegacy <small>v3.12</small></div>
+      <div class="blm-section">Perfil</div>
+      <div class="blm-list">
+        <button class="primary" data-a="milton">📖 Meus dados</button>
+        <button data-a="daniel">📖 Daniel</button>
+        <button class="pink" data-a="batalha">⚔️ Modo Batalha</button>
+      </div>
+      <div class="blm-section">Social e dados</div>
+      <div class="blm-list">
+        <button class="cyan" data-a="comunidade">👥 Comunidade</button>
+        <button class="gold" data-a="migracao">📥 Migração</button>
+        <button data-a="refresh">🔄 Atualizar dados</button>
+      </div>
+      <div class="blm-section">Navegação</div>
+      <div class="blm-list">
+        <button data-a="meta">🎯 Meta de leitura</button>
+        <button data-a="visao">📊 Visão geral</button>
+        <button data-a="graficos">📈 Gráficos</button>
+        <button data-a="ranking">🏅 Ranking</button>
+        <button data-a="livro">📖 Livro</button>
+      </div>
+      <div class="blm-section">Sistema</div>
+      <div class="blm-list">
+        <button data-a="changelog">📋 Notas da versão</button>
+      </div>`;
+    p.onclick=function(e){
+      const a=e.target && e.target.closest('button') && e.target.closest('button').getAttribute('data-a'); if(!a) return;
+      if(a==='milton' && typeof setUsuario==='function') setUsuario('Milton');
+      else if(a==='daniel' && typeof setUsuario==='function') setUsuario('Daniel');
+      else if(a==='batalha' && typeof setUsuario==='function') setUsuario('Batalha');
+      else if(a==='comunidade') { if(typeof abrirComunidade==='function') abrirComunidade(); else if(typeof openCommunity==='function') openCommunity(); else if(typeof toggleCommunity==='function') toggleCommunity(); }
+      else if(a==='migracao') { if(typeof abrirMigracao==='function') abrirMigracao(); else if(typeof openMigration==='function') openMigration(); }
+      else if(['meta','visao','graficos','ranking','livro'].includes(a)) scrollSec(a);
+      else if(a==='refresh' && typeof manualRefresh==='function') manualRefresh();
+      else if(a==='changelog' && typeof toggleChangelog==='function') toggleChangelog();
+      close();
+    };
+  }
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){
+    const prev=typeof oldDebug==='function'?oldDebug():{};
+    return Object.assign({}, prev, {patch:'v3.12-mobile-menu-chart-container-fix', bottomNav:!!document.getElementById('mobile-nav'), menu:!!document.getElementById('blMobileMenuPanel'), path:location.pathname});
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
+  setTimeout(buildMenu,300); setTimeout(buildMenu,1200); setInterval(removeBottomNav,1500);
 })();
 </script>
 

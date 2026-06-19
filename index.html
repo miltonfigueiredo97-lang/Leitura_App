@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.11">
+<meta name="booklegacy-version" content="v3.0">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -538,39 +538,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
-
-
-<!-- BookLegacy V3.11 DESKTOP LOCK: root nunca deve virar mobile -->
-<style id="bl-v311-desktop-lock">
-@media (min-width: 900px) {
-  html, body { overflow-x: auto !important; }
-  #mobile-nav, #btn-view-toggle, #blMobileMenuFab, #blMobileMenuPanel { display: none !important; }
-  body.mobile-view-disabled #mobile-nav { display: none !important; }
-  header { position: relative !important; padding: 24px 36px !important; display:flex !important; align-items:center !important; gap:16px !important; flex-wrap:nowrap !important; }
-  header .icon { font-size:44px !important; }
-  header h1 { font-size:26px !important; white-space:nowrap !important; }
-  header p { display:block !important; font-size:13px !important; }
-  header .badge { display:inline-flex !important; }
-  header > div:last-child { display:flex !important; flex-wrap:wrap !important; gap:10px !important; }
-  .page { padding: 28px 36px 80px !important; max-width: 1500px !important; margin: 0 auto !important; overflow-x: visible !important; }
-  .lendo-wrap { display:block; padding:20px 36px !important; }
-  .lendo-inner { max-width:1500px !important; margin:0 auto !important; display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; gap:20px !important; }
-  .lendo-card { min-width:280px !important; width:auto !important; }
-  .grid2 { display:grid !important; grid-template-columns:1fr 1fr !important; }
-  .grid3 { display:grid !important; grid-template-columns:1fr 1fr 1fr !important; }
-  .grid4 { display:grid !important; grid-template-columns:1fr 1fr 1fr 1fr !important; }
-  .grid6 { display:grid !important; grid-template-columns:repeat(6,1fr) !important; }
-  .kpi-grid-5 { display:grid !important; grid-template-columns:repeat(5,1fr) !important; }
-  #kpi-books-grid { display:grid !important; grid-template-columns:repeat(4,1fr) !important; }
-  .rank-bar-wrap { display:block !important; }
-  .fab { bottom:28px !important; right:28px !important; width:64px !important; height:64px !important; }
-}
-</style>
-<script>
-window.blMobileDebug = undefined;
-window.__BOOKLEGACY_BUILD = 'v3.11-desktop-root-stable';
-</script>
-
 </head>
 <body>
 
@@ -611,7 +578,7 @@ window.__BOOKLEGACY_BUILD = 'v3.11-desktop-root-stable';
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.11</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -8628,7 +8595,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<style id="booklegacy-v3-battle-top-clean-css">
+<style id="booklegacy-v12-24-battle-top-clean-css">
 body.bl-v12-battle #pageDashboard,
 body.bl-v12-battle .lendo-wrap {
   display: none !important;
@@ -8647,7 +8614,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   display: none !important;
 }
 </style>
-<script id="booklegacy-v3-battle-top-clean">
+<script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
   window.__BL_PATCH_VERSION = 'v3.0';
@@ -8725,7 +8692,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 <!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
-<style id="booklegacy-v3-battle-back-button-css">
+<style id="booklegacy-v12-25-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
   align-items:center !important;
@@ -8749,7 +8716,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   z-index:80 !important;
 }
 </style>
-<script id="booklegacy-v3-battle-back-button-fix">
+<script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
   window.__BL_PATCH_VERSION = 'v3.0';
