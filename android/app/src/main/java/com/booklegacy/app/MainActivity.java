@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
@@ -13,6 +14,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.ServiceWorkerController;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
@@ -25,11 +27,15 @@ import com.google.android.gms.tasks.Task;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends Activity {
     private static final int RC_SIGN_IN = 9001;
     private WebView webView;
     private GoogleSignInClient googleSignInClient;
     private String webClientId;
+    private long lastFreshLoadAt = 0L;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -45,6 +51,9 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.parseColor("#0b0f17"));
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        // Evita que o APK continue mostrando mobile.html antigo.
+        // Não limpa cookies nem IndexedDB, então não derruba o login salvo.
+        webView.clearCache(true);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -59,7 +68,16 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.17");
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.21");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                ServiceWorkerController.getInstance()
+                        .getServiceWorkerWebSettings()
+                        .setCacheMode(WebSettings.LOAD_NO_CACHE);
+            } catch (Exception ignored) {}
+        }
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -92,11 +110,43 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                view.evaluateJavascript("window.__BOOKLEGACY_ANDROID_APP=true;window.__BOOKLEGACY_ANDROID_VERSION='3.17';", null);
+                view.evaluateJavascript("window.__BOOKLEGACY_ANDROID_APP=true;window.__BOOKLEGACY_ANDROID_VERSION='3.21';" +
+                        "try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}}catch(e){}" +
+                        "try{if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}}catch(e){}", null);
             }
         });
 
-        webView.loadUrl(getString(R.string.booklegacy_app_url));
+        loadFreshBookLegacy();
+    }
+
+    private String buildFreshUrl() {
+        String baseUrl = getString(R.string.booklegacy_app_url);
+        Uri uri = Uri.parse(baseUrl);
+        Uri.Builder builder = uri.buildUpon();
+        builder.appendQueryParameter("native", "1");
+        builder.appendQueryParameter("v", "321");
+        builder.appendQueryParameter("cache", "off");
+        builder.appendQueryParameter("t", String.valueOf(System.currentTimeMillis()));
+        return builder.build().toString();
+    }
+
+    private void loadFreshBookLegacy() {
+        if (webView == null) return;
+        lastFreshLoadAt = System.currentTimeMillis();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+        headers.put("Pragma", "no-cache");
+        headers.put("Expires", "0");
+        webView.loadUrl(buildFreshUrl(), headers);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Se o app ficou parado em segundo plano por muito tempo, reabre já buscando a versão nova.
+        if (webView != null && lastFreshLoadAt > 0 && System.currentTimeMillis() - lastFreshLoadAt > 10 * 60 * 1000) {
+            loadFreshBookLegacy();
+        }
     }
 
     private void setupGoogleSignIn() {
@@ -173,7 +223,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getVersion() {
-            return "3.17";
+            return "3.21";
         }
     }
 

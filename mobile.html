@@ -9515,5 +9515,296 @@ body.bl-v12-battle #blBattleBackButtonV25{
 })();
 </script>
 
+
+
+<!-- BOOKLEGACY V3.21 — mobile/apk layout final + cache debug (não altera desktop) -->
+<style id="bl-v321-mobile-apk-final-css">
+@media (max-width: 899px), (pointer: coarse) {
+  html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; }
+  body.bl-modal-open { overflow:hidden !important; touch-action:none !important; }
+  body.bl-modal-open .pwa-overlay.open { overflow:hidden !important; overscroll-behavior:contain !important; touch-action:none !important; }
+  body.bl-modal-open .pwa-overlay.open .pwa-modal {
+    max-height:calc(100dvh - 18px) !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+    touch-action:pan-y !important;
+    box-sizing:border-box !important;
+  }
+  #modalSessao.open { align-items:flex-end !important; }
+  #modalSessao .pwa-modal { height:auto !important; max-height:calc(100dvh - 14px) !important; }
+
+  #app, #pageDashboard, #pageBatalha, .page { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; box-sizing:border-box !important; }
+  .card, .sec, #grid-rankings, .grid2, .grid3, .grid4, .grid6, [data-desktop-grid] { max-width:100% !important; box-sizing:border-box !important; }
+
+  /* remove a rolagem lateral antiga que estava cortando quadros */
+  .bl-v321-fit-card, .bl-v321-chart-card, .bl-v321-ranking-card, .bl-v321-week-card, .bl-v321-book-card, .bl-v321-generos-card, .bl-v321-donut-card, .bl-v321-calendar-card {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:hidden !important;
+    box-sizing:border-box !important;
+  }
+  .bl-v321-fit-card * { box-sizing:border-box !important; max-width:100% !important; }
+  .bl-v321-fit-card canvas,
+  .bl-v321-chart-card canvas,
+  #cMonthly, #cDrilldown, #cGeneros, #cBook, #cHeat, #cDonut, #cAutores {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+  #grid-rankings { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:12px !important; width:100% !important; min-width:0 !important; }
+  #grid-rankings > div { min-width:0 !important; width:100% !important; max-width:100% !important; }
+
+  /* 2 — Comunidade: adapta, não corta. */
+  #blCommunityModal { align-items:flex-start !important; justify-content:center !important; padding:8px !important; overflow-y:auto !important; overflow-x:hidden !important; }
+  #blCommunityModal > div { width:calc(100vw - 16px) !important; max-width:calc(100vw - 16px) !important; min-width:0 !important; margin:0 auto !important; padding:14px !important; overflow-x:hidden !important; box-sizing:border-box !important; }
+  #blCommunityModal .bl-community-grid { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:10px !important; width:100% !important; min-width:0 !important; }
+  #blCommunityModal [style*="grid-template-columns"] { grid-template-columns:minmax(0,1fr) !important; }
+  #blCommunityModal [style*="min-width:240px"] { min-width:0 !important; width:100% !important; }
+  #blCommunityModal input, #blCommunityModal select, #blCommunityModal textarea, #blCommunityModal button { min-width:0 !important; max-width:100% !important; }
+
+  /* 4 — Ranking: linhas cabem no card. */
+  #rankList { width:100% !important; max-width:100% !important; min-width:0 !important; overflow:hidden !important; }
+  #rankList .rank-item {
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    display:grid !important; grid-template-columns:22px 38px minmax(0,1fr) 38px !important;
+    gap:6px !important; align-items:center !important; overflow:hidden !important; padding:5px 0 !important;
+  }
+  #rankList .rank-num { grid-column:1 !important; width:auto !important; font-size:10px !important; text-align:right !important; }
+  #rankList .rank-medal { display:none !important; }
+  #rankList .rank-item img { grid-column:2 !important; width:38px !important; height:54px !important; object-fit:cover !important; border-radius:4px !important; }
+  #rankList .rank-name { grid-column:3 !important; min-width:0 !important; white-space:normal !important; overflow:hidden !important; text-overflow:clip !important; word-break:normal !important; font-size:12px !important; line-height:1.15 !important; }
+  #rankList .rank-year { display:block !important; font-size:10px !important; }
+  #rankList .rank-score { grid-column:4 !important; width:auto !important; min-width:0 !important; font-size:11px !important; text-align:right !important; overflow:hidden !important; }
+  #rankList .rank-bar-wrap { display:none !important; }
+
+  /* 5 — Dia da Semana / Livros por mês: sem min-width antigo. */
+  #wdAvg, #wdSum, #livrosMes, .bl-bars-mobile { width:100% !important; max-width:100% !important; min-width:0 !important; overflow:hidden !important; display:flex !important; align-items:flex-end !important; justify-content:space-between !important; gap:3px !important; height:104px !important; }
+  #wdAvg .wd-col, #wdSum .wd-col, #livrosMes .wd-col, .bl-bars-mobile .wd-col { flex:1 1 0 !important; min-width:0 !important; max-width:none !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:flex-end !important; }
+  #wdAvg .wd-bar, #wdSum .wd-bar, #livrosMes .wd-bar, .bl-bars-mobile .wd-bar { width:100% !important; max-width:16px !important; min-width:4px !important; border-radius:6px 6px 2px 2px !important; }
+  #wdAvg .wd-val, #wdSum .wd-val, #livrosMes .wd-val, .bl-bars-mobile .wd-val { font-size:8px !important; line-height:1 !important; white-space:nowrap !important; overflow:hidden !important; max-width:100% !important; }
+  #wdAvg .wd-lbl, #wdSum .wd-lbl, #livrosMes .wd-lbl, .bl-bars-mobile .wd-lbl { font-size:7px !important; line-height:1 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:clip !important; max-width:100% !important; }
+
+  /* 6 — Gêneros em lista responsiva, sem canvas branco/cortado. */
+  .bl-genre-list { width:100% !important; max-width:100% !important; display:flex !important; flex-direction:column !important; gap:8px !important; padding:4px 0 !important; }
+  .bl-genre-row { display:grid !important; grid-template-columns:minmax(0,1fr) 42px !important; align-items:center !important; gap:8px !important; width:100% !important; }
+  .bl-genre-name { color:#e2e8f0 !important; font-size:12px !important; font-weight:700 !important; min-width:0 !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; }
+  .bl-genre-num { color:#4ecdc4 !important; font-size:11px !important; font-weight:900 !important; text-align:right !important; }
+  .bl-genre-track { grid-column:1 / -1 !important; width:100% !important; height:7px !important; background:#20283a !important; border-radius:10px !important; overflow:hidden !important; }
+  .bl-genre-bar { height:100% !important; border-radius:10px !important; background:linear-gradient(90deg,#8b7cf8,#4ecdc4) !important; }
+
+  /* 7 — Donuts sempre circulares e abaixo do título, sem cobrir legenda/texto. */
+  .bl-donut-square { width:min(190px,62vw) !important; height:min(190px,62vw) !important; max-width:190px !important; max-height:190px !important; margin:8px auto 12px !important; position:relative !important; overflow:hidden !important; aspect-ratio:1/1 !important; }
+  .bl-donut-square canvas, #cDonut, #cAutores { width:100% !important; height:100% !important; min-width:0 !important; max-width:100% !important; max-height:100% !important; display:block !important; }
+  #donutLeg, #autoresLeg { position:relative !important; z-index:1 !important; clear:both !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+  .donut-leg-item { display:grid !important; grid-template-columns:12px minmax(0,1fr) 40px !important; gap:6px !important; align-items:center !important; width:100% !important; max-width:100% !important; }
+  .donut-leg-name { min-width:0 !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; }
+
+  /* 8 — Progresso por livro: busca e gráfico no quadro. */
+  #selBookBusca { width:100% !important; min-width:0 !important; max-width:100% !important; }
+  #selBookLista { left:0 !important; right:0 !important; width:100% !important; max-width:100% !important; min-width:0 !important; z-index:99999 !important; max-height:240px !important; overflow-y:auto !important; overflow-x:hidden !important; }
+  #cBook { height:220px !important; min-width:0 !important; max-width:100% !important; }
+
+  /* 9 — Calendário: quadrado com texto simples. */
+  #calGrid { width:100% !important; max-width:100% !important; min-width:0 !important; display:grid !important; grid-template-columns:repeat(7,minmax(0,1fr)) !important; gap:4px !important; overflow:hidden !important; }
+  #calGrid .cal-empty { aspect-ratio:1/1 !important; min-width:0 !important; }
+  #calGrid .cal-day { aspect-ratio:1/1 !important; min-height:0 !important; height:auto !important; min-width:0 !important; padding:3px !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:2px !important; text-align:center !important; overflow:hidden !important; border-radius:8px !important; }
+  #calGrid .cal-day-num { font-size:9px !important; line-height:1 !important; opacity:.72 !important; }
+  #calGrid .cal-day-pages { color:#4ecdc4 !important; font-size:9px !important; font-weight:900 !important; line-height:1.05 !important; word-break:normal !important; }
+  #calGrid .cal-day-bar, #calGrid .cal-day-livro { display:none !important; }
+
+  /* 11 — Batalha adapta em vez de cortar. */
+  #pageBatalha { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; padding:10px !important; box-sizing:border-box !important; }
+  #batalhaContainer { width:100% !important; max-width:100% !important; min-width:0 !important; overflow-x:hidden !important; box-sizing:border-box !important; }
+  #batalhaContainer > div { width:100% !important; max-width:100% !important; min-width:0 !important; padding-left:0 !important; padding-right:0 !important; margin-left:0 !important; margin-right:0 !important; box-sizing:border-box !important; }
+  #pageBatalha [data-desktop-grid], #pageBatalha [style*="display:grid"], #pageBatalha [style*="grid-template-columns"] { grid-template-columns:minmax(0,1fr) !important; width:100% !important; min-width:0 !important; max-width:100% !important; }
+  #pageBatalha [style*="grid-template-columns:repeat(4"], #pageBatalha #bat-attrs { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  #pageBatalha canvas, #pageBatalha svg { width:100% !important; min-width:0 !important; max-width:100% !important; }
+  #pageBatalha .bat-section-hdr { white-space:normal !important; overflow:hidden !important; text-overflow:clip !important; font-size:10px !important; }
+
+  /* 12 — Meta: lista rola e botões ficam fixos no rodapé do popup. */
+  #painelGerenciarMeta { width:calc(100vw - 16px) !important; max-width:calc(100vw - 16px) !important; height:calc(100dvh - 24px) !important; max-height:calc(100dvh - 24px) !important; top:12px !important; left:8px !important; right:8px !important; transform:none !important; padding:12px !important; display:none; overflow:hidden !important; flex-direction:column !important; }
+  #painelGerenciarMeta[style*="display: flex"], #painelGerenciarMeta[style*="display:flex"] { display:flex !important; }
+  #gmLista { flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; overflow-x:hidden !important; display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:10px !important; padding:8px 2px 12px !important; align-content:start !important; }
+  #gmLista > div { width:100% !important; min-width:0 !important; max-width:100% !important; flex:initial !important; transform:none !important; padding:2px !important; }
+  #gmLista > div > div:first-child { width:100% !important; height:auto !important; aspect-ratio:2/3 !important; max-width:100% !important; max-height:none !important; }
+  #gmLista img { width:100% !important; height:100% !important; object-fit:cover !important; }
+  .bl-gm-footer { position:sticky !important; bottom:0 !important; z-index:3 !important; background:linear-gradient(180deg,rgba(22,27,39,.94),#161b27 45%) !important; padding-top:10px !important; margin-top:8px !important; }
+}
+</style>
+<script id="bl-v321-mobile-apk-final-js">
+(function(){
+  'use strict';
+  const PATCH='v3.21-mobile-apk-final-layout-cache';
+  const $=id=>document.getElementById(id);
+  const mob=()=>window.innerWidth<=899 || location.pathname.includes('mobile.html') || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent||'');
+  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  let modalY=0;
+
+  function fit(el){ if(!el) return; el.classList.add('bl-v321-fit-card'); el.style.maxWidth='100%'; el.style.width='100%'; el.style.minWidth='0'; el.style.overflowX='hidden'; el.style.boxSizing='border-box'; }
+  function fitWrap(el){ if(!el) return; fit(el); [...el.querySelectorAll('[style*="min-width"], [style*="width:"]')].forEach(x=>{ if(x.closest('#gmLista')) return; x.style.maxWidth='100%'; x.style.minWidth='0'; }); }
+  function prepDonut(id){
+    const c=$(id); if(!c||!c.parentElement) return;
+    const p=c.parentElement; p.classList.add('bl-donut-square'); p.style.width='min(190px,62vw)'; p.style.height='min(190px,62vw)'; p.style.maxWidth='190px'; p.style.maxHeight='190px'; p.style.margin='8px auto 12px'; p.style.aspectRatio='1/1'; p.style.overflow='hidden';
+    c.style.width='100%'; c.style.height='100%'; c.style.minWidth='0'; c.style.maxWidth='100%';
+  }
+  function markCards(){
+    if(!mob()) return;
+    try{ fit($('grid-rankings')); }catch(e){}
+    try{ const c=$('rankList')?.closest('.card'); c?.classList.add('bl-v321-ranking-card'); fit(c); }catch(e){}
+    try{ const c=($('wdAvg')||$('wdSum')||$('livrosMes'))?.closest('.card'); c?.classList.add('bl-v321-week-card'); fit(c); }catch(e){}
+    try{ const c=$('cGeneros')?.closest('.card'); c?.classList.add('bl-v321-generos-card'); fit(c); }catch(e){}
+    try{ const c=$('cDonut')?.closest('.card'); c?.classList.add('bl-v321-donut-card'); fit(c); }catch(e){}
+    try{ const c=$('cAutores')?.closest('.card'); c?.classList.add('bl-v321-donut-card'); fit(c); }catch(e){}
+    try{ const c=$('selBookBusca')?.closest('.card'); c?.classList.add('bl-v321-book-card'); fit(c); }catch(e){}
+    try{ const c=$('cBook')?.closest('.card'); c?.classList.add('bl-v321-book-card'); fit(c); }catch(e){}
+    try{ const c=$('calGrid')?.closest('.card'); c?.classList.add('bl-v321-calendar-card'); fit(c); }catch(e){}
+    ['cMonthly','cDrilldown','cGeneros','cBook','cHeat'].forEach(id=>{ const c=$(id); if(c){ c.style.minWidth='0'; c.style.maxWidth='100%'; c.style.width='100%'; fit(c.parentElement); } });
+    prepDonut('cDonut'); prepDonut('cAutores');
+  }
+
+  // 14 — popup rola por dentro, fundo travado.
+  function lockModal(){ if(!mob()) return; modalY=window.scrollY||0; document.body.classList.add('bl-modal-open'); document.documentElement.classList.add('bl-modal-open'); }
+  function unlockModalIfNone(){ if(!document.querySelector('.pwa-overlay.open')){ document.body.classList.remove('bl-modal-open'); document.documentElement.classList.remove('bl-modal-open'); } }
+  function patchModals(){
+    const oldOpen=window.abrirModal;
+    if(typeof oldOpen==='function' && !oldOpen.__bl_v321){
+      const wrapped=function(tipo){ const r=oldOpen.apply(this,arguments); setTimeout(()=>{ lockModal(); const ov=$('modal'+String(tipo).charAt(0).toUpperCase()+String(tipo).slice(1)); const m=ov?.querySelector('.pwa-modal'); if(m){ m.scrollTop=0; m.style.overflowY='auto'; m.style.overflowX='hidden'; } },30); return r; };
+      wrapped.__bl_v321=true; window.abrirModal=wrapped;
+    }
+    const oldClose=window.fecharModal;
+    if(typeof oldClose==='function' && !oldClose.__bl_v321){
+      const wrapped=function(tipo){ const r=oldClose.apply(this,arguments); setTimeout(unlockModalIfNone,30); return r; };
+      wrapped.__bl_v321=true; window.fecharModal=wrapped;
+    }
+    document.querySelectorAll('.pwa-overlay').forEach(ov=>{
+      if(ov.__bl_v321_modal) return; ov.__bl_v321_modal=true;
+      ov.addEventListener('touchmove', ev=>{ const m=ov.querySelector('.pwa-modal'); if(ov.classList.contains('open') && (!m || !m.contains(ev.target))) ev.preventDefault(); }, {passive:false});
+      ov.addEventListener('wheel', ev=>{ const m=ov.querySelector('.pwa-modal'); if(ov.classList.contains('open') && (!m || !m.contains(ev.target))) ev.preventDefault(); }, {passive:false});
+    });
+  }
+
+  // 5 — barras HTML re-renderizadas para caberem no card.
+  const oldBuildWd=window.buildWd;
+  window.buildWd=function(){
+    if(!mob() || typeof WD_AVG==='undefined' || typeof WD_SUM==='undefined'){ return oldBuildWd&&oldBuildWd.apply(this,arguments); }
+    const yr=$('selWd')?.value || 'total';
+    const labels=(typeof WD_LABELS!=='undefined'?WD_LABELS:['D','S','T','Q','Q','S','S']);
+    const colors=(typeof WD_COLORS!=='undefined'?WD_COLORS:['#8b7cf8','#4ecdc4','#ffd166','#f88c6a','#e56cff','#56cfff','#22c55e']);
+    [['avg',WD_AVG,'wdAvg'],['sum',WD_SUM,'wdSum']].forEach(([type,src,id])=>{
+      const el=$(id); if(!el) return; const vals=src[yr] || src.total || [0,0,0,0,0,0,0]; const maxV=Math.max(...vals,1);
+      el.className='wd-bars bl-bars-mobile'; el.innerHTML=vals.map((v,i)=>{ const h=Math.max(5,Math.round(Number(v||0)/maxV*72)); const disp=type==='avg'?Number(v||0).toFixed(0):Number(v||0).toLocaleString('pt-BR'); return `<div class="wd-col"><span class="wd-val">${disp}</span><div class="wd-bar" style="height:${h}px;background:${colors[i%colors.length]}"></div><span class="wd-lbl">${labels[i]}</span></div>`; }).join('');
+    });
+    markCards();
+  };
+
+  const oldBuildLivrosMes=window.buildLivrosMes;
+  window.buildLivrosMes=function(){
+    if(!mob()) return oldBuildLivrosMes&&oldBuildLivrosMes.apply(this,arguments);
+    const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; const yr=$('selWd')?.value || 'total';
+    const ultima={}; (window._sessoes||[]).forEach(s=>{ if(s.data && (!ultima[s.livro] || s.data>ultima[s.livro])) ultima[s.livro]=s.data; });
+    const map={}; (window._livros||[]).filter(l=>l.status==='Completo').forEach(l=>{ const data=ultima[l.livro]; if(!data) return; const y=data.slice(0,4); if(yr!=='total' && y!==yr) return; const mo=data.slice(5,7); const key=`${y}-${mo}`; map[key]=(map[key]||0)+1; });
+    let keys=[]; if(yr==='total') keys=Object.keys(map).sort().slice(-12); else keys=Array.from({length:12},(_,i)=>`${yr}-${String(i+1).padStart(2,'0')}`);
+    const el=$('livrosMes'); if(!el) return; if(!keys.length || !Object.keys(map).length){ el.innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px">Nenhum livro concluído</div>'; return; }
+    const maxV=Math.max(...keys.map(k=>map[k]||0),1); el.className='wd-bars bl-bars-mobile';
+    el.innerHTML=keys.map(k=>{ const [y,mo]=k.split('-'); const v=map[k]||0; const h=Math.max(4,Math.round(v/maxV*72)); return `<div class="wd-col"><span class="wd-val">${v||''}</span><div class="wd-bar" style="height:${h}px;background:#4ecdc4;opacity:${v?1:.25}"></div><span class="wd-lbl">${meses[Number(mo)-1]}</span></div>`; }).join('');
+    markCards();
+  };
+
+  // 6 — gêneros em HTML para não ficar branco/cortado.
+  const oldBuildGeneros=window.buildGeneros;
+  window.buildGeneros=function(){
+    if(!mob()) return oldBuildGeneros&&oldBuildGeneros.apply(this,arguments);
+    let el=$('cGeneros'); if(!el) return;
+    const wrap=el.parentElement || el;
+    fit(wrap); wrap.style.height='auto'; wrap.style.minHeight='0'; wrap.style.overflow='hidden';
+    const all=[...(window._livros||[]),...(window._dadosD?.livros||[]),...(window._dadosD?.lendo||[]),...(window._dadosD?.pausados||[])];
+    const seen=new Set(), map={};
+    all.forEach(l=>{ const title=l.livro||l.title; if(!title || seen.has(title)) return; seen.add(title); const st=String(l.status||'').toLowerCase(); if(st && st!=='completo') return; const g=(l.genero||l.genre||l.categoria||l.category||'').trim(); if(!g) return; g.split(/[;,/|]/).map(x=>x.trim()).filter(Boolean).forEach(x=>{ map[x]=(map[x]||0)+1; }); });
+    const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10); const max=Math.max(...sorted.map(x=>x[1]),1);
+    if(!sorted.length){ wrap.innerHTML='<div id="cGeneros" class="bl-genre-list"><div style="color:#8892a8;font-size:12px;text-align:center;padding:16px;">Nenhum gênero cadastrado nos livros concluídos.</div></div>'; return; }
+    wrap.innerHTML='<div id="cGeneros" class="bl-genre-list">'+sorted.map(([g,n])=>`<div class="bl-genre-row" onclick="window.abrirPainelGenero&&abrirPainelGenero('${String(g).replace(/'/g,"\\'")}')"><div class="bl-genre-name">${g}</div><div class="bl-genre-num">${n}</div><div class="bl-genre-track"><div class="bl-genre-bar" style="width:${Math.round(n/max*100)}%"></div></div></div>`).join('')+'</div>';
+    markCards();
+  };
+
+  // 7 — prepara contêiner quadrado antes e depois do Chart.js.
+  const oldBuildDonuts=window.buildDonuts;
+  window.buildDonuts=function(){
+    if(mob()){ prepDonut('cDonut'); prepDonut('cAutores'); }
+    const r=oldBuildDonuts&&oldBuildDonuts.apply(this,arguments);
+    if(mob()) setTimeout(()=>{ prepDonut('cDonut'); prepDonut('cAutores'); ['cDonut','cAutores'].forEach(id=>{ try{ const ch=window.Chart&&Chart.getChart(id); if(ch){ ch.resize(); ch.update('none'); } }catch(e){} }); markCards(); },60);
+    return r;
+  };
+
+  // 8 — busca de livro robusta e gráfico dentro do card.
+  window.filtrarSelBook=function(termo){
+    const lista=$('selBookLista'); if(!lista) return; const t=norm(termo); const base=(window._livros&&window._livros.length?window._livros:(window.livrosCache||[]));
+    const order={'lendo':0,'pausado':1,'completo':2,'aguardando':3};
+    const books=[...base].filter(l=>!t || norm(l.livro||l.title).includes(t) || norm(l.autor||'').includes(t)).sort((a,b)=>{ const sa=order[norm(a.status)]??9, sb=order[norm(b.status)]??9; return sa!==sb?sa-sb:String(a.livro||'').localeCompare(String(b.livro||'')); }).slice(0,30);
+    if(!books.length){ lista.style.display='none'; return; }
+    lista.innerHTML=books.map(b=>{ const st=norm(b.status); const icon=st==='lendo'?'📖':st==='pausado'?'⏸️':st==='completo'?'✅':'📋'; return `<div class="bl-book-option" data-book="${String(b.livro||b.title).replace(/"/g,'&quot;')}" style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);color:var(--text);background:var(--bg3);">${icon} ${b.livro||b.title}</div>`; }).join('');
+    lista.style.display='block'; lista.style.position='absolute'; lista.style.zIndex='99999'; lista.style.overflowY='auto';
+  };
+  function patchBookSearch(){
+    const input=$('selBookBusca'), lista=$('selBookLista'); if(!input||!lista) return;
+    input.oninput=function(){ window.filtrarSelBook(this.value); };
+    input.onfocus=function(){ window.filtrarSelBook(this.value||''); };
+    lista.onpointerdown=function(ev){ const item=ev.target.closest('.bl-book-option'); if(!item) return; ev.preventDefault(); const book=item.dataset.book; const sel=$('selBook'); if(sel) sel.value=book; input.value=book; lista.style.display='none'; try{ window.buildBookChart&&window.buildBookChart(); window.buildBookInfo&&window.buildBookInfo(); }catch(e){} setTimeout(()=>{ normalizeBookChart(); },80); };
+    input.onblur=function(){ setTimeout(()=>{ lista.style.display='none'; },350); };
+  }
+  function normalizeBookChart(){ const c=$('cBook'); if(c){ c.style.minWidth='0'; c.style.maxWidth='100%'; c.style.width='100%'; fit(c.parentElement); try{ const ch=window.Chart&&Chart.getChart(c); if(ch){ ch.resize(); ch.update('none'); } }catch(e){} } }
+  const oldBuildBookChart=window.buildBookChart;
+  function wrapBookChart(){ if(typeof window.buildBookChart==='function' && !window.buildBookChart.__bl_v321){ const old=window.buildBookChart; window.buildBookChart=function(){ const r=old.apply(this,arguments); setTimeout(normalizeBookChart,80); return r; }; window.buildBookChart.__bl_v321=true; } }
+
+  // 9 — calendário com texto simples: "32 páginas".
+  const oldBuildCalendar=window.buildCalendar;
+  window.buildCalendar=function(){
+    if(!mob() || typeof calYear==='undefined' || typeof calMonth==='undefined') return oldBuildCalendar&&oldBuildCalendar.apply(this,arguments);
+    const sess=window._sessoes||[]; const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const title=$('calTitle'); if(title) title.textContent=`${meses[calMonth]} ${calYear}`;
+    const prefix=`${calYear}-${String(calMonth+1).padStart(2,'0')}`; const dayData={}; sess.filter(s=>s.data&&s.data.startsWith(prefix)).forEach(s=>{ (dayData[s.data]||(dayData[s.data]=[])).push(s); });
+    const firstDay=new Date(calYear,calMonth,1).getDay(); const daysInMonth=new Date(calYear,calMonth+1,0).getDate(); let html='';
+    dias.forEach(d=>{ html+=`<div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:3px 0;">${d}</div>`; });
+    for(let i=0;i<firstDay;i++) html+='<div class="cal-empty"></div>';
+    for(let day=1;day<=daysInMonth;day++){ const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; const entries=dayData[dateStr]||[]; const total=entries.reduce((a,r)=>a+Number(r.paginas||0),0); const selected=(typeof calSelected!=='undefined' && calSelected===dateStr); html+=`<div class="cal-day${total?' active':''}${selected?' selected':''}" onclick="calSelect('${dateStr}')"><div class="cal-day-num">${day}</div>${total?`<div class="cal-day-pages">${total}<br>páginas</div>`:''}</div>`; }
+    const grid=$('calGrid'); if(grid) grid.innerHTML=html;
+    try{ if(calSelected && calSelected.startsWith(prefix)) calShowDetail(calSelected); else { const det=$('calDetail'); if(det) det.style.display='none'; calSelected=null; } }catch(e){}
+    markCards();
+  };
+
+  // 11 — normaliza batalha depois de renderizar.
+  function normalizeBattle(){ if(!mob()) return; const cont=$('batalhaContainer'); if(!cont) return; fit(cont); const root=cont.firstElementChild; fit(root); if(root){ root.style.minWidth='0'; root.style.maxWidth='100%'; root.style.paddingLeft='0'; root.style.paddingRight='0'; } cont.querySelectorAll('[style*="min-width"], [style*="max-width"], [style*="width:"]').forEach(el=>{ if(el.tagName==='CANVAS') return; el.style.minWidth='0'; el.style.maxWidth='100%'; }); cont.querySelectorAll('[style*="grid-template-columns"]').forEach(el=>{ if(el.id==='bat-attrs') el.style.gridTemplateColumns='repeat(2,minmax(0,1fr))'; else el.style.gridTemplateColumns='minmax(0,1fr)'; }); }
+  const oldRenderBatalha=window.renderBatalha;
+  if(typeof oldRenderBatalha==='function' && !oldRenderBatalha.__bl_v321){ window.renderBatalha=function(){ const r=oldRenderBatalha.apply(this,arguments); setTimeout(normalizeBattle,80); setTimeout(normalizeBattle,500); return r; }; window.renderBatalha.__bl_v321=true; }
+
+  // 12 — footer do gerenciar meta sempre visível e lista com scroll próprio.
+  function patchGoalModal(){ const p=$('painelGerenciarMeta'), list=$('gmLista'), btn=$('gmBtnSalvar'); if(!p||!list||!btn) return; const footer=btn.parentElement; if(footer) footer.classList.add('bl-gm-footer'); list.style.overflowY='auto'; list.style.minHeight='0'; list.style.flex='1 1 auto'; list.querySelectorAll(':scope > div').forEach(el=>{ el.removeAttribute('onmouseenter'); el.removeAttribute('onmouseleave'); el.style.transform='none'; el.style.zIndex='1'; el.style.boxShadow='none'; el.style.width=''; el.style.minWidth='0'; el.style.maxWidth='100%'; el.style.flex='initial'; }); }
+  const oldRenderGM=window.renderGerenciarMeta;
+  if(typeof oldRenderGM==='function' && !oldRenderGM.__bl_v321){ window.renderGerenciarMeta=function(){ const r=oldRenderGM.apply(this,arguments); setTimeout(patchGoalModal,20); return r; }; window.renderGerenciarMeta.__bl_v321=true; }
+  const oldOpenGM=window.abrirGerenciarMeta;
+  if(typeof oldOpenGM==='function' && !oldOpenGM.__bl_v321){ window.abrirGerenciarMeta=function(){ const r=oldOpenGM.apply(this,arguments); setTimeout(()=>{ patchGoalModal(); lockModal(); },50); return r; }; window.abrirGerenciarMeta.__bl_v321=true; }
+  const oldCloseGM=window.fecharGerenciarMeta;
+  if(typeof oldCloseGM==='function' && !oldCloseGM.__bl_v321){ window.fecharGerenciarMeta=function(){ const r=oldCloseGM.apply(this,arguments); setTimeout(unlockModalIfNone,40); return r; }; window.fecharGerenciarMeta.__bl_v321=true; }
+
+  // 2 — reforça comunidade depois que o modal é criado.
+  function patchCommunity(){ const m=$('blCommunityModal'); if(!m) return; m.querySelectorAll('[style*="min-width"], [style*="width:"]').forEach(el=>{ el.style.minWidth='0'; el.style.maxWidth='100%'; }); m.querySelectorAll('[style*="grid-template-columns"]').forEach(el=>{ el.style.gridTemplateColumns='minmax(0,1fr)'; }); }
+  const oldCommunity=window.blOpenCommunityModal;
+  if(typeof oldCommunity==='function' && !oldCommunity.__bl_v321){ window.blOpenCommunityModal=async function(){ const r=await oldCommunity.apply(this,arguments); setTimeout(patchCommunity,60); setTimeout(patchCommunity,500); return r; }; window.blOpenCommunityModal.__bl_v321=true; }
+
+  // cache debug para APK.
+  window.blAndroidCacheDebug=function(){ return {patch:PATCH, androidFlag:!!window.__BOOKLEGACY_ANDROID_APP, androidVersion:window.__BOOKLEGACY_ANDROID_VERSION||null, href:location.href, serviceWorker:!!navigator.serviceWorker, cacheGuard:'v3.21'}; };
+
+  function boot(){ markCards(); patchModals(); patchBookSearch(); wrapBookChart(); patchGoalModal(); patchCommunity(); normalizeBattle(); setTimeout(()=>{ try{ window.buildWd&&window.buildWd(); window.buildLivrosMes&&window.buildLivrosMes(); window.buildGeneros&&window.buildGeneros(); window.buildDonuts&&window.buildDonuts(); window.buildCalendar&&window.buildCalendar(); }catch(e){ console.warn('v3.21 rebuild', e); } },250); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  setTimeout(boot,700); setTimeout(boot,1800); setInterval(()=>{ markCards(); patchGoalModal(); patchCommunity(); },2500);
+  document.addEventListener('touchmove', function(ev){ if(document.body.classList.contains('bl-modal-open')){ const open=document.querySelector('.pwa-overlay.open .pwa-modal, #painelGerenciarMeta[style*="display: flex"], #painelGerenciarMeta[style*="display:flex"]'); if(open && !open.contains(ev.target)) ev.preventDefault(); } }, {passive:false});
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH, communityFit:!!$('blCommunityModal'), modalLock:document.body.classList.contains('bl-modal-open'), rankingV321:!!$('rankList')?.closest('.bl-v321-ranking-card'), cacheDebug:typeof window.blAndroidCacheDebug}); };
+})();
+</script>
+
 </body>
 </html>
