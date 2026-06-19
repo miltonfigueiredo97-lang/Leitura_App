@@ -9123,5 +9123,92 @@ body.bl-v12-battle #blBattleBackButtonV25{
 })();
 </script>
 
+
+
+<script id="booklegacy-native-auth-bridge-v317">
+// BookLegacy V3.17 — Android APK login nativo + Firebase Web Auth dentro da WebView.
+(function(){
+  const PATCH = 'v3.17-android-native-login-bridge';
+  function hasNativeBridge(){
+    return !!(window.BookLegacyNative && typeof window.BookLegacyNative.signInWithGoogle === 'function');
+  }
+  function setAuthMessage(msg, isError){
+    const err = document.getElementById('authError');
+    if(err){
+      err.textContent = msg || '';
+      err.style.color = isError ? '#f88c6a' : '#4ecdc4';
+    }
+  }
+  function waitForAuth(timeoutMs=15000){
+    return new Promise((resolve,reject)=>{
+      const started = Date.now();
+      const t = setInterval(()=>{
+        if(window.firebase && window.BL && window.BL.auth && window.firebase.auth && window.firebase.auth.GoogleAuthProvider){
+          clearInterval(t); resolve(window.BL.auth); return;
+        }
+        if(Date.now()-started > timeoutMs){
+          clearInterval(t); reject(new Error('Firebase Auth ainda não carregou no WebView.'));
+        }
+      },150);
+    });
+  }
+  window.bookLegacyNativeGoogleLogin = async function(idToken){
+    try{
+      setAuthMessage('✅ Login Google recebido. Entrando no Firebase...', false);
+      const auth = await waitForAuth();
+      const credential = window.firebase.auth.GoogleAuthProvider.credential(idToken);
+      await auth.signInWithCredential(credential);
+      setAuthMessage('✅ Login concluído. Carregando dados...', false);
+      if(typeof window.blRefreshAndRender === 'function') setTimeout(()=>window.blRefreshAndRender(), 500);
+    }catch(e){
+      console.error('[BookLegacy Native Login]', e);
+      setAuthMessage('❌ Login nativo falhou: ' + (e && e.message ? e.message : e), true);
+    }
+  };
+  window.bookLegacyNativeGoogleLoginError = function(msg){
+    console.error('[BookLegacy Native Login]', msg);
+    setAuthMessage('❌ ' + msg, true);
+  };
+  function patchLoginButton(){
+    const btn = document.getElementById('authLoginBtn');
+    if(!btn) return;
+    if(hasNativeBridge()){
+      btn.textContent = 'Entrar com Google';
+      btn.onclick = null;
+      if(!btn.__booklegacyNativePatched){
+        btn.__booklegacyNativePatched = true;
+        btn.addEventListener('click', function(ev){
+          if(!hasNativeBridge()) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+          setAuthMessage('Abrindo login Google do aplicativo...', false);
+          try{ window.BookLegacyNative.signInWithGoogle(); }
+          catch(e){ window.bookLegacyNativeGoogleLoginError(e && e.message ? e.message : String(e)); }
+          return false;
+        }, true);
+      }
+    }
+  }
+  document.addEventListener('DOMContentLoaded', patchLoginButton);
+  setInterval(patchLoginButton, 500);
+  window.blAndroidDebug = function(){
+    return {
+      patch: PATCH,
+      nativeBridge: hasNativeBridge(),
+      androidFlag: !!window.__BOOKLEGACY_ANDROID_APP,
+      androidVersion: window.__BOOKLEGACY_ANDROID_VERSION || null,
+      BL: !!window.BL,
+      auth: !!(window.BL && window.BL.auth),
+      currentUser: window.BL && window.BL.auth && window.BL.auth.currentUser ? {
+        uid: window.BL.auth.currentUser.uid,
+        email: window.BL.auth.currentUser.email,
+        displayName: window.BL.auth.currentUser.displayName
+      } : null
+    };
+  };
+})();
+</script>
+
 </body>
 </html>

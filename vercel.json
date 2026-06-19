@@ -1,1 +1,19 @@
-{"version":2,"builds":[{"src":"package.json","use":"@vercel/static-build","config":{"distDir":"dist"}}],"routes":[{"src":"/mobile.html","dest":"/mobile.html"},{"src":"/manifest.json","dest":"/manifest.json"},{"src":"/sw.js","dest":"/sw.js"},{"src":"/(.*)","dest":"/index.html"}]}
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "src": "/mobile.html", "dest": "/mobile.html" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/icon-192.svg", "dest": "/icon-192.svg" },
+    { "src": "/icon-512.svg", "dest": "/icon-512.svg" },
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
