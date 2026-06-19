@@ -1,1 +1,1 @@
-BookLegacy V12.18 - Corrige troca imediata do adversário no Modo Batalha 2x2.
+BookLegacy V12.19 - corrige troca real do adversário no Batalha usando a chave de dados correta (Daniel/Roger), sem mexer em banco/login.

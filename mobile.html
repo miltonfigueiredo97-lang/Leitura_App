@@ -8769,12 +8769,13 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 <script id="bl-v12-18-battle-opponent-instant-fix">
-/* BookLegacy V12.18 — Corrige troca de adversário no Batalha 2x2.
+/* BookLegacy V12.19 — Corrige troca de adversário + chave real dos dados no Batalha 2x2.
    Não mexe em Firebase/Auth/Firestore. Só ajusta o seletor do modo batalha. */
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.18-battle-opponent-instant-fix';
+  window.__BL_PATCH_VERSION = 'v12.19-battle-opponent-datakey-fix';
   window.__BL_V12_18_MARKER = true;
+  window.__BL_V12_19_MARKER = true;
 
   const $ = id => document.getElementById(id);
   const norm = v => String(v ?? '').trim().toLowerCase();
@@ -8818,7 +8819,13 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return opts.find(p => keyOf(p)===current || labelOf(p)===current) || opts[0] || {label:'Daniel Victor'};
   }
   function valueForA(p){ return /milton/i.test(labelOf(p)) ? 'Milton' : labelOf(p); }
-  function valueForB(p){ return labelOf(p); }
+  function valueForB(p){
+    const label = labelOf(p);
+    if(/roger/i.test(label)) return 'Roger';
+    if(/daniel/i.test(label)) return 'Daniel';
+    if(/milton/i.test(label)) return 'Milton';
+    return label;
+  }
 
   function fillSelects(op){
     const list = people();
@@ -8925,7 +8932,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   const prevDebug = window.blBattleDebug;
   window.blBattleDebug = window.blV12Debug = function(){
     const op=selectedOpponent();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1218:true, usuarioAtual:window.usuarioAtual, opponent:labelOf(op), bSelect:$('bat-playerB')?.value || null, dropdownDisplay:$('blBattleDropdownV17')?getComputedStyle($('blBattleDropdownV17')).display:null, people:people().map(labelOf), opponents:opponents().map(labelOf), oldDebug: typeof prevDebug==='function' ? prevDebug() : null};
+    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1218:true, marker1219:true, usuarioAtual:window.usuarioAtual, opponent:labelOf(op), bSelect:$('bat-playerB')?.value || null, bText:$('bat-playerB')?.selectedOptions?.[0]?.textContent || null, dropdownDisplay:$('blBattleDropdownV17')?getComputedStyle($('blBattleDropdownV17')).display:null, people:people().map(labelOf), opponents:opponents().map(labelOf), oldDebug: typeof prevDebug==='function' ? prevDebug() : null};
   };
 
   const oldSet = window.setUsuario;
