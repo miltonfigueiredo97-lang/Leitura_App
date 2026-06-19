@@ -8,7 +8,7 @@ android {
         applicationId 'com.booklegacy.app'
         minSdk 23
         targetSdk 35
-        versionCode 38
-        versionName '3.8'
+        versionCode 315
+        versionName '3.15'
     }
 }

@@ -16,7 +16,7 @@ import android.content.Intent;
 
 public class MainActivity extends Activity {
     private WebView webView;
-    private static final String APP_URL = "https://leitura-app-theta.vercel.app/mobile.html?app=android&v=3.8";
+    private static final String APP_URL = "https://leitura-app-theta.vercel.app/mobile.html?app=android&v=3.3";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.8");
+        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.15");
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
