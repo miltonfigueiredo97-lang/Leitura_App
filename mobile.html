@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.0">
+<meta name="booklegacy-version" content="v3.10">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -578,7 +578,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.10</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -8948,6 +8948,111 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
   setTimeout(buildMenu, 600);
   window.blMobileDebug = function(){ return { patch: window.__BL_MOBILE_PATCH_VERSION, BL: !!window.BL, profileLabel: typeof window.blProfileLabel, community: typeof window.blOpenCommunityModal, battle: typeof window.renderBatalha, bottomNav: !!document.getElementById('mobile-nav') && getComputedStyle(document.getElementById('mobile-nav')).display, menu: !!document.getElementById('bl-mobile-menu-btn') }; };
+})();
+</script>
+
+
+
+<!-- BOOKLEGACY V3.10 MOBILE LAYOUT ONLY PATCH -->
+<style id="booklegacy-v310-mobile-layout-fix">
+html,body{width:100%!important;max-width:100vw!important;overflow-x:hidden!important;background:#0d1117!important;}
+body{min-width:0!important;}
+#mobile-nav,#btn-view-toggle{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}
+#app,.page,#pageDashboard{width:100%!important;max-width:100vw!important;margin:0!important;box-sizing:border-box!important;overflow-x:hidden!important;padding-left:10px!important;padding-right:10px!important;}
+header{position:sticky!important;top:0!important;z-index:2000!important;width:100%!important;max-width:100vw!important;box-sizing:border-box!important;padding:10px 12px!important;display:grid!important;grid-template-columns:auto 1fr auto!important;gap:10px!important;align-items:center!important;overflow:visible!important;}
+header .icon{font-size:28px!important;line-height:1!important;}
+header h1{font-size:18px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+header p{font-size:10px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+header>div:nth-child(2){min-width:0!important;}
+header>div:last-child{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important;flex-wrap:nowrap!important;min-width:0!important;}
+/* No mobile, botões grandes saem do topo e entram no menu */
+#btn-community,#btn-migration,#appInstallBtn,#btn-refresh,header button[onclick="toggleChangelog()"],#btn-user-milton,#btn-user-daniel,#btn-user-batalha{display:none!important;}
+.bl-profile{max-width:145px!important;min-width:0!important;padding:4px 7px!important;font-size:10px!important;overflow:hidden!important;}
+.bl-profile img{width:24px!important;height:24px!important;}
+.bl-profile span{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:95px!important;}
+.bl-profile button{font-size:10px!important;}
+#bl-mobile-menu-btn{display:flex!important;width:38px!important;height:38px!important;align-items:center!important;justify-content:center!important;border-radius:11px!important;border:1px solid #2a3248!important;background:#1e2535!important;color:#e2e8f0!important;font-size:22px!important;font-weight:900!important;box-shadow:0 4px 16px rgba(0,0,0,.35)!important;}
+#bl-mobile-menu-panel{position:fixed!important;right:10px!important;top:62px!important;z-index:5000!important;width:min(320px,calc(100vw - 20px))!important;background:#161b27!important;border:1px solid #2a3248!important;border-radius:16px!important;padding:12px!important;box-shadow:0 20px 70px rgba(0,0,0,.65)!important;display:none;}
+#bl-mobile-menu-panel.open{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}
+#bl-mobile-menu-panel button{width:100%!important;border-radius:11px!important;border:1px solid #2a3248!important;background:#1e2535!important;color:#e2e8f0!important;padding:11px 9px!important;font-size:12px!important;font-weight:800!important;text-align:center!important;}
+#bl-mobile-menu-panel .full{grid-column:1/-1!important;}
+.lendo-wrap{width:100%!important;max-width:100vw!important;padding:10px!important;box-sizing:border-box!important;overflow:hidden!important;}
+.lendo-inner{width:100%!important;display:flex!important;flex-direction:column!important;gap:10px!important;}
+.lendo-card{width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important;}
+.grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
+.kpi-grid-5,#kpi-books-grid,#bookInfoStats,.meta-stats{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;width:100%!important;max-width:100%!important;}
+.card,.kpi{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important;padding:12px!important;}
+.sec{width:100%!important;max-width:100%!important;overflow:hidden!important;}
+.ctrl{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;width:100%!important;max-width:100%!important;}
+.ctrl select,.ctrl button,.btn,select{max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+/* Ranking por notas: filtros e cards sem cortar */
+#grid-rankings{grid-template-columns:minmax(0,1fr)!important;overflow:hidden!important;}
+#rankList,.rank-list,.rank-item{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;}
+.rank-item{display:grid!important;grid-template-columns:28px 42px minmax(0,1fr) 34px!important;align-items:center!important;gap:6px!important;}
+.rank-name{white-space:normal!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;font-size:12px!important;line-height:1.15!important;}
+.rank-bar-wrap{display:none!important;}
+.rank-item img{width:38px!important;height:54px!important;object-fit:cover!important;}
+/* Dia da semana */
+.wd-bars{width:100%!important;max-width:100%!important;overflow:hidden!important;gap:3px!important;}
+.wd-col{min-width:0!important;flex:1 1 0!important;}
+.wd-lbl,.wd-val{font-size:8px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+/* Calendário */
+#calGrid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:3px!important;width:100%!important;max-width:100%!important;overflow:hidden!important;}
+.cal-day{min-width:0!important;aspect-ratio:1!important;min-height:0!important;padding:3px!important;overflow:hidden!important;}
+.cal-day-num{font-size:9px!important;line-height:1!important;}
+.cal-day-pag{font-size:9px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.cal-day-livro{font-size:8px!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+#calWrap,.cal-wrap{width:100%!important;max-width:100%!important;overflow:hidden!important;}
+/* Heatmap */
+#heatmapGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;width:100%!important;max-width:100%!important;overflow:hidden!important;}
+#heatmapGrid>*{min-width:0!important;max-width:100%!important;overflow:hidden!important;}
+/* Gêneros e charts */
+canvas{max-width:100%!important;width:100%!important;box-sizing:border-box!important;}
+#cGeneros{height:270px!important;max-width:100%!important;}
+#cMonthly{height:230px!important;max-width:100%!important;}
+#cHeat{max-width:100%!important;}
+/* Batalha */
+#pageBatalha{width:100%!important;max-width:100vw!important;padding:10px!important;overflow-x:hidden!important;}
+#batalhaContainer{width:100%!important;max-width:100%!important;overflow:hidden!important;}
+/* FAB */
+.fab{right:14px!important;bottom:18px!important;width:54px!important;height:54px!important;z-index:2500!important;}
+.fab-menu{right:14px!important;bottom:82px!important;z-index:2500!important;}
+</style>
+<script id="booklegacy-v310-mobile-menu-fix">
+(function(){
+  window.__BL_MOBILE_PATCH_VERSION='v3.10-mobile-crop-fix';
+  function $(id){return document.getElementById(id)}
+  function hideBottomNav(){ const nav=$('mobile-nav'); if(nav) nav.remove(); const tog=$('btn-view-toggle'); if(tog) tog.remove(); }
+  function addMenu(){
+    const header=document.querySelector('header'); if(!header) return;
+    if(!$('bl-mobile-menu-btn')){
+      const btn=document.createElement('button'); btn.id='bl-mobile-menu-btn'; btn.type='button'; btn.textContent='☰'; btn.setAttribute('aria-label','Menu');
+      btn.onclick=function(e){ e.stopPropagation(); const p=$('bl-mobile-menu-panel'); if(p) p.classList.toggle('open'); };
+      header.appendChild(btn);
+    }
+    if(!$('bl-mobile-menu-panel')){
+      const p=document.createElement('div'); p.id='bl-mobile-menu-panel';
+      const add=(txt,fn,cls='')=>{ const b=document.createElement('button'); b.type='button'; b.textContent=txt; if(cls)b.className=cls; b.onclick=function(){ p.classList.remove('open'); try{fn&&fn()}catch(e){console.error(e)} }; p.appendChild(b); };
+      add('📖 Meu perfil',()=>{ if(window.setUsuario) setUsuario(window.blProfileLabel?blProfileLabel():'Milton'); },'full');
+      add('⚔️ Batalha',()=>{ if(window.setUsuario) setUsuario('Batalha'); });
+      add('👥 Comunidade',()=>{ if(window.blOpenCommunityModal) blOpenCommunityModal(); });
+      add('📥 Migração',()=>{ if(window.blOpenMigrationModal) blOpenMigrationModal(); });
+      add('🎯 Meta',()=>{ if(window.mNavTo) mNavTo('meta'); else document.querySelector('[data-msection="meta"]')?.scrollIntoView({behavior:'smooth'}); });
+      add('📊 Geral',()=>{ if(window.mNavTo) mNavTo('visao'); else document.querySelector('[data-msection="visao"]')?.scrollIntoView({behavior:'smooth'}); });
+      add('📈 Gráficos',()=>{ if(window.mNavTo) mNavTo('graficos'); else document.querySelector('[data-msection="graficos"]')?.scrollIntoView({behavior:'smooth'}); });
+      add('🏅 Ranking',()=>{ if(window.mNavTo) mNavTo('ranking'); else document.querySelector('[data-msection="ranking"]')?.scrollIntoView({behavior:'smooth'}); });
+      add('📚 Livro',()=>{ if(window.mNavTo) mNavTo('livro'); else document.querySelector('[data-msection="livro"]')?.scrollIntoView({behavior:'smooth'}); });
+      add('🔄 Atualizar',()=>{ if(window.manualRefresh) manualRefresh(); });
+      add('📋 Notas',()=>{ if(window.toggleChangelog) toggleChangelog(); });
+      document.body.appendChild(p);
+      document.addEventListener('click',()=>p.classList.remove('open'));
+      p.addEventListener('click',e=>e.stopPropagation());
+    }
+  }
+  function init(){ hideBottomNav(); addMenu(); document.body.classList.add('bl-mobile-v310'); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  setTimeout(init,700); setTimeout(init,1800);
+  window.blMobileDebug=function(){return{patch:window.__BL_MOBILE_PATCH_VERSION, BL:!!window.BL, community:typeof window.blOpenCommunityModal, battle:typeof window.renderBatalha, bottomNav:!!$('mobile-nav'), menu:!!$('bl-mobile-menu-btn'), w:innerWidth};};
 })();
 </script>
 

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.0">
+<meta name="booklegacy-version" content="v3.10">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -465,32 +465,32 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 20px
 }
 
 /* Quando JS ativa mobile-view no desktop */
-body.mobile-view #mobile-nav { display:flex !important; }
-body.mobile-view #btn-view-toggle { top:56px !important; bottom:auto !important; right:6px !important; }
-body.mobile-view header { padding:6px 8px !important; position:sticky; top:0; z-index:1000; }
-body.mobile-view header h1 { font-size:12px !important; }
-body.mobile-view header p, body.mobile-view .badge { display:none !important; }
-body.mobile-view #btn-user-milton,
-body.mobile-view #btn-user-daniel,
-body.mobile-view #btn-user-batalha { padding:4px 7px !important; font-size:11px !important; }
-body.mobile-view #app, body.mobile-view .page {
+body.__disabled_mobile_view_#mobile-nav { display:flex !important; }
+body.__disabled_mobile_view_#btn-view-toggle { top:56px !important; bottom:auto !important; right:6px !important; }
+body.__disabled_mobile_view_header { padding:6px 8px !important; position:sticky; top:0; z-index:1000; }
+body.__disabled_mobile_view_header h1 { font-size:12px !important; }
+body.__disabled_mobile_view_header p, body.__disabled_mobile_view_.badge { display:none !important; }
+body.__disabled_mobile_view_#btn-user-milton,
+body.__disabled_mobile_view_#btn-user-daniel,
+body.__disabled_mobile_view_#btn-user-batalha { padding:4px 7px !important; font-size:11px !important; }
+body.__disabled_mobile_view_#app, body.__disabled_mobile_view_.page {
   width:100% !important; max-width:100% !important; margin:0 !important;
   padding:6px 8px calc(var(--nav-h) + 12px) 8px !important;
   box-sizing:border-box !important;
 }
-body.mobile-view .lendo-wrap { width:100% !important; max-width:100% !important; }
-body.mobile-view .lendo-inner { flex-direction:column !important; gap:8px !important; }
-body.mobile-view .lendo-card { min-width:unset !important; width:100% !important; }
-body.mobile-view .grid2, body.mobile-view .grid3,
-body.mobile-view .grid4, body.mobile-view .grid6 { grid-template-columns:1fr !important; }
-body.mobile-view .kpi-grid-5 { grid-template-columns:repeat(2,1fr) !important; }
-body.mobile-view #kpi-books-grid { grid-template-columns:1fr 1fr !important; }
-body.mobile-view #grid-rankings { grid-template-columns:1fr !important; }
-body.mobile-view .kpi { overflow:hidden !important; }
-body.mobile-view .kpi-nome { white-space:normal !important; word-break:break-word !important; }
-body.mobile-view .rank-bar-wrap { display:none !important; }
-body.mobile-view .fab { bottom:calc(var(--nav-h) + 14px) !important; right:10px !important; }
-body.mobile-view .fab-menu { bottom:calc(var(--nav-h) + 70px) !important; right:10px !important; }
+body.__disabled_mobile_view_.lendo-wrap { width:100% !important; max-width:100% !important; }
+body.__disabled_mobile_view_.lendo-inner { flex-direction:column !important; gap:8px !important; }
+body.__disabled_mobile_view_.lendo-card { min-width:unset !important; width:100% !important; }
+body.__disabled_mobile_view_.grid2, body.__disabled_mobile_view_.grid3,
+body.__disabled_mobile_view_.grid4, body.__disabled_mobile_view_.grid6 { grid-template-columns:1fr !important; }
+body.__disabled_mobile_view_.kpi-grid-5 { grid-template-columns:repeat(2,1fr) !important; }
+body.__disabled_mobile_view_#kpi-books-grid { grid-template-columns:1fr 1fr !important; }
+body.__disabled_mobile_view_#grid-rankings { grid-template-columns:1fr !important; }
+body.__disabled_mobile_view_.kpi { overflow:hidden !important; }
+body.__disabled_mobile_view_.kpi-nome { white-space:normal !important; word-break:break-word !important; }
+body.__disabled_mobile_view_.rank-bar-wrap { display:none !important; }
+body.__disabled_mobile_view_.fab { bottom:calc(var(--nav-h) + 14px) !important; right:10px !important; }
+body.__disabled_mobile_view_.fab-menu { bottom:calc(var(--nav-h) + 70px) !important; right:10px !important; }
 
 /* ── Mobile: força todos inline grids para 1 coluna ── */
 @media (max-width: 600px) {
@@ -511,20 +511,20 @@ body.mobile-view .fab-menu { bottom:calc(var(--nav-h) + 70px) !important; right:
   .pwa-row   { grid-template-columns:1fr !important; }
   .meta-stats{ grid-template-columns:1fr 1fr !important; }
 }
-body.mobile-view [data-desktop-grid] {
+body.__disabled_mobile_view_[data-desktop-grid] {
   grid-template-columns: 1fr !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
-body.mobile-view #kpi-books-grid[data-desktop-grid],
-body.mobile-view #bookInfoStats[data-desktop-grid],
-body.mobile-view #heatmapGrid[data-desktop-grid],
-body.mobile-view .kpi-grid-5[data-desktop-grid] {
+body.__disabled_mobile_view_#kpi-books-grid[data-desktop-grid],
+body.__disabled_mobile_view_#bookInfoStats[data-desktop-grid],
+body.__disabled_mobile_view_#heatmapGrid[data-desktop-grid],
+body.__disabled_mobile_view_.kpi-grid-5[data-desktop-grid] {
   grid-template-columns: 1fr 1fr !important;
 }
-body.mobile-view canvas { max-width:100% !important; width:100% !important; }
-body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
-body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
+body.__disabled_mobile_view_canvas { max-width:100% !important; width:100% !important; }
+body.__disabled_mobile_view_.pwa-row { grid-template-columns:1fr !important; }
+body.__disabled_mobile_view_.meta-stats { grid-template-columns:1fr 1fr !important; }
 
 /* BookLegacy V12.1 - login Firebase + dashboard original + batalha visível */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -538,6 +538,15 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
+
+<style id="booklegacy-v310-desktop-freeze">
+/* V3.10: desktop congelado. O index.html não assume layout mobile em notebook/desktop estreito. */
+@media (min-width: 768px){
+  #mobile-nav, #btn-view-toggle, #bl-mobile-menu-btn, #bl-mobile-menu-panel{display:none!important;}
+  body{min-width:1100px;}
+}
+</style>
+<script>window.__BOOKLEGACY_RELEASE='v3.10-desktop-frozen';</script>
 </head>
 <body>
 
@@ -578,7 +587,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
     <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.10</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
