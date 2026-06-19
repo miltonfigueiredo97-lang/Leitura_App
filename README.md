@@ -1,1 +1,3 @@
-BookLegacy V12.9 - modo batalha original com seletor pesquisável e comparação multi real.
+# BookLegacy V12.8
+
+Patch cirúrgico: botão Batalha visível, Modo Batalha original, seleção de 2+ players, botão voltar e esconder livros do topo apenas no modo batalha.
