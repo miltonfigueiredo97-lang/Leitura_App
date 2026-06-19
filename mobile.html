@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v12.25-battle-back-button-fix">
+<meta name="booklegacy-version" content="v3.0">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -575,7 +575,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
       </button>
     </div>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v2.7</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -4259,7 +4259,7 @@ function blOpenInviteModal(user){
 
 
 // ════════════════════════════════════════════════
-// BOOKLEGACY V7.6 — MIGRAÇÃO NO APP
+// BOOKLEGACY V3.0 — MIGRAÇÃO NO APP
 // Permite importar JSON da base antiga dentro do usuário Google logado.
 // ════════════════════════════════════════════════
 function blMigrationShell(){
@@ -6179,6 +6179,23 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
+  {
+    versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
+    itens: [
+      'Migração oficial do dashboard para Firebase/Firestore com Google Login',
+      'Dados isolados por conta: cada usuário carrega biblioteca, sessões, notas, metas e coleções pelo próprio UID',
+      'Comunidade: sistema de amigos, convite por link e visualização de perfil de outros leitores',
+      'Perfil de amigo em modo leitura: sem botões de editar, adicionar ou excluir dados do outro usuário',
+      'Migração de dados pelo app com importação de biblioteca, sessões, notas, metas e coleções',
+      'Modo Batalha estabilizado como duelo 1x1',
+      'Modo Batalha: seletor único de adversário em lista pesquisável',
+      'Modo Batalha: adversário selecionado por UID do Firebase, evitando conflito entre nomes iguais',
+      'Modo Batalha: botão Voltar para meus dados restaurado',
+      'Modo Batalha: cards de livros do dashboard escondidos durante o duelo',
+      'Correções de carregamento, cache, service worker e conflitos de patches anteriores',
+      'Preparação da base para PWA/app mobile',
+    ]
+  },
   {
     versao: '2.7', data: '11/06/2026', titulo: 'APIs de Livros, Gerenciar Meta & Ranking Completo',
     itens: [
@@ -8215,11 +8232,11 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<!-- BookLegacy V12.24: seletor único e estável do modo batalha -->
+<!-- BookLegacy V3.0: seletor único e estável do modo batalha -->
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.24-battle-top-clean';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8442,7 +8459,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v12.24-battle-top-clean',
+      patch:'v3.0',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8464,7 +8481,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<style id="booklegacy-v12-24-battle-top-clean-css">
+<style id="booklegacy-v3-battle-top-clean-css">
 body.bl-v12-battle #pageDashboard,
 body.bl-v12-battle .lendo-wrap {
   display: none !important;
@@ -8483,10 +8500,10 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   display: none !important;
 }
 </style>
-<script id="booklegacy-v12-24-battle-top-clean">
+<script id="booklegacy-v3-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.24-battle-top-clean';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8546,7 +8563,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v12.24-battle-top-clean',
+      patch:'v3.0',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8560,8 +8577,8 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 
-<!-- BookLegacy V12.25: botão voltar no modo batalha sem mexer no render -->
-<style id="booklegacy-v12-25-battle-back-button-css">
+<!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
+<style id="booklegacy-v3-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
   align-items:center !important;
@@ -8585,10 +8602,10 @@ body.bl-v12-battle #blBattleBackButtonV25{
   z-index:80 !important;
 }
 </style>
-<script id="booklegacy-v12-25-battle-back-button-fix">
+<script id="booklegacy-v3-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.25-battle-back-button-fix';
+  window.__BL_PATCH_VERSION = 'v3.0';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8654,7 +8671,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v12.25-battle-back-button-fix',
+      patch:'v3.0',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null

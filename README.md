@@ -1,3 +1,3 @@
-BookLegacy V12.25 - Battle back button fix
+BookLegacy V3.0 - Firebase, Comunidade e Modo Batalha 1x1
 
-Base V12.24. Corrige apenas o botão Voltar para meus dados no Modo Batalha, sem alterar render, Firebase ou seletor.
+Base estável com notas de atualização corrigidas para V3.0.
