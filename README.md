@@ -1,16 +1,12 @@
-# BookLegacy V3.3 — Mobile funcional + APK no mesmo repositório
+# BookLegacy V3.4 — Mobile organizado + APK no mesmo repositório
 
-Esta versão mantém o desktop e o mobile com a mesma base funcional.
+Esta versão mantém o app funcional igual ao desktop, mas reorganiza o mobile:
 
-## Correções principais
-- `mobile.html` agora usa o mesmo código funcional do desktop.
-- Corrige erro `blProfileLabel is not defined`.
-- Comunidade, Firebase, login, amigos e Batalha ficam disponíveis no mobile.
-- Mobile recebe apenas formatação responsiva, baseada no layout mobile de referência.
-- Projeto Android fica dentro da pasta `/android`, no mesmo repositório.
-- GitHub Actions para gerar APK em `.github/workflows/build-apk.yml`.
+- remove a barra inferior mobile;
+- troca a barra superior lotada por um botão `☰ Menu`;
+- o menu abre Meu Perfil, Modo Batalha, Comunidade, Atualizar e Notas;
+- melhora espaçamento, cards, KPIs e gráficos no celular;
+- mantém Firebase, Google Login, Comunidade, amigos e Batalha;
+- mantém Android/APK dentro do mesmo repositório.
 
-## Fluxo
-Suba tudo no mesmo repositório `Leitura_App`.
-Vercel continua usando a raiz para o site.
-GitHub Actions usa a pasta `/android` para gerar o APK.
+APK: o app Android abre a versão mobile online. Alterações feitas pelo APK gravam no mesmo Firebase/Firestore usado pelo site.
