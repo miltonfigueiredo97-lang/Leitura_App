@@ -1,3 +1,1 @@
-# BookLegacy V12.8
-
-Patch cirúrgico: botão Batalha visível, Modo Batalha original, seleção de 2+ players, botão voltar e esconder livros do topo apenas no modo batalha.
+BookLegacy v12.11 — corrige o botão Modo Batalha que aparecia e sumia. Mantém o picker multi da V12.10.
