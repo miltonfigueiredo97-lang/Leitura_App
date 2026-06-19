@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="booklegacy-v12-8-marker" content="original-battle-multi-button-fix">
 <meta name="booklegacy-version" content="v12.1-battle-visible">
 <script>
 // Redirect mobile browsers to mobile.html
@@ -537,7 +538,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
-<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-7-marker";</script>
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 </head>
 <body>
 
@@ -7907,56 +7908,151 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 <!-- BOOKLEGACY V11: HARD BATTLE BUTTON + NO MOBILE TOGGLE. Patch only battle visibility/opening. -->
-
-
-<style id="bl-v12-7-battle-realfix-style">
-  body.bl-battle-active .lendo-wrap,
-  body.bl-battle-active #bl-readonly-note,
-  body.bl-battle-active .fab { display:none!important; }
-  body.bl-battle-active #pageDashboard { display:none!important; }
-  body.bl-battle-active #pageBatalha { display:block!important; }
-  body.bl-battle-active #app > .sec,
-  body.bl-battle-active #app > .card,
-  body.bl-battle-active #app > .grid2,
-  body.bl-battle-active #app > .grid3,
-  body.bl-battle-active #app > .grid4 { display:none!important; }
-  #bl-battle-back-btn,#bl-battle-apply-btn{
-    border:none;border-radius:12px;padding:9px 14px;font-weight:900;cursor:pointer;color:#fff;
-    font-size:13px;box-shadow:0 0 18px rgba(139,124,248,.18)
+<style id="bl-v11-battle-style">
+  #btn-mobile-toggle, #btnViewToggle, .mobile-toggle, [data-action="toggle-mobile"], [onclick*="mobile-view"], [onclick*="desktop"] { display:none!important; visibility:hidden!important; pointer-events:none!important; }
+  #btn-user-batalha, #blBattleHardButton {
+    display:inline-flex!important; visibility:visible!important; opacity:1!important;
+    align-items:center!important; gap:6px!important;
   }
-  #bl-battle-back-btn{background:#334155}
-  #bl-battle-apply-btn{background:linear-gradient(135deg,#8b7cf8,#e56cff)}
-  #bl-battle-multi-panel{max-width:1100px;margin:14px auto 4px;padding:12px 14px;background:rgba(15,23,42,.78);border:1px solid rgba(139,124,248,.28);border-radius:16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-  #bl-battle-multi-panel label{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 11px;color:#e2e8f0;font-size:13px;font-weight:800;cursor:pointer}
-  #bl-battle-multi-panel input{accent-color:#8b7cf8}
-  .bl-original-pair-wrap{margin:0 auto 24px;}
-  .bl-original-pair-title{max-width:1100px;margin:18px auto 8px;padding:9px 14px;border-radius:13px;background:rgba(139,124,248,.10);border:1px solid rgba(139,124,248,.25);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#d7d2ff;text-align:center;text-transform:uppercase}
+  body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
+  body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
 </style>
 <script>
-/* BookLegacy V12.7 — REALFIX: mantém o Modo Batalha original e só adiciona multi + voltar */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.7-original-battle-multi-realfix';
-  window.__BL_V12_7_MARKER = 'booklegacy-v12-7-marker';
-  const $ = (id)=>document.getElementById(id);
-  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const norm = (v)=>String(v||'').trim().toLowerCase();
-  const raw = ()=>window.BL?.raw || window._blRaw || {};
-
-  function safeProfileLabel(user){
-    if(!user) return raw().currentLabel || 'Milton';
-    try { if(typeof window.blProfileLabel === 'function') return window.blProfileLabel(user); } catch(e) {}
-    const src = `${user.displayName||''} ${user.email||''}`.toLowerCase();
-    if(src.includes('daniel')) return 'Daniel';
-    if(src.includes('milton')) return 'Milton';
-    return (user.displayName || user.email || 'Usuário').split(' ')[0];
+  window.__BL_PATCH_VERSION = 'v11-battle-hardfix';
+  const $ = id => document.getElementById(id);
+  const norm = v => String(v||'').trim().toLowerCase();
+  function raw(){ return window.BL?.raw || {}; }
+  function users(){
+    const map = new Map();
+    function add(u){
+      if(!u) return;
+      const label = u.label || u.name || u.displayName || u.nome || u.email || u.uid || u.id;
+      if(!label) return;
+      const key = norm(u.uid || u.id || label);
+      map.set(key, { ...u, label:String(label) });
+    }
+    (raw().users||[]).forEach(add);
+    (raw().friends||[]).forEach(add);
+    // fallback para o módulo original do seu dashboard, sem depender de detecção de amigos
+    add({ label:'Milton', uid: window.firebaseAuth?.currentUser?.uid || 'milton' });
+    add({ label:'Daniel', uid:'E6gcZlwzNTMPxmTTINCdSlmR8I63' });
+    return Array.from(map.values());
   }
-  const previousBlProfileLabel = window.blProfileLabel;
-  window.blProfileLabel = function(user){
-    if(!user) return raw().currentLabel || 'Milton';
-    try { return previousBlProfileLabel ? previousBlProfileLabel(user) : safeProfileLabel(user); }
-    catch(e){ return safeProfileLabel(user); }
+  function ownLabels(){
+    const cu = window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
+    const out = ['milton'];
+    if(cu){ out.push(norm(cu.uid), norm(cu.email), norm(cu.displayName)); }
+    return out.filter(Boolean);
+  }
+  function isFriendMode(){
+    const u = window.usuarioAtual;
+    if(!u || u === 'Batalha') return false;
+    return !ownLabels().includes(norm(u));
+  }
+  function removeMobileToggle(){
+    document.querySelectorAll('#btn-mobile-toggle,#btnViewToggle,.mobile-toggle,[data-action="toggle-mobile"],button').forEach(el=>{
+      const t=(el.textContent||'').toLowerCase();
+      const oc=(el.getAttribute('onclick')||'').toLowerCase();
+      if(el.id==='btn-user-batalha' || el.id==='blBattleHardButton') return;
+      if(t.includes('mobile') || t.includes('desktop') || oc.includes('mobile-view') || oc.includes('desktop')){
+        el.style.setProperty('display','none','important');
+        el.style.setProperty('visibility','hidden','important');
+        el.onclick=null;
+      }
+    });
+  }
+  function getHeaderButtonWrap(){
+    const milton = $('btn-user-milton');
+    if(milton && milton.parentElement) return milton.parentElement;
+    const header = document.querySelector('header') || document.querySelector('.topbar') || document.body;
+    return header;
+  }
+  function ensureBattleButton(){
+    let btn = $('btn-user-batalha');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btn-user-batalha';
+      btn.type = 'button';
+      getHeaderButtonWrap().appendChild(btn);
+    }
+    btn.textContent = '⚔️ Batalha';
+    btn.removeAttribute('hidden');
+    btn.style.cssText += ';display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;';
+    btn.onclick = function(ev){ ev && ev.preventDefault && ev.preventDefault(); openBattle(); return false; };
+    if(isFriendMode()) btn.style.setProperty('display','none','important');
+    return btn;
+  }
+  function fillBattleSelects(){
+    const list = users();
+    const a = $('bat-playerA'), b = $('bat-playerB');
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
+  }
+  function hideDashboardForBattle(){
+    const dash=$('pageDashboard'), bat=$('pageBatalha');
+    if(dash) dash.style.display='none';
+    if(bat) bat.style.display='block';
+    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+    document.body.classList.remove('bl-v11-friend');
+    document.body.classList.add('bl-v11-battle');
+    // esconde blocos soltos que o dashboard original deixa fora de pageDashboard
+    document.querySelectorAll('#app > .sec, #app > .card, #app > .grid2, #app > .grid3, #app > .grid4').forEach(el=>{
+      if(!el.closest('#pageBatalha')) el.style.display='none';
+    });
+  }
+  function openBattle(){
+    window.usuarioAtual = 'Batalha';
+    hideDashboardForBattle();
+    fillBattleSelects();
+    try{
+      if(typeof window.renderBatalha === 'function') window.renderBatalha();
+      else throw new Error('renderBatalha não encontrado no HTML');
+    }catch(e){
+      console.error('Erro ao abrir Batalha:', e);
+      const c=$('batalhaContainer');
+      if(c) c.innerHTML = `<div class="card" style="padding:22px;color:#f88c6a"><b>Erro ao abrir o módulo original de batalha.</b><br>${String(e.message||e)}</div>`;
+    }
+    setTimeout(syncUI, 50);
+  }
+  function syncUI(){
+    removeMobileToggle();
+    ensureBattleButton();
+    const friend = isFriendMode();
+    document.body.classList.toggle('bl-v11-friend', friend);
+    if(window.usuarioAtual === 'Batalha') document.body.classList.add('bl-v11-battle'); else document.body.classList.remove('bl-v11-battle');
+    const fab=document.querySelector('.fab');
+    if(fab){
+      if(friend || window.usuarioAtual==='Batalha') fab.style.setProperty('display','none','important');
+      else fab.style.removeProperty('display');
+    }
+  }
+  const oldSet = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return openBattle();
+    if(typeof oldSet === 'function') oldSet.apply(this, arguments);
+    setTimeout(syncUI, 0); setTimeout(syncUI, 100); setTimeout(syncUI, 600);
   };
+  const oldRender = window.renderBatalha;
+  window.renderBatalha = function(){ fillBattleSelects(); if(typeof oldRender === 'function') return oldRender.apply(this, arguments); };
+  window.blV11Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?.style?.display, users:users(), rawUsers:raw().users, rawFriends:raw().friends}; };
+  document.addEventListener('DOMContentLoaded', ()=>{ syncUI(); setTimeout(syncUI,500); setTimeout(syncUI,1500); });
+  setInterval(syncUI, 2000);
+})();
+</script>
 
+<script>
+/* BookLegacy V12 — BATALHA VISÍVEL E INDEPENDENTE
+   Patch focado apenas em: botão Modo Batalha e abertura do módulo. */
+(function(){
+  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
+  const $ = (id)=>document.getElementById(id);
+  const norm = (v)=>String(v||'').trim().toLowerCase();
+  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function raw(){ return window.BL?.raw || window._blRaw || {}; }
+  function meUid(){ return window.firebaseAuth?.currentUser?.uid || window.auth?.currentUser?.uid || raw().currentUid || ''; }
+  function meName(){ return window.firebaseAuth?.currentUser?.displayName || window.auth?.currentUser?.displayName || 'Meus dados'; }
   function people(){
     const map = new Map();
     function add(p){
@@ -7964,188 +8060,377 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       const uid = p.uid || p.id || '';
       const label = p.label || p.displayName || p.name || p.nome || p.email || uid;
       if(!label && !uid) return;
-      const key = norm(label) || uid;
-      if(!map.has(key)) map.set(key,{...p,uid,label:String(label||uid)});
-      else map.set(key,{...map.get(key),...p,uid:map.get(key).uid||uid,label:map.get(key).label||String(label||uid)});
+      const key = uid || label;
+      map.set(String(key), { ...p, uid, label:String(label || uid) });
     }
     (raw().users||[]).forEach(add);
     (raw().friends||[]).forEach(add);
-    const cu = window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser;
-    if(cu) add({uid:cu.uid,label:raw().currentLabel||safeProfileLabel(cu),displayName:cu.displayName,email:cu.email,photoURL:cu.photoURL});
-    add({label:'Milton',uid:'Z3zFRHVwJSTPDGDladUL5kgUAPw2'});
-    add({label:'Daniel',uid:'E6gcZlwzNTMPxmTTINCdSlmR8I63'});
-    return Array.from(map.values()).filter(p=>p.label);
+    const cu = window.firebaseAuth?.currentUser || window.auth?.currentUser;
+    if(cu) add({ uid:cu.uid, label:cu.displayName||cu.email||'Eu', displayName:cu.displayName, email:cu.email, photoURL:cu.photoURL, library: window.BL?.data?.library || [] });
+    return Array.from(map.values());
   }
-  function myLabel(){
-    const cu = window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser;
-    return raw().currentLabel || safeProfileLabel(cu) || 'Milton';
-  }
-  function ownLabels(){
-    const cu = window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser;
-    return [myLabel(), cu?.uid, cu?.email, cu?.displayName, 'Milton'].map(norm).filter(Boolean);
-  }
-  function isFriendView(){
-    return window.usuarioAtual && window.usuarioAtual !== 'Batalha' && !ownLabels().includes(norm(window.usuarioAtual));
-  }
-
-  const renderOriginalBattle = window.renderBatalha;
-  const setUsuarioOriginal = window.setUsuario;
-
-  function fillBattleSelectsPreserve(){
-    const list = people();
-    const a = $('bat-playerA'), b = $('bat-playerB');
-    if(!a || !b || !list.length) return list;
-    const oldA = a.value, oldB = b.value;
-    const opts = list.map((p)=>`<option value="${esc(p.label)}">${esc(p.label)}</option>`).join('');
-    a.innerHTML = opts; b.innerHTML = opts;
-    a.value = [...a.options].some(o=>o.value===oldA) ? oldA : (list[0]?.label || 'Milton');
-    b.value = [...b.options].some(o=>o.value===oldB) ? oldB : (list[1]?.label || list[0]?.label || 'Daniel');
-    return list;
-  }
-
-  function checkedLabels(){
-    const checks = [...document.querySelectorAll('#bl-battle-multi-panel input[type="checkbox"]')];
-    const vals = checks.filter(c=>c.checked).map(c=>c.value);
-    if(vals.length) return vals;
-    const a=$('bat-playerA')?.value, b=$('bat-playerB')?.value;
-    return [a,b].filter(Boolean);
-  }
-
-  function ensureBattleControls(){
-    const seletor = $('batalha-seletor');
-    if(!seletor) return;
-    if(!$('bl-battle-back-btn')){
-      const btn = document.createElement('button');
-      btn.id='bl-battle-back-btn'; btn.type='button'; btn.textContent='↩ Voltar para meus dados';
-      btn.onclick = ()=>exitBattle();
-      seletor.appendChild(btn);
-    }
-    let panel = $('bl-battle-multi-panel');
-    if(!panel){
-      panel = document.createElement('div'); panel.id='bl-battle-multi-panel';
-      seletor.insertAdjacentElement('afterend', panel);
-    }
-    const list = people();
-    const selected = new Set(checkedLabels().map(norm));
-    if(!selected.size){
-      const a=$('bat-playerA')?.value, b=$('bat-playerB')?.value;
-      [a,b].forEach(v=>{ if(v) selected.add(norm(v)); });
-    }
-    panel.innerHTML = '<span style="font-size:12px;color:#94a3b8;font-weight:900;letter-spacing:1px;text-transform:uppercase">Players:</span>' +
-      list.map((p,i)=>{
-        const label=String(p.label||('Usuário '+(i+1)));
-        const chk = selected.has(norm(label)) || (!selected.size && i<2);
-        return `<label><input type="checkbox" value="${esc(label)}" ${chk?'checked':''}>${esc(label)}</label>`;
-      }).join('') +
-      '<button id="bl-battle-apply-btn" type="button">⚔️ Atualizar Batalha</button>';
-    const apply=$('bl-battle-apply-btn'); if(apply) apply.onclick=()=>renderBattleMulti();
-    panel.querySelectorAll('input[type="checkbox"]').forEach(c=>c.onchange=()=>{
-      const vals=checkedLabels();
-      if(vals[0] && $('bat-playerA')) $('bat-playerA').value=vals[0];
-      if(vals[1] && $('bat-playerB')) $('bat-playerB').value=vals[1];
+  function removeDesktopMobileToggle(){
+    document.querySelectorAll('button,a').forEach(el=>{
+      const t = norm(el.textContent);
+      const oc = norm(el.getAttribute('onclick'));
+      const id = norm(el.id);
+      if(id.includes('battle') || id.includes('batalha')) return;
+      if(t.includes('mobile') || t.includes('desktop') || oc.includes('mobile') || oc.includes('desktop')){
+        el.style.setProperty('display','none','important');
+        el.style.setProperty('visibility','hidden','important');
+        el.onclick = null;
+      }
     });
   }
+  function ensureBattleButton(){
+    let btn = $('bl-battle-main-btn');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'bl-battle-main-btn';
+      btn.type = 'button';
+      btn.textContent = '⚔️ Modo Batalha';
+      btn.setAttribute('aria-label','Abrir Modo Batalha');
+      const headerControls = document.querySelector('header [style*="display:flex"]:has(#header-badge)') || document.querySelector('header > div:last-child') || document.querySelector('header') || document.body;
+      const ref = $('header-badge') || $('btn-community') || null;
+      if(ref && ref.parentElement) ref.parentElement.insertBefore(btn, ref);
+      else headerControls.appendChild(btn);
+    }
+    btn.style.cssText = 'display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;background:#e56cff!important;border:1px solid #e56cff!important;color:white!important;padding:7px 14px!important;border-radius:9px!important;cursor:pointer!important;font-size:13px!important;font-weight:800!important;white-space:nowrap!important;box-shadow:0 0 14px rgba(229,108,255,.25)!important;';
+    btn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openBattleHard(); return false; };
+    const oldBtn = $('btn-user-batalha');
+    if(oldBtn){
+      oldBtn.style.setProperty('display','inline-flex','important');
+      oldBtn.style.setProperty('visibility','visible','important');
+      oldBtn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openBattleHard(); return false; };
+    }
+    return btn;
+  }
+  function fillSelectors(){
+    const list = people();
+    const a = $('bat-playerA'), b = $('bat-playerB');
+    if(!a || !b) return list;
+    const opts = list.map((p,i)=>`<option value="${esc(p.uid || p.label || i)}">${esc(p.label || p.displayName || p.email || p.uid || 'Usuário')}</option>`).join('');
+    a.innerHTML = opts;
+    b.innerHTML = opts;
+    const uid = meUid();
+    if(uid && list.some(p=>p.uid===uid)) a.value = uid;
+    else a.selectedIndex = 0;
+    b.selectedIndex = list.length > 1 ? 1 : 0;
+    return list;
+  }
+  function dataFor(value){
+    const list = people();
+    return list.find(p => String(p.uid||'')===String(value) || String(p.label||'')===String(value)) || list[0] || {};
+  }
+  function completed(lib){ return (lib||[]).filter(l=>/lido|conclu|finaliz/i.test(String(l.status||l.situacao||''))).length; }
+  function pages(lib,sessions){
+    const fromSessions = (sessions||[]).reduce((s,x)=>s+(Number(x.paginas||x.pages||0)||0),0);
+    if(fromSessions) return fromSessions;
+    return (lib||[]).reduce((s,l)=>s+(Number(l.pagAtual||l.currentPage||l.pagesRead||0)||0),0);
+  }
+  function avg(ratings){
+    const arr=(ratings||[]).map(r=>Number(r.notaFinal||r.nota||r.score||0)).filter(Boolean);
+    return arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2) : '—';
+  }
+  function renderBattleFallback(){
+    const a = dataFor($('bat-playerA')?.value);
+    const b = dataFor($('bat-playerB')?.value);
+    const c = $('batalhaContainer');
+    if(!c) return;
+    const la=a.library||[], lb=b.library||[], sa=a.sessions||[], sb=b.sessions||[], ra=a.ratings||[], rb=b.ratings||[];
+    const stats = [
+      ['Livros concluídos', completed(la), completed(lb)],
+      ['Páginas lidas', pages(la,sa), pages(lb,sb)],
+      ['Sessões', sa.length, sb.length],
+      ['Média das notas', avg(ra), avg(rb)]
+    ];
+    c.innerHTML = `
+      <section class="card" style="margin:18px auto;max-width:1180px;padding:22px;border:1px solid var(--border);background:var(--bg2);border-radius:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
+          <div>
+            <div style="font-size:13px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase">⚔️ Modo Batalha</div>
+            <h2 style="margin:4px 0 0;font-size:28px">${esc(a.label||'Jogador A')} <span style="color:var(--muted)">vs</span> ${esc(b.label||'Jogador B')}</h2>
+          </div>
+          <button type="button" onclick="window.blExitBattle && window.blExitBattle()" style="background:var(--purple);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">↩ Voltar ao dashboard</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:14px;">
+          ${stats.map(([name,va,vb])=>{
+            const na=Number(va), nb=Number(vb);
+            const winner = !isNaN(na)&&!isNaN(nb) ? (na>nb?'A':nb>na?'B':'E') : 'E';
+            return `<div class="kpi" style="min-height:150px"><div class="kpi-lbl">${esc(name)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px"><div><div class="kpi-sub">${esc(a.label||'A')}</div><div class="kpi-val" style="font-size:26px;color:${winner==='A'?'#8b7cf8':'var(--text)'}">${esc(va)}</div></div><div><div class="kpi-sub">${esc(b.label||'B')}</div><div class="kpi-val" style="font-size:26px;color:${winner==='B'?'#f88c6a':'var(--text)'}">${esc(vb)}</div></div></div></div>`;
+          }).join('')}
+        </div>
+        <div style="margin-top:16px;color:var(--muted);font-size:12px">Fallback de segurança ativo. O botão abriu o módulo de batalha mesmo que o renderBatalha original falhe.</div>
+      </section>`;
+  }
+  function openBattleHard(){
+    window.usuarioAtual = 'Batalha';
+    removeDesktopMobileToggle();
+    const app = $('app');
+    if(app) app.style.display = 'block';
+    const dash = $('pageDashboard'), battle = $('pageBatalha');
+    if(dash) dash.style.setProperty('display','none','important');
+    if(battle){ battle.style.setProperty('display','block','important'); battle.hidden=false; }
+    document.querySelectorAll('#app > *').forEach(el=>{
+      if(el.id === 'pageBatalha') el.style.setProperty('display','block','important');
+      else if(el.id === 'pageDashboard') el.style.setProperty('display','none','important');
+      else el.style.setProperty('display','none','important');
+    });
+    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+    fillSelectors();
+    let rendered = false;
+    try{
+      if(typeof window.renderBatalha === 'function'){
+        window.renderBatalha();
+        rendered = true;
+      }
+    }catch(e){ console.error('renderBatalha original falhou:', e); }
+    setTimeout(()=>{
+      const c = $('batalhaContainer');
+      if(!c || (c.innerText||'').trim().length < 20) renderBattleFallback();
+      window.scrollTo(0,0);
+    }, rendered ? 250 : 20);
+  }
+  function exitBattle(){
+    window.usuarioAtual = meName();
+    document.querySelectorAll('#app > *').forEach(el=>{ el.style.removeProperty('display'); });
+    const dash=$('pageDashboard'), battle=$('pageBatalha');
+    if(dash) dash.style.display='block';
+    if(battle) battle.style.display='none';
+    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
+    window.scrollTo(0,0);
+  }
+  window.blOpenBattleHard = openBattleHard;
+  window.blExitBattle = exitBattle;
+  window.blV12Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, mainButton:!!$('bl-battle-main-btn'), oldButton:!!$('btn-user-batalha'), pageBatalha:!!$('pageBatalha'), containerText:($('batalhaContainer')?.innerText||'').slice(0,120), people:people().map(p=>({uid:p.uid,label:p.label,email:p.email,lib:(p.library||[]).length,sessions:(p.sessions||[]).length,ratings:(p.ratings||[]).length}))}; };
+  const oldSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return openBattleHard();
+    if(typeof oldSetUsuario === 'function') return oldSetUsuario.apply(this, arguments);
+  };
+  function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
+  document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
+  setInterval(tick,1500);
+})();
+</script>
 
-  function forceBattleOnly(){
-    document.body.classList.add('bl-battle-active');
+
+
+<script>
+/* BookLegacy V12.8 — PATCH FINAL: mantém o Modo Batalha original, força botão, multi-player e voltar */
+(function(){
+  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
+  window.__BL_V12_8_MARKER = true;
+  const $ = (id)=>document.getElementById(id);
+  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const norm = (v)=>String(v||'').trim().toLowerCase();
+
+  function raw(){ return window.BL?.raw || window._blRaw || {}; }
+  function authUser(){ return window.firebaseAuth?.currentUser || window.auth?.currentUser || window.BL?.auth?.currentUser || null; }
+  function safeLabel(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
+  function meLabel(){
+    const cu=authUser();
+    return raw().currentLabel || safeLabel(cu) || window.__BL_ME_LABEL || 'Milton';
+  }
+  function people(){
+    const map = new Map();
+    function add(p){
+      if(!p) return;
+      const uid = p.uid || p.id || '';
+      const label = safeLabel(p);
+      if(!label && !uid) return;
+      const key = uid || label;
+      if(!map.has(String(key))) map.set(String(key), {...p, uid, label: label || uid});
+      else map.set(String(key), {...map.get(String(key)), ...p, uid: uid || map.get(String(key)).uid, label: label || map.get(String(key)).label});
+    }
+    (raw().users||[]).forEach(add);
+    (raw().friends||[]).forEach(add);
+    const cu=authUser();
+    if(cu) add({uid:cu.uid,label:cu.displayName||cu.email||'Eu',displayName:cu.displayName,email:cu.email,photoURL:cu.photoURL});
+    if(!map.size){ add({label:'Milton'}); add({label:'Daniel'}); }
+    return [...map.values()].filter(p=>safeLabel(p));
+  }
+
+  // Corrige erro de profile quando o Google ainda não terminou de carregar.
+  if(typeof window.blProfileLabel === 'function' && !window.__BL_PROFILE_NULL_SAFE_V128){
+    const oldProfileLabel = window.blProfileLabel;
+    window.blProfileLabel = function(user){
+      if(!user) return meLabel();
+      try { return oldProfileLabel(user); } catch(e){ return user.displayName || user.email || user.uid || meLabel(); }
+    };
+    window.__BL_PROFILE_NULL_SAFE_V128 = true;
+  }
+
+  const originalRenderBattle = window.renderBatalha;
+  const originalSetUsuario = window.setUsuario;
+
+  function hideTopBooksOnlyInBattle(){
+    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.setProperty('display','none','important');
     if(bat){ bat.style.setProperty('display','block','important'); bat.hidden=false; }
     document.querySelectorAll('#app > *').forEach(el=>{
       if(el.id==='pageBatalha') el.style.setProperty('display','block','important');
       else if(el.id==='pageDashboard') el.style.setProperty('display','none','important');
-      else if(['SCRIPT','STYLE'].includes(el.tagName)) return;
       else el.style.setProperty('display','none','important');
     });
     const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
-    const lw=document.querySelector('.lendo-wrap'); if(lw) lw.style.setProperty('display','none','important');
+    document.body.classList.add('bl-battle-active');
   }
 
-  function renderPairIntoHTML(a,b){
+  function restoreMyProfile(){
+    document.body.classList.remove('bl-battle-active');
+    window.usuarioAtual = meLabel();
+    document.querySelectorAll('#app > *').forEach(el=>el.style.removeProperty('display'));
+    const dash=$('pageDashboard'), bat=$('pageBatalha');
+    if(dash) dash.style.display='block';
+    if(bat) bat.style.display='none';
+    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.removeProperty('display'));
+    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
+    try{ if(typeof originalSetUsuario==='function') originalSetUsuario(meLabel()); }catch(e){ console.warn('Voltar perfil: setUsuario original falhou', e); }
+    setTimeout(()=>{ const dash=$('pageDashboard'), bat=$('pageBatalha'); if(dash) dash.style.display='block'; if(bat) bat.style.display='none'; ensureBattleButton(); },80);
+    window.scrollTo(0,0);
+  }
+  window.blBackToMyProfile = restoreMyProfile;
+  window.blExitBattle = restoreMyProfile;
+
+  function ensureBattleButton(){
+    let btn=$('btn-user-batalha');
+    const wrap = $('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='btn-user-batalha';
+      btn.type='button';
+      wrap.appendChild(btn);
+    }
+    btn.textContent='⚔️ Batalha';
+    btn.removeAttribute('hidden');
+    btn.disabled=false;
+    btn.style.cssText='display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;padding:6px 14px!important;border-radius:7px!important;border:none!important;cursor:pointer!important;font-size:13px!important;font-weight:700!important;background:transparent!important;color:var(--muted)!important;transition:all .2s!important;';
+    btn.onclick=function(ev){ ev&&ev.preventDefault&&ev.preventDefault(); ev&&ev.stopPropagation&&ev.stopPropagation(); openBattleOriginalMulti(); return false; };
+
+    // Mantém também o botão de topo, se existir em alguma versão, mas sem depender dele.
+    let main=$('bl-battle-main-btn');
+    if(main){ main.onclick=btn.onclick; main.style.setProperty('display','inline-flex','important'); }
+    return btn;
+  }
+
+  function ensureReturnButton(){
+    const page=$('pageBatalha'); if(!page) return;
+    let btn=$('bl-battle-return-original');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='bl-battle-return-original';
+      btn.type='button';
+      btn.textContent='↩ Voltar para meus dados';
+      btn.style.cssText='margin:8px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
+      const first = page.firstElementChild;
+      page.insertBefore(btn, first || null);
+    }
+    btn.onclick=restoreMyProfile;
+    btn.style.setProperty('display','inline-flex','important');
+  }
+
+  function fillOriginalSelects(){
+    const list=people();
+    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
+      const sel=$(id); if(!sel) return;
+      const prev=sel.value;
+      sel.innerHTML=list.map(p=>`<option value="${esc(p.label)}">${esc(p.label)}</option>`).join('');
+      sel.value=[...sel.options].some(o=>o.value===prev)?prev:(list[idx]?.label || list[0]?.label || '');
+    });
+    return list;
+  }
+
+  function ensureMultiControls(){
+    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
+    let box=$('bl-battle-multi-controls');
+    if(!box){
+      box=document.createElement('div');
+      box.id='bl-battle-multi-controls';
+      box.style.cssText='max-width:1180px;margin:0 auto 14px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(15,23,42,.72);';
+      container.parentElement.insertBefore(box, container);
+    }
+    const list=people();
+    const checkedNow = checkedLabels();
+    const selected = new Set(checkedNow.length ? checkedNow : list.slice(0, Math.min(2,list.length)).map(p=>p.label));
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-weight:900;color:#e2e8f0">Selecionar players da batalha</div>
+        <button id="bl-battle-apply-original" type="button" style="background:#e56cff;color:white;border:0;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer">Atualizar batalha</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${list.map(p=>`<label style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 11px;cursor:pointer;font-weight:700;color:#cbd5e1"><input class="bl-battle-check" type="checkbox" value="${esc(p.label)}" ${selected.has(p.label)?'checked':''}> ${esc(p.label)}</label>`).join('')}
+      </div>`;
+    $('bl-battle-apply-original').onclick=()=>renderBattleMultiOriginal();
+    box.querySelectorAll('.bl-battle-check').forEach(ch=>ch.addEventListener('change',()=>renderBattleMultiOriginal()));
+  }
+
+  function checkedLabels(){
+    return [...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value).filter(Boolean);
+  }
+
+  function renderPair(a,b){
     const selA=$('bat-playerA'), selB=$('bat-playerB'), c=$('batalhaContainer');
-    if(!selA || !selB || !c || typeof renderOriginalBattle !== 'function') return '';
+    if(!selA || !selB || !c || typeof originalRenderBattle!=='function') return '';
     selA.value=a; selB.value=b;
-    renderOriginalBattle();
+    originalRenderBattle();
     return c.innerHTML;
   }
 
-  function renderBattleMulti(){
-    forceBattleOnly();
-    fillBattleSelectsPreserve();
-    ensureBattleControls();
+  function renderBattleMultiOriginal(){
+    hideTopBooksOnlyInBattle();
+    ensureReturnButton();
+    fillOriginalSelects();
+    ensureMultiControls();
     const c=$('batalhaContainer'); if(!c) return;
-    let selected = checkedLabels();
-    selected = [...new Set(selected.filter(Boolean))];
+    const selected=checkedLabels();
     if(selected.length < 2){
-      c.innerHTML = '<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>';
+      c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>';
       return;
     }
-    if($('bat-playerA')) $('bat-playerA').value = selected[0];
-    if($('bat-playerB')) $('bat-playerB').value = selected[1];
     if(selected.length === 2){
-      renderPairIntoHTML(selected[0], selected[1]);
-      forceBattleOnly(); ensureBattleControls();
+      renderPair(selected[0], selected[1]);
       return;
     }
-    const pieces=[];
-    for(let i=0;i<selected.length;i++){
-      for(let j=i+1;j<selected.length;j++){
-        const html = renderPairIntoHTML(selected[i], selected[j]);
-        pieces.push(`<div class="bl-original-pair-wrap"><div class="bl-original-pair-title">${esc(selected[i])} VS ${esc(selected[j])}</div>${html}</div>`);
-      }
+    const pairs=[];
+    for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i], selected[j]]);
+    const html=[];
+    for(const [a,b] of pairs){
+      const inner=renderPair(a,b);
+      html.push(`<section class="bl-original-battle-pair" style="max-width:1180px;margin:0 auto 26px"><div style="font-weight:900;color:#e2e8f0;margin:0 0 10px;font-size:18px">⚔️ ${esc(a)} <span style="color:#94a3b8">vs</span> ${esc(b)}</div>${inner}</section>`);
     }
-    c.innerHTML = `<div style="padding:0 0 30px">${pieces.join('')}</div>`;
-    forceBattleOnly(); ensureBattleControls();
-    window.scrollTo(0,0);
+    c.innerHTML=html.join('');
   }
 
-  function openBattle(){
+  function openBattleOriginalMulti(){
     window.usuarioAtual='Batalha';
-    fillBattleSelectsPreserve();
-    forceBattleOnly();
-    ensureBattleControls();
-    renderBattleMulti();
-    window.scrollTo(0,0);
+    hideTopBooksOnlyInBattle();
+    fillOriginalSelects();
+    ensureReturnButton();
+    ensureMultiControls();
+    renderBattleMultiOriginal();
+    setTimeout(()=>{ hideTopBooksOnlyInBattle(); ensureBattleButton(); ensureReturnButton(); window.scrollTo(0,0); },50);
   }
-
-  function exitBattle(){
-    document.body.classList.remove('bl-battle-active');
-    document.querySelectorAll('#app > *').forEach(el=>{ el.style.removeProperty('display'); });
-    const bat=$('pageBatalha'), dash=$('pageDashboard');
-    if(bat) bat.style.display='none';
-    if(dash) dash.style.display='block';
-    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
-    const lw=document.querySelector('.lendo-wrap'); if(lw) lw.style.removeProperty('display');
-    const me = myLabel();
-    window.usuarioAtual = me;
-    if(typeof setUsuarioOriginal === 'function'){
-      try{ setUsuarioOriginal(me); }catch(e){ console.warn('setUsuario original ao voltar falhou:', e); }
-    }
-    window.scrollTo(0,0);
-  }
+  window.blOpenBattleOriginalMulti = openBattleOriginalMulti;
 
   window.renderBatalha = function(){
-    if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMulti();
-    if(typeof renderOriginalBattle === 'function') return renderOriginalBattle.apply(this, arguments);
+    if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMultiOriginal();
+    if(typeof originalRenderBattle==='function') return originalRenderBattle.apply(this, arguments);
   };
   window.setUsuario = function(usuario){
-    if(usuario === 'Batalha') return openBattle();
+    if(usuario==='Batalha') return openBattleOriginalMulti();
     document.body.classList.remove('bl-battle-active');
-    if(typeof setUsuarioOriginal === 'function') return setUsuarioOriginal.apply(this, arguments);
+    if(typeof originalSetUsuario==='function') return originalSetUsuario.apply(this, arguments);
+    window.usuarioAtual=usuario;
   };
-  window.blOpenBattle = openBattle;
-  window.blExitBattle = exitBattle;
   window.blBattleDebug = window.blV12Debug = function(){
-    return {patch:window.__BL_PATCH_VERSION, marker:!!window.__BL_V12_7_MARKER, usuarioAtual:window.usuarioAtual, pageBatalha:!!$('pageBatalha'), bodyBattle:document.body.classList.contains('bl-battle-active'), livrosTopoVisiveis:!![...document.querySelectorAll('.lendo-wrap')].find(e=>getComputedStyle(e).display!=='none'), people:people().map(p=>p.label), checked:checkedLabels()};
+    return {patch:window.__BL_PATCH_VERSION, marker:!!window.__BL_V12_8_MARKER, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?getComputedStyle($('btn-user-batalha')).display:null, usuarioAtual:window.usuarioAtual, pageBatalha:!!$('pageBatalha'), bodyBattle:document.body.classList.contains('bl-battle-active'), people:people().map(p=>p.label), checked:checkedLabels()};
   };
-  function wire(){
-    const oldBtn=$('btn-user-batalha');
-    if(oldBtn){ oldBtn.style.display='inline-flex'; oldBtn.onclick=(ev)=>{ev.preventDefault(); openBattle(); return false;}; }
-    const extra=$('bl-battle-main-btn'); if(extra) extra.style.display='none';
-    if(window.usuarioAtual==='Batalha') { forceBattleOnly(); ensureBattleControls(); }
-  }
-  document.addEventListener('DOMContentLoaded', ()=>{ wire(); setTimeout(wire,500); setTimeout(wire,1500); });
-  setInterval(wire,1500);
+
+  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha') { hideTopBooksOnlyInBattle(); ensureReturnButton(); ensureMultiControls(); } }
+  document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,400); setTimeout(tick,1200); setTimeout(tick,2500); });
+  setInterval(tick,1500);
 })();
 </script>
 
