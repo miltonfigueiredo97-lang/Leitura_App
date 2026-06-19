@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.0">
+<meta name="booklegacy-version" content="v3.1">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -13,6 +13,17 @@ if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.inner
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0d1117">
 <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#8b7cf8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BookLegacy">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<meta name="booklegacy-build" content="3.1-pwa-app">
+<meta name="booklegacy-app-mode" content="pwa-ready">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Leitura">
@@ -538,6 +549,49 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
+
+<script id="booklegacy-v31-pwa-installer">
+window.__BOOKLEGACY_VERSION = '3.1';
+window.__BOOKLEGACY_PWA_READY = true;
+(function(){
+  let deferredPrompt = null;
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function showInstallHelp(){
+    const msg = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      ? 'No iPhone: toque em Compartilhar e depois em “Adicionar à Tela de Início”.'
+      : 'No Android: toque no menu do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.';
+    alert(msg);
+  }
+  function wire(){
+    let btn = document.getElementById('appInstallBtn');
+    if (!btn) {
+      const headerRight = document.querySelector('header > div:last-child') || document.querySelector('header');
+      if (!headerRight) return;
+      btn = document.createElement('button');
+      btn.id = 'appInstallBtn';
+      btn.type = 'button';
+      btn.textContent = '📲 Instalar app';
+      btn.style.cssText = 'display:inline-flex;background:rgba(78,205,196,.15);border:1px solid var(--teal,#4ecdc4);color:var(--teal,#4ecdc4);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;align-items:center;gap:6px;';
+      headerRight.appendChild(btn);
+    }
+    btn.style.display = isStandalone() ? 'none' : 'inline-flex';
+    btn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        btn.style.display = isStandalone() ? 'none' : 'inline-flex';
+      } else { showInstallHelp(); }
+    };
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; wire(); });
+  window.addEventListener('appinstalled', () => { const btn=document.getElementById('appInstallBtn'); if(btn) btn.style.display='none'; });
+  window.addEventListener('DOMContentLoaded', wire);
+  window.addEventListener('load', () => setTimeout(wire, 800));
+})();
+</script>
 </head>
 <body>
 
@@ -6179,6 +6233,17 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
+  {
+    versao: '3.1', data: '19/06/2026', titulo: 'BookLegacy como App/PWA',
+    itens: [
+      'App preparado para instalação na tela inicial do Android e iPhone',
+      'Manifest PWA revisado com nome, ícones, tema, orientação e atalhos do BookLegacy',
+      'Ícones PNG 192x192 e 512x512 adicionados para instalação do app',
+      'Botão “Instalar app” habilitado no header com instrução automática quando o navegador não libera instalação direta',
+      'Service worker ajustado para evitar cache antigo e reduzir risco de voltar versões quebradas',
+      'Base mantida em Firebase/Firestore sem alterar dados, login, comunidade ou Modo Batalha'
+    ]
+  },
   {
     versao: '3.0', data: '19/06/2026', titulo: 'Firebase, Comunidade & Modo Batalha 1x1',
     itens: [
