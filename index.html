@@ -8153,5 +8153,177 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 })();
 </script>
 
+<script>
+/* BookLegacy V12 — BATALHA VISÍVEL E INDEPENDENTE
+   Patch focado apenas em: botão Modo Batalha e abertura do módulo. */
+(function(){
+  window.__BL_PATCH_VERSION = 'v12-battle-visible-independent';
+  const $ = (id)=>document.getElementById(id);
+  const norm = (v)=>String(v||'').trim().toLowerCase();
+  const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function raw(){ return window.BL?.raw || window._blRaw || {}; }
+  function meUid(){ return window.firebaseAuth?.currentUser?.uid || window.auth?.currentUser?.uid || raw().currentUid || ''; }
+  function meName(){ return window.firebaseAuth?.currentUser?.displayName || window.auth?.currentUser?.displayName || 'Meus dados'; }
+  function people(){
+    const map = new Map();
+    function add(p){
+      if(!p) return;
+      const uid = p.uid || p.id || '';
+      const label = p.label || p.displayName || p.name || p.nome || p.email || uid;
+      if(!label && !uid) return;
+      const key = uid || label;
+      map.set(String(key), { ...p, uid, label:String(label || uid) });
+    }
+    (raw().users||[]).forEach(add);
+    (raw().friends||[]).forEach(add);
+    const cu = window.firebaseAuth?.currentUser || window.auth?.currentUser;
+    if(cu) add({ uid:cu.uid, label:cu.displayName||cu.email||'Eu', displayName:cu.displayName, email:cu.email, photoURL:cu.photoURL, library: window.BL?.data?.library || [] });
+    return Array.from(map.values());
+  }
+  function removeDesktopMobileToggle(){
+    document.querySelectorAll('button,a').forEach(el=>{
+      const t = norm(el.textContent);
+      const oc = norm(el.getAttribute('onclick'));
+      const id = norm(el.id);
+      if(id.includes('battle') || id.includes('batalha')) return;
+      if(t.includes('mobile') || t.includes('desktop') || oc.includes('mobile') || oc.includes('desktop')){
+        el.style.setProperty('display','none','important');
+        el.style.setProperty('visibility','hidden','important');
+        el.onclick = null;
+      }
+    });
+  }
+  function ensureBattleButton(){
+    let btn = $('bl-battle-main-btn');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'bl-battle-main-btn';
+      btn.type = 'button';
+      btn.textContent = '⚔️ Modo Batalha';
+      btn.setAttribute('aria-label','Abrir Modo Batalha');
+      const headerControls = document.querySelector('header [style*="display:flex"]:has(#header-badge)') || document.querySelector('header > div:last-child') || document.querySelector('header') || document.body;
+      const ref = $('header-badge') || $('btn-community') || null;
+      if(ref && ref.parentElement) ref.parentElement.insertBefore(btn, ref);
+      else headerControls.appendChild(btn);
+    }
+    btn.style.cssText = 'display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;background:#e56cff!important;border:1px solid #e56cff!important;color:white!important;padding:7px 14px!important;border-radius:9px!important;cursor:pointer!important;font-size:13px!important;font-weight:800!important;white-space:nowrap!important;box-shadow:0 0 14px rgba(229,108,255,.25)!important;';
+    btn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openBattleHard(); return false; };
+    const oldBtn = $('btn-user-batalha');
+    if(oldBtn){
+      oldBtn.style.setProperty('display','inline-flex','important');
+      oldBtn.style.setProperty('visibility','visible','important');
+      oldBtn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openBattleHard(); return false; };
+    }
+    return btn;
+  }
+  function fillSelectors(){
+    const list = people();
+    const a = $('bat-playerA'), b = $('bat-playerB');
+    if(!a || !b) return list;
+    const opts = list.map((p,i)=>`<option value="${esc(p.uid || p.label || i)}">${esc(p.label || p.displayName || p.email || p.uid || 'Usuário')}</option>`).join('');
+    a.innerHTML = opts;
+    b.innerHTML = opts;
+    const uid = meUid();
+    if(uid && list.some(p=>p.uid===uid)) a.value = uid;
+    else a.selectedIndex = 0;
+    b.selectedIndex = list.length > 1 ? 1 : 0;
+    return list;
+  }
+  function dataFor(value){
+    const list = people();
+    return list.find(p => String(p.uid||'')===String(value) || String(p.label||'')===String(value)) || list[0] || {};
+  }
+  function completed(lib){ return (lib||[]).filter(l=>/lido|conclu|finaliz/i.test(String(l.status||l.situacao||''))).length; }
+  function pages(lib,sessions){
+    const fromSessions = (sessions||[]).reduce((s,x)=>s+(Number(x.paginas||x.pages||0)||0),0);
+    if(fromSessions) return fromSessions;
+    return (lib||[]).reduce((s,l)=>s+(Number(l.pagAtual||l.currentPage||l.pagesRead||0)||0),0);
+  }
+  function avg(ratings){
+    const arr=(ratings||[]).map(r=>Number(r.notaFinal||r.nota||r.score||0)).filter(Boolean);
+    return arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2) : '—';
+  }
+  function renderBattleFallback(){
+    const a = dataFor($('bat-playerA')?.value);
+    const b = dataFor($('bat-playerB')?.value);
+    const c = $('batalhaContainer');
+    if(!c) return;
+    const la=a.library||[], lb=b.library||[], sa=a.sessions||[], sb=b.sessions||[], ra=a.ratings||[], rb=b.ratings||[];
+    const stats = [
+      ['Livros concluídos', completed(la), completed(lb)],
+      ['Páginas lidas', pages(la,sa), pages(lb,sb)],
+      ['Sessões', sa.length, sb.length],
+      ['Média das notas', avg(ra), avg(rb)]
+    ];
+    c.innerHTML = `
+      <section class="card" style="margin:18px auto;max-width:1180px;padding:22px;border:1px solid var(--border);background:var(--bg2);border-radius:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
+          <div>
+            <div style="font-size:13px;color:var(--muted);font-weight:800;letter-spacing:1px;text-transform:uppercase">⚔️ Modo Batalha</div>
+            <h2 style="margin:4px 0 0;font-size:28px">${esc(a.label||'Jogador A')} <span style="color:var(--muted)">vs</span> ${esc(b.label||'Jogador B')}</h2>
+          </div>
+          <button type="button" onclick="window.blExitBattle && window.blExitBattle()" style="background:var(--purple);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">↩ Voltar ao dashboard</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:14px;">
+          ${stats.map(([name,va,vb])=>{
+            const na=Number(va), nb=Number(vb);
+            const winner = !isNaN(na)&&!isNaN(nb) ? (na>nb?'A':nb>na?'B':'E') : 'E';
+            return `<div class="kpi" style="min-height:150px"><div class="kpi-lbl">${esc(name)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px"><div><div class="kpi-sub">${esc(a.label||'A')}</div><div class="kpi-val" style="font-size:26px;color:${winner==='A'?'#8b7cf8':'var(--text)'}">${esc(va)}</div></div><div><div class="kpi-sub">${esc(b.label||'B')}</div><div class="kpi-val" style="font-size:26px;color:${winner==='B'?'#f88c6a':'var(--text)'}">${esc(vb)}</div></div></div></div>`;
+          }).join('')}
+        </div>
+        <div style="margin-top:16px;color:var(--muted);font-size:12px">Fallback de segurança ativo. O botão abriu o módulo de batalha mesmo que o renderBatalha original falhe.</div>
+      </section>`;
+  }
+  function openBattleHard(){
+    window.usuarioAtual = 'Batalha';
+    removeDesktopMobileToggle();
+    const app = $('app');
+    if(app) app.style.display = 'block';
+    const dash = $('pageDashboard'), battle = $('pageBatalha');
+    if(dash) dash.style.setProperty('display','none','important');
+    if(battle){ battle.style.setProperty('display','block','important'); battle.hidden=false; }
+    document.querySelectorAll('#app > *').forEach(el=>{
+      if(el.id === 'pageBatalha') el.style.setProperty('display','block','important');
+      else if(el.id === 'pageDashboard') el.style.setProperty('display','none','important');
+      else el.style.setProperty('display','none','important');
+    });
+    const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
+    fillSelectors();
+    let rendered = false;
+    try{
+      if(typeof window.renderBatalha === 'function'){
+        window.renderBatalha();
+        rendered = true;
+      }
+    }catch(e){ console.error('renderBatalha original falhou:', e); }
+    setTimeout(()=>{
+      const c = $('batalhaContainer');
+      if(!c || (c.innerText||'').trim().length < 20) renderBattleFallback();
+      window.scrollTo(0,0);
+    }, rendered ? 250 : 20);
+  }
+  function exitBattle(){
+    window.usuarioAtual = meName();
+    document.querySelectorAll('#app > *').forEach(el=>{ el.style.removeProperty('display'); });
+    const dash=$('pageDashboard'), battle=$('pageBatalha');
+    if(dash) dash.style.display='block';
+    if(battle) battle.style.display='none';
+    const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
+    window.scrollTo(0,0);
+  }
+  window.blOpenBattleHard = openBattleHard;
+  window.blExitBattle = exitBattle;
+  window.blV12Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, mainButton:!!$('bl-battle-main-btn'), oldButton:!!$('btn-user-batalha'), pageBatalha:!!$('pageBatalha'), containerText:($('batalhaContainer')?.innerText||'').slice(0,120), people:people().map(p=>({uid:p.uid,label:p.label,email:p.email,lib:(p.library||[]).length,sessions:(p.sessions||[]).length,ratings:(p.ratings||[]).length}))}; };
+  const oldSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    if(usuario === 'Batalha') return openBattleHard();
+    if(typeof oldSetUsuario === 'function') return oldSetUsuario.apply(this, arguments);
+  };
+  function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
+  document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
+  setInterval(tick,1500);
+})();
+</script>
+
 </body>
 </html>
