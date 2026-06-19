@@ -1,1 +1,1 @@
-BookLegacy v12.11 — corrige o botão Modo Batalha que aparecia e sumia. Mantém o picker multi da V12.10.
+BookLegacy V12.12 — base V12.10 + botão Batalha DB-safe. Não altera Firebase/Auth/Firestore.
