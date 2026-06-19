@@ -2,11 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.0">
+<meta name="booklegacy-version" content="v3.11">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
-  // BookLegacy V6: manter o mesmo app em desktop e mobile; sem redirecionar para mobile.html
+  // BookLegacy V12.1: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
 }
 </script>
 
@@ -526,7 +526,7 @@ body.mobile-view canvas { max-width:100% !important; width:100% !important; }
 body.mobile-view .pwa-row { grid-template-columns:1fr !important; }
 body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
-/* BookLegacy V6 - login Firebase mantendo visual original */
+/* BookLegacy V12.1 - login Firebase + dashboard original + batalha visível */
 #authOverlay{position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(139,124,248,.24),transparent 32rem),rgba(13,17,23,.96);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;}
 .auth-card{width:min(520px,100%);background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:34px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.45)}
 .auth-card .logo{font-size:56px;margin-bottom:8px}.auth-card h2{font-size:30px;margin:0 0 10px;color:var(--text)}.auth-card p{color:var(--muted);line-height:1.55;margin:0 0 22px}.auth-btn{border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;font-size:15px}.auth-err{margin-top:14px;color:#f88c6a;font-size:13px;min-height:18px}.bl-profile{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:5px 9px;color:var(--text);font-size:12px}.bl-profile img{width:28px;height:28px;border-radius:50%}.bl-profile button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px}.bl-profile button:hover{color:var(--orange)}
@@ -537,7 +537,125 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
-<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v3-4-marker";</script>
+<script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
+
+
+<!-- BookLegacy V3.11 MOBILE LAYOUT ONLY: não muda dados internos/gráficos -->
+<style id="bl-v311-mobile-layout-only">
+@media (max-width: 899px) {
+  :root { --bl-safe-bottom: 12px; }
+  html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; background:#0d1117 !important; }
+  body { font-size:14px !important; }
+  /* topo limpo: esconde botoes do header e usa menu hamburguer */
+  header { position:sticky !important; top:0 !important; z-index:2000 !important; padding:10px 12px !important; gap:8px !important; min-height:60px !important; flex-wrap:nowrap !important; }
+  header .icon { font-size:28px !important; flex-shrink:0 !important; }
+  header h1 { font-size:18px !important; line-height:1.05 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; max-width:calc(100vw - 110px) !important; }
+  header p { font-size:10px !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; max-width:calc(100vw - 110px) !important; }
+  header > div:last-child { display:none !important; }
+  #mobile-nav, #btn-view-toggle { display:none !important; }
+
+  #blMobileMenuFab { display:flex !important; position:fixed !important; top:12px !important; right:10px !important; z-index:3001 !important; width:42px !important; height:42px !important; border-radius:12px !important; border:1px solid rgba(139,124,248,.55) !important; background:#1e2535 !important; color:#fff !important; align-items:center !important; justify-content:center !important; font-size:23px !important; box-shadow:0 8px 24px rgba(0,0,0,.45) !important; }
+  #blMobileMenuPanel { display:none; position:fixed; top:62px; right:10px; left:10px; z-index:3000; background:#161b27; border:1px solid #2a3248; border-radius:16px; padding:12px; box-shadow:0 18px 60px rgba(0,0,0,.7); }
+  #blMobileMenuPanel.open { display:block !important; }
+  #blMobileMenuPanel .blm-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  #blMobileMenuPanel button { border:1px solid #2a3248; border-radius:10px; background:#1e2535; color:#e2e8f0; padding:10px 8px; font-size:13px; font-weight:800; text-align:center; }
+  #blMobileMenuPanel .primary { background:#8b7cf8; color:#fff; border-color:#8b7cf8; }
+  #blMobileMenuPanel .cyan { border-color:#56cfff; color:#56cfff; }
+  #blMobileMenuPanel .gold { border-color:#ffd166; color:#ffd166; }
+  #blMobileMenuPanel .pink { background:#e56cff; color:#fff; border-color:#e56cff; }
+
+  .lendo-wrap { padding:10px !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+  .lendo-inner { display:flex !important; flex-direction:column !important; gap:10px !important; max-width:100% !important; }
+  .lendo-card { min-width:0 !important; width:100% !important; padding:14px !important; }
+  .lendo-book-title { font-size:20px !important; }
+
+  #app, .page { display:block; width:100% !important; max-width:100% !important; margin:0 !important; padding:10px 10px 82px !important; overflow-x:hidden !important; box-sizing:border-box !important; }
+  .sec { font-size:11px !important; margin:18px 0 8px !important; letter-spacing:1.6px !important; }
+  .card { width:100% !important; max-width:100% !important; padding:12px !important; border-radius:14px !important; overflow-x:auto !important; overflow-y:visible !important; -webkit-overflow-scrolling:touch !important; }
+  .card-title { font-size:18px !important; white-space:normal !important; }
+  .card-sub { font-size:12px !important; }
+  .grid2, .grid3, .grid4, .grid6, [data-desktop-grid] { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:12px !important; width:100% !important; }
+  .kpi-grid-5 { display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; }
+  .kpi-grid-5 .kpi:nth-child(5) { grid-column:1 / -1 !important; max-width:100% !important; }
+  #kpi-books-grid { display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; }
+  .kpi { padding:12px !important; min-width:0 !important; }
+  .kpi-val { font-size:22px !important; }
+  .kpi-book { display:flex !important; flex-direction:row !important; gap:8px !important; align-items:flex-start !important; }
+  .kpi-book img, .kpi-book .fallback { width:44px !important; height:62px !important; object-fit:cover !important; flex-shrink:0 !important; }
+  .kpi-nome, .rank-name { white-space:normal !important; overflow:visible !important; text-overflow:clip !important; word-break:normal !important; }
+
+  /* NÃO desmontar dados internos: os blocos abaixo só dão rolagem horizontal se precisar */
+  #grid-rankings, #rankList, .rank-list { width:100% !important; min-width:0 !important; overflow:visible !important; }
+  .rank-item { display:flex !important; width:100% !important; min-width:360px !important; }
+  .rank-bar-wrap { display:block !important; min-width:70px !important; }
+  .ctrl { display:flex !important; flex-wrap:nowrap !important; gap:6px !important; overflow-x:auto !important; padding-bottom:4px !important; }
+  .ctrl select, .ctrl button, .btn { flex:0 0 auto !important; font-size:12px !important; }
+
+  /* gráficos/calendários: rolam dentro do card, não cortam conteúdo */
+  canvas { max-width:none !important; }
+  .card canvas { min-width:360px !important; }
+  #cGeneros, #cMonthly, #cHeat { min-width:360px !important; }
+  #heatmapGrid { min-width:360px !important; }
+  #calGrid { min-width:520px !important; }
+  .cal-day { min-height:52px !important; padding:4px !important; }
+  .wd-bars { min-width:360px !important; overflow:visible !important; }
+
+  .fab { bottom:18px !important; right:16px !important; width:54px !important; height:54px !important; font-size:24px !important; z-index:2500 !important; }
+  .fab-menu { bottom:80px !important; right:16px !important; z-index:2501 !important; }
+
+  #pageBatalha { padding:10px !important; overflow-x:hidden !important; }
+  #batalhaContainer { overflow-x:auto !important; }
+  #batalhaContainer > div { min-width:520px !important; }
+}
+</style>
+<script id="bl-v311-mobile-menu-js">
+(function(){
+  function call(name){ if (typeof window[name] === 'function') return window[name](); }
+  function scrollSec(id){ if (typeof window.scrollToSec === 'function') return window.scrollToSec(id); const el=document.querySelector('[data-msection="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function close(){ const p=document.getElementById('blMobileMenuPanel'); if(p) p.classList.remove('open'); }
+  function ensureMenu(){
+    if (window.innerWidth > 899) return;
+    if (!document.getElementById('blMobileMenuFab')) {
+      const b=document.createElement('button'); b.id='blMobileMenuFab'; b.type='button'; b.textContent='☰'; b.onclick=function(){ const p=document.getElementById('blMobileMenuPanel'); if(p) p.classList.toggle('open'); };
+      document.body.appendChild(b);
+    }
+    if (!document.getElementById('blMobileMenuPanel')) {
+      const p=document.createElement('div'); p.id='blMobileMenuPanel';
+      p.innerHTML='<div class="blm-grid">'
+        +'<button class="primary" data-a="milton">📖 Milton</button>'
+        +'<button data-a="daniel">📖 Daniel</button>'
+        +'<button class="pink" data-a="batalha">⚔️ Batalha</button>'
+        +'<button class="cyan" data-a="comunidade">👥 Comunidade</button>'
+        +'<button class="gold" data-a="migracao">📥 Migração</button>'
+        +'<button data-a="meta">🎯 Meta</button>'
+        +'<button data-a="visao">📊 Geral</button>'
+        +'<button data-a="graficos">📈 Gráficos</button>'
+        +'<button data-a="ranking">🏅 Ranking</button>'
+        +'<button data-a="livro">📖 Livro</button>'
+        +'<button data-a="refresh">🔄 Atualizar</button>'
+        +'<button data-a="changelog">📋 v3.11</button>'
+        +'</div>';
+      p.addEventListener('click', function(e){
+        const a=e.target && e.target.getAttribute('data-a'); if(!a) return;
+        if(a==='milton' && typeof setUsuario==='function') setUsuario('Milton');
+        if(a==='daniel' && typeof setUsuario==='function') setUsuario('Daniel');
+        if(a==='batalha' && typeof setUsuario==='function') setUsuario('Batalha');
+        if(a==='comunidade') { if(typeof abrirComunidade==='function') abrirComunidade(); else if(typeof openCommunity==='function') openCommunity(); else if(typeof toggleCommunity==='function') toggleCommunity(); }
+        if(a==='migracao') { if(typeof abrirMigracao==='function') abrirMigracao(); else if(typeof openMigration==='function') openMigration(); }
+        if(['meta','visao','graficos','ranking','livro'].includes(a)) scrollSec(a);
+        if(a==='refresh' && typeof manualRefresh==='function') manualRefresh();
+        if(a==='changelog' && typeof toggleChangelog==='function') toggleChangelog();
+        close();
+      });
+      document.body.appendChild(p);
+    }
+  }
+  window.blMobileDebug=function(){ return {patch:'v3.11-mobile-layout-container-only', BL:!!window.BL, community: typeof window.abrirComunidade || typeof window.openCommunity || typeof window.toggleCommunity, battle: typeof window.setUsuario, bottomNav: getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileMenuFab'), url:location.pathname}; };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', ensureMenu); else ensureMenu();
+  setTimeout(ensureMenu,500); setTimeout(ensureMenu,2000);
+})();
+</script>
+
 </head>
 <body>
 
@@ -545,7 +663,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <div class="auth-card">
     <div class="logo">📚</div>
     <h2>BookLegacy</h2>
-    <p>Entre com Google para acessar seu dashboard de leitura com seus dados privados no Firebase.</p>
+    <p>Entre com Google. O app carrega somente seus dados privados; dados de amigos aparecem apenas quando houver amizade aceita.</p>
     <button id="authLoginBtn" class="auth-btn">Entrar com Google</button>
     <div id="authError" class="auth-err"></div>
   </div>
@@ -565,7 +683,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
         📖 Milton
       </button>
-      <button id="btn-user-daniel" onclick="setUsuario('Daniel')"
+      <button id="btn-user-daniel" style="display:none" onclick="setUsuario('Daniel')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         📖 Daniel
       </button>
@@ -574,8 +692,11 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         ⚔️ Batalha
       </button>
     </div>
+    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
+    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
+    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.4</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.11</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -3853,7 +3974,7 @@ window.abrirLivroDetalhes = abrirLivroDetalhes;
 
 
 // ════════════════════════════════════════════════
-// BOOKLEGACY V7.1 — FIREBASE + AMIGOS + PWA HOTFIX
+// BOOKLEGACY V7.2 — FIREBASE ESTÁVEL + AMIGOS + PWA
 // Mantém o layout original e troca data.json por Firestore.
 // ════════════════════════════════════════════════
 const firebaseConfig = {
@@ -3883,6 +4004,10 @@ window.BL.app = firebase.initializeApp(firebaseConfig);
 window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
+try {
+  // Evita travar em alguns navegadores/rede quando o Firestore tenta usar stream/websocket.
+  window.BL.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+} catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 function blTxt(v){ return String(v ?? '').trim(); }
@@ -3924,32 +4049,106 @@ async function blEnsureUserProfile(user){
 
 function blMapSnap(snap){ return snap.docs.map(d => ({ id:d.id, ...d.data() })); }
 
-async function blLoadFirestoreData(){
-  const user = window.BL.auth.currentUser;
-  if (!user) throw new Error('Usuário não logado');
-  const uid = user.uid;
-  const [booksSnap, librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
-    window.BL.db.collection('books').get(),
-    window.BL.db.collection('users').doc(uid).collection('library').get(),
-    window.BL.db.collection('users').doc(uid).collection('sessions').get(),
-    window.BL.db.collection('users').doc(uid).collection('ratings').get(),
-    window.BL.db.collection('users').doc(uid).collection('goals').get(),
-    window.BL.db.collection('users').doc(uid).collection('collections').get(),
+function blProfileLabel(user){
+  const src = `${user.displayName || ''} ${user.email || ''}`.toLowerCase();
+  if (src.includes('daniel')) return 'Daniel';
+  if (src.includes('milton')) return 'Milton';
+  return (user.displayName || user.email || 'Usuário').split(' ')[0];
+}
+
+
+function blWithTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo excedido ao carregar: ' + label)), ms))
   ]);
-  const raw = {
-    uid,
-    books: blMapSnap(booksSnap),
+}
+
+async function blSafeGet(query, label){
+  try { return await blWithTimeout(query.get(), 14000, label); }
+  catch(e){ console.error('Falha ao ler', label, e); throw e; }
+}
+
+async function blReadUserBundle(uid, label){
+  const userRef = window.BL.db.collection('users').doc(uid);
+  const [librarySnap, sessionsSnap, ratingsSnap, goalsSnap, collectionsSnap] = await Promise.all([
+    blSafeGet(userRef.collection('library'), 'library/' + label),
+    blSafeGet(userRef.collection('sessions'), 'sessions/' + label),
+    blSafeGet(userRef.collection('ratings'), 'ratings/' + label),
+    blSafeGet(userRef.collection('goals'), 'goals/' + label),
+    blSafeGet(userRef.collection('collections'), 'collections/' + label),
+  ]);
+  return {
+    uid, label,
     library: blMapSnap(librarySnap),
     sessions: blMapSnap(sessionsSnap),
     ratings: blMapSnap(ratingsSnap),
     goals: blMapSnap(goalsSnap),
     collections: blMapSnap(collectionsSnap)
   };
+}
+
+async function blLoadFriendsForUser(uid){
+  try {
+    const snap = await blSafeGet(window.BL.db.collection('users').doc(uid).collection('friends').where('status','==','accepted'), 'friends');
+    return snap.docs.map(d => ({ uid:d.id, ...(d.data()||{}) }));
+  } catch(e) {
+    console.warn('Amigos não carregados. Verifique regras do Firestore.', e);
+    return [];
+  }
+}
+
+async function blLoadFirestoreData(){
+  const user = window.BL.auth.currentUser;
+  if (!user) throw new Error('Usuário não logado');
+  const uid = user.uid;
+  const meLabel = blProfileLabel(user);
+
+  // Primeiro carrega o usuário logado. Assim o dashboard abre mesmo se amigos/livros globais falharem.
+  const myBundle = await blReadUserBundle(uid, meLabel);
+
+  let books = [];
+  try {
+    const booksSnap = await blSafeGet(window.BL.db.collection('books'), 'books');
+    books = blMapSnap(booksSnap);
+  } catch(e) {
+    console.warn('Coleção books não carregou; seguindo com dados da library.', e);
+  }
+
+  let friends = [];
+  let friendBundles = [];
+  try {
+    friends = await blLoadFriendsForUser(uid);
+    for (const f of friends) {
+      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
+      try { friendBundles.push(await blReadUserBundle(f.uid, label)); }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
+    }
+  } catch(e) {
+    console.warn('Amigos não carregados; dashboard individual será exibido.', e);
+  }
+
+  const raw = { uid, currentLabel:meLabel, books, users:[myBundle, ...friendBundles], friends };
   window.BL.raw = raw;
+  blUpdateUserButtons(raw);
   return blAdaptFirestoreToLegacy(raw);
 }
 
-function blLegacyBook(item, bookMap){
+function blUpdateUserButtons(raw){
+  const btnMilton = document.getElementById('btn-user-milton');
+  const btnDaniel = document.getElementById('btn-user-daniel');
+  const btnBatalha = document.getElementById('btn-user-batalha');
+  const labels = (raw.users||[]).map(u => u.label);
+  if (btnMilton) {
+    btnMilton.textContent = `📖 ${raw.currentLabel || 'Meus dados'}`;
+    btnMilton.setAttribute('onclick', 'setUsuario(' + JSON.stringify(raw.currentLabel || 'Milton') + ')');
+  }
+  const hasDaniel = labels.some(l => String(l).toLowerCase() === 'daniel');
+  if (btnDaniel) btnDaniel.style.display = hasDaniel ? '' : 'none';
+  if (btnBatalha) btnBatalha.style.display = (raw.users||[]).length >= 2 ? '' : 'none';
+}
+
+function blLegacyBook(item, bookMap, userLabel){
   const b = bookMap.get(item.bookId) || {};
   const title = blTxt(item.title || b.title || item.livro || b.livro);
   const total = blNum(item.totalPages || item.pages || b.pages || b.totalPages);
@@ -3971,15 +4170,16 @@ function blLegacyBook(item, bookMap){
     totalPag: total,
     pagAtual: current,
     pct: total ? Math.min(1, Math.max(0, current / total)) : blNum(item.progress),
-    usuario: 'MILTON',
+    usuario: userLabel || 'Milton',
     genero: blTxt(item.genre || b.genre || item.genero)
   };
 }
 
 function blAdaptFirestoreToLegacy(raw){
   const bookMap = new Map((raw.books || []).map(b => [b.id, b]));
-  const legacyBooks = (raw.library || []).map(item => blLegacyBook(item, bookMap)).filter(l => l.livro);
-  const sessoes = (raw.sessions || []).map(s => ({
+  const bundles = raw.users || [{ label: raw.currentLabel || 'Usuário', library: raw.library||[], sessions: raw.sessions||[], ratings: raw.ratings||[], goals: raw.goals||[], collections: raw.collections||[] }];
+  const legacyBooks = bundles.flatMap(u => (u.library || []).map(item => blLegacyBook(item, bookMap, u.label))).filter(l => l.livro);
+  const sessoes = bundles.flatMap(u => (u.sessions || []).map(s => ({
     id: s.id,
     bookId: s.bookId || '',
     livro: blTxt(s.title || s.livro),
@@ -3989,9 +4189,9 @@ function blAdaptFirestoreToLegacy(raw){
     minutos: blNum(s.minutes || s.minutos),
     segundos: blNum(s.seconds || s.segundos),
     ano: blNum(s.year || s.ano || String(s.date||'').slice(0,4)),
-    usuario: 'MILTON'
-  })).filter(s => s.livro && s.data);
-  const notas = (raw.ratings || []).map(r => {
+    usuario: u.label || 'Milton'
+  }))).filter(s => s.livro && s.data);
+  const notas = bundles.flatMap(u => (u.ratings || []).map(r => {
     const criterios = {
       'Diálogos': blNum(r.dialogos), 'Enredo': blNum(r.enredo), 'Estilo Visual': blNum(r.estiloVisual),
       'Finalização': blNum(r.finalizacao), 'Imersão': blNum(r.imersao), 'Impacto Emocional': blNum(r.impactoEmocional),
@@ -3999,10 +4199,11 @@ function blAdaptFirestoreToLegacy(raw){
     };
     const vals = Object.values(criterios).filter(v => v > 0);
     const media = blNum(r.notaFinal || r.notaPonderada) || (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0);
-    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:'MILTON' };
-  }).filter(n => n.livro);
+    return { id:r.id, bookId:r.bookId||'', livro:blTxt(r.title || r.livro), ano:blNum(r.readingYear || r.ano), media, criterios, usuario:u.label || 'Milton' };
+  })).filter(n => n.livro);
   const metasPorAno = {};
-  (raw.goals || []).forEach(g => {
+  const ownBundle = bundles[0] || {goals:[]};
+  (ownBundle.goals || []).forEach(g => {
     const y = String(g.year || g.id || '').replace(/[^0-9]/g,'') || String(g.year || '');
     if (!y) return;
     if (g.raw) metasPorAno[y] = g.raw;
@@ -4042,7 +4243,7 @@ async function blRefreshAndRender(){
     inicializar(d);
   } else if (typeof setUsuario === 'function') {
     window._dadosD = d;
-    setUsuario('Milton');
+    setUsuario((window.BL.raw && window.BL.raw.currentLabel) || blProfileLabel(window.BL.auth.currentUser));
   }
   const footer = document.getElementById('footer-data');
   if (footer) footer.textContent = new Date().toLocaleString('pt-BR');
@@ -4440,7 +4641,7 @@ function blSetupLoadingWatchdog(){
     if (loading && loading.style.display !== 'none' && (!app || app.style.display === 'none') && (!overlay || overlay.style.display !== 'flex')) {
       loading.innerHTML = '<div style="max-width:720px;margin:30px auto;background:#161b27;border:1px solid #f88c6a;border-radius:16px;padding:24px;color:#e2e8f0;text-align:left"><h2 style="color:#f88c6a;margin-bottom:10px">⚠️ O carregamento demorou demais</h2><p>Isso geralmente é configuração do Firebase, regra do Firestore ou erro de permissão ao ler dados.</p><p style="color:#8892a8;margin-top:10px">Abra o Console do navegador ou mande print da tela. Você também pode voltar para a versão anterior pelo histórico de deploys da Vercel.</p><button onclick="location.reload()" style="margin-top:14px;background:#8b7cf8;color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">Recarregar</button></div>';
     }
-  }, 22000);
+  }, 12000);
 }
 blSetupLoadingWatchdog();
 
@@ -4462,11 +4663,28 @@ async function iniciarAppFirebase(){
         return;
       }
       if (overlay) overlay.style.display = 'none';
-      document.getElementById('loading').style.display = 'block';
-      await blEnsureUserProfile(user);
-      await blAcceptInviteIfPresent(user);
-      await blRefreshAndRender();
+      // Segurança: limpa qualquer dado renderizado do login anterior antes de carregar o usuário atual.
+      window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+      window._livros = [];
+      window._sessoes = [];
+      const appEl = document.getElementById('app'); if (appEl) appEl.style.display = 'none';
+      const loadingEl = document.getElementById('loading');
+      loadingEl.style.display = 'block';
+      loadingEl.innerHTML = '⏳ Login feito. Preparando seu perfil...';
+      if (window.BL.__activeUid !== user.uid) {
+        window.BL.__activeUid = user.uid;
+        window.__BL_INITIALIZED = false;
+        window.usuarioAtual = '';
+        window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
+        window._livros = [];
+        window._sessoes = [];
+      }
       blDecorateHeader(user);
+      await blEnsureUserProfile(user);
+      loadingEl.innerHTML = '⏳ Verificando convites e amizades...';
+      await blAcceptInviteIfPresent(user);
+      loadingEl.innerHTML = '⏳ Carregando sua biblioteca do Firebase...';
+      await blRefreshAndRender();
     } catch(e) {
       document.getElementById('loading').innerHTML = '<p style="color:#f88c6a;padding:40px;text-align:center">⚠️ Erro ao carregar Firebase: '+e.message+'</p>';
       console.error(e);
@@ -4484,11 +4702,25 @@ function blDecorateHeader(user){
   const el = document.createElement('div');
   el.id = 'blProfile';
   el.className = 'bl-profile';
-  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>${user.displayName || 'Usuário'}</span><button type="button" id="blLogout">Sair</button>`;
+  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blInviteBtn">Comunidade</button><button type="button" id="blLogout">Sair</button>`;
   headerRight.prepend(el);
+  document.getElementById('blInviteBtn').onclick = () => blOpenCommunityModal();
   document.getElementById('blLogout').onclick = () => window.BL.auth.signOut();
 }
 
+
+function blSetupInstallButton(){
+  let deferredPrompt = null;
+  const btn = document.getElementById('appInstallBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-flex';
+  });
+  if (btn) btn.onclick = async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; btn.style.display = 'none'; }
+    else alert('No celular: abra no Chrome/Edge e use “Adicionar à tela inicial” ou “Instalar app”. No iPhone: Compartilhar → Adicionar à Tela de Início.');
+  };
+}
+blSetupInstallButton();
 
 iniciarAppFirebase();
 </script>
@@ -8481,7 +8713,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<style id="booklegacy-v12-24-battle-top-clean-css">
+<style id="booklegacy-v3-battle-top-clean-css">
 body.bl-v12-battle #pageDashboard,
 body.bl-v12-battle .lendo-wrap {
   display: none !important;
@@ -8500,7 +8732,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   display: none !important;
 }
 </style>
-<script id="booklegacy-v12-24-battle-top-clean">
+<script id="booklegacy-v3-battle-top-clean">
 (function(){
   'use strict';
   window.__BL_PATCH_VERSION = 'v3.0';
@@ -8578,7 +8810,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 <!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
-<style id="booklegacy-v12-25-battle-back-button-css">
+<style id="booklegacy-v3-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
   align-items:center !important;
@@ -8602,7 +8834,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   z-index:80 !important;
 }
 </style>
-<script id="booklegacy-v12-25-battle-back-button-fix">
+<script id="booklegacy-v3-battle-back-button-fix">
 (function(){
   'use strict';
   window.__BL_PATCH_VERSION = 'v3.0';
@@ -8680,171 +8912,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(ensureBackButton, 200));
   setTimeout(ensureBackButton, 500);
   setTimeout(ensureBackButton, 1500);
-})();
-</script>
-
-<style id="booklegacy-v34-mobile-polish">
-/* BookLegacy V3.4 — mobile polish: mesmo app, só organização visual */
-@media (max-width: 900px){
-  html,body{max-width:100vw!important;overflow-x:hidden!important;background:#0d1117!important;}
-  body{padding-bottom:0!important;}
-
-  /* Remove barra inferior inútil */
-  #mobile-nav{display:none!important;visibility:hidden!important;height:0!important;pointer-events:none!important;}
-  body.mobile-view #mobile-nav, body.booklegacy-mobile-app #mobile-nav{display:none!important;}
-
-  /* Header compacto e utilizável */
-  header{
-    position:sticky!important;top:0!important;z-index:2100!important;
-    display:flex!important;align-items:center!important;gap:8px!important;
-    min-height:56px!important;padding:8px 10px!important;
-    background:linear-gradient(135deg,#111827 0%,#161b27 100%)!important;
-    border-bottom:1px solid rgba(139,124,248,.22)!important;
-    box-shadow:0 8px 24px rgba(0,0,0,.32)!important;
-    flex-wrap:nowrap!important;overflow:visible!important;
-  }
-  header .icon{font-size:24px!important;line-height:1!important;flex:0 0 auto!important;}
-  header > div:nth-child(2){min-width:0!important;flex:1 1 auto!important;}
-  header h1{font-size:15px!important;line-height:1.1!important;margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  header p{display:block!important;font-size:10px!important;color:#8892a8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin-top:2px!important;}
-  header .badge{display:none!important;}
-
-  /* Esconde a fileira antiga cheia de botões; o menu novo chama as mesmas funções */
-  header > div:last-child{display:none!important;}
-  #blMobileMenuBtn{display:flex!important;align-items:center!important;gap:6px!important;}
-
-  #app,.page{padding:8px 10px 22px!important;max-width:100%!important;width:100%!important;overflow-x:hidden!important;}
-  .lendo-wrap{padding:8px 10px!important;}
-  .lendo-inner{gap:10px!important;}
-  .lendo-card{border-radius:14px!important;padding:14px!important;}
-
-  .sec{font-size:11px!important;letter-spacing:1px!important;margin:18px 0 8px!important;}
-  .card{border-radius:14px!important;padding:12px!important;margin-bottom:10px!important;overflow:hidden!important;}
-  .card-title{font-size:15px!important;line-height:1.25!important;}
-  .card-sub{font-size:11px!important;line-height:1.35!important;margin-bottom:10px!important;}
-
-  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{grid-template-columns:1fr!important;gap:10px!important;}
-  .kpi-grid-5,.kpi-grid-5[data-desktop-grid],#status-kpi-grid{grid-template-columns:1fr 1fr!important;gap:8px!important;}
-  .kpi-grid-5 .kpi:nth-child(5),#status-kpi-grid .kpi:nth-child(5){grid-column:1/-1!important;max-width:none!important;margin:0!important;}
-  .kpi{padding:12px!important;border-radius:12px!important;}
-  .kpi-icon{font-size:18px!important;margin-bottom:4px!important;}
-  .kpi-val{font-size:22px!important;}
-  .kpi-lbl{font-size:9px!important;line-height:1.2!important;}
-  .kpi-sub{display:none!important;}
-
-  .meta-row{flex-direction:column!important;align-items:center!important;gap:12px!important;}
-  .meta-stats{grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;}
-  .meta-stat{padding:9px!important;border-radius:10px!important;}
-  .meta-stat-val{font-size:16px!important;}
-  .ring-wrap{width:112px!important;height:112px!important;}
-
-  canvas{max-width:100%!important;width:100%!important;}
-  #cHeat,#cMonthly{height:230px!important;}
-  #cGeneros{height:280px!important;}
-  #cDonut,#cAutores{height:200px!important;}
-  .rank-bar-wrap{display:none!important;}
-  .rank-name{font-size:13px!important;white-space:normal!important;word-break:break-word!important;}
-  .ctrl{gap:6px!important;flex-wrap:wrap!important;}
-  .ctrl select,.ctrl .btn,.btn{font-size:12px!important;padding:7px 9px!important;min-height:34px!important;}
-
-  .fab{bottom:18px!important;right:14px!important;width:52px!important;height:52px!important;z-index:1800!important;}
-  .fab-menu{bottom:78px!important;right:14px!important;z-index:1800!important;}
-
-  #pageBatalha{padding:8px 10px 22px!important;}
-  body.batalha-ativo #pageDashboard, body.batalha-ativo .lendo-wrap{display:none!important;}
-}
-@media (min-width:901px){
-  #blMobileMenuBtn,#blMobileDrawer,#blMobileDrawerBackdrop{display:none!important;}
-}
-#blMobileMenuBtn{
-  position:fixed;top:10px;right:10px;z-index:2300;
-  border:1px solid rgba(139,124,248,.45);background:rgba(30,37,53,.96);color:#e2e8f0;
-  border-radius:12px;padding:9px 12px;font-size:13px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer;
-}
-#blMobileDrawerBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:2400;}
-#blMobileDrawer{
-  display:none;position:fixed;top:0;right:0;width:min(88vw,340px);height:100vh;z-index:2500;
-  background:#111827;border-left:1px solid rgba(139,124,248,.25);box-shadow:-18px 0 40px rgba(0,0,0,.45);
-  padding:16px;overflow-y:auto;color:#e2e8f0;
-}
-#blMobileDrawer.open,#blMobileDrawerBackdrop.open{display:block!important;}
-.blm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.blm-title{font-size:18px;font-weight:900;}
-.blm-close{width:34px;height:34px;border-radius:10px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:18px;}
-.blm-section{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:#8892a8;margin:16px 0 8px;font-weight:800;}
-.blm-btn{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:7px 0;padding:12px;border-radius:12px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;font-size:14px;font-weight:800;text-align:left;}
-.blm-btn.primary{background:rgba(139,124,248,.18);border-color:rgba(139,124,248,.55);color:#fff;}
-.blm-btn.blue{background:rgba(86,207,255,.12);border-color:rgba(86,207,255,.45);}
-.blm-btn.orange{background:rgba(248,140,106,.12);border-color:rgba(248,140,106,.45);}
-.blm-mini{font-size:11px;color:#8892a8;line-height:1.35;margin-top:10px;}
-</style>
-<script id="booklegacy-v34-mobile-menu">
-(function(){
-  window.__BOOKLEGACY_MOBILE_PATCH='v3.4-mobile-header-clean';
-  function callSafe(fnName){
-    try{
-      var fn=window[fnName];
-      if(typeof fn==='function') return fn.apply(window, Array.prototype.slice.call(arguments,1));
-    }catch(e){ console.error('[BookLegacy mobile]', fnName, e); }
-  }
-  function closeDrawer(){
-    document.getElementById('blMobileDrawer')?.classList.remove('open');
-    document.getElementById('blMobileDrawerBackdrop')?.classList.remove('open');
-  }
-  function openDrawer(){
-    document.getElementById('blMobileDrawer')?.classList.add('open');
-    document.getElementById('blMobileDrawerBackdrop')?.classList.add('open');
-  }
-  function go(section){ closeDrawer(); setTimeout(function(){
-    var target=document.querySelector('[data-msection="'+section+'"]');
-    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-  },80); }
-  function build(){
-    if(document.getElementById('blMobileDrawer')) return;
-    var btn=document.createElement('button');
-    btn.id='blMobileMenuBtn';
-    btn.type='button';
-    btn.innerHTML='☰ Menu';
-    btn.onclick=openDrawer;
-    document.body.appendChild(btn);
-    var back=document.createElement('div');
-    back.id='blMobileDrawerBackdrop';
-    back.onclick=closeDrawer;
-    document.body.appendChild(back);
-    var d=document.createElement('aside');
-    d.id='blMobileDrawer';
-    d.innerHTML=''
-      + '<div class="blm-head"><div><div class="blm-title">📚 BookLegacy</div><div class="blm-mini">Menu mobile</div></div><button class="blm-close" type="button">×</button></div>'
-      + '<div class="blm-section">Perfil</div>'
-      + '<button class="blm-btn primary" data-act="me">📖 Meu perfil</button>'
-      + '<button class="blm-btn orange" data-act="battle">⚔️ Modo Batalha</button>'
-      + '<button class="blm-btn blue" data-act="community">👥 Comunidade</button>'
-      + '<div class="blm-section">Dashboard</div>'
-      + '<button class="blm-btn" data-go="meta">🎯 Meta</button>'
-      + '<button class="blm-btn" data-go="visao">📊 Visão geral</button>'
-      + '<button class="blm-btn" data-go="graficos">📈 Gráficos</button>'
-      + '<button class="blm-btn" data-go="ranking">🏅 Ranking</button>'
-      + '<button class="blm-btn" data-go="livro">📚 Livro</button>'
-      + '<button class="blm-btn" data-go="mais">··· Mais</button>'
-      + '<div class="blm-section">Ações</div>'
-      + '<button class="blm-btn" data-act="refresh">🔄 Atualizar dados</button>'
-      + '<button class="blm-btn" data-act="updates">📋 Notas V3.4</button>'
-      + '<div class="blm-mini">A barra inferior foi removida. O app mobile usa as mesmas funções do desktop; só mudou a organização da tela.</div>';
-    document.body.appendChild(d);
-    d.querySelector('.blm-close').onclick=closeDrawer;
-    d.addEventListener('click',function(ev){
-      var b=ev.target.closest('button'); if(!b) return;
-      var act=b.getAttribute('data-act'); var sec=b.getAttribute('data-go');
-      if(sec) return go(sec);
-      if(act==='me'){ closeDrawer(); callSafe('setUsuario','Milton'); }
-      if(act==='battle'){ closeDrawer(); callSafe('setUsuario','Batalha'); }
-      if(act==='community'){ closeDrawer(); callSafe('blOpenCommunityModal'); }
-      if(act==='refresh'){ closeDrawer(); callSafe('manualRefresh'); }
-      if(act==='updates'){ closeDrawer(); callSafe('toggleChangelog'); }
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
-  window.blMobileDebug=function(){return {patch:window.__BOOKLEGACY_MOBILE_PATCH, navDisplay:getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileDrawer'), community:typeof window.blOpenCommunityModal, battle:typeof window.setUsuario};};
 })();
 </script>
 
