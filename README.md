@@ -1,1 +1,1 @@
-BookLegacy V12.17 — Modo Batalha 2x2 com seletor pesquisável de apenas 1 adversário. Base DB-safe.
+BookLegacy V12.18 - Corrige troca imediata do adversário no Modo Batalha 2x2.
