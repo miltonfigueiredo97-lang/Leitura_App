@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.1">
+<meta name="booklegacy-version" content="v3.2">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -13,17 +13,6 @@ if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.inner
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0d1117">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#8b7cf8">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="BookLegacy">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-<meta name="booklegacy-build" content="3.1-pwa-app">
-<meta name="booklegacy-app-mode" content="pwa-ready">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Leitura">
@@ -549,49 +538,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
-
-<script id="booklegacy-v31-pwa-installer">
-window.__BOOKLEGACY_VERSION = '3.1';
-window.__BOOKLEGACY_PWA_READY = true;
-(function(){
-  let deferredPrompt = null;
-  function isStandalone(){
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  }
-  function showInstallHelp(){
-    const msg = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-      ? 'No iPhone: toque em Compartilhar e depois em “Adicionar à Tela de Início”.'
-      : 'No Android: toque no menu do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.';
-    alert(msg);
-  }
-  function wire(){
-    let btn = document.getElementById('appInstallBtn');
-    if (!btn) {
-      const headerRight = document.querySelector('header > div:last-child') || document.querySelector('header');
-      if (!headerRight) return;
-      btn = document.createElement('button');
-      btn.id = 'appInstallBtn';
-      btn.type = 'button';
-      btn.textContent = '📲 Instalar app';
-      btn.style.cssText = 'display:inline-flex;background:rgba(78,205,196,.15);border:1px solid var(--teal,#4ecdc4);color:var(--teal,#4ecdc4);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;align-items:center;gap:6px;';
-      headerRight.appendChild(btn);
-    }
-    btn.style.display = isStandalone() ? 'none' : 'inline-flex';
-    btn.onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-        btn.style.display = isStandalone() ? 'none' : 'inline-flex';
-      } else { showInstallHelp(); }
-    };
-  }
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; wire(); });
-  window.addEventListener('appinstalled', () => { const btn=document.getElementById('appInstallBtn'); if(btn) btn.style.display='none'; });
-  window.addEventListener('DOMContentLoaded', wire);
-  window.addEventListener('load', () => setTimeout(wire, 800));
-})();
-</script>
 </head>
 <body>
 
@@ -630,9 +576,9 @@ window.__BOOKLEGACY_PWA_READY = true;
     </div>
     <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
-    <button id="appInstallBtn" type="button" style="display:inline-flex;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
+    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.2</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -6347,15 +6293,15 @@ window.addEventListener('load', () => { _applyMQ(_mq); if(window.innerWidth < 90
 
 // ── Changelog ────────────────────────────────────
 const CHANGELOG = [
+
   {
-    versao: '3.1', data: '19/06/2026', titulo: 'BookLegacy como App/PWA',
+    versao: '3.2', data: '19/06/2026', titulo: 'Mobile formatado para APK Android',
     itens: [
-      'App preparado para instalação na tela inicial do Android e iPhone',
-      'Manifest PWA revisado com nome, ícones, tema, orientação e atalhos do BookLegacy',
-      'Ícones PNG 192x192 e 512x512 adicionados para instalação do app',
-      'Botão “Instalar app” habilitado no header com instrução automática quando o navegador não libera instalação direta',
-      'Service worker ajustado para evitar cache antigo e reduzir risco de voltar versões quebradas',
-      'Base mantida em Firebase/Firestore sem alterar dados, login, comunidade ou Modo Batalha'
+      'Mobile restaurado usando a base visual do app mobile de referência enviado pelo Milton',
+      'Layout mobile em scroll infinito com cards compactos e grids adaptados para celular',
+      'Nav inferior mobile preservada para atalhos de Meta, Geral, Gráficos, Ranking, Livro e Mais',
+      'Ajustes de responsividade para evitar estouro lateral, cards quebrados e gráficos fora da tela',
+      'Preparação da rota mobile.html para ser carregada diretamente pelo APK Android',
     ]
   },
   {
@@ -8415,7 +8361,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.2';
   window.__BL_V12_23_MARKER = true;
 
   const $ = id => document.getElementById(id);
@@ -8638,7 +8584,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blBattleDebug = window.blV12Debug = function(){
     const op = selectedOpponent();
     return {
-      patch:'v3.0',
+      patch:'v3.2',
       marker:true,
       selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
       dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
@@ -8660,7 +8606,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<style id="booklegacy-v3-battle-top-clean-css">
+<style id="booklegacy-v12-24-battle-top-clean-css">
 body.bl-v12-battle #pageDashboard,
 body.bl-v12-battle .lendo-wrap {
   display: none !important;
@@ -8679,10 +8625,10 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   display: none !important;
 }
 </style>
-<script id="booklegacy-v3-battle-top-clean">
+<script id="booklegacy-v12-24-battle-top-clean">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.2';
   window.__BL_V12_24_MARKER = true;
   const $ = id => document.getElementById(id);
   function forceBattleOnly(){
@@ -8742,7 +8688,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof previousDebug === 'function' ? previousDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.2',
       marker1224:true,
       dashboardDisplay:$('pageDashboard') ? getComputedStyle($('pageDashboard')).display : null,
       lendoWrapDisplay:document.querySelector('.lendo-wrap') ? getComputedStyle(document.querySelector('.lendo-wrap')).display : null,
@@ -8757,7 +8703,7 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
 
 
 <!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
-<style id="booklegacy-v3-battle-back-button-css">
+<style id="booklegacy-v12-25-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
   display:inline-flex !important;
   align-items:center !important;
@@ -8781,10 +8727,10 @@ body.bl-v12-battle #blBattleBackButtonV25{
   z-index:80 !important;
 }
 </style>
-<script id="booklegacy-v3-battle-back-button-fix">
+<script id="booklegacy-v12-25-battle-back-button-fix">
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
+  window.__BL_PATCH_VERSION = 'v3.2';
   window.__BL_V12_25_MARKER = true;
   const $ = id => document.getElementById(id);
   function currentUserLabel(){
@@ -8850,7 +8796,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blBattleDebug = window.blV12Debug = function(){
     const old = typeof prevDebug === 'function' ? prevDebug() : {};
     return Object.assign({}, old, {
-      patch:'v3.0',
+      patch:'v3.2',
       marker1225:true,
       backButton:!!$('blBattleBackButtonV25'),
       backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null

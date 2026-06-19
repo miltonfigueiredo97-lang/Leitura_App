@@ -1,12 +1,11 @@
-# BookLegacy V3.1 — App/PWA
+# BookLegacy V3.2 — Mobile Format + APK Ready
 
-Versão preparada para instalação como aplicativo no celular.
+Esta versão mantém a base V3.0 estável e restaura a formatação mobile usando o arquivo mobile de referência enviado pelo Milton.
 
-## Conteúdo
-- Dashboard BookLegacy V3.1
-- Manifest PWA revisado
-- Service worker seguro contra cache antigo
-- Ícones PNG 192 e 512
-- Botão Instalar app
+## Alterações
+- `mobile.html` formatado para uso real no APK Android.
+- Rota mobile preparada para WebView Android.
+- Desktop preservado.
+- Firebase/login/banco/comunidade/batalha não foram alterados.
 
-Suba o conteúdo interno deste ZIP no GitHub/Vercel.
+Suba o conteúdo interno deste ZIP no repositório web usado pela Vercel.

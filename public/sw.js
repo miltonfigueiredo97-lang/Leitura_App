@@ -1,11 +1,9 @@
-const CACHE = 'booklegacy-v3-1-pwa-app';
-self.addEventListener('install', event => { self.skipWaiting(); });
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+const CACHE = 'booklegacy-v321-battle-visible';
+self.addEventListener('install', e => { self.skipWaiting(); });
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.origin !== location.origin) return;
-  event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request)));
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(fetch(e.request, {cache:'no-store'}).catch(() => fetch(e.request)));
 });
