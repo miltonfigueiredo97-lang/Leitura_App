@@ -3932,6 +3932,7 @@ async function blEnsureUserProfile(user){
 function blMapSnap(snap){ return snap.docs.map(d => ({ id:d.id, ...d.data() })); }
 
 function blProfileLabel(user){
+  if (!user) return (window.BL && window.BL.raw && window.BL.raw.currentLabel) || 'Milton';
   const src = `${user.displayName || ''} ${user.email || ''}`.toLowerCase();
   if (src.includes('daniel')) return 'Daniel';
   if (src.includes('milton')) return 'Milton';
@@ -8794,6 +8795,167 @@ body.bl-v12-battle #blBattleBackButtonV25{
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(ensureBackButton, 200));
   setTimeout(ensureBackButton, 500);
   setTimeout(ensureBackButton, 1500);
+})();
+</script>
+
+
+<style id="bl-v319-common-fixes-css">
+/* BookLegacy V3.19 — correções comuns desktop/mobile */
+.bl-hidden-fab-menu { display:none !important; }
+.bl-profile img { object-fit:cover; background:#252d40; }
+</style>
+
+<script id="bl-v319-common-fixes-js">
+(function(){
+  'use strict';
+  const VERSION = 'v3.19-common-action-meta-fix';
+  const $ = (id)=>document.getElementById(id);
+  const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+  const norm=(v)=>String(v||'').trim().toLowerCase();
+  const slug=(v)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'item';
+
+  // 3 — blProfileLabel seguro: evita displayName null e melhora fallback de perfil.
+  window.blProfileLabel = function(user){
+    if(!user) return (window.BL && window.BL.raw && window.BL.raw.currentLabel) || 'Milton';
+    const src = `${user.displayName || ''} ${user.email || ''}`.toLowerCase();
+    if (src.includes('daniel')) return 'Daniel';
+    if (src.includes('milton')) return 'Milton';
+    return (user.displayName || user.email || 'Usuário').split(' ')[0];
+  };
+
+  function closeFab(){
+    try{
+      const menu=$('fabMenu'), btn=$('fabBtn');
+      if(menu) menu.style.display='none';
+      if(btn) btn.textContent='＋';
+      try{ window.fabOpen=false; }catch(e){}
+    }catch(e){}
+  }
+  window.blCloseFabMenu = closeFab;
+
+  // 1 — abrir modal não pode abrir o menu + por acidente.
+  const oldAbrirModal = window.abrirModal;
+  if(typeof oldAbrirModal === 'function' && !oldAbrirModal.__bl_v319_wrapped){
+    const wrapped = function(tipo){
+      const r = oldAbrirModal.apply(this, arguments);
+      setTimeout(closeFab, 0);
+      setTimeout(closeFab, 80);
+      return r;
+    };
+    wrapped.__bl_v319_wrapped = true;
+    window.abrirModal = wrapped;
+  }
+
+  function modalIsOpen(tipo){
+    const id = 'modal' + tipo.charAt(0).toUpperCase() + tipo.slice(1);
+    const el = $(id);
+    return !!(el && el.classList.contains('open'));
+  }
+  function msgOk(id){
+    const el=$(id);
+    return !!(el && el.classList.contains('ok'));
+  }
+  function closeIfOk(tipo,msgId){
+    setTimeout(()=>{
+      try{
+        if(msgOk(msgId) && modalIsOpen(tipo) && typeof window.fecharModal==='function') window.fecharModal(tipo);
+      }catch(e){}
+      closeFab();
+    }, 950);
+  }
+  function wrapSave(fnName,tipo,msgId){
+    const old = window[fnName];
+    if(typeof old !== 'function' || old.__bl_v319_wrapped) return;
+    const wrapped = async function(){
+      try { return await old.apply(this, arguments); }
+      finally { closeIfOk(tipo,msgId); }
+    };
+    wrapped.__bl_v319_wrapped=true;
+    window[fnName]=wrapped;
+  }
+  function installActionWrappers(){
+    wrapSave('enviarSessao','sessao','s-msg');
+    wrapSave('enviarNota','nota','n-msg');
+    wrapSave('enviarLivro','livro','l-msg');
+    wrapSave('enviarNovoLivro','novoLivro','nl-msg');
+    wrapSave('salvarEdicaoSessao','editarSessao','ee-msg');
+    wrapSave('confirmarExcluir','excluir','ex-msg');
+  }
+
+  // 13 — Gerenciar Meta direto no Firestore, sem Apps Script antigo.
+  async function blSalvarGerenciarMetaFirestore(){
+    const btn=$('gmBtnSalvar');
+    const msg='gmMsg';
+    let ano='';
+    try { ano = String((typeof gmAnoAtual !== 'undefined' && gmAnoAtual) || $('selMetaAno')?.value || new Date().getFullYear()); }
+    catch(e){ ano = String($('selMetaAno')?.value || new Date().getFullYear()); }
+    let selecionados=[];
+    try { if(typeof gmSelecionados !== 'undefined') selecionados = Array.from(gmSelecionados || []); } catch(e) {}
+    // fallback: pega os cards selecionados visualmente se o Set não estiver acessível
+    if(!selecionados.length){
+      document.querySelectorAll('#gmLista [title]').forEach(el=>{
+        const txt=el.getAttribute('title')||'';
+        if(txt && (el.innerHTML.includes('✓') || el.style.outline || el.querySelector('[style*="rgba(139,124,248"]'))) selecionados.push(txt);
+      });
+    }
+    const uid = window.BL?.auth?.currentUser?.uid;
+    const db = window.BL?.db;
+    if(!uid || !db){ if(typeof mostrarMsg==='function') mostrarMsg(msg,'❌ Usuário/Firebase não carregado.','err'); return; }
+    const rawLib = (window.BL?.raw?.users?.[0]?.library) || (window.BL?.raw?.library) || [];
+    const byTitle = new Map();
+    rawLib.forEach(l=>{ const title=l.title||l.livro||l.nome; if(title) byTitle.set(norm(title), l); });
+    const livrosAtuais = (window._livros||[]).filter(l => String(l.metaAno||l.targetYear||'') === ano).map(l=>l.livro||l.title).filter(Boolean);
+    const finalSet = new Set(selecionados.map(String));
+    const allTitles = Array.from(new Set([...livrosAtuais, ...selecionados]));
+    if(btn){ btn.disabled=true; btn.textContent='Salvando...'; }
+    try{
+      const batch = db.batch();
+      allTitles.forEach(title=>{
+        const lib = byTitle.get(norm(title));
+        if(!lib?.id) return;
+        const ref = db.collection('users').doc(uid).collection('library').doc(lib.id);
+        batch.set(ref, { targetYear: finalSet.has(title) ? ano : '', updatedAt: new Date().toISOString() }, { merge:true });
+      });
+      await batch.commit();
+      // atualização local imediata
+      (window._livros||[]).forEach(l=>{ const title=l.livro||l.title; if(!title) return; if(finalSet.has(title)) l.metaAno=ano; else if(String(l.metaAno||'')===ano) l.metaAno=''; });
+      if(typeof mostrarMsg==='function') mostrarMsg(msg,'✅ Meta atualizada no Firebase!','ok');
+      if(typeof window.blRefreshAndRender==='function') await window.blRefreshAndRender();
+      setTimeout(()=>{ try{ if(typeof fecharGerenciarMeta==='function') fecharGerenciarMeta(); }catch(e){} }, 750);
+    }catch(e){
+      console.error('Meta Firebase:', e);
+      if(typeof mostrarMsg==='function') mostrarMsg(msg,'❌ Firebase: '+e.message,'err');
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent='✅ Salvar Meta'; }
+    }
+  }
+  window.salvarGerenciarMeta = blSalvarGerenciarMetaFirestore;
+
+  // 3 — se o Google não trouxer imagem, mantém avatar visual em vez de sumir.
+  function avatarData(name){
+    const t=String(name||'U').trim();
+    const initials=t.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'U';
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="48" fill="#252d40"/><text x="48" y="57" text-anchor="middle" font-size="32" font-family="Arial" font-weight="700" fill="#e2e8f0">${initials}</text></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+  }
+  function fixProfileImages(){
+    try{
+      const user = window.BL?.auth?.currentUser;
+      document.querySelectorAll('.bl-profile').forEach(chip=>{
+        let img=chip.querySelector('img');
+        const name = user?.displayName || user?.email || chip.textContent || 'Usuário';
+        if(!img){ img=document.createElement('img'); chip.insertBefore(img, chip.firstChild); }
+        if(!img.getAttribute('src')) img.src = user?.photoURL || avatarData(name);
+        img.onerror = function(){ this.onerror=null; this.src=avatarData(name); };
+      });
+      document.querySelectorAll('img').forEach(img=>{ img.onerror = img.onerror || function(){ this.onerror=null; this.src=avatarData(this.alt||'Usuário'); }; });
+    }catch(e){}
+  }
+
+  function boot(){ installActionWrappers(); fixProfileImages(); closeFab(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  setTimeout(boot,500); setTimeout(boot,1600); setInterval(fixProfileImages,4000);
+  window.blV319Debug = function(){ return {patch:VERSION, abrirModalWrapped:!!window.abrirModal?.__bl_v319_wrapped, profileLabel:typeof window.blProfileLabel, metaSave:'firebase', fabMenu: $('fabMenu')?.style?.display || null}; };
 })();
 </script>
 
