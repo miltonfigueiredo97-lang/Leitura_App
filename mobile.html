@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-v12-8-marker" content="original-battle-multi-button-fix">
+<meta name="booklegacy-v12-9-marker" content="original-battle-multi-select-realfix">
 <meta name="booklegacy-version" content="v12.1-battle-visible">
 <script>
 // Redirect mobile browsers to mobile.html
@@ -8046,7 +8046,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 /* BookLegacy V12 — BATALHA VISÍVEL E INDEPENDENTE
    Patch focado apenas em: botão Modo Batalha e abertura do módulo. */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
+  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-select-realfix';
   const $ = (id)=>document.getElementById(id);
   const norm = (v)=>String(v||'').trim().toLowerCase();
   const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -8217,21 +8217,35 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 <script>
-/* BookLegacy V12.8 — PATCH FINAL: mantém o Modo Batalha original, força botão, multi-player e voltar */
+/* BookLegacy V12.9 — Batalha original + seletor pesquisável + multi real */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.8-original-battle-multi-button-fix';
-  window.__BL_V12_8_MARKER = true;
+  window.__BL_PATCH_VERSION = 'v12.9-original-battle-multi-select-realfix';
+  window.__BL_V12_9_MARKER = true;
   const $ = (id)=>document.getElementById(id);
   const esc = (v)=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const norm = (v)=>String(v||'').trim().toLowerCase();
 
+  const originalRenderBattle = window.renderBatalha;
+  const originalSetUsuario = window.setUsuario;
+
+  let selectedPlayers = [];
+  let searchText = '';
+  let renderingMulti = false;
+
   function raw(){ return window.BL?.raw || window._blRaw || {}; }
   function authUser(){ return window.firebaseAuth?.currentUser || window.auth?.currentUser || window.BL?.auth?.currentUser || null; }
   function safeLabel(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
-  function meLabel(){
-    const cu=authUser();
-    return raw().currentLabel || safeLabel(cu) || window.__BL_ME_LABEL || 'Milton';
+  function meLabel(){ const cu=authUser(); return raw().currentLabel || safeLabel(cu) || window.__BL_ME_LABEL || 'Milton Figueiredo'; }
+
+  if(typeof window.blProfileLabel === 'function' && !window.__BL_PROFILE_NULL_SAFE_V129){
+    const oldProfileLabel = window.blProfileLabel;
+    window.blProfileLabel = function(user){
+      if(!user) return meLabel();
+      try { return oldProfileLabel(user); } catch(e){ return user.displayName || user.email || user.uid || meLabel(); }
+    };
+    window.__BL_PROFILE_NULL_SAFE_V129 = true;
   }
+
   function people(){
     const map = new Map();
     function add(p){
@@ -8240,95 +8254,117 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       const label = safeLabel(p);
       if(!label && !uid) return;
       const key = uid || label;
-      if(!map.has(String(key))) map.set(String(key), {...p, uid, label: label || uid});
-      else map.set(String(key), {...map.get(String(key)), ...p, uid: uid || map.get(String(key)).uid, label: label || map.get(String(key)).label});
+      const old = map.get(String(key)) || {};
+      map.set(String(key), {...old, ...p, uid: uid || old.uid, label: label || old.label || uid});
     }
     (raw().users||[]).forEach(add);
     (raw().friends||[]).forEach(add);
     const cu=authUser();
     if(cu) add({uid:cu.uid,label:cu.displayName||cu.email||'Eu',displayName:cu.displayName,email:cu.email,photoURL:cu.photoURL});
-    if(!map.size){ add({label:'Milton'}); add({label:'Daniel'}); }
+    if(!map.size){ add({label:'Milton Figueiredo'}); add({label:'Daniel Victor'}); }
     return [...map.values()].filter(p=>safeLabel(p));
   }
 
-  // Corrige erro de profile quando o Google ainda não terminou de carregar.
-  if(typeof window.blProfileLabel === 'function' && !window.__BL_PROFILE_NULL_SAFE_V128){
-    const oldProfileLabel = window.blProfileLabel;
-    window.blProfileLabel = function(user){
-      if(!user) return meLabel();
-      try { return oldProfileLabel(user); } catch(e){ return user.displayName || user.email || user.uid || meLabel(); }
-    };
-    window.__BL_PROFILE_NULL_SAFE_V128 = true;
+  function normalizeBook(b,label){
+    const title = b?.livro || b?.titulo || b?.title || b?.nome || b?.name || '';
+    const pages = Number(b?.totalPag ?? b?.paginas ?? b?.pages ?? b?.totalPaginas ?? b?.pageCount ?? 0) || 0;
+    let status = b?.status || b?.situacao || '';
+    const st = norm(status);
+    if(st.includes('lendo')) status='Lendo';
+    else if(st.includes('paus')) status='Pausado';
+    else if(st.includes('aguard') || st.includes('quero')) status='Aguardando';
+    else if(st.includes('complet') || st.includes('lido') || st.includes('final')) status='Completo';
+    return {...b, livro:title, titulo:title, totalPag:pages, paginas:b?.paginas ?? pages, status, usuario:label};
+  }
+  function normalizeSession(s,label){
+    const data = s?.data || s?.date || s?.dia || '';
+    const ano = Number(s?.ano || (String(data).slice(0,4))) || undefined;
+    return {...s, livro:s?.livro || s?.titulo || s?.title || s?.book || '', paginas:Number(s?.paginas ?? s?.pages ?? 0)||0, minutos:Number(s?.minutos ?? s?.minutes ?? 0)||0, data, ano, usuario:label};
+  }
+  function normalizeRating(n,label){
+    const data = n?.data || n?.date || '';
+    const ano = Number(n?.ano || (String(data).slice(0,4))) || undefined;
+    const media = Number(n?.media ?? n?.nota ?? n?.rating ?? n?.score ?? 0) || 0;
+    return {...n, livro:n?.livro || n?.titulo || n?.title || '', media, ano, usuario:label};
   }
 
-  const originalRenderBattle = window.renderBatalha;
-  const originalSetUsuario = window.setUsuario;
+  function buildBattleData(){
+    const base = window._dadosD || {};
+    const out = {...base, livros:[], lendo:[], pausados:[], aguardando:[], sessoes:[], notas:[], metasPorAno:base.metasPorAno||{}};
+    const list = people();
+    let addedFromRaw = false;
+    list.forEach(p=>{
+      const label = safeLabel(p);
+      const lib = p.library || p.livros || p.books || [];
+      const sess = p.sessions || p.sessoes || [];
+      const ratings = p.ratings || p.notas || [];
+      if(lib.length || sess.length || ratings.length) addedFromRaw = true;
+      lib.map(b=>normalizeBook(b,label)).forEach(b=>{
+        const st=norm(b.status);
+        if(st.includes('lendo')) out.lendo.push(b);
+        else if(st.includes('paus')) out.pausados.push(b);
+        else if(st.includes('aguard')) out.aguardando.push(b);
+        else out.livros.push(b);
+      });
+      out.sessoes.push(...sess.map(s=>normalizeSession(s,label)));
+      out.notas.push(...ratings.map(n=>normalizeRating(n,label)));
+    });
+    if(!addedFromRaw){
+      // fallback: usa o dataset atual, sem perder o módulo original
+      ['livros','lendo','pausados','aguardando','sessoes','notas'].forEach(k=>{ out[k]=Array.isArray(base[k]) ? base[k].slice() : []; });
+    }
+    return out;
+  }
+
+  function ensureBattleButton(){
+    let btn=$('btn-user-batalha');
+    const wrap = $('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
+    if(!btn){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; wrap.appendChild(btn); }
+    btn.textContent='⚔️ Modo Batalha';
+    btn.removeAttribute('hidden'); btn.disabled=false;
+    btn.style.cssText='display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;padding:6px 14px!important;border-radius:8px!important;border:none!important;cursor:pointer!important;font-size:13px!important;font-weight:800!important;background:linear-gradient(135deg,#8b7cf8,#e56cff)!important;color:white!important;transition:all .2s!important;';
+    btn.onclick=function(ev){ ev&&ev.preventDefault&&ev.preventDefault(); ev&&ev.stopPropagation&&ev.stopPropagation(); openBattle(); return false; };
+    const main=$('bl-battle-main-btn'); if(main){ main.onclick=btn.onclick; main.style.setProperty('display','inline-flex','important'); }
+    return btn;
+  }
 
   function hideTopBooksOnlyInBattle(){
-    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
+    document.body.classList.add('bl-battle-active');
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.setProperty('display','none','important');
     if(bat){ bat.style.setProperty('display','block','important'); bat.hidden=false; }
-    document.querySelectorAll('#app > *').forEach(el=>{
-      if(el.id==='pageBatalha') el.style.setProperty('display','block','important');
-      else if(el.id==='pageDashboard') el.style.setProperty('display','none','important');
-      else el.style.setProperty('display','none','important');
-    });
+    document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
+    const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.setProperty('display','none','important');
     const fab=document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
-    document.body.classList.add('bl-battle-active');
   }
 
   function restoreMyProfile(){
     document.body.classList.remove('bl-battle-active');
     window.usuarioAtual = meLabel();
-    document.querySelectorAll('#app > *').forEach(el=>el.style.removeProperty('display'));
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.display='block';
     if(bat) bat.style.display='none';
+    const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.removeProperty('display');
     document.querySelectorAll('.lendo-wrap, #lendoWrap, [data-lendo-wrap]').forEach(el=>el.style.removeProperty('display'));
     const fab=document.querySelector('.fab'); if(fab) fab.style.removeProperty('display');
     try{ if(typeof originalSetUsuario==='function') originalSetUsuario(meLabel()); }catch(e){ console.warn('Voltar perfil: setUsuario original falhou', e); }
-    setTimeout(()=>{ const dash=$('pageDashboard'), bat=$('pageBatalha'); if(dash) dash.style.display='block'; if(bat) bat.style.display='none'; ensureBattleButton(); },80);
+    setTimeout(()=>{ if(dash) dash.style.display='block'; if(bat) bat.style.display='none'; ensureBattleButton(); },80);
     window.scrollTo(0,0);
   }
   window.blBackToMyProfile = restoreMyProfile;
   window.blExitBattle = restoreMyProfile;
 
-  function ensureBattleButton(){
-    let btn=$('btn-user-batalha');
-    const wrap = $('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='btn-user-batalha';
-      btn.type='button';
-      wrap.appendChild(btn);
-    }
-    btn.textContent='⚔️ Batalha';
-    btn.removeAttribute('hidden');
-    btn.disabled=false;
-    btn.style.cssText='display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:6px!important;padding:6px 14px!important;border-radius:7px!important;border:none!important;cursor:pointer!important;font-size:13px!important;font-weight:700!important;background:transparent!important;color:var(--muted)!important;transition:all .2s!important;';
-    btn.onclick=function(ev){ ev&&ev.preventDefault&&ev.preventDefault(); ev&&ev.stopPropagation&&ev.stopPropagation(); openBattleOriginalMulti(); return false; };
-
-    // Mantém também o botão de topo, se existir em alguma versão, mas sem depender dele.
-    let main=$('bl-battle-main-btn');
-    if(main){ main.onclick=btn.onclick; main.style.setProperty('display','inline-flex','important'); }
-    return btn;
+  function initialSelected(){
+    const list=people().map(safeLabel).filter(Boolean);
+    if(selectedPlayers.length) return selectedPlayers.filter(x=>list.includes(x));
+    try{ const saved=JSON.parse(localStorage.getItem('blBattleSelectedPlayers')||'[]'); if(Array.isArray(saved) && saved.length) return saved.filter(x=>list.includes(x)); }catch(e){}
+    return list.slice(0, Math.min(2,list.length));
   }
 
-  function ensureReturnButton(){
-    const page=$('pageBatalha'); if(!page) return;
-    let btn=$('bl-battle-return-original');
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='bl-battle-return-original';
-      btn.type='button';
-      btn.textContent='↩ Voltar para meus dados';
-      btn.style.cssText='margin:8px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
-      const first = page.firstElementChild;
-      page.insertBefore(btn, first || null);
-    }
-    btn.onclick=restoreMyProfile;
-    btn.style.setProperty('display','inline-flex','important');
+  function setSelected(arr){
+    const allowed=new Set(people().map(safeLabel));
+    selectedPlayers=[...new Set((arr||[]).filter(x=>allowed.has(x)))];
+    try{ localStorage.setItem('blBattleSelectedPlayers', JSON.stringify(selectedPlayers)); }catch(e){}
   }
 
   function fillOriginalSelects(){
@@ -8336,101 +8372,148 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=$(id); if(!sel) return;
       const prev=sel.value;
-      sel.innerHTML=list.map(p=>`<option value="${esc(p.label)}">${esc(p.label)}</option>`).join('');
-      sel.value=[...sel.options].some(o=>o.value===prev)?prev:(list[idx]?.label || list[0]?.label || '');
+      sel.innerHTML=list.map(p=>`<option value="${esc(safeLabel(p))}">${esc(safeLabel(p))}</option>`).join('');
+      sel.value=[...sel.options].some(o=>o.value===prev)?prev:(selectedPlayers[idx] || list[idx]?.label || list[0]?.label || '');
     });
-    return list;
+    const hiddenAno=$('bat-ano'), customAno=$('bl-battle-year');
+    if(hiddenAno && customAno) hiddenAno.value=customAno.value;
   }
 
-  function ensureMultiControls(){
+  function ensureReturnAndPicker(){
     const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let box=$('bl-battle-multi-controls');
+    const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.setProperty('display','none','important');
+    let box=$('bl-battle-control-panel');
     if(!box){
-      box=document.createElement('div');
-      box.id='bl-battle-multi-controls';
-      box.style.cssText='max-width:1180px;margin:0 auto 14px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(15,23,42,.72);';
-      container.parentElement.insertBefore(box, container);
+      box=document.createElement('div'); box.id='bl-battle-control-panel';
+      box.style.cssText='max-width:1180px;margin:18px auto 18px;padding:0 12px;';
+      page.insertBefore(box, container);
     }
     const list=people();
-    const checkedNow = checkedLabels();
-    const selected = new Set(checkedNow.length ? checkedNow : list.slice(0, Math.min(2,list.length)).map(p=>p.label));
+    if(!selectedPlayers.length) setSelected(initialSelected());
+    const filtered=list.filter(p=>safeLabel(p).toLowerCase().includes(searchText.toLowerCase()) || String(p.email||'').toLowerCase().includes(searchText.toLowerCase()));
+    const hiddenAno=$('bat-ano');
+    const yearOptions = hiddenAno ? [...hiddenAno.options].map(o=>`<option value="${esc(o.value)}" ${o.selected?'selected':''}>${esc(o.textContent)}</option>`).join('') : '<option value="total">Todos os anos</option>';
     box.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-        <div style="font-weight:900;color:#e2e8f0">Selecionar players da batalha</div>
-        <button id="bl-battle-apply-original" type="button" style="background:#e56cff;color:white;border:0;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer">Atualizar batalha</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <button id="bl-battle-return-original" type="button" style="background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);">↩ Voltar para meus dados</button>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+          <span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
+          <select id="bl-battle-year" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:800;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">${yearOptions}</select>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        ${list.map(p=>`<label style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 11px;cursor:pointer;font-weight:700;color:#cbd5e1"><input class="bl-battle-check" type="checkbox" value="${esc(p.label)}" ${selected.has(p.label)?'checked':''}> ${esc(p.label)}</label>`).join('')}
+      <div style="border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(15,23,42,.72);overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div>
+            <div style="font-weight:950;color:#e2e8f0;font-size:16px">Players da batalha</div>
+            <div style="color:var(--muted);font-size:12px;margin-top:2px">${selectedPlayers.length} selecionado(s): ${selectedPlayers.map(esc).join(', ') || 'nenhum'}</div>
+          </div>
+          <button id="bl-battle-apply-original" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Atualizar batalha</button>
+        </div>
+        <div style="padding:14px 16px;display:grid;grid-template-columns:minmax(230px,320px) 1fr;gap:14px;align-items:start">
+          <div>
+            <input id="bl-battle-search" value="${esc(searchText)}" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#101827;border:1px solid rgba(255,255,255,.12);color:#e2e8f0;border-radius:10px;padding:11px 12px;font-weight:700;outline:none;margin-bottom:10px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="bl-battle-select-all" type="button" style="background:rgba(255,255,255,.06);color:#cbd5e1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 9px;font-weight:800;cursor:pointer">Selecionar todos</button>
+              <button id="bl-battle-clear" type="button" style="background:rgba(255,255,255,.06);color:#cbd5e1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 9px;font-weight:800;cursor:pointer">Limpar</button>
+            </div>
+          </div>
+          <div id="bl-battle-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-height:250px;overflow:auto;padding-right:4px">
+            ${filtered.map(p=>{ const label=safeLabel(p); const checked=selectedPlayers.includes(label); return `
+              <button type="button" class="bl-battle-player-option" data-label="${esc(label)}" style="text-align:left;display:flex;align-items:center;gap:10px;background:${checked?'rgba(139,124,248,.18)':'rgba(255,255,255,.045)'};border:1px solid ${checked?'rgba(139,124,248,.55)':'rgba(255,255,255,.08)'};border-radius:12px;padding:10px;cursor:pointer;color:#e2e8f0;font-weight:850;">
+                <span style="width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;background:${checked?'#8b7cf8':'rgba(255,255,255,.08)'};color:white;font-size:12px">${checked?'✓':''}</span>
+                <span style="min-width:0"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</span>${p.email?`<small style="display:block;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</small>`:''}</span>
+              </button>`; }).join('') || '<div style="color:#94a3b8;padding:10px">Nenhum player encontrado.</div>'}
+          </div>
+        </div>
       </div>`;
+    $('bl-battle-return-original').onclick=restoreMyProfile;
     $('bl-battle-apply-original').onclick=()=>renderBattleMultiOriginal();
-    box.querySelectorAll('.bl-battle-check').forEach(ch=>ch.addEventListener('change',()=>renderBattleMultiOriginal()));
+    $('bl-battle-year').onchange=()=>{ const h=$('bat-ano'); if(h) h.value=$('bl-battle-year').value; renderBattleMultiOriginal(); };
+    $('bl-battle-search').oninput=(ev)=>{ searchText=ev.target.value||''; ensureReturnAndPicker(); };
+    $('bl-battle-select-all').onclick=()=>{ setSelected(people().map(safeLabel)); renderBattleMultiOriginal(); };
+    $('bl-battle-clear').onclick=()=>{ setSelected([]); ensureReturnAndPicker(); const c=$('batalhaContainer'); if(c)c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>'; };
+    box.querySelectorAll('.bl-battle-player-option').forEach(btn=>btn.onclick=()=>{ const label=btn.getAttribute('data-label'); const set=new Set(selectedPlayers); set.has(label)?set.delete(label):set.add(label); setSelected([...set]); renderBattleMultiOriginal(); });
   }
 
-  function checkedLabels(){
-    return [...document.querySelectorAll('.bl-battle-check:checked')].map(x=>x.value).filter(Boolean);
-  }
-
-  function renderPair(a,b){
+  function renderPair(a,b,battleData){
     const selA=$('bat-playerA'), selB=$('bat-playerB'), c=$('batalhaContainer');
     if(!selA || !selB || !c || typeof originalRenderBattle!=='function') return '';
+    const oldData = window._dadosD;
+    window._dadosD = battleData || buildBattleData();
+    fillOriginalSelects();
     selA.value=a; selB.value=b;
     originalRenderBattle();
-    return c.innerHTML;
+    const html = c.innerHTML;
+    window._dadosD = oldData;
+    return html;
   }
 
   function renderBattleMultiOriginal(){
-    hideTopBooksOnlyInBattle();
-    ensureReturnButton();
-    fillOriginalSelects();
-    ensureMultiControls();
-    const c=$('batalhaContainer'); if(!c) return;
-    const selected=checkedLabels();
-    if(selected.length < 2){
-      c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>';
-      return;
-    }
-    if(selected.length === 2){
-      renderPair(selected[0], selected[1]);
-      return;
-    }
-    const pairs=[];
-    for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i], selected[j]]);
-    const html=[];
-    for(const [a,b] of pairs){
-      const inner=renderPair(a,b);
-      html.push(`<section class="bl-original-battle-pair" style="max-width:1180px;margin:0 auto 26px"><div style="font-weight:900;color:#e2e8f0;margin:0 0 10px;font-size:18px">⚔️ ${esc(a)} <span style="color:#94a3b8">vs</span> ${esc(b)}</div>${inner}</section>`);
-    }
-    c.innerHTML=html.join('');
+    if(renderingMulti) return;
+    renderingMulti = true;
+    try{
+      window.usuarioAtual='Batalha';
+      hideTopBooksOnlyInBattle();
+      if(!selectedPlayers.length) setSelected(initialSelected());
+      const battleData = buildBattleData();
+      const oldData = window._dadosD;
+      window._dadosD = battleData;
+      if(typeof originalRenderBattle==='function'){
+        // Atualiza options do ano uma vez usando o módulo original, mas ainda escondido.
+        fillOriginalSelects();
+      }
+      window._dadosD = oldData;
+      ensureReturnAndPicker();
+      fillOriginalSelects();
+      const c=$('batalhaContainer'); if(!c) return;
+      const selected=selectedPlayers.slice();
+      if(selected.length < 2){
+        c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#f8caca;border:1px solid rgba(248,140,106,.35)">Selecione pelo menos 2 players para a Batalha.</div>';
+        return;
+      }
+      if(selected.length === 2){
+        c.innerHTML = renderPair(selected[0], selected[1], battleData);
+        return;
+      }
+      const pairs=[];
+      for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i], selected[j]]);
+      const html=[];
+      for(const [a,b] of pairs){
+        const inner=renderPair(a,b,battleData);
+        html.push(`<section class="bl-original-battle-pair" style="max-width:1180px;margin:0 auto 34px"><div style="font-weight:950;color:#e2e8f0;margin:0 0 12px;font-size:20px;padding:0 12px">⚔️ ${esc(a)} <span style="color:#94a3b8">vs</span> ${esc(b)}</div>${inner}</section>`);
+      }
+      c.innerHTML=html.join('');
+    } finally { renderingMulti = false; }
   }
 
-  function openBattleOriginalMulti(){
+  function openBattle(){
     window.usuarioAtual='Batalha';
+    setSelected(initialSelected());
     hideTopBooksOnlyInBattle();
-    fillOriginalSelects();
-    ensureReturnButton();
-    ensureMultiControls();
+    ensureBattleButton();
     renderBattleMultiOriginal();
-    setTimeout(()=>{ hideTopBooksOnlyInBattle(); ensureBattleButton(); ensureReturnButton(); window.scrollTo(0,0); },50);
+    setTimeout(()=>{ hideTopBooksOnlyInBattle(); ensureBattleButton(); ensureReturnAndPicker(); window.scrollTo(0,0); },60);
   }
-  window.blOpenBattleOriginalMulti = openBattleOriginalMulti;
+  window.blOpenBattleOriginalMulti = openBattle;
 
   window.renderBatalha = function(){
+    if(renderingMulti) return;
     if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMultiOriginal();
     if(typeof originalRenderBattle==='function') return originalRenderBattle.apply(this, arguments);
   };
   window.setUsuario = function(usuario){
-    if(usuario==='Batalha') return openBattleOriginalMulti();
+    if(usuario==='Batalha') return openBattle();
     document.body.classList.remove('bl-battle-active');
     if(typeof originalSetUsuario==='function') return originalSetUsuario.apply(this, arguments);
     window.usuarioAtual=usuario;
   };
   window.blBattleDebug = window.blV12Debug = function(){
-    return {patch:window.__BL_PATCH_VERSION, marker:!!window.__BL_V12_8_MARKER, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?getComputedStyle($('btn-user-batalha')).display:null, usuarioAtual:window.usuarioAtual, pageBatalha:!!$('pageBatalha'), bodyBattle:document.body.classList.contains('bl-battle-active'), people:people().map(p=>p.label), checked:checkedLabels()};
+    return {patch:window.__BL_PATCH_VERSION, marker:!!window.__BL_V12_9_MARKER, button:!!$('btn-user-batalha'), usuarioAtual:window.usuarioAtual, bodyBattle:document.body.classList.contains('bl-battle-active'), people:people().map(p=>({label:safeLabel(p), lib:(p.library||p.livros||[]).length, sessions:(p.sessions||p.sessoes||[]).length, ratings:(p.ratings||p.notas||[]).length})), selected:selectedPlayers.slice(), pairs:selectedPlayers.length>1 ? selectedPlayers.length*(selectedPlayers.length-1)/2 : 0};
   };
 
-  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha') { hideTopBooksOnlyInBattle(); ensureReturnButton(); ensureMultiControls(); } }
+  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha'||document.body.classList.contains('bl-battle-active')) { hideTopBooksOnlyInBattle(); ensureReturnAndPicker(); } }
   document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,400); setTimeout(tick,1200); setTimeout(tick,2500); });
-  setInterval(tick,1500);
+  setInterval(tick,1800);
 })();
 </script>
 
