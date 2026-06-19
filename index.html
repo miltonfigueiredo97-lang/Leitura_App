@@ -7619,6 +7619,7 @@ if ('serviceWorker' in navigator) {
       sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
     });
   }
+  window.__BL_NATIVE_RENDER_BATALHA = window.renderBatalha;
   const oldRenderBatalha=window.renderBatalha;
   window.renderBatalha=function(){ fillBattleSelects(); if(typeof oldRenderBatalha==='function') oldRenderBatalha(); };
 
@@ -8553,7 +8554,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 /* BookLegacy V12.12 — botão Batalha DB-safe
    Base: V12.10. Não mexe em Firebase/Auth/Firestore/perfil. Só mantém o botão visível e liga ao Batalha existente. */
 (function(){
-  window.__BL_PATCH_VERSION = 'v12.12-battle-button-minimal-dbsafe';
+  window.__BL_PATCH_VERSION = 'v12.16-battle-selector-stable';
   window.__BL_V12_12_MARKER = true;
   const BTN_ID = 'btn-user-batalha';
   function qs(sel){ return document.querySelector(sel); }
@@ -8624,48 +8625,47 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 </script>
 
 
-
-<script id="bl-v12-15-battle-selector-5players">
-/* BookLegacy V12.15 — seletor real de até 5 players sem tocar em Firebase/login/banco.
-   Corrige somente o Modo Batalha: esconde seletor A/B antigo, abre lista pesquisável e renderiza todos os pares selecionados. */
+<script id="bl-v12-16-battle-selector-stable">
+/* BookLegacy V12.16 — patch direto no Modo Batalha original.
+   Mantém o renderBatalha original salvo em __BL_NATIVE_RENDER_BATALHA, cria seletor pesquisável até 5 players e renderiza todos os pares. */
 (function(){
   'use strict';
-  window.__BL_PATCH_VERSION = 'v12.15-battle-selector-5players';
-  window.__BL_V12_15_MARKER = true;
+  window.__BL_PATCH_VERSION = 'v12.16-battle-selector-stable';
+  window.__BL_V12_16_MARKER = true;
 
   const $ = (id)=>document.getElementById(id);
   const esc = (v)=>String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm = (v)=>String(v ?? '').trim().toLowerCase();
-  const baseRenderBatalha = window.renderBatalha;   // wrapper anterior que ainda consegue chamar o render original quando NÃO está em Batalha
-  const baseSetUsuario = window.setUsuario;
+  const nativeRender = window.__BL_NATIVE_RENDER_BATALHA || window.renderBatalha;
+  const previousSetUsuario = window.setUsuario;
 
   function raw(){ return window.BL?.raw || window._blRaw || {}; }
   function authUser(){ return window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null; }
-  function safeLabel(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
-  function meLabel(){ const u=authUser(); return raw().currentLabel || safeLabel(u) || window.__BL_ME_LABEL || 'Milton'; }
-  function meUid(){ return raw().uid || authUser()?.uid || ''; }
+  function labelOf(p){ return String(p?.label || p?.displayName || p?.name || p?.nome || p?.email || p?.uid || '').trim(); }
+  function keyOf(p){ return String(p?.uid || labelOf(p)); }
+  function meLabel(){ const u=authUser(); return raw().currentLabel || labelOf(u) || window.__BL_ME_LABEL || 'Milton'; }
 
   function people(){
     const map = new Map();
     function add(p){
       if(!p) return;
+      const label = labelOf(p);
       const uid = p.uid || p.id || '';
-      const label = safeLabel(p);
-      if(!uid && !label) return;
+      if(!label && !uid) return;
       const key = uid || norm(label);
-      if(!map.has(key)) map.set(key, Object.assign({}, p, {uid, label: label || uid}));
-      else map.set(key, Object.assign({}, map.get(key), p, {uid: uid || map.get(key).uid, label: label || map.get(key).label}));
+      const old = map.get(key) || {};
+      map.set(key, Object.assign({}, old, p, {uid: uid || old.uid || '', label: label || old.label || uid}));
     }
     (Array.isArray(raw().users) ? raw().users : []).forEach(add);
     (Array.isArray(raw().friends) ? raw().friends : []).forEach(add);
-    const u=authUser(); if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
+    const u = authUser();
+    if(u) add({uid:u.uid,label:u.displayName||u.email||'Eu',displayName:u.displayName,email:u.email,photoURL:u.photoURL});
     if(!map.size){ add({label:'Milton'}); add({label:'Daniel'}); }
-    return [...map.values()].filter(p=>safeLabel(p));
+    return [...map.values()].filter(p=>labelOf(p));
   }
 
   function battleValue(p){
-    const label = safeLabel(p);
-    // Mantém compatibilidade com o render original, que filtra a coluna usuario por texto.
+    const label = labelOf(p);
     if(/milton/i.test(label)) return 'Milton';
     if(/daniel/i.test(label)) return 'Daniel';
     if(/roger/i.test(label)) return 'Roger';
@@ -8674,187 +8674,148 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
   function selectedKeys(){
     const list = people();
-    if(!Array.isArray(window.__BL_BATTLE_SELECTED_V15) || !window.__BL_BATTLE_SELECTED_V15.length){
-      window.__BL_BATTLE_SELECTED_V15 = list.slice(0, Math.min(3, list.length)).map(p=>p.uid || p.label).filter(Boolean);
+    if(!Array.isArray(window.__BL_BATTLE_SELECTED_V16) || !window.__BL_BATTLE_SELECTED_V16.length){
+      window.__BL_BATTLE_SELECTED_V16 = list.slice(0, Math.min(3, list.length)).map(keyOf);
     }
-    return window.__BL_BATTLE_SELECTED_V15;
+    return window.__BL_BATTLE_SELECTED_V16.map(String);
   }
   function selectedPeople(){
-    const keys = new Set(selectedKeys().map(String));
-    return people().filter(p => keys.has(String(p.uid || p.label)) || keys.has(String(p.label)));
+    const keys = new Set(selectedKeys());
+    return people().filter(p => keys.has(keyOf(p)) || keys.has(labelOf(p))).slice(0,5);
   }
 
-  function hideOldBattleControls(){
-    const oldTop=$('batalha-seletor'); if(oldTop) oldTop.style.setProperty('display','none','important');
-    const oldMulti=$('bl-battle-multi-controls'); if(oldMulti) oldMulti.remove();
+  function hideOldControls(){
+    const top=$('batalha-seletor'); if(top) top.style.setProperty('display','none','important');
+    const old=$('bl-battle-multi-controls'); if(old) old.style.setProperty('display','none','important');
+    const old15=$('bl-battle-selector-v15'); if(old15) old15.style.setProperty('display','none','important');
     document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap]').forEach(el=>el.style.setProperty('display','none','important'));
-    const fab=document.querySelector('.fab,#fabBtn'); if(fab) fab.style.setProperty('display','none','important');
+    document.querySelectorAll('.fab,#fabBtn,#fabMenu').forEach(el=>el.style.setProperty('display','none','important'));
   }
 
   function showBattlePage(){
-    window.usuarioAtual = 'Batalha';
-    document.body.classList.add('bl-battle-active');
+    window.usuarioAtual='Batalha';
+    document.body.classList.add('bl-battle-active','bl-v16-battle');
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.setProperty('display','none','important');
     if(bat){ bat.hidden=false; bat.style.setProperty('display','block','important'); }
-    document.querySelectorAll('#app > *').forEach(el=>{
-      if(el.id === 'pageBatalha') el.style.setProperty('display','block','important');
-      else el.style.setProperty('display','none','important');
-    });
-    hideOldBattleControls();
+    hideOldControls();
   }
 
-  function restoreMyProfile(){
-    document.body.classList.remove('bl-battle-active');
+  function restoreProfile(){
+    document.body.classList.remove('bl-battle-active','bl-v16-battle');
+    const dd=$('blBattleDropdownV16'); if(dd) dd.style.display='none';
     const bat=$('pageBatalha'), dash=$('pageDashboard');
-    document.querySelectorAll('#app > *').forEach(el=>el.style.removeProperty('display'));
     if(bat) bat.style.display='none';
     if(dash) dash.style.display='block';
-    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap]').forEach(el=>el.style.removeProperty('display'));
-    const fab=document.querySelector('.fab,#fabBtn'); if(fab) fab.style.removeProperty('display');
-    try{ if(typeof baseSetUsuario === 'function') baseSetUsuario(meLabel()); }catch(e){ console.warn('V12.15 voltar perfil:', e); }
-    setTimeout(()=>{ if(bat) bat.style.display='none'; if(dash) dash.style.display='block'; ensureBattleButton(); }, 80);
+    document.querySelectorAll('.lendo-wrap,#lendoWrap,[data-lendo-wrap],.fab,#fabBtn,#fabMenu').forEach(el=>el.style.removeProperty('display'));
+    try{ if(typeof previousSetUsuario==='function') previousSetUsuario(meLabel()); else window.usuarioAtual=meLabel(); }catch(e){ window.usuarioAtual=meLabel(); console.warn('V12.16 voltar perfil:', e); }
+    setTimeout(()=>{ const b=$('pageBatalha'), d=$('pageDashboard'); if(b) b.style.display='none'; if(d) d.style.display='block'; ensureBattleButton(); }, 80);
     window.scrollTo(0,0);
   }
-  window.blBackToMyProfile = restoreMyProfile;
-  window.blExitBattle = restoreMyProfile;
+  window.blBackToMyProfile = restoreProfile;
+  window.blExitBattle = restoreProfile;
 
   function ensureReturnButton(){
     const page=$('pageBatalha'); if(!page) return;
     let btn=$('bl-battle-return-original');
     if(!btn){
-      btn=document.createElement('button');
-      btn.id='bl-battle-return-original';
-      btn.type='button';
+      btn=document.createElement('button'); btn.id='bl-battle-return-original'; btn.type='button';
       btn.textContent='↩ Voltar para meus dados';
       btn.style.cssText='margin:18px 0 14px;background:var(--purple,#8b7cf8);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer;box-shadow:0 10px 25px rgba(139,124,248,.25);';
       page.insertBefore(btn, page.firstElementChild || null);
     }
-    btn.onclick=restoreMyProfile;
+    btn.onclick=restoreProfile;
     btn.style.setProperty('display','inline-flex','important');
   }
 
-  function ensureOriginalSelectOptions(){
+  function ensureNativeSelectOptions(){
     const list=people();
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=$(id); if(!sel) return;
       const prev=sel.value;
-      sel.innerHTML=list.map(p=>`<option value="${esc(battleValue(p))}">${esc(p.label)}</option>`).join('');
+      sel.innerHTML=list.map(p=>`<option value="${esc(battleValue(p))}">${esc(labelOf(p))}</option>`).join('');
       if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
       else sel.value=battleValue(list[idx] || list[0] || {label:'Milton'});
     });
   }
 
-  function ensurePicker(){
-    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
-    let picker=$('bl-battle-selector-v15');
-    if(!picker){
-      picker=document.createElement('div');
-      picker.id='bl-battle-selector-v15';
-      picker.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:20;';
-      container.parentElement.insertBefore(picker, container);
-    }
-    const list=people();
-    const sel=new Set(selectedKeys().map(String));
-    const names=selectedPeople().map(p=>p.label);
-    picker.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-weight:900;color:#fff;font-size:16px">Players selecionados</div>
-          <div id="blBattleSelectedNamesV15" style="font-size:12px;color:#94a3b8;margin-top:4px">${esc(names.join(', ') || 'Nenhum player selecionado')}</div>
-        </div>
-        <button id="blBattleOpenPickerV15" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar players</button>
-      </div>
-      <div id="blBattleDropdownV15" style="display:none;position:absolute;z-index:99999;right:14px;top:66px;width:min(390px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 55px rgba(0,0,0,.55);padding:12px">
-        <input id="blBattleSearchV15" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none">
-        <div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Selecione até 5 players</div>
-        <div id="blBattlePickerListV15" style="max-height:300px;overflow:auto;display:grid;gap:8px">
-          ${list.map(p=>{
-            const key=p.uid || p.label;
-            const checked = sel.has(String(key)) || sel.has(String(p.label));
-            return `<label class="blBattlePickItemV15" data-name="${esc(norm(p.label))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)">
-              <input class="blBattleCheckV15" type="checkbox" value="${esc(key)}" ${checked?'checked':''}>
-              <span>${esc(p.label)}</span>
-            </label>`;
-          }).join('')}
-        </div>
-        <div id="blBattleLimitMsgV15" style="display:none;color:#fb923c;font-size:12px;margin-top:9px;font-weight:800">Limite de 5 players por batalha.</div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-          <button id="blBattleClosePickerV15" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button>
-          <button id="blBattleApplyPickerV15" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button>
-        </div>
-      </div>`;
-
-    const dd=$('blBattleDropdownV15');
-    $('blBattleOpenPickerV15').onclick=()=>{ dd.style.display = dd.style.display==='none' ? 'block':'none'; setTimeout(()=>$('blBattleSearchV15')?.focus(),30); };
-    $('blBattleClosePickerV15').onclick=()=>{ dd.style.display='none'; };
-    $('blBattleSearchV15').oninput=(ev)=>{
-      const q=norm(ev.target.value);
-      document.querySelectorAll('.blBattlePickItemV15').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; });
-    };
-    document.querySelectorAll('.blBattleCheckV15').forEach(ch=>{
-      ch.onchange=()=>{
-        const checked=[...document.querySelectorAll('.blBattleCheckV15:checked')];
-        const msg=$('blBattleLimitMsgV15');
-        if(checked.length>5){ ch.checked=false; if(msg) msg.style.display='block'; }
-        else if(msg) msg.style.display='none';
-      };
-    });
-    $('blBattleApplyPickerV15').onclick=()=>{
-      window.__BL_BATTLE_SELECTED_V15=[...document.querySelectorAll('.blBattleCheckV15:checked')].map(i=>i.value);
-      dd.style.display='none';
-      renderBattleMulti();
-    };
+  function updateSelectedSummary(){
+    const names=$('blBattleSelectedNamesV16');
+    if(names) names.textContent = selectedPeople().map(labelOf).join(', ') || 'Nenhum player selecionado';
+    const count=$('blBattleSelectedCountV16');
+    if(count) count.textContent = selectedPeople().length + '/5';
   }
 
-  function renderOriginalPair(pA,pB){
+  function ensurePicker(){
+    const page=$('pageBatalha'), container=$('batalhaContainer'); if(!page || !container) return;
+    let picker=$('bl-battle-selector-v16');
+    if(!picker){
+      picker=document.createElement('div'); picker.id='bl-battle-selector-v16';
+      picker.style.cssText='max-width:1180px;margin:0 auto 18px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(15,23,42,.78);position:relative;z-index:30;';
+      picker.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-weight:900;color:#fff;font-size:16px">Players selecionados <span id="blBattleSelectedCountV16" style="font-size:12px;color:#94a3b8"></span></div><div id="blBattleSelectedNamesV16" style="font-size:12px;color:#94a3b8;margin-top:4px"></div></div><button id="blBattleOpenPickerV16" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer">Selecionar players</button></div>`;
+      container.parentElement.insertBefore(picker, container);
+      picker.querySelector('#blBattleOpenPickerV16').addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); openDropdown(); });
+    }
+    updateSelectedSummary();
+  }
+
+  function buildDropdown(){
+    let dd=$('blBattleDropdownV16');
+    const list=people();
+    const sel=new Set(selectedKeys());
+    if(!dd){
+      dd=document.createElement('div'); dd.id='blBattleDropdownV16';
+      dd.style.cssText='display:none;position:fixed;z-index:2147483647;right:34px;top:132px;width:min(430px,calc(100vw - 34px));background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-shadow:0 22px 65px rgba(0,0,0,.65);padding:12px';
+      document.body.appendChild(dd);
+      dd.addEventListener('click', ev=>ev.stopPropagation());
+    }
+    dd.innerHTML=`<input id="blBattleSearchV16" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#111827;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:10px 11px;margin-bottom:10px;outline:none"><div style="font-size:11px;color:#94a3b8;margin:0 0 8px">Selecione de 2 até 5 players</div><div id="blBattlePickerListV16" style="max-height:320px;overflow:auto;display:grid;gap:8px">${list.map(p=>{ const key=keyOf(p); const checked=sel.has(String(key)) || sel.has(labelOf(p)); return `<label class="blBattlePickItemV16" data-name="${esc(norm(labelOf(p)))}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.055);cursor:pointer;color:#e2e8f0;font-weight:900;border:1px solid rgba(255,255,255,.06)"><input class="blBattleCheckV16" type="checkbox" value="${esc(key)}" ${checked?'checked':''}><span>${esc(labelOf(p))}</span></label>`; }).join('')}</div><div id="blBattleLimitMsgV16" style="display:none;color:#fb923c;font-size:12px;margin-top:9px;font-weight:800">Limite de 5 players.</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="blBattleClosePickerV16" type="button" style="background:#1f2937;color:#cbd5e1;border:0;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer">Fechar</button><button id="blBattleApplyPickerV16" type="button" style="background:#8b7cf8;color:white;border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer">Aplicar</button></div>`;
+    const search=$('blBattleSearchV16');
+    if(search) search.oninput=(ev)=>{ const q=norm(ev.target.value); dd.querySelectorAll('.blBattlePickItemV16').forEach(el=>{ el.style.display = !q || norm(el.dataset.name).includes(q) ? 'flex':'none'; }); };
+    dd.querySelectorAll('.blBattleCheckV16').forEach(ch=>{ ch.onchange=()=>{ const checked=dd.querySelectorAll('.blBattleCheckV16:checked'); const msg=$('blBattleLimitMsgV16'); if(checked.length>5){ ch.checked=false; if(msg) msg.style.display='block'; } else if(msg) msg.style.display='none'; }; });
+    $('blBattleClosePickerV16').onclick=(ev)=>{ ev.preventDefault(); dd.style.display='none'; };
+    $('blBattleApplyPickerV16').onclick=(ev)=>{ ev.preventDefault(); const vals=[...dd.querySelectorAll('.blBattleCheckV16:checked')].map(i=>i.value); if(vals.length<2){ const msg=$('blBattleLimitMsgV16'); if(msg){ msg.textContent='Selecione pelo menos 2 players.'; msg.style.display='block'; } return; } window.__BL_BATTLE_SELECTED_V16=vals.slice(0,5); dd.style.display='none'; renderBattleMulti(); };
+    return dd;
+  }
+
+  function openDropdown(){
+    const dd=buildDropdown();
+    dd.style.display='block';
+    setTimeout(()=>$('blBattleSearchV16')?.focus(),30);
+  }
+
+  function renderNativePair(pa,pb){
     const c=$('batalhaContainer'), a=$('bat-playerA'), b=$('bat-playerB');
-    if(!c || !a || !b || typeof baseRenderBatalha !== 'function') return '';
-    ensureOriginalSelectOptions();
-    const oldUser=window.usuarioAtual;
-    const hadClass=document.body.classList.contains('bl-battle-active');
-    const oldA=a.value, oldB=b.value;
-    a.value=battleValue(pA);
-    b.value=battleValue(pB);
-    window.usuarioAtual='__BL_ORIGINAL_PAIR__';
-    document.body.classList.remove('bl-battle-active');
-    try{ baseRenderBatalha(); }
-    catch(e){ c.innerHTML=`<div class="card" style="padding:18px;color:#fb923c">Erro ao renderizar ${esc(pA.label)} vs ${esc(pB.label)}: ${esc(e.message||e)}</div>`; }
+    if(!c || !a || !b || typeof nativeRender!=='function') return `<div style="padding:16px;color:#fb923c">Render original não encontrado.</div>`;
+    ensureNativeSelectOptions();
+    const oldUser=window.usuarioAtual, oldA=a.value, oldB=b.value;
+    const had=document.body.classList.contains('bl-battle-active');
+    a.value=battleValue(pa); b.value=battleValue(pb);
+    window.usuarioAtual='__BL_NATIVE_PAIR__';
+    document.body.classList.remove('bl-battle-active','bl-v16-battle');
+    try{ nativeRender(); }catch(e){ c.innerHTML=`<div style="padding:16px;color:#fb923c">Erro em ${esc(labelOf(pa))} vs ${esc(labelOf(pb))}: ${esc(e.message||e)}</div>`; }
     const html=c.innerHTML;
     a.value=oldA; b.value=oldB; window.usuarioAtual=oldUser;
-    if(hadClass) document.body.classList.add('bl-battle-active');
+    if(had) document.body.classList.add('bl-battle-active','bl-v16-battle');
     return html;
   }
 
   function renderBattleMulti(){
-    showBattlePage();
-    ensureReturnButton();
-    ensureOriginalSelectOptions();
-    ensurePicker();
-    hideOldBattleControls();
+    showBattlePage(); ensureReturnButton(); ensurePicker(); ensureNativeSelectOptions(); hideOldControls();
     const c=$('batalhaContainer'); if(!c) return;
-    const selected=selectedPeople().slice(0,5);
-    if(selected.length<2){ c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#fb923c">Selecione pelo menos 2 players.</div>'; return; }
+    const selected=selectedPeople();
+    if(selected.length<2){ c.innerHTML='<div class="card" style="max-width:900px;margin:20px auto;padding:20px;color:#fb923c">Clique em “Selecionar players” e escolha pelo menos 2 players.</div>'; updateSelectedSummary(); return; }
     const pairs=[];
     for(let i=0;i<selected.length;i++) for(let j=i+1;j<selected.length;j++) pairs.push([selected[i],selected[j]]);
-    const blocks=[];
-    for(const [pa,pb] of pairs){
-      const inner=renderOriginalPair(pa,pb);
-      blocks.push(`<section class="blBattlePairV15" style="max-width:1180px;margin:0 auto 30px">
-        <div style="font-weight:900;color:#e2e8f0;font-size:20px;margin:0 0 12px">⚔️ ${esc(pa.label)} <span style="color:#94a3b8">vs</span> ${esc(pb.label)}</div>
-        ${inner}
-      </section>`);
-    }
+    const blocks=pairs.map(([pa,pb])=>`<section class="blBattlePairV16" style="max-width:1180px;margin:0 auto 34px"><div style="font-weight:900;color:#e2e8f0;font-size:20px;margin:0 0 12px">⚔️ ${esc(labelOf(pa))} <span style="color:#94a3b8">vs</span> ${esc(labelOf(pb))}</div>${renderNativePair(pa,pb)}</section>`);
     c.innerHTML=blocks.join('');
-    ensurePicker();
-    hideOldBattleControls();
     window.__BL_BATTLE_PAIR_COUNT=pairs.length;
+    ensurePicker(); hideOldControls(); updateSelectedSummary();
   }
 
   function openBattle(){ showBattlePage(); renderBattleMulti(); window.scrollTo(0,0); }
-  window.blOpenBattleSelectorV15=openBattle;
-  window.blOpenBattleOriginalMulti=openBattle;
-  window.blOpenBattlePickerMulti=openBattle;
+  window.blOpenBattle = openBattle;
+  window.blOpenBattleSelectorV16 = openBattle;
 
   function ensureBattleButton(){
     let btn=$('btn-user-batalha') || $('bl-battle-main-btn');
@@ -8862,43 +8823,35 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       const target=$('btn-user-milton')?.parentElement || document.querySelector('header') || document.body;
       btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; target.appendChild(btn);
     }
-    btn.textContent='⚔️ Modo Batalha';
-    btn.hidden=false; btn.disabled=false;
-    btn.style.setProperty('display','inline-flex','important');
-    btn.style.setProperty('visibility','visible','important');
-    btn.style.setProperty('opacity','1','important');
+    btn.textContent='⚔️ Modo Batalha'; btn.hidden=false; btn.disabled=false;
+    btn.style.setProperty('display','inline-flex','important'); btn.style.setProperty('visibility','visible','important'); btn.style.setProperty('opacity','1','important');
     btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); openBattle(); return false; };
   }
 
   window.renderBatalha=function(){
     if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')) return renderBattleMulti();
-    if(typeof baseRenderBatalha==='function') return baseRenderBatalha.apply(this, arguments);
+    if(typeof nativeRender==='function') return nativeRender.apply(this, arguments);
   };
   window.setUsuario=function(usuario){
     if(usuario==='Batalha') return openBattle();
-    document.body.classList.remove('bl-battle-active');
-    if(typeof baseSetUsuario==='function') return baseSetUsuario.apply(this, arguments);
+    document.body.classList.remove('bl-battle-active','bl-v16-battle');
+    const dd=$('blBattleDropdownV16'); if(dd) dd.style.display='none';
+    if(typeof previousSetUsuario==='function') return previousSetUsuario.apply(this, arguments);
     window.usuarioAtual=usuario;
   };
 
   window.blBattleDebug=window.blV12Debug=function(){
     const sel=selectedPeople();
-    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1215:!!window.__BL_V12_15_MARKER, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), picker:!!$('bl-battle-selector-v15'), dropdown:!!$('blBattleDropdownV15'), oldTopDisplay:$('batalha-seletor')?getComputedStyle($('batalha-seletor')).display:null, selected:sel.map(p=>p.label), pairCount:sel.length>=2?sel.length*(sel.length-1)/2:0, renderedPairs:window.__BL_BATTLE_PAIR_COUNT||0, people:people().map(p=>p.label)};
+    return {patch:window.__BL_PATCH_VERSION, marker:true, marker1216:!!window.__BL_V12_16_MARKER, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), picker:!!$('bl-battle-selector-v16'), dropdownDisplay:$('blBattleDropdownV16')?getComputedStyle($('blBattleDropdownV16')).display:null, oldTopDisplay:$('batalha-seletor')?getComputedStyle($('batalha-seletor')).display:null, selected:sel.map(labelOf), pairCount:sel.length>=2?sel.length*(sel.length-1)/2:0, renderedPairs:window.__BL_BATTLE_PAIR_COUNT||0, people:people().map(labelOf)};
   };
 
-  const style=document.createElement('style');
-  style.id='bl-v12-15-style';
-  style.textContent=`
-    body.bl-battle-active #batalha-seletor{display:none!important}
-    body.bl-battle-active #bl-battle-multi-controls{display:none!important}
-    body.bl-battle-active .lendo-wrap, body.bl-battle-active #lendoWrap{display:none!important}
-    body.bl-battle-active #bl-battle-selector-v15{display:block!important}
-  `;
+  const style=document.createElement('style'); style.id='bl-v12-16-style';
+  style.textContent=`body.bl-v16-battle #batalha-seletor, body.bl-v16-battle #bl-battle-multi-controls, body.bl-v16-battle #bl-battle-selector-v15{display:none!important} body.bl-v16-battle .lendo-wrap, body.bl-v16-battle #lendoWrap{display:none!important} body.bl-v16-battle #bl-battle-selector-v16{display:block!important}`;
   document.head.appendChild(style);
 
-  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){ hideOldBattleControls(); ensureReturnButton(); ensurePicker(); } }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{tick(); setTimeout(tick,600);}); else {tick(); setTimeout(tick,600);}
-  setInterval(tick, 1000);
+  function tick(){ ensureBattleButton(); if(window.usuarioAtual==='Batalha' || document.body.classList.contains('bl-battle-active')){ ensureReturnButton(); ensurePicker(); hideOldControls(); } }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{ tick(); setTimeout(tick,600); }); else { tick(); setTimeout(tick,600); }
+  setInterval(tick, 1500);
 })();
 </script>
 
