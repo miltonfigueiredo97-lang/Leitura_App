@@ -563,6 +563,31 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   .grid2,.grid3,.grid4,.grid6{gap:10px!important;}
 }
 </style>
+
+<style id="booklegacy-v3-6-mobile-layout-final">
+@media (max-width: 768px){
+  #mobile-nav{display:none!important;height:0!important;visibility:hidden!important;pointer-events:none!important;}
+  body{padding-bottom:0!important;overflow-x:hidden!important;}
+  header{position:sticky!important;top:0!important;z-index:2200!important;padding:8px 8px!important;gap:6px!important;align-items:center!important;min-height:48px!important;}
+  header .icon{font-size:20px!important;flex:0 0 auto!important;}
+  header h1{font-size:13px!important;max-width:120px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+  header p,.badge{display:none!important;}
+  header>div:last-child{margin-left:auto!important;display:flex!important;gap:5px!important;align-items:center!important;flex-wrap:nowrap!important;max-width:calc(100vw - 170px)!important;overflow:visible!important;}
+  #btn-user-milton,#btn-user-daniel,#btn-user-batalha{display:none!important;}
+  #blMobileMenuBtn{display:inline-flex!important;position:relative!important;z-index:2300!important;height:34px!important;min-width:78px!important;justify-content:center!important;align-items:center!important;padding:0 10px!important;border-radius:10px!important;font-size:12px!important;line-height:1!important;background:#8b7cf8!important;color:#fff!important;border:0!important;font-weight:900!important;box-shadow:0 6px 18px rgba(139,124,248,.22)!important;}
+  #blMobileDrawer{position:fixed!important;top:0!important;right:0!important;bottom:0!important;width:min(86vw,360px)!important;max-width:360px!important;background:#0d1117!important;border-left:1px solid #2a3248!important;z-index:2600!important;overflow-y:auto!important;padding:14px!important;box-shadow:-18px 0 45px rgba(0,0,0,.55)!important;}
+  #blMobileDrawerBackdrop{z-index:2550!important;}
+  #app,.page{padding:8px 10px 20px!important;max-width:100vw!important;overflow-x:hidden!important;}
+  .lendo-wrap{padding:8px 10px!important;}
+  .grid2,.grid3,.grid4,.grid6,[data-desktop-grid]{grid-template-columns:1fr!important;}
+  .kpi-grid-5,#kpi-books-grid,#bookInfoStats,.meta-stats{grid-template-columns:1fr 1fr!important;}
+  .card{padding:10px!important;border-radius:12px!important;max-width:100%!important;overflow:hidden!important;}
+  canvas{max-width:100%!important;width:100%!important;}
+  .fab{bottom:16px!important;right:12px!important;}
+  .fab-menu{bottom:76px!important;right:12px!important;}
+}
+</style>
+
 </head>
 <body>
 
@@ -600,7 +625,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
       </button>
     </div>
     <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.4</button>
+    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.6</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
   </div>
 </header>
@@ -7490,6 +7515,23 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
+
+<script id="booklegacy-v3-6-profile-label-global-safe">
+(function(){
+  'use strict';
+  function safeProfileLabel(user){
+    user = user || (window.BL && window.BL.auth && window.BL.auth.currentUser) || null;
+    const raw = String((user && (user.displayName || user.email)) || '').trim();
+    const low = raw.toLowerCase();
+    if (low.includes('milton')) return 'Milton';
+    if (low.includes('daniel')) return 'Daniel';
+    if (window.BL && window.BL.raw && window.BL.raw.currentLabel) return window.BL.raw.currentLabel;
+    return raw ? raw.split(' ')[0] : 'Milton';
+  }
+  window.blProfileLabel = window.blProfileLabel || safeProfileLabel;
+})();
+</script>
+
 <script>
 // ════════════════════════════════════════════════════════════════
 // BOOKLEGACY V7.8 — HOTFIX ESTÁVEL
@@ -8886,6 +8928,24 @@ body.bl-v12-battle #blBattleBackButtonV25{
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
   window.blMobileDebug=function(){return {patch:window.__BOOKLEGACY_MOBILE_PATCH, navDisplay:getComputedStyle(document.getElementById('mobile-nav')||document.body).display, menu:!!document.getElementById('blMobileDrawer'), community:typeof window.blOpenCommunityModal, battle:typeof window.setUsuario};};
+})();
+</script>
+
+
+<script id="booklegacy-v3-6-mobile-debug">
+(function(){
+  const prev = window.blMobileDebug;
+  window.blMobileDebug = function(){
+    const old = typeof prev === 'function' ? prev() : {};
+    return Object.assign({}, old, {
+      patch:'v3.6-mobile-fullfunc-safe',
+      profileLabel:typeof window.blProfileLabel,
+      bottomNav:document.getElementById('mobile-nav') ? getComputedStyle(document.getElementById('mobile-nav')).display : null,
+      menu:!!document.getElementById('blMobileDrawer'),
+      community:typeof window.blOpenCommunityModal,
+      users:(window.BL&&window.BL.raw&&window.BL.raw.users||[]).length
+    });
+  };
 })();
 </script>
 
