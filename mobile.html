@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v12.24-battle-top-clean">
+<meta name="booklegacy-version" content="v12.25-battle-back-button-fix">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -8555,6 +8555,114 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   };
   setInterval(forceBattleOnly, 700);
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(forceBattleOnly, 100));
+})();
+</script>
+
+
+
+<!-- BookLegacy V12.25: botão voltar no modo batalha sem mexer no render -->
+<style id="booklegacy-v12-25-battle-back-button-css">
+body.bl-v12-battle #blBattleBackButtonV25{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+#blBattleBackButtonV25{
+  background:#8b7cf8 !important;
+  color:#fff !important;
+  border:0 !important;
+  border-radius:10px !important;
+  padding:11px 16px !important;
+  font-weight:900 !important;
+  cursor:pointer !important;
+  box-shadow:0 10px 24px rgba(139,124,248,.28) !important;
+}
+#blBattleBackWrapV25{
+  max-width:1200px !important;
+  margin:22px auto 0 !important;
+  padding:0 0 !important;
+  position:relative !important;
+  z-index:80 !important;
+}
+</style>
+<script id="booklegacy-v12-25-battle-back-button-fix">
+(function(){
+  'use strict';
+  window.__BL_PATCH_VERSION = 'v12.25-battle-back-button-fix';
+  window.__BL_V12_25_MARKER = true;
+  const $ = id => document.getElementById(id);
+  function currentUserLabel(){
+    return window.BL?.raw?.currentLabel || window.BL?.auth?.currentUser?.displayName || 'Milton';
+  }
+  function ensureBackButton(){
+    const page = $('pageBatalha');
+    if(!page) return;
+    let wrap = $('blBattleBackWrapV25');
+    if(!wrap){
+      wrap = document.createElement('div');
+      wrap.id = 'blBattleBackWrapV25';
+      wrap.innerHTML = '<button id="blBattleBackButtonV25" type="button">↩ Voltar para meus dados</button>';
+      const selector = $('blBattleSelectorBoxV23') || $('batalha-seletor') || $('batalhaContainer');
+      if(selector && selector.parentNode){ selector.parentNode.insertBefore(wrap, selector); }
+      else { page.insertBefore(wrap, page.firstChild); }
+    }
+    const btn = $('blBattleBackButtonV25');
+    if(btn){
+      btn.onclick = function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        document.body.classList.remove('bl-v12-battle');
+        const dash = $('pageDashboard'), battle = $('pageBatalha');
+        if(battle) battle.style.setProperty('display','none','important');
+        if(dash){
+          dash.style.removeProperty('visibility');
+          dash.style.removeProperty('height');
+          dash.style.removeProperty('min-height');
+          dash.style.removeProperty('overflow');
+          dash.style.removeProperty('margin');
+          dash.style.removeProperty('padding');
+          dash.style.setProperty('display','block','important');
+        }
+        document.querySelectorAll('.lendo-wrap').forEach(el=>{
+          el.style.removeProperty('display');
+          el.style.removeProperty('visibility');
+          el.style.removeProperty('height');
+          el.style.removeProperty('min-height');
+          el.style.removeProperty('overflow');
+          el.style.removeProperty('margin');
+          el.style.removeProperty('padding');
+        });
+        const fab = document.querySelector('.fab');
+        if(fab) fab.style.removeProperty('display');
+        const label = currentUserLabel();
+        if(typeof window.setUsuario === 'function'){
+          try{ window.setUsuario(label); }catch(e){ window.usuarioAtual = label; }
+        } else window.usuarioAtual = label;
+        if(dash) dash.style.setProperty('display','block','important');
+        if(battle) battle.style.setProperty('display','none','important');
+        window.scrollTo(0,0);
+      };
+    }
+  }
+  const previousSetUsuario = window.setUsuario;
+  window.setUsuario = function(usuario){
+    const r = typeof previousSetUsuario === 'function' ? previousSetUsuario.apply(this, arguments) : (window.usuarioAtual = usuario);
+    if(usuario === 'Batalha') setTimeout(ensureBackButton, 30);
+    return r;
+  };
+  const prevDebug = window.blBattleDebug || window.blV12Debug;
+  window.blBattleDebug = window.blV12Debug = function(){
+    const old = typeof prevDebug === 'function' ? prevDebug() : {};
+    return Object.assign({}, old, {
+      patch:'v12.25-battle-back-button-fix',
+      marker1225:true,
+      backButton:!!$('blBattleBackButtonV25'),
+      backButtonDisplay:$('blBattleBackButtonV25') ? getComputedStyle($('blBattleBackButtonV25')).display : null
+    });
+  };
+  document.addEventListener('DOMContentLoaded', ()=>setTimeout(ensureBackButton, 200));
+  setTimeout(ensureBackButton, 500);
+  setTimeout(ensureBackButton, 1500);
 })();
 </script>
 
