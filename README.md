@@ -1,30 +1,28 @@
-# BookLegacy V3.22 — Mobile/APK layout + scroll lock real
+# BookLegacy V3.23 — ajuste fino Mobile/APK
 
 Arquivos incluídos:
 - mobile.html
 - vercel.json
 - android/gradle.properties
 - android/app/src/main/java/com/booklegacy/app/MainActivity.java
+- README.md
 
-Não incluído / não alterado:
+Não inclui e não altera:
 - index.html
 - android/app/google-services.json
 - android/app/src/main/res/values/booklegacy_config.xml
 - .github/workflows/build-apk.yml
 
-Correções focadas no que ainda ficou pendente:
-- Comunidade: mantém layout mobile e agora o scroll fica dentro do modal, não no fundo.
-- Ranking por Notas: lista reorganizada com capa, título e nota alinhados.
-- Gêneros Lidos: restaurado como gráfico Chart.js original, só corrigindo largura/altura.
-- Progresso por Livro: busca reamarrada por input/click/touch e canvas preso ao quadro.
-- Gerenciar Meta: rodapé levantado para não ficar atrás da barra inferior do celular.
-- Registrar Sessão: scroll lock real; fundo travado e popup rolando por dentro.
-- Header mobile/APK: afastado da área de relógio/bateria/câmera.
-- Batalha: conquistas, artefatos/maldições e competição por gêneros ajustados ao celular.
-- Watchdog de overlays: reduz travamento por popup/overlay fantasma.
-- Cache APK mantido: MainActivity usa v=322 e LOAD_NO_CACHE.
+Correções principais:
+- Ranking completo: nota presa dentro do quadro.
+- Gêneros lidos: gráfico mantido e aviso fantasma removido.
+- Progresso por Livro: busca reamarrada.
+- Gerenciar Meta: botões Cancelar/Salvar mais baixos.
+- Header mobile/APK: novo texto "SEU DASHBOARD DE LEITURA" + foto + nome.
+- Batalha: conquistas em grid compacto.
+- Batalha: artefatos e maldições em cards horizontais menores.
+- Batalha: competição por gêneros presa dentro do quadro.
+- Cache automático do APK mantido e atualizado para V3.23.
 
-Debug no mobile/APK:
-- blMobileDebug()
-- blAndroidCacheDebug()
-- blUnlockApp()  // emergência se algum overlay travar interação
+Commit sugerido:
+V3.23 mobile apk fine layout fix
