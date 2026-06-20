@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.12">
+<meta name="booklegacy-version" content="v3.26">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -10528,6 +10528,277 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,rankV325:!!window.__bl_v325_rank_wrapped,bookSearchV325:!!$('selBookBusca')?.__bl_v325,headerV325:!!document.querySelector('.bl-v325-user-title'),mobileLook:document.body.classList.contains('bl-v325-mobile-look')}); };
   const oldCache=window.blAndroidCacheDebug;
   window.blAndroidCacheDebug=function(){ const prev=typeof oldCache==='function'?oldCache():{}; return Object.assign({},prev,{patch:PATCH,cacheGuard:'v3.25'}); };
+})();
+</script>
+
+
+<!-- BOOKLEGACY V3.26 — correção final cuidadosa mobile/apk: menu, modais, busca, batalha -->
+<style id="bl-v326-careful-final-css">
+@media (max-width:899px), (pointer:coarse){
+  :root{--bl-safe-top:env(safe-area-inset-top,0px);--bl-safe-bottom:env(safe-area-inset-bottom,0px)}
+  html,body{width:100%!important;max-width:100vw!important;overflow-x:hidden!important}
+  body.bl-v326-mobile-same-apk #app,body.bl-v326-mobile-same-apk #pageDashboard,body.bl-v326-mobile-same-apk #pageBatalha{width:100%!important;max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important}
+
+  /* Menu: sempre acima da página, mas some atrás de modal */
+  #blMobileMenuFab{z-index:2147483001!important;position:fixed!important;top:calc(var(--bl-safe-top) + 24px)!important;right:12px!important}
+  #blMobileMenuPanel{z-index:2147483000!important;position:fixed!important;top:calc(var(--bl-safe-top) + 88px)!important;right:10px!important;left:auto!important;width:min(330px,calc(100vw - 20px))!important;max-height:calc(100dvh - var(--bl-safe-top) - var(--bl-safe-bottom) - 106px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;box-sizing:border-box!important}
+  .bl-v326-menu-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:2147482999;touch-action:none}
+  body.bl-v326-menu-open .bl-v326-menu-backdrop{display:block!important}
+  body.bl-v326-modal-active #blMobileMenuFab,
+  body.bl-v326-modal-active #blMobileMenuPanel,
+  body.bl-v326-modal-active .bl-v326-menu-backdrop{display:none!important;pointer-events:none!important}
+
+  /* Ranking completo: X sempre clicável e FAB oculto */
+  #modal-ranking-completo{z-index:2147482500!important;overflow-x:hidden!important}
+  #modal-ranking-completo>div{position:relative!important;overflow-x:hidden!important}
+  #modal-ranking-completo>div>button:first-child{z-index:2147482600!important;position:absolute!important;top:10px!important;right:10px!important;width:36px!important;height:36px!important;line-height:36px!important;background:rgba(15,23,42,.96)!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 8px 28px rgba(0,0,0,.45)!important}
+
+  /* Detalhes do Livro: typeahead real */
+  #selBookBusca{width:100%!important;max-width:100%!important;box-sizing:border-box!important;position:relative!important}
+  #selBookLista.bl-v326-suggest{display:none;position:absolute!important;left:0!important;right:0!important;top:calc(100% + 6px)!important;z-index:2147482400!important;width:100%!important;max-height:min(330px,55dvh)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;background:#0d1424!important;border:1px solid rgba(139,124,248,.45)!important;border-radius:14px!important;box-shadow:0 18px 50px rgba(0,0,0,.55)!important;padding:4px!important;box-sizing:border-box!important}
+  #selBookLista.bl-v326-suggest.open{display:block!important}
+  .bl-v326-suggestion{display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;align-items:center!important;gap:8px!important;width:100%!important;padding:10px 9px!important;border:0!important;border-bottom:1px solid rgba(42,50,72,.65)!important;background:transparent!important;color:#e2e8f0!important;text-align:left!important;border-radius:10px!important;box-sizing:border-box!important;font-family:'Rajdhani',sans-serif!important}
+  .bl-v326-suggestion:active,.bl-v326-suggestion:hover{background:rgba(139,124,248,.16)!important}
+  .bl-v326-suggestion strong{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:15px!important;line-height:1.08!important;color:#f8fafc!important}
+  .bl-v326-suggestion small{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:11px!important;line-height:1.1!important;color:#8892a8!important;margin-top:3px!important}
+  .bl-v326-empty{padding:12px!important;color:#8892a8!important;font-size:13px!important;font-family:'Rajdhani',sans-serif!important}
+
+  /* Todas as conquistas: legível e compacto */
+  #modal-todas-conquistas{z-index:2147482500!important;padding:calc(var(--bl-safe-top) + 10px) 8px calc(var(--bl-safe-bottom) + 16px)!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;overscroll-behavior:contain!important}
+  #modal-todas-conquistas>div{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;min-width:0!important;margin:0 auto!important;padding:15px 10px!important;box-sizing:border-box!important;overflow-x:hidden!important;border-radius:16px!important}
+  #modal-todas-conquistas .bl-v326-ach-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'a a' 'b b'!important;gap:4px 8px!important;padding:8px 8px!important;border-radius:10px!important;margin:0!important;align-items:center!important}
+  #modal-todas-conquistas .bl-v326-ach-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important}
+  #modal-todas-conquistas .bl-v326-ach-row>div:nth-child(2){grid-area:name!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #modal-todas-conquistas .bl-v326-ach-row>div:nth-child(3){grid-area:a!important;text-align:left!important;background:rgba(168,85,247,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;justify-content:space-between!important;align-items:center!important}
+  #modal-todas-conquistas .bl-v326-ach-row>div:nth-child(4){grid-area:b!important;text-align:left!important;background:rgba(249,115,22,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;justify-content:space-between!important;align-items:center!important}
+  #modal-todas-conquistas .bl-v326-title-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'own own'!important;gap:4px 8px!important;padding:8px 8px!important;border-radius:10px!important;margin:0!important;align-items:center!important}
+  #modal-todas-conquistas .bl-v326-title-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important}
+  #modal-todas-conquistas .bl-v326-title-row>div:nth-child(2){grid-area:name!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #modal-todas-conquistas .bl-v326-title-row>div:nth-child(3){grid-area:own!important;text-align:left!important;font-size:10px!important;background:rgba(250,204,21,.08)!important;border-radius:8px!important;padding:5px 7px!important;white-space:normal!important}
+
+  /* Artefatos/Maldições: duas capas, texto totalmente embaixo */
+  #pageBatalha #bat-artefatos,#pageBatalha #bat-maldicoes{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;width:100%!important;max-width:100%!important;overflow:hidden!important;align-items:start!important;box-sizing:border-box!important}
+  #pageBatalha #bat-artefatos>div,#pageBatalha #bat-maldicoes>div{width:100%!important;max-width:100%!important;min-width:0!important;text-align:center!important;overflow:hidden!important;box-sizing:border-box!important}
+  #pageBatalha .bat-art-card{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;padding:8px!important;box-sizing:border-box!important;border-radius:14px!important;background:rgba(15,23,42,.78)!important;position:relative!important}
+  #pageBatalha .bat-art-capa{width:100%!important;max-width:100%!important;aspect-ratio:2/3!important;height:auto!important;min-height:0!important;position:relative!important;border-radius:10px!important;overflow:hidden!important;background:#111827!important;margin:0!important;box-sizing:border-box!important}
+  #pageBatalha .bat-art-capa img,#pageBatalha .bat-art-capa>div img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+  #pageBatalha .bat-art-overlay{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%!important;max-width:100%!important;display:block!important;background:transparent!important;padding:7px 2px 0!important;margin:0!important;text-align:center!important;box-sizing:border-box!important;min-width:0!important}
+  #pageBatalha .bat-art-overlay *{text-align:center!important;max-width:100%!important;min-width:0!important;white-space:normal!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:1.08!important;display:block!important}
+  #pageBatalha .bat-art-overlay div:nth-child(1){font-size:9px!important;letter-spacing:1px!important;margin-bottom:4px!important}
+  #pageBatalha .bat-art-overlay div:nth-child(2){font-size:12px!important;font-weight:900!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;min-height:26px!important}
+  #pageBatalha .bat-art-overlay div:nth-child(3){font-size:10px!important;color:rgba(255,255,255,.72)!important;margin-top:4px!important}
+
+  /* Competição por gêneros: quadro como referência, sem sair dele */
+  #bat-generos-div{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;padding:0!important;margin:0!important}
+  #bat-generos-div.bl-v326-genre-ready{display:block!important}
+  #bat-generos-div .bl-v326-genre-legend{display:flex!important;justify-content:center!important;gap:10px!important;flex-wrap:wrap!important;margin:0 0 12px!important;max-width:100%!important;overflow:hidden!important}
+  #bat-generos-div .bl-v326-genre-row{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0 0 12px!important;overflow:hidden!important;border-radius:10px!important;background:rgba(255,255,255,.025)!important;padding:8px!important}
+  #bat-generos-div .bl-v326-genre-name{font-family:'Rajdhani',sans-serif!important;font-size:11px!important;color:#c0c8d8!important;font-weight:900!important;letter-spacing:.8px!important;text-transform:uppercase!important;margin:0 0 7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #bat-generos-div .bl-v326-genre-line{display:grid!important;grid-template-columns:34px minmax(0,1fr) 34px!important;align-items:center!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;margin-bottom:5px!important}
+  #bat-generos-div .bl-v326-genre-line:last-child{margin-bottom:0!important}
+  #bat-generos-div .bl-v326-pct{font-family:'Orbitron',sans-serif!important;font-size:10px!important;font-weight:900!important;white-space:nowrap!important;text-align:right!important}
+  #bat-generos-div .bl-v326-track{height:16px!important;background:rgba(255,255,255,.06)!important;border-radius:6px!important;overflow:hidden!important;min-width:0!important;width:100%!important;max-width:100%!important}
+  #bat-generos-div .bl-v326-fill{height:100%!important;border-radius:6px!important;min-width:2px!important;max-width:100%!important}
+
+  /* Comunidade: modal de verdade, sem FAB por cima, sem travar app */
+  #blCommunityModal{z-index:2147482500!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;padding:calc(var(--bl-safe-top) + 10px) 8px calc(var(--bl-safe-bottom) + 14px)!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;overscroll-behavior:contain!important}
+  #blCommunityModal>div{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;min-width:0!important;margin:0 auto!important;max-height:none!important;box-sizing:border-box!important;overflow-x:hidden!important;padding:14px 10px!important;border-radius:16px!important}
+  #blCommunityModal h2{font-size:20px!important;margin:0 0 4px!important}
+  #blCommunityModal h3{font-size:16px!important;margin:0 0 8px!important}
+  #blCommunityModal .bl-community-grid{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;width:100%!important;max-width:100%!important}
+  #blCommunityModal section{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:12px!important;overflow:hidden!important}
+  #blCommunityModal input,#blCommunityModal button{max-width:100%!important;box-sizing:border-box!important}
+  #blCommunityClose{position:sticky!important;top:0!important;z-index:2!important;align-self:flex-start!important;white-space:nowrap!important;font-size:12px!important;border-radius:10px!important;padding:8px 10px!important}
+}
+</style>
+<script id="bl-v326-careful-final-js">
+(function(){
+  const PATCH='v3.26-mobile-apk-careful-final';
+  const $=id=>document.getElementById(id);
+  const mob=()=>matchMedia('(max-width:899px), (pointer:coarse)').matches || location.pathname.includes('mobile.html');
+  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  function safeStop(ev){ if(!ev) return; ev.preventDefault&&ev.preventDefault(); ev.stopPropagation&&ev.stopPropagation(); ev.stopImmediatePropagation&&ev.stopImmediatePropagation(); }
+  function dataArrays(){
+    const arr=[];
+    try{ if(Array.isArray(window._livros)) arr.push(...window._livros); }catch(e){}
+    try{ if(typeof livrosCache!=='undefined' && Array.isArray(livrosCache)) arr.push(...livrosCache); }catch(e){}
+    try{ ['livros','lendo','pausados','aguardando','library'].forEach(k=>{ const v=window._dadosD?.[k]||window.BL?.raw?.[k]; if(Array.isArray(v)) arr.push(...v); }); }catch(e){}
+    try{ (window.NOTES||[]).forEach(n=>arr.push({livro:n.livro,ano:n.ano,status:'Avaliado'})); }catch(e){}
+    try{ Object.keys(window.BOOK_DAILY||{}).forEach(name=>arr.push({livro:name,status:'Com histórico'})); }catch(e){}
+    const map=new Map();
+    arr.forEach(b=>{ const title=String(b?.livro||b?.title||b?.nome||b?.name||'').trim(); if(!title) return; const k=norm(title); const prev=map.get(k)||{}; map.set(k,Object.assign({},prev,b,{livro:title})); });
+    return [...map.values()];
+  }
+  function scoreBook(b,q){
+    const t=norm(b.livro), a=norm(b.autor), c=norm(b.colecao), g=norm(b.genero), qq=norm(q);
+    if(!qq) return 0;
+    if(t===qq) return 1000;
+    if(t.startsWith(qq)) return 800-(t.length-qq.length);
+    if(t.includes(qq)) return 520-(t.indexOf(qq));
+    const words=qq.split(/\s+/).filter(Boolean);
+    if(words.length && words.every(w=>t.includes(w))) return 420;
+    if(a.includes(qq)||c.includes(qq)||g.includes(qq)) return 220;
+    return -1;
+  }
+  function chooseBook(title){
+    const hidden=$('selBook'), input=$('selBookBusca'), list=$('selBookLista');
+    if(!title) return;
+    if(hidden) hidden.value=title;
+    if(input) input.value=title;
+    if(list) list.classList.remove('open');
+    try{ window.buildBookChart&&window.buildBookChart(); }catch(e){console.warn('buildBookChart v326',e)}
+    try{ window.buildBookInfo&&window.buildBookInfo(); }catch(e){console.warn('buildBookInfo v326',e)}
+    setTimeout(()=>{ try{ const ch=window.Chart&&Chart.getChart('cBook'); if(ch){ch.resize();ch.update('none');} }catch(e){} },120);
+  }
+  function renderBookSuggestions(term){
+    const list=$('selBookLista'); if(!list) return [];
+    const q=norm(term);
+    const books=dataArrays().map(b=>({b,score:scoreBook(b,q)})).filter(x=>q && x.score>=0).sort((a,b)=>b.score-a.score || String(a.b.livro).localeCompare(String(b.b.livro),'pt-BR')).slice(0,30).map(x=>x.b);
+    list.classList.add('bl-v326-suggest');
+    if(!q){ list.innerHTML=''; list.classList.remove('open'); return []; }
+    if(!books.length){ list.innerHTML='<div class="bl-v326-empty">Nenhum livro encontrado</div>'; list.classList.add('open'); return []; }
+    list.innerHTML=books.map(b=>{
+      const status=b.status||b.situacao||''; const icon=norm(status).includes('lendo')?'📖':norm(status).includes('paus')?'⏸️':norm(status).includes('compl')?'✅':'📚';
+      const sub=[b.autor,b.colecao,status].filter(Boolean).join(' · ');
+      return '<button type="button" class="bl-v326-suggestion" data-book="'+esc(b.livro)+'"><span>'+icon+'</span><span><strong>'+esc(b.livro)+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span></button>';
+    }).join('');
+    list.classList.add('open');
+    return books;
+  }
+  function patchBookSearch(){
+    const oldInput=$('selBookBusca'), oldList=$('selBookLista'); if(!oldInput||!oldList) return;
+    let input=oldInput, list=oldList;
+    if(!input.__bl_v326_clean){
+      const ni=input.cloneNode(true); ni.__bl_v326_clean=true; ni.__bl_v325=true; ni.removeAttribute('oninput'); ni.removeAttribute('onblur'); ni.autocomplete='off';
+      input.parentNode.replaceChild(ni,input); input=ni;
+    }
+    if(!list.__bl_v326_clean){
+      const nl=list.cloneNode(false); nl.id='selBookLista'; nl.className=(list.className||'')+' bl-v326-suggest'; nl.__bl_v326_clean=true; nl.__bl_v325=true;
+      list.parentNode.replaceChild(nl,list); list=nl;
+    }
+    if(input.__bl_v326_bound) return; input.__bl_v326_bound=true;
+    window.filtrarSelBook=function(termo){return renderBookSuggestions(termo);};
+    input.addEventListener('input',()=>renderBookSuggestions(input.value),{passive:true});
+    input.addEventListener('focus',()=>{ if(input.value) renderBookSuggestions(input.value); },{passive:true});
+    input.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ const first=$('selBookLista')?.querySelector('[data-book]'); if(first){ safeStop(ev); chooseBook(first.dataset.book); } } if(ev.key==='Escape'){ $('selBookLista')?.classList.remove('open'); } },{passive:false});
+    ['pointerdown','mousedown','touchstart','click'].forEach(evt=>list.addEventListener(evt,ev=>{ const btn=ev.target.closest&&ev.target.closest('[data-book]'); if(!btn) return; safeStop(ev); chooseBook(btn.dataset.book); },{capture:true,passive:false}));
+    document.addEventListener('pointerdown',ev=>{ if(ev.target===input || list.contains(ev.target)) return; list.classList.remove('open'); },true);
+  }
+
+  function modalVisible(el){ if(!el) return false; const cs=getComputedStyle(el); return cs.display!=='none' && cs.visibility!=='hidden' && el.offsetParent!==null || (el && el.style.display && el.style.display!=='none'); }
+  function updateModalAndMenuState(){
+    if(!mob()) return;
+    const modalIds=['modal-ranking-completo','modal-todas-conquistas','blCommunityModal','painelSessao','modalSessao','gmModal','modal-gerenciar-meta','modalAtualizarLivro','modalLivro','fabMenu'];
+    const active=modalIds.some(id=>{ const el=$(id); if(!el) return false; const cs=getComputedStyle(el); return cs.display!=='none' && cs.visibility!=='hidden' && (el.offsetWidth||el.offsetHeight||el.getClientRects().length); });
+    document.body.classList.toggle('bl-v326-modal-active',active);
+    const panel=$('blMobileMenuPanel'); const open=!!(panel&&panel.classList.contains('open')) && !active;
+    document.body.classList.toggle('bl-v326-menu-open',open);
+    document.documentElement.classList.toggle('bl-v326-menu-open',open);
+    if(!open) document.body.classList.remove('blm-menu-open');
+  }
+  function ensureMenuBackdrop(){
+    if(!mob()) return;
+    let bd=document.querySelector('.bl-v326-menu-backdrop');
+    if(!bd){ bd=document.createElement('div'); bd.className='bl-v326-menu-backdrop'; document.body.appendChild(bd); bd.addEventListener('click',()=>closeMenu(),{passive:true}); }
+  }
+  function closeMenu(){ const p=$('blMobileMenuPanel'); if(p) p.classList.remove('open'); document.body.classList.remove('blm-menu-open','bl-v326-menu-open'); document.documentElement.classList.remove('blm-menu-open','bl-v326-menu-open'); }
+  function patchMenuButtons(){
+    const p=$('blMobileMenuPanel'); if(!p) return;
+    p.style.overscrollBehavior='contain'; p.style.webkitOverflowScrolling='touch';
+    p.querySelectorAll('button[data-a]').forEach(btn=>{
+      const txt=norm(btn.textContent); const a=btn.dataset.a;
+      if(a==='community'||a==='comunidade'||txt.includes('comunidade')) btn.dataset.a='v326-community';
+      if(a==='battle'||a==='batalha'||txt.includes('batalha')) btn.dataset.a='v326-battle';
+    });
+  }
+  async function openCommunityNow(){
+    closeMenu();
+    try{
+      const r=window.blOpenCommunityModal&&window.blOpenCommunityModal();
+      const m=$('blCommunityModal'); if(m){ m.style.display='flex'; m.style.visibility='visible'; m.style.opacity='1'; }
+      Promise.resolve(r).then(()=>{ const mm=$('blCommunityModal'); if(mm){mm.style.display='flex';mm.style.visibility='visible';mm.style.opacity='1';} updateModalAndMenuState(); }).catch(e=>console.warn('comunidade v326',e));
+      setTimeout(()=>{ const mm=$('blCommunityModal'); if(mm){mm.style.display='flex';mm.style.visibility='visible';mm.style.opacity='1';} updateModalAndMenuState(); },40);
+    }catch(e){ alert('Erro ao abrir comunidade: '+(e?.message||e)); }
+  }
+  function openBattleNow(){
+    closeMenu();
+    try{ window.setUsuario&&window.setUsuario('Batalha'); }catch(e){console.warn('setUsuario batalha v326',e)}
+    setTimeout(()=>{ try{ window.renderBatalha&&window.renderBatalha(); patchBattleArea(); }catch(e){console.warn('render batalha v326',e)} },20);
+    setTimeout(()=>{ try{ patchBattleArea(); window.scrollTo(0,0); }catch(e){} },220);
+  }
+  function patchMenuActions(){
+    ensureMenuBackdrop(); patchMenuButtons();
+    if(!window.__bl_v326_menu_capture){
+      window.__bl_v326_menu_capture=true;
+      document.addEventListener('click',ev=>{ const btn=ev.target.closest&&ev.target.closest('#blMobileMenuPanel button[data-a]'); if(!btn) return; const a=btn.dataset.a; if(a==='v326-community'){ safeStop(ev); openCommunityNow(); } if(a==='v326-battle'){ safeStop(ev); openBattleNow(); } },true);
+      document.addEventListener('touchmove',ev=>{ const p=$('blMobileMenuPanel'); if(document.body.classList.contains('bl-v326-menu-open') && p && !p.contains(ev.target)){ ev.preventDefault(); } },{passive:false,capture:true});
+    }
+  }
+
+  function patchAchievementsModal(){
+    const m=$('modal-todas-conquistas'); if(!m) return;
+    const rows=[...m.querySelectorAll('div[style*="grid-template-columns:24px 1fr 72px 72px"]')];
+    rows.forEach(r=>r.classList.add('bl-v326-ach-row'));
+    const titleRows=[...m.querySelectorAll('div[style*="grid-template-columns:24px 1fr auto"]')];
+    titleRows.forEach(r=>r.classList.add('bl-v326-title-row'));
+    const close=m.querySelector('button'); if(close) close.style.zIndex='2147482600';
+  }
+  function patchArtifacts(){
+    ['bat-artefatos','bat-maldicoes'].forEach(id=>{ const el=$(id); if(!el) return; el.querySelectorAll('.bat-art-card').forEach(card=>{ const ov=card.querySelector('.bat-art-overlay'); if(ov && ov.parentElement!==card) card.appendChild(ov); if(ov) ov.style.position='static'; }); });
+  }
+  function normalizeBattleGenres(){
+    const gd=$('bat-generos-div'); if(!gd) return;
+    const rows=[...gd.querySelectorAll('div[data-desktop-grid="1"]')];
+    if(!rows.length && gd.classList.contains('bl-v326-genre-ready')) return;
+    const legend=gd.firstElementChild?gd.firstElementChild.outerHTML:'';
+    const data=rows.map(row=>{
+      const cells=[...row.children];
+      const name=(cells[0]?.textContent||'').trim();
+      const spans=[...row.querySelectorAll('span')].map(s=>(s.textContent||'').trim()).filter(Boolean);
+      const pctA=parseInt((spans[0]||'0').replace(/[^0-9]/g,''),10)||0;
+      const pctB=parseInt((spans[1]||'0').replace(/[^0-9]/g,''),10)||0;
+      return {name,pctA,pctB};
+    }).filter(x=>x.name);
+    if(!data.length) return;
+    gd.classList.add('bl-v326-genre-ready'); gd.classList.remove('bl-v325-genre-ready');
+    gd.innerHTML='<div class="bl-v326-genre-legend">'+legend+'</div>'+data.map(x=>{
+      const wa=Math.max(2,Math.min(100,x.pctA)), wb=Math.max(2,Math.min(100,x.pctB));
+      return '<div class="bl-v326-genre-row"><div class="bl-v326-genre-name">'+esc(x.name)+'</div><div class="bl-v326-genre-line"><span class="bl-v326-pct" style="color:#A855F7">'+x.pctA+'%</span><div class="bl-v326-track"><div class="bl-v326-fill" style="width:'+wa+'%;background:linear-gradient(90deg,rgba(168,85,247,.35),#A855F7)"></div></div><span></span></div><div class="bl-v326-genre-line"><span></span><div class="bl-v326-track"><div class="bl-v326-fill" style="width:'+wb+'%;background:linear-gradient(90deg,#FB923C,rgba(249,115,22,.35))"></div></div><span class="bl-v326-pct" style="color:#FB923C;text-align:left">'+x.pctB+'%</span></div></div>';
+    }).join('');
+  }
+  function patchBattleArea(){ patchAchievementsModal(); patchArtifacts(); normalizeBattleGenres(); }
+  function patchCommunity(){
+    const m=$('blCommunityModal'); if(!m) return;
+    m.style.pointerEvents='auto';
+    const c=$('blCommunityClose'); if(c && !c.__bl_v326){ c.__bl_v326=true; c.addEventListener('click',()=>{ setTimeout(()=>{ m.remove(); unlockApp(); },0); },{capture:true}); }
+  }
+  function unlockApp(){
+    document.body.classList.remove('bl-modal-open','blm-menu-open','bl-v326-menu-open','bl-v326-modal-active');
+    document.documentElement.classList.remove('bl-modal-open','blm-menu-open','bl-v326-menu-open');
+    document.querySelectorAll('.pwa-overlay').forEach(o=>{ if(!o.classList.contains('open')) o.style.pointerEvents='none'; });
+    updateModalAndMenuState();
+  }
+
+  function boot(){
+    if(!mob()) return;
+    document.body.classList.add('bl-v326-mobile-same-apk');
+    patchBookSearch(); patchMenuActions(); patchAchievementsModal(); patchBattleArea(); patchCommunity(); updateModalAndMenuState();
+  }
+  const oldRender=window.renderBatalha;
+  if(typeof oldRender==='function' && !oldRender.__bl_v326){ window.renderBatalha=function(){ const r=oldRender.apply(this,arguments); [40,180,600,1200].forEach(t=>setTimeout(patchBattleArea,t)); return r; }; window.renderBatalha.__bl_v326=true; }
+  const oldOpen=window.blOpenCommunityModal;
+  if(typeof oldOpen==='function' && !oldOpen.__bl_v326){ window.blOpenCommunityModal=function(){ const r=oldOpen.apply(this,arguments); setTimeout(()=>{patchCommunity();updateModalAndMenuState();},0); setTimeout(()=>{patchCommunity();updateModalAndMenuState();},250); return r; }; window.blOpenCommunityModal.__bl_v326=true; }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  [100,300,800,1600,3000].forEach(t=>setTimeout(boot,t));
+  setInterval(boot,2000);
+  try{ new MutationObserver(()=>setTimeout(boot,40)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']}); }catch(e){}
+  window.blUnlockApp=function(){ unlockApp(); closeMenu(); return 'V3.26 unlock ok'; };
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,bookSearchV326:!!$('selBookBusca')?.__bl_v326_bound,menuData:[...document.querySelectorAll('#blMobileMenuPanel button[data-a]')].map(b=>b.dataset.a),modalActive:document.body.classList.contains('bl-v326-modal-active'),sameApk:document.body.classList.contains('bl-v326-mobile-same-apk')}); };
+  const oldCache=window.blAndroidCacheDebug;
+  window.blAndroidCacheDebug=function(){ const prev=typeof oldCache==='function'?oldCache():{}; return Object.assign({},prev,{patch:PATCH,cacheGuard:'v3.26'}); };
 })();
 </script>
 
