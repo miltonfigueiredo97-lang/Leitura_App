@@ -1,46 +1,30 @@
-# BookLegacy V3.21 — revisão dos pontos pendentes + cache automático APK
+# BookLegacy V3.22 — Mobile/APK layout + scroll lock real
 
-Arquivos incluídos neste pacote:
+Arquivos incluídos:
+- mobile.html
+- vercel.json
+- android/gradle.properties
+- android/app/src/main/java/com/booklegacy/app/MainActivity.java
 
-- `mobile.html`
-- `vercel.json`
-- `android/app/src/main/java/com/booklegacy/app/MainActivity.java`
-- `android/gradle.properties`
-- `README.md`
+Não incluído / não alterado:
+- index.html
+- android/app/google-services.json
+- android/app/src/main/res/values/booklegacy_config.xml
+- .github/workflows/build-apk.yml
 
-Arquivos NÃO incluídos / NÃO alterados:
+Correções focadas no que ainda ficou pendente:
+- Comunidade: mantém layout mobile e agora o scroll fica dentro do modal, não no fundo.
+- Ranking por Notas: lista reorganizada com capa, título e nota alinhados.
+- Gêneros Lidos: restaurado como gráfico Chart.js original, só corrigindo largura/altura.
+- Progresso por Livro: busca reamarrada por input/click/touch e canvas preso ao quadro.
+- Gerenciar Meta: rodapé levantado para não ficar atrás da barra inferior do celular.
+- Registrar Sessão: scroll lock real; fundo travado e popup rolando por dentro.
+- Header mobile/APK: afastado da área de relógio/bateria/câmera.
+- Batalha: conquistas, artefatos/maldições e competição por gêneros ajustados ao celular.
+- Watchdog de overlays: reduz travamento por popup/overlay fantasma.
+- Cache APK mantido: MainActivity usa v=322 e LOAD_NO_CACHE.
 
-- `index.html` — desktop não foi mexido neste pacote.
-- `android/app/google-services.json` — mantém o Firebase que você já configurou.
-- `android/app/src/main/res/values/booklegacy_config.xml` — mantém o Web Client ID que você já colou.
-- `.github/workflows/build-apk.yml` — mantém o workflow atual.
-
-Correções V3.21:
-
-- Comunidade mobile/apk: adapta à largura do celular, sem cortar metade.
-- Ranking por Notas: card e linhas ajustados ao tamanho da tela.
-- Dia da Semana e Livros por Mês: barras re-renderizadas para caber no card.
-- Gêneros Lidos: substituído por lista mobile legível, sem dados brancos/cortados.
-- Coleções/Autores favoritos: donuts forçados em área quadrada menor, sem oval e sem invadir texto.
-- Progresso por Livro: busca reescrita para mobile e gráfico sem min-width lateral.
-- Calendário: células quadradas com texto simples, exemplo `32 páginas`.
-- Batalha: remoção do min-width antigo e grids adaptados ao celular.
-- Gerenciar Meta: lista com rolagem própria e botões de salvar/cancelar fixos no rodapé do popup.
-- Registrar Sessão/modal: fundo fica travado; rolagem acontece dentro do popup.
-- Cache APK: WebView carrega `mobile.html` com parâmetro novo e sem cache; Vercel manda `mobile.html` com `no-store`.
-
-Depois de subir, para mobile web basta aguardar Vercel publicar. Para o APK, por causa da correção nativa de cache, gere um APK novo no GitHub Actions uma vez.
-
-Debug após publicar:
-
-```js
-blMobileDebug()
-blAndroidCacheDebug()
-```
-
-Esperado no mobile:
-
-```txt
-patch: "v3.21-mobile-apk-final-layout-cache"
-cacheGuard: "v3.21"
-```
+Debug no mobile/APK:
+- blMobileDebug()
+- blAndroidCacheDebug()
+- blUnlockApp()  // emergência se algum overlay travar interação
