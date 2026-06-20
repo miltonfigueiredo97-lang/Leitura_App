@@ -1,11 +1,12 @@
-# BookLegacy V3.23 — ajuste fino Mobile/APK
+# BookLegacy V3.24 — Mobile/APK polish fix
 
-Arquivos incluídos:
+Pacote focado somente em mobile/APK.
+
+Inclui:
 - mobile.html
 - vercel.json
 - android/gradle.properties
 - android/app/src/main/java/com/booklegacy/app/MainActivity.java
-- README.md
 
 Não inclui e não altera:
 - index.html
@@ -14,15 +15,12 @@ Não inclui e não altera:
 - .github/workflows/build-apk.yml
 
 Correções principais:
-- Ranking completo: nota presa dentro do quadro.
-- Gêneros lidos: gráfico mantido e aviso fantasma removido.
-- Progresso por Livro: busca reamarrada.
-- Gerenciar Meta: botões Cancelar/Salvar mais baixos.
-- Header mobile/APK: novo texto "SEU DASHBOARD DE LEITURA" + foto + nome.
-- Batalha: conquistas em grid compacto.
-- Batalha: artefatos e maldições em cards horizontais menores.
-- Batalha: competição por gêneros presa dentro do quadro.
-- Cache automático do APK mantido e atualizado para V3.23.
-
-Commit sugerido:
-V3.23 mobile apk fine layout fix
+- Ranking completo com filtros organizados, números 1/2/3 e nota alinhada.
+- Busca do Progresso por Livro reamarrada usando todas as bases de livros disponíveis.
+- Header mobile/APK com “SEU DASHBOARD DE LEITURA”, foto e nome do usuário.
+- Modal Todas as Conquistas compacto e legível no celular.
+- Artefatos/Maldições em duas capas lado a lado, com título embaixo.
+- Competição por Gêneros presa dentro do quadro.
+- Mobile usando a mesma base visual do APK.
+- Comunidade com abertura mais estável no APK.
+- Cache automático do APK atualizado para 3.24.
