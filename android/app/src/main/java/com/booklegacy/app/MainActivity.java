@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.24");
+        settings.setUserAgentString(settings.getUserAgentString() + " BookLegacyAndroidApp/3.25");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
@@ -110,7 +110,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                view.evaluateJavascript("window.__BOOKLEGACY_ANDROID_APP=true;window.__BOOKLEGACY_ANDROID_VERSION='3.24';" +
+                view.evaluateJavascript("window.__BOOKLEGACY_ANDROID_APP=true;window.__BOOKLEGACY_ANDROID_VERSION='3.25';" +
                         "try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}}catch(e){}" +
                         "try{if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}}catch(e){}", null);
             }
@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
         Uri uri = Uri.parse(baseUrl);
         Uri.Builder builder = uri.buildUpon();
         builder.appendQueryParameter("native", "1");
-        builder.appendQueryParameter("v", "324");
+        builder.appendQueryParameter("v", "325");
         builder.appendQueryParameter("cache", "off");
         builder.appendQueryParameter("t", String.valueOf(System.currentTimeMillis()));
         return builder.build().toString();
@@ -223,7 +223,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getVersion() {
-            return "3.23";
+            return "3.25";
         }
     }
 
