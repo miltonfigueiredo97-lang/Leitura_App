@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.26">
+<meta name="booklegacy-version" content="v3.27">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -10799,6 +10799,226 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,bookSearchV326:!!$('selBookBusca')?.__bl_v326_bound,menuData:[...document.querySelectorAll('#blMobileMenuPanel button[data-a]')].map(b=>b.dataset.a),modalActive:document.body.classList.contains('bl-v326-modal-active'),sameApk:document.body.classList.contains('bl-v326-mobile-same-apk')}); };
   const oldCache=window.blAndroidCacheDebug;
   window.blAndroidCacheDebug=function(){ const prev=typeof oldCache==='function'?oldCache():{}; return Object.assign({},prev,{patch:PATCH,cacheGuard:'v3.26'}); };
+})();
+</script>
+
+
+<!-- BOOKLEGACY V3.27 — correção pontual sem empilhar: ranking filtros, typeahead, batalha e mobile/apk -->
+<style id="bl-v327-careful-targeted-css">
+@media (max-width:899px), (pointer:coarse){
+  :root{--bl-safe-top:env(safe-area-inset-top,0px);--bl-safe-bottom:env(safe-area-inset-bottom,0px)}
+  html,body{width:100%!important;max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior-x:none!important}
+  body.bl-v327-no-x,#app,#pageDashboard,#pageBatalha,.page,main{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important}
+  body.bl-v327-no-x .grid2,body.bl-v327-no-x [data-mobile-stack="1"]{display:grid!important;grid-template-columns:1fr!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:12px!important}
+  body.bl-v327-no-x .card,body.bl-v327-no-x .sec,body.bl-v327-no-x .ctrl,body.bl-v327-no-x .rank-list,body.bl-v327-no-x canvas{max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+
+  /* 4 — modal ranking: filtros funcionando + botão menu escondido + nota dentro */
+  body.bl-v327-modal-rank #blMobileMenuFab,body.bl-v327-modal-rank #blMobileMenuPanel{display:none!important;pointer-events:none!important}
+  #modal-ranking-completo{z-index:2147482800!important;overflow-x:hidden!important}
+  #modal-ranking-completo>div{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;overflow-x:hidden!important;box-sizing:border-box!important;padding:16px 10px!important}
+  #modal-ranking-completo>div>button:first-child{z-index:2147482900!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  #modal-ranking-completo .bl-v327-rc-filters{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;margin:0 0 10px!important;align-items:center!important}
+  #modal-ranking-completo .bl-v327-rc-filters select{width:100%!important;min-width:0!important;box-sizing:border-box!important;font-size:11px!important;padding:8px 6px!important}
+  #modal-ranking-completo .bl-v327-rc-filters #rcTema{grid-column:1 / -1!important}
+  #modal-ranking-completo .bl-v327-rc-filters button{min-width:0!important;width:100%!important;box-sizing:border-box!important;font-size:11px!important;padding:8px 4px!important;white-space:nowrap!important}
+  #modal-ranking-completo #rcList{display:flex!important;flex-direction:column!important;gap:7px!important;width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  #modal-ranking-completo .bl-v327-rank-item{display:grid!important;grid-template-columns:28px 40px minmax(0,1fr) 46px!important;gap:7px!important;align-items:center!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important;padding:8px 7px!important;border-radius:12px!important;background:rgba(15,23,42,.86)!important;border:1px solid rgba(139,124,248,.16)!important}
+  #modal-ranking-completo .bl-v327-rank-pos{width:25px!important;height:25px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:10px!important;font-family:'Orbitron',sans-serif!important;font-weight:900!important;color:#060b14!important;flex:0 0 25px!important}
+  #modal-ranking-completo .bl-v327-rank-cover{width:40px!important;height:56px!important;border-radius:7px!important;overflow:hidden!important;background:#111827!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:18px!important}
+  #modal-ranking-completo .bl-v327-rank-cover img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+  #modal-ranking-completo .bl-v327-rank-main{min-width:0!important;overflow:hidden!important;text-align:left!important}
+  #modal-ranking-completo .bl-v327-rank-name{font-family:'Rajdhani',sans-serif!important;font-size:14px!important;font-weight:800!important;color:#f8fafc!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #modal-ranking-completo .bl-v327-rank-year{display:block!important;font-size:10px!important;color:#8892a8!important;margin-top:3px!important}
+  #modal-ranking-completo .bl-v327-rank-score{font-family:'Orbitron',sans-serif!important;font-size:12px!important;font-weight:900!important;text-align:right!important;white-space:normal!important;line-height:1.05!important;min-width:0!important;max-width:46px!important;overflow:hidden!important}
+  #modal-ranking-completo .bl-v327-rank-score small{display:block!important;font-size:7px!important;opacity:.65!important;margin-top:2px!important}
+
+  /* 8 — detalhes: lista de sugestão verdadeira */
+  #selBookBusca{position:relative!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+  #selBookLista.bl-v327-suggest{display:none!important;position:absolute!important;top:calc(100% + 6px)!important;left:0!important;right:0!important;width:100%!important;max-width:100%!important;z-index:2147483000!important;max-height:min(340px,58dvh)!important;overflow-y:auto!important;overflow-x:hidden!important;background:#0d1424!important;border:1px solid rgba(139,124,248,.48)!important;border-radius:14px!important;box-shadow:0 18px 52px rgba(0,0,0,.58)!important;padding:5px!important;box-sizing:border-box!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important}
+  #selBookLista.bl-v327-suggest.open{display:block!important}
+  .bl-v327-book-suggestion{display:grid!important;grid-template-columns:30px minmax(0,1fr)!important;gap:8px!important;align-items:center!important;width:100%!important;padding:10px 8px!important;border:0!important;border-bottom:1px solid rgba(42,50,72,.68)!important;border-radius:10px!important;background:transparent!important;color:#e2e8f0!important;text-align:left!important;font-family:'Rajdhani',sans-serif!important;box-sizing:border-box!important}
+  .bl-v327-book-suggestion:active,.bl-v327-book-suggestion:hover{background:rgba(139,124,248,.17)!important}
+  .bl-v327-book-suggestion strong{display:block!important;font-size:15px!important;font-weight:900!important;line-height:1.06!important;color:#f8fafc!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .bl-v327-book-suggestion small{display:block!important;font-size:11px!important;line-height:1.1!important;color:#8892a8!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .bl-v327-book-empty{padding:12px!important;color:#8892a8!important;font-size:13px!important;font-family:'Rajdhani',sans-serif!important}
+
+  /* 16 — voltar a deixar conquistas principais boas; só modal recebe layout compacto */
+  #pageBatalha .bat-conquista{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;width:78px!important;min-width:72px!important;max-width:84px!important;flex:0 0 78px!important;text-align:center!important;background:transparent!important;padding:0!important;border-radius:0!important;gap:4px!important;overflow:visible!important;box-sizing:border-box!important}
+  #pageBatalha .bat-conquista-icon{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;grid-row:auto!important}
+  #pageBatalha .bat-conquista-icon span{font-size:21px!important;line-height:1!important}
+  #pageBatalha .bat-conquista-name,#pageBatalha .bat-conquista>div:not(.bat-conquista-icon){width:100%!important;max-width:100%!important;text-align:center!important;font-size:8px!important;line-height:1.05!important;white-space:normal!important;overflow:hidden!important;text-overflow:ellipsis!important;letter-spacing:.3px!important}
+  #pageBatalha .bat-conquista>div[style*="height:3px"]{width:86%!important;max-width:86%!important;margin-left:auto!important;margin-right:auto!important}
+  #modal-todas-conquistas .bl-v327-modal-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'a a' 'b b'!important;gap:5px 8px!important;padding:8px!important;border-radius:10px!important;align-items:center!important;margin:0!important;box-sizing:border-box!important}
+  #modal-todas-conquistas .bl-v327-modal-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important}
+  #modal-todas-conquistas .bl-v327-modal-row>div:nth-child(2){grid-area:name!important;font-size:11.5px!important;font-weight:900!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #modal-todas-conquistas .bl-v327-modal-row>div:nth-child(3){grid-area:a!important;text-align:left!important;background:rgba(168,85,247,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important}
+  #modal-todas-conquistas .bl-v327-modal-row>div:nth-child(4){grid-area:b!important;text-align:left!important;background:rgba(249,115,22,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important}
+  #modal-todas-conquistas .bl-v327-title-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'own own'!important;gap:5px 8px!important;padding:8px!important;border-radius:10px!important;align-items:center!important;margin:0!important}
+  #modal-todas-conquistas .bl-v327-title-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important}
+  #modal-todas-conquistas .bl-v327-title-row>div:nth-child(2){grid-area:name!important;font-size:11.5px!important;font-weight:900!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #modal-todas-conquistas .bl-v327-title-row>div:nth-child(3){grid-area:own!important;text-align:left!important;font-size:9.5px!important;background:rgba(250,204,21,.08)!important;border-radius:8px!important;padding:5px 7px!important;white-space:normal!important}
+
+  /* 17 — texto sempre embaixo das capas */
+  #pageBatalha .bat-art-card{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important}
+  #pageBatalha .bat-art-overlay{position:static!important;width:100%!important;background:transparent!important;padding:7px 2px 0!important;margin:0!important;text-align:center!important;display:block!important}
+  #pageBatalha .bat-art-overlay *{display:block!important;text-align:center!important;max-width:100%!important;white-space:normal!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:1.08!important}
+  #pageBatalha .bat-art-overlay div:nth-child(2){display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;min-height:25px!important}
+
+  /* 18 — competição por gêneros: cada linha usa 100% do quadro */
+  #bat-generos-div{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;padding:0!important;margin:0!important;display:block!important}
+  #bat-generos-div .bl-v327-genre-legend{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:10px!important;width:100%!important;margin:0 0 12px!important;overflow:hidden!important}
+  #bat-generos-div .bl-v327-genre-row{width:100%!important;max-width:100%!important;min-width:0!important;display:block!important;box-sizing:border-box!important;padding:8px 8px 9px!important;margin:0 0 10px!important;border-radius:12px!important;background:rgba(15,23,42,.58)!important;border:1px solid rgba(255,255,255,.055)!important;overflow:hidden!important}
+  #bat-generos-div .bl-v327-genre-name{font-family:'Rajdhani',sans-serif!important;font-size:12px!important;font-weight:900!important;letter-spacing:.8px!important;text-transform:uppercase!important;color:#c0c8d8!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0 0 7px!important}
+  #bat-generos-div .bl-v327-genre-line{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:7px!important;align-items:center!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:5px 0!important;overflow:hidden!important}
+  #bat-generos-div .bl-v327-genre-line.orange{grid-template-columns:42px minmax(0,1fr)!important}
+  #bat-generos-div .bl-v327-pct{font-family:'Orbitron',sans-serif!important;font-size:10px!important;font-weight:900!important;text-align:right!important;white-space:nowrap!important}
+  #bat-generos-div .bl-v327-track{height:16px!important;width:100%!important;max-width:100%!important;min-width:0!important;background:rgba(255,255,255,.06)!important;border-radius:6px!important;overflow:hidden!important}
+  #bat-generos-div .bl-v327-fill{height:100%!important;border-radius:6px!important;min-width:2px!important;max-width:100%!important}
+}
+</style>
+<script id="bl-v327-careful-targeted-js">
+(function(){
+  const PATCH='v3.27-targeted-no-new-regression';
+  const $=id=>document.getElementById(id);
+  const mob=()=>matchMedia('(max-width:899px), (pointer:coarse)').matches || location.pathname.includes('mobile.html');
+  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const safeStop=ev=>{ev&&ev.preventDefault&&ev.preventDefault();ev&&ev.stopPropagation&&ev.stopPropagation();ev&&ev.stopImmediatePropagation&&ev.stopImmediatePropagation();};
+
+  function bookTitle(b){return String(b?.livro||b?.title||b?.nome||b?.name||'').trim();}
+  function allBooks(){
+    const arr=[];
+    try{if(Array.isArray(window._livros))arr.push(...window._livros)}catch(e){}
+    try{if(typeof livrosCache!=='undefined'&&Array.isArray(livrosCache))arr.push(...livrosCache)}catch(e){}
+    try{['livros','lendo','pausados','aguardando','library'].forEach(k=>{const v=window._dadosD?.[k]||window.BL?.raw?.[k];if(Array.isArray(v))arr.push(...v)})}catch(e){}
+    try{(window.NOTES||[]).forEach(n=>arr.push({livro:n.livro,ano:n.ano,status:'Avaliado'}))}catch(e){}
+    try{Object.keys(window.BOOK_DAILY||{}).forEach(n=>arr.push({livro:n,status:'Com histórico'}))}catch(e){}
+    const map=new Map();
+    arr.forEach(b=>{const t=bookTitle(b);if(!t)return;const k=norm(t);map.set(k,Object.assign({},map.get(k)||{},b,{livro:t}))});
+    return [...map.values()];
+  }
+  function notesData(){try{return Array.isArray(window.NOTES)?window.NOTES:(typeof NOTES!=='undefined'&&Array.isArray(NOTES)?NOTES:[])}catch(e){return []}}
+  function getRankMode(){try{return rankModeRC||window.rankModeRC||'best'}catch(e){return window.rankModeRC||'best'}}
+  function setRankMode(m){try{rankModeRC=m}catch(e){} window.rankModeRC=m;}
+  function coverFor(title,b){
+    b=b||allBooks().find(x=>norm(bookTitle(x))===norm(title))||{};
+    let src=b.coverUrl||b.capa||b.cover||'';
+    try{ if(src&&typeof proxyUrl==='function') src=proxyUrl(src); }catch(e){}
+    if(!src&&b.isbn) src='https://covers.openlibrary.org/b/isbn/'+encodeURIComponent(b.isbn)+'-M.jpg';
+    return src;
+  }
+  function populateRcFilters(){
+    const rcAno=$('rcAno'), rcCol=$('rcColecao'); if(!rcAno||!rcCol)return;
+    const notes=notesData();
+    const keepAno=rcAno.value||'all', keepCol=rcCol.value||'all';
+    const anos=[...new Set(notes.map(n=>n.ano).filter(a=>a&&Number(a)>1900))].sort();
+    rcAno.innerHTML='<option value="all">Todos os anos</option>'+anos.map(a=>'<option value="'+esc(a)+'">'+esc(a)+'</option>').join('');
+    const cols=[...new Set(allBooks().map(l=>l.colecao).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR'));
+    rcCol.innerHTML='<option value="all">Todas as coleções</option>'+cols.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+    if([...rcAno.options].some(o=>o.value===keepAno))rcAno.value=keepAno;
+    if([...rcCol.options].some(o=>o.value===keepCol))rcCol.value=keepCol;
+  }
+  function updateRcButtons(){const m=getRankMode(); const b=$('rcBtnBest'), w=$('rcBtnWorst'); if(b)b.className='btn'+(m==='best'?' on':''); if(w)w.className='btn'+(m==='worst'?' on':'');}
+  function buildRc(){
+    const el=$('rcList'), yr=$('rcAno'), col=$('rcColecao'), tema=$('rcTema'), total=$('rcTotal'); if(!el||!yr||!col||!tema)return false;
+    const books=allBooks(), notes=notesData();
+    let pool=yr.value==='all'?notes:notes.filter(n=>String(n.ano)===String(yr.value));
+    if(col.value!=='all') pool=pool.filter(n=>{const b=books.find(x=>norm(bookTitle(x))===norm(n.livro));return String(b?.colecao||'')===String(col.value)});
+    const scored=pool.map(n=>{const score=tema.value==='all'?n.media:(n.criterios?.[tema.value]??n.media);return Object.assign({},n,{score:Number(score)})}).filter(n=>Number.isFinite(n.score));
+    const mode=getRankMode();
+    scored.sort((a,b)=>mode==='worst'?a.score-b.score:b.score-a.score);
+    if(total)total.textContent=scored.length+' livro'+(scored.length!==1?'s':'')+' no ranking';
+    el.innerHTML=scored.map((n,i)=>{
+      const b=books.find(x=>norm(bookTitle(x))===norm(n.livro));
+      const cor=mode==='worst'?'#f88c6a':(i===0?'#ffd166':i===1?'#c0c0c0':i===2?'#cd7f32':'#8b7cf8');
+      const src=coverFor(n.livro,b);
+      const extra=tema.value==='all'?'':'<small>'+Number(n.media||0).toFixed(1)+' geral</small>';
+      return '<div class="rank-item bl-v327-rank-item" data-book="'+esc(n.livro)+'"><div class="bl-v327-rank-pos" style="background:'+cor+'">'+(i+1)+'</div><div class="bl-v327-rank-cover">'+(src?'<img loading="eager" decoding="async" src="'+esc(src)+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\'📖\'" alt="">':'📖')+'</div><div class="bl-v327-rank-main"><div class="bl-v327-rank-name">'+esc(n.livro)+'</div><span class="bl-v327-rank-year">'+esc(n.ano||'—')+'</span></div><div class="bl-v327-rank-score" style="color:'+cor+'">'+Number(n.score||0).toFixed(1)+extra+'</div></div>';
+    }).join('')||'<div style="color:#8892a8;padding:12px;text-align:center">Nenhum livro encontrado para estes filtros.</div>';
+    el.querySelectorAll('[data-book]').forEach(row=>row.addEventListener('click',()=>{try{window.abrirLivroDetalhes&&window.abrirLivroDetalhes(row.dataset.book)}catch(e){} const m=$('modal-ranking-completo'); if(m)m.style.display='none'; document.body.classList.remove('bl-v327-modal-rank');},{passive:true}));
+    updateRcButtons(); return true;
+  }
+  function patchRanking(){
+    const modal=$('modal-ranking-completo'); if(!modal)return;
+    const filters=modal.querySelector('div[style*="flex-wrap"]'); if(filters)filters.classList.add('bl-v327-rc-filters');
+    const close=modal.querySelector('button'); if(close&&!close.__bl_v327){close.__bl_v327=true;close.addEventListener('click',()=>document.body.classList.remove('bl-v327-modal-rank'),true)}
+    ['rcAno','rcColecao','rcTema'].forEach(id=>{const s=$(id); if(s&&!s.__bl_v327){s.__bl_v327=true; s.addEventListener('change',()=>setTimeout(buildRc,0),true)}});
+    const best=$('rcBtnBest'), worst=$('rcBtnWorst');
+    if(best&&!best.__bl_v327){best.__bl_v327=true;best.addEventListener('click',ev=>{safeStop(ev);setRankMode('best');buildRc();},true)}
+    if(worst&&!worst.__bl_v327){worst.__bl_v327=true;worst.addEventListener('click',ev=>{safeStop(ev);setRankMode('worst');buildRc();},true)}
+    window.updateBtnsRC=updateRcButtons; try{updateBtnsRC=updateRcButtons}catch(e){}
+    window.buildRankingCompleto=buildRc; try{buildRankingCompleto=buildRc}catch(e){}
+    const oldOpen=window.abrirRankingCompleto;
+    if(!window.__bl_v327_open_rank){window.__bl_v327_open_rank=true;window.abrirRankingCompleto=function(){populateRcFilters(); const m=$('modal-ranking-completo'); try{ if(typeof oldOpen==='function') oldOpen.apply(this,arguments); }catch(e){} populateRcFilters(); document.body.classList.add('bl-v327-modal-rank'); if(m)m.style.display='flex'; setTimeout(buildRc,0); return false;}; try{abrirRankingCompleto=window.abrirRankingCompleto}catch(e){}}
+    if(getComputedStyle(modal).display!=='none'){document.body.classList.add('bl-v327-modal-rank');buildRc();}
+  }
+
+  function scoreBook(b,q){const t=norm(bookTitle(b)), a=norm(b.autor), c=norm(b.colecao), g=norm(b.genero), qq=norm(q); if(!qq)return -1; if(t===qq)return 1000; if(t.startsWith(qq))return 850-(t.length-qq.length); if(t.includes(qq))return 650-t.indexOf(qq); const words=qq.split(/\s+/).filter(Boolean); if(words.length&&words.every(w=>t.includes(w)))return 520; if(a.includes(qq)||c.includes(qq)||g.includes(qq))return 260; return -1;}
+  function selectBook(title){const input=$('selBookBusca'), hidden=$('selBook'), list=$('selBookLista'); if(hidden)hidden.value=title; if(input)input.value=title; if(list)list.classList.remove('open'); try{window.buildBookChart&&window.buildBookChart()}catch(e){} try{window.buildBookInfo&&window.buildBookInfo()}catch(e){} setTimeout(()=>{try{const ch=window.Chart&&Chart.getChart('cBook');if(ch){ch.resize();ch.update('none')}}catch(e){}},80);}
+  function showSuggestions(q){
+    const list=$('selBookLista'); if(!list)return [];
+    list.classList.add('bl-v327-suggest');
+    const query=norm(q);
+    if(!query){list.innerHTML='';list.classList.remove('open');return []}
+    const results=allBooks().map(b=>({b,score:scoreBook(b,query)})).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score || bookTitle(a.b).localeCompare(bookTitle(b.b),'pt-BR')).slice(0,25).map(x=>x.b);
+    if(!results.length){list.innerHTML='<div class="bl-v327-book-empty">Nenhum livro encontrado</div>'; list.classList.add('open'); return []}
+    list.innerHTML=results.map(b=>{const st=b.status||b.situacao||''; const icon=norm(st).includes('lendo')?'📖':norm(st).includes('paus')?'⏸️':norm(st).includes('compl')?'✅':'📚'; const sub=[b.autor,b.colecao,st].filter(Boolean).join(' · '); return '<button type="button" class="bl-v327-book-suggestion" data-book="'+esc(bookTitle(b))+'"><span>'+icon+'</span><span><strong>'+esc(bookTitle(b))+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span></button>'}).join('');
+    list.classList.add('open'); return results;
+  }
+  function patchBookSearch(){
+    let input=$('selBookBusca'), list=$('selBookLista'); if(!input||!list)return;
+    if(!input.__bl_v327){const ni=input.cloneNode(true); ni.value=input.value||''; ni.id='selBookBusca'; ni.removeAttribute('oninput'); ni.removeAttribute('onblur'); ni.autocomplete='off'; ni.__bl_v327=true; ni.__bl_v326_clean=true; ni.__bl_v326_bound=true; ni.__bl_v325=true; input.parentNode.replaceChild(ni,input); input=ni;}
+    if(!list.__bl_v327){const nl=list.cloneNode(false); nl.id='selBookLista'; nl.className='bl-v327-suggest'; nl.__bl_v327=true; nl.__bl_v326_clean=true; nl.__bl_v325=true; list.parentNode.replaceChild(nl,list); list=nl;}
+    if(input.__bl_v327_bound)return; input.__bl_v327_bound=true;
+    window.filtrarSelBook=function(v){return showSuggestions(v)}; try{filtrarSelBook=window.filtrarSelBook}catch(e){}
+    input.addEventListener('input',()=>showSuggestions(input.value),{passive:true});
+    input.addEventListener('focus',()=>{if(input.value)showSuggestions(input.value)}, {passive:true});
+    input.addEventListener('keydown',ev=>{if(ev.key==='Enter'){const first=$('selBookLista')?.querySelector('[data-book]'); if(first){safeStop(ev); selectBook(first.dataset.book)}} if(ev.key==='Escape')$('selBookLista')?.classList.remove('open')},{passive:false});
+    ['pointerdown','mousedown','touchstart','click'].forEach(evt=>list.addEventListener(evt,ev=>{const b=ev.target.closest&&ev.target.closest('[data-book]'); if(!b)return; safeStop(ev); selectBook(b.dataset.book)}, {capture:true,passive:false}));
+    document.addEventListener('pointerdown',ev=>{const l=$('selBookLista'), i=$('selBookBusca'); if(!l||!i)return; if(ev.target===i||l.contains(ev.target))return; l.classList.remove('open')}, true);
+  }
+
+  function patchAchievementsModal(){
+    const m=$('modal-todas-conquistas'); if(!m)return;
+    [...m.querySelectorAll('div[style*="grid-template-columns:24px 1fr 72px 72px"],div[style*="grid-template-columns: 24px 1fr 72px 72px"]')].forEach(r=>{r.classList.remove('bl-v326-ach-row');r.classList.add('bl-v327-modal-row')});
+    [...m.querySelectorAll('div[style*="grid-template-columns:24px 1fr auto"],div[style*="grid-template-columns: 24px 1fr auto"]')].forEach(r=>{r.classList.remove('bl-v326-title-row');r.classList.add('bl-v327-title-row')});
+  }
+
+  function patchGenreBattle(){
+    const gd=$('bat-generos-div'); if(!gd)return;
+    let rows=[];
+    if(gd.querySelector('.bl-v327-genre-row')) return;
+    if(gd.querySelector('.bl-v326-genre-row')){
+      rows=[...gd.querySelectorAll('.bl-v326-genre-row')].map(r=>{const name=r.querySelector('.bl-v326-genre-name')?.textContent?.trim()||''; const ps=[...r.querySelectorAll('.bl-v326-pct')].map(x=>parseInt(x.textContent.replace(/[^0-9]/g,''),10)||0); return {name,pctA:ps[0]||0,pctB:ps[1]||0};});
+    } else {
+      rows=[...gd.querySelectorAll('div[data-desktop-grid="1"]')].map(r=>{const cells=[...r.children]; const name=(cells[0]?.textContent||'').trim(); const spans=[...r.querySelectorAll('span')].map(s=>(s.textContent||'').trim()).filter(Boolean); return {name,pctA:parseInt((spans[0]||'0').replace(/[^0-9]/g,''),10)||0,pctB:parseInt((spans[1]||'0').replace(/[^0-9]/g,''),10)||0};});
+    }
+    rows=rows.filter(x=>x.name);
+    if(!rows.length)return;
+    const legend=gd.querySelector('.bl-v326-genre-legend,.bl-v325-genre-legend')?.innerHTML || gd.firstElementChild?.innerHTML || '';
+    gd.className='bl-v327-genre-ready';
+    gd.innerHTML='<div class="bl-v327-genre-legend">'+legend+'</div>'+rows.map(x=>'<div class="bl-v327-genre-row"><div class="bl-v327-genre-name">'+esc(x.name)+'</div><div class="bl-v327-genre-line"><span class="bl-v327-pct" style="color:#A855F7">'+x.pctA+'%</span><div class="bl-v327-track"><div class="bl-v327-fill" style="width:'+Math.max(2,Math.min(100,x.pctA))+'%;background:linear-gradient(90deg,rgba(168,85,247,.35),#A855F7)"></div></div></div><div class="bl-v327-genre-line orange"><span class="bl-v327-pct" style="color:#FB923C">'+x.pctB+'%</span><div class="bl-v327-track"><div class="bl-v327-fill" style="width:'+Math.max(2,Math.min(100,x.pctB))+'%;background:linear-gradient(90deg,#FB923C,rgba(249,115,22,.35))"></div></div></div></div>').join('');
+  }
+  function patchArtifacts(){document.querySelectorAll('#pageBatalha .bat-art-card').forEach(card=>{const ov=card.querySelector('.bat-art-overlay'); if(ov){card.appendChild(ov);ov.style.position='static'}})}
+  function resetMenuScroll(){const p=$('blMobileMenuPanel'); if(p&&p.classList.contains('open')) p.scrollTop=0;}
+  function patchMenuScrollReset(){const fab=$('blMobileMenuFab'); if(fab&&!fab.__bl_v327){fab.__bl_v327=true; ['click','touchstart'].forEach(evt=>fab.addEventListener(evt,()=>setTimeout(resetMenuScroll,30),{passive:true,capture:true}))}}
+
+  function boot(){
+    if(!mob())return;
+    document.body.classList.add('bl-v327-no-x','bl-v326-mobile-same-apk');
+    document.querySelectorAll('.grid2').forEach(g=>g.setAttribute('data-mobile-stack','1'));
+    patchRanking(); patchBookSearch(); patchAchievementsModal(); patchGenreBattle(); patchArtifacts(); patchMenuScrollReset();
+  }
+  const oldRender=window.renderBatalha;
+  if(typeof oldRender==='function'&&!oldRender.__bl_v327){window.renderBatalha=function(){const r=oldRender.apply(this,arguments);[60,250,900,1800].forEach(t=>setTimeout(()=>{patchAchievementsModal();patchGenreBattle();patchArtifacts();},t));return r};window.renderBatalha.__bl_v327=true;}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  [100,400,1000,2200,4200].forEach(t=>setTimeout(boot,t));
+  setInterval(boot,2600);
+  try{new MutationObserver(()=>setTimeout(boot,60)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']})}catch(e){}
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patch:PATCH,rankFilterV327:!!window.buildRankingCompleto,bookSuggestV327:!!$('selBookBusca')?.__bl_v327_bound,genreV327:!!document.querySelector('#bat-generos-div .bl-v327-genre-row'),sameMobileApkV327:document.body.classList.contains('bl-v327-no-x')})};
+  const oldCache=window.blAndroidCacheDebug;
+  window.blAndroidCacheDebug=function(){const prev=typeof oldCache==='function'?oldCache():{};return Object.assign({},prev,{patch:PATCH,cacheGuard:'v3.27'})};
 })();
 </script>
 

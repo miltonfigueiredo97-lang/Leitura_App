@@ -1,10 +1,8 @@
-# BookLegacy V3.26 — Mobile/APK careful final fix
+# BookLegacy V3.27 — correção pontual mobile/APK
 
 Arquivos incluídos:
 - mobile.html
 - vercel.json
-- android/gradle.properties
-- android/app/src/main/java/com/booklegacy/app/MainActivity.java
 - README.md
 
 Não inclui e não altera:
@@ -13,18 +11,15 @@ Não inclui e não altera:
 - android/app/src/main/res/values/booklegacy_config.xml
 - .github/workflows/build-apk.yml
 
-Correções principais:
-- Ranking completo: botão X clicável e menu de três traços oculto dentro do modal.
-- Detalhes do Livro: busca por texto com lista de livros próximos; seleciona o livro e abre os detalhes.
-- Todas as conquistas: modal mobile reformatado com linhas compactas.
-- Artefatos/Maldições: título, nota e ano ficam abaixo de cada capa.
-- Competição por gêneros: refeito para usar o quadro como referência e não sair dele.
-- Mobile web recebe a mesma classe/base visual do APK.
-- Comunidade/Batalha: menu interceptado sem delay usando data-a próprio, painel com scroll interno e sem travar fundo.
-- Correção de travamento: blUnlockApp() limpa locks/overlays se algo prender.
-- APK atualizado para cache guard v3.26.
+Correções:
+- filtros do Ranking Completo aplicados de verdade;
+- pesquisa de Detalhes do Livro com lista de sugestões e seleção;
+- menu de três traços reseta sempre no topo ao abrir;
+- mobile sem rolagem lateral, usando a mesma base visual do APK;
+- conquistas principais restauradas sem esmagar;
+- modal Ver Todas as Conquistas compacto;
+- artefatos/maldições com textos embaixo;
+- competição por gêneros refeita para usar a largura do quadro.
 
-Teste:
-- blMobileDebug()
-- blAndroidCacheDebug()
-- blUnlockApp()
+Debug esperado:
+blMobileDebug().patch = v3.27-targeted-no-new-regression
