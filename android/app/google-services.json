@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "938470924015",
+    "project_id": "leitura-app-a97c1",
+    "storage_bucket": "leitura-app-a97c1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:938470924015:android:88852caa42bf278c0fc51a",
+        "android_client_info": {
+          "package_name": "com.booklegacy.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "938470924015-0rp74ahte79akjjk78hpevm7oi375rr5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.booklegacy.app",
+            "certificate_hash": "d55393a23062785bf254cf0a9daca5023a504606"
+          }
+        },
+        {
+          "client_id": "938470924015-ndsdslvicth7ltqtdqh6und79ua1ed6n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUZpJ08RRZft7BUl40I9K4sqhsT05sLTM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "938470924015-ndsdslvicth7ltqtdqh6und79ua1ed6n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

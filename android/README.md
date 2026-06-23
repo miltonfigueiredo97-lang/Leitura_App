@@ -1,21 +1,29 @@
-# BookLegacy Android APK — V3.2
+# Android — BookLegacy V3.17
 
-Projeto Android real para gerar APK do BookLegacy.
+App Android híbrido com WebView interna + Google Sign-In nativo.
 
-## Como ele abre no celular
-Este APK abre uma WebView Android apontando diretamente para:
+## Arquivo mais importante
 
-`https://leitura-app-theta.vercel.app/mobile.html?app=android&v=3.3`
+```txt
+android/app/src/main/res/values/booklegacy_config.xml
+```
 
-Ou seja: o visual do app no celular será o `mobile.html` publicado na Vercel. Por isso, primeiro suba o pacote web V3.2 com o mobile formatado. Depois gere o APK.
+Cole ali o Web Client ID real do Firebase/Google Cloud.
 
-## Gerar APK pelo GitHub
-1. Crie ou use um repositório Android.
-2. Suba o conteúdo interno deste ZIP.
-3. Vá em `Actions`.
-4. Rode `Build Android APK`.
-5. Baixe o artefato `BookLegacy-v3-debug-apk`.
-6. Instale o `app-debug.apk` no celular.
+## Package name
 
-## Observação
-O APK é um app Android de verdade, mas usa WebView para carregar o app publicado. Isso mantém Firebase/Google Login funcionando pelo domínio autorizado da Vercel.
+```txt
+com.booklegacy.app
+```
+
+## SHA-1 de teste
+
+```txt
+D5:53:93:A2:30:62:78:5B:F2:54:CF:0A:9D:AC:A5:02:3A:50:46:06
+```
+
+Esse SHA é fixo porque o projeto usa `android/keystore/booklegacy-debug.jks` para assinar o APK de teste.
+
+## Build
+
+GitHub Actions → Build Android APK → Run workflow.

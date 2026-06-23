@@ -1,1 +1,1 @@
-{"name":"booklegacy-app","version":"0.7.1","private":true,"type":"module","scripts":{"build":"node build.js","dev":"node build.js && npx serve dist"},"dependencies":{},"devDependencies":{}}
+{"name":"booklegacy-app","version":"3.17.0","private":true,"type":"module","scripts":{"build":"node build.js","dev":"node build.js && npx serve dist"},"dependencies":{},"devDependencies":{}}
