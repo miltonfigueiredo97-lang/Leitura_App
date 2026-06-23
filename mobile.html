@@ -2,11 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<<<<<<< HEAD
 <meta name="booklegacy-version" content="v3.29">
-=======
-<meta name="booklegacy-version" content="v3.28">
->>>>>>> ce0987e9bfa94974724e1786ade7be8f4602288d
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -10807,7 +10803,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
 </script>
 
 
-<<<<<<< HEAD
 <!-- BOOKLEGACY V3.27 — correção pontual sem empilhar: ranking filtros, typeahead, batalha e mobile/apk -->
 <style id="bl-v327-careful-targeted-css">
 @media (max-width:899px), (pointer:coarse){
@@ -10884,103 +10879,10 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="bl-v327-careful-targeted-js">
 (function(){
   const PATCH='v3.27-targeted-no-new-regression';
-=======
-
-
-
-
-<!-- BOOKLEGACY V3.28 — correção pontual real: busca por sugestão, menu scroll, batalha gêneros, mobile sem lateral -->
-<style id="bl-v328-targeted-css">
-@media (max-width:899px), (pointer:coarse){
-  html,body{width:100%!important;max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior-x:none!important;}
-  body.bl-v328-mobile-fluid{width:100%!important;max-width:100vw!important;overflow-x:hidden!important;}
-  body.bl-v328-mobile-fluid #app,
-  body.bl-v328-mobile-fluid #pageDashboard,
-  body.bl-v328-mobile-fluid #pageBatalha,
-  body.bl-v328-mobile-fluid main,
-  body.bl-v328-mobile-fluid .page{
-    width:100%!important;max-width:100vw!important;min-width:0!important;overflow-x:hidden!important;box-sizing:border-box!important;
-  }
-  body.bl-v328-mobile-fluid .card,
-  body.bl-v328-mobile-fluid .sec,
-  body.bl-v328-mobile-fluid .ctrl,
-  body.bl-v328-mobile-fluid .grid2,
-  body.bl-v328-mobile-fluid [data-desktop-grid="1"],
-  body.bl-v328-mobile-fluid .bl-v328-clamp{
-    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow-x:hidden!important;
-  }
-  body.bl-v328-mobile-fluid canvas{max-width:100%!important;box-sizing:border-box!important;}
-  body.bl-v328-mobile-fluid img{max-width:100%!important;}
-  body.bl-v328-mobile-fluid table{width:100%!important;max-width:100%!important;table-layout:fixed!important;}
-  body.bl-v328-mobile-fluid .row,
-  body.bl-v328-mobile-fluid .stats,
-  body.bl-v328-mobile-fluid .kpi-grid-5{max-width:100%!important;min-width:0!important;}
-
-  /* Menu nunca deve sobrepor modal e sempre deve abrir no topo */
-  body.bl-v328-modal-open #blMobileMenuFab,
-  body.bl-v328-modal-open #blMobileMenuPanel{display:none!important;pointer-events:none!important;}
-  #blMobileMenuPanel{max-width:calc(100vw - 20px)!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;}
-
-  /* Detalhes do livro — sugestão real abaixo do campo */
-  #selBookBusca{width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
-  #blBookSearchSuggest{
-    display:none!important;position:absolute!important;top:calc(100% + 6px)!important;left:0!important;right:0!important;width:100%!important;max-width:100%!important;
-    z-index:2147483400!important;max-height:min(360px,58dvh)!important;overflow-y:auto!important;overflow-x:hidden!important;
-    background:#0d1424!important;border:1px solid rgba(139,124,248,.58)!important;border-radius:14px!important;box-shadow:0 20px 60px rgba(0,0,0,.68)!important;
-    padding:6px!important;box-sizing:border-box!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;
-  }
-  #blBookSearchSuggest.open{display:block!important;}
-  .bl-v328-book-option{width:100%!important;display:grid!important;grid-template-columns:34px minmax(0,1fr)!important;gap:9px!important;align-items:center!important;padding:10px 9px!important;border:0!important;border-bottom:1px solid rgba(42,50,72,.65)!important;border-radius:10px!important;background:transparent!important;color:#e2e8f0!important;text-align:left!important;font-family:'Rajdhani',sans-serif!important;box-sizing:border-box!important;}
-  .bl-v328-book-option:active,.bl-v328-book-option:hover{background:rgba(139,124,248,.18)!important;}
-  .bl-v328-book-option strong{display:block!important;font-size:15px!important;line-height:1.05!important;font-weight:900!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#f8fafc!important;}
-  .bl-v328-book-option small{display:block!important;font-size:11px!important;line-height:1.1!important;margin-top:3px!important;color:#8892a8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  .bl-v328-book-empty{padding:12px!important;color:#8892a8!important;font-size:13px!important;font-family:'Rajdhani',sans-serif!important;}
-
-  /* Ranking: evitar menu sobre o X e suavizar capas */
-  body.bl-v328-rank-open #blMobileMenuFab,body.bl-v328-rank-open #blMobileMenuPanel{display:none!important;pointer-events:none!important;}
-  #modal-ranking-completo .bl-v327-rank-cover,
-  #modal-ranking-completo .bl-v328-rank-cover{background:#111827!important;contain:layout paint!important;}
-  #modal-ranking-completo img{transition:none!important;backface-visibility:hidden!important;}
-
-  /* Todas as conquistas — só o modal, sem estragar o menu principal */
-  #modal-todas-conquistas{z-index:2147483000!important;overflow-y:auto!important;overflow-x:hidden!important;padding:calc(env(safe-area-inset-top,0px) + 10px) 8px calc(env(safe-area-inset-bottom,0px) + 16px)!important;box-sizing:border-box!important;overscroll-behavior:contain!important;}
-  #modal-todas-conquistas>div{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;min-width:0!important;margin:0 auto!important;padding:14px 9px!important;box-sizing:border-box!important;overflow-x:hidden!important;border-radius:16px!important;}
-  #modal-todas-conquistas .bl-v328-ach-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'a a' 'b b'!important;gap:5px 8px!important;padding:7px!important;border-radius:10px!important;align-items:center!important;margin:0 0 6px!important;box-sizing:border-box!important;}
-  #modal-todas-conquistas .bl-v328-ach-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important;}
-  #modal-todas-conquistas .bl-v328-ach-row>div:nth-child(2){grid-area:name!important;font-size:11px!important;font-weight:900!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  #modal-todas-conquistas .bl-v328-ach-row>div:nth-child(3){grid-area:a!important;text-align:left!important;background:rgba(168,85,247,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important;font-size:10px!important;}
-  #modal-todas-conquistas .bl-v328-ach-row>div:nth-child(4){grid-area:b!important;text-align:left!important;background:rgba(249,115,22,.08)!important;border-radius:8px!important;padding:5px 7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0!important;font-size:10px!important;}
-  #modal-todas-conquistas .bl-v328-title-row{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-areas:'ico name' 'own own'!important;gap:5px 8px!important;padding:7px!important;border-radius:10px!important;align-items:center!important;margin:0 0 6px!important;box-sizing:border-box!important;}
-  #modal-todas-conquistas .bl-v328-title-row>span:first-child{grid-area:ico!important;font-size:16px!important;line-height:1!important;}
-  #modal-todas-conquistas .bl-v328-title-row>div:nth-child(2){grid-area:name!important;font-size:11px!important;font-weight:900!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  #modal-todas-conquistas .bl-v328-title-row>div:nth-child(3){grid-area:own!important;text-align:left!important;font-size:9.5px!important;background:rgba(250,204,21,.08)!important;border-radius:8px!important;padding:5px 7px!important;white-space:normal!important;}
-
-  /* Batalha — competição por gêneros usa o quadro como limite real */
-  #bat-generos{display:none!important;}
-  #bat-generos-div.bl-v328-genre{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;padding:0!important;margin:0!important;}
-  #bat-generos-div.bl-v328-genre *{box-sizing:border-box!important;max-width:100%!important;min-width:0!important;}
-  .bl-v328-genre-legend{display:flex!important;justify-content:center!important;gap:10px!important;flex-wrap:wrap!important;margin:0 0 10px!important;width:100%!important;overflow:hidden!important;font-family:'Rajdhani',sans-serif!important;font-size:12px!important;color:#c0c8d8!important;}
-  .bl-v328-genre-row{width:100%!important;max-width:100%!important;min-width:0!important;display:block!important;border:1px solid rgba(255,255,255,.055)!important;background:rgba(15,23,42,.58)!important;border-radius:12px!important;padding:8px!important;margin:0 0 9px!important;overflow:hidden!important;}
-  .bl-v328-genre-name{font-family:'Rajdhani',sans-serif!important;font-size:12px!important;font-weight:900!important;letter-spacing:.6px!important;text-transform:uppercase!important;color:#c0c8d8!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0 0 7px!important;}
-  .bl-v328-genre-line{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:7px!important;align-items:center!important;width:100%!important;max-width:100%!important;margin:5px 0!important;overflow:hidden!important;}
-  .bl-v328-genre-pct{font-family:'Orbitron',sans-serif!important;font-size:10px!important;font-weight:900!important;text-align:right!important;white-space:nowrap!important;}
-  .bl-v328-genre-track{height:16px!important;width:100%!important;max-width:100%!important;background:rgba(255,255,255,.06)!important;border-radius:6px!important;overflow:hidden!important;}
-  .bl-v328-genre-fill{height:100%!important;border-radius:6px!important;min-width:2px!important;max-width:100%!important;}
-
-  /* Artefatos: mantém o que já ficou bom e força texto abaixo da capa */
-  #pageBatalha .bat-art-card .bat-art-overlay{position:static!important;width:100%!important;margin-top:6px!important;text-align:center!important;display:block!important;}
-  #pageBatalha .bat-art-card .bat-art-overlay *{display:block!important;text-align:center!important;max-width:100%!important;}
-}
-</style>
-<script id="bl-v328-targeted-js">
-(function(){
-  const PATCH='v3.28-targeted-real-fix';
->>>>>>> ce0987e9bfa94974724e1786ade7be8f4602288d
   const $=id=>document.getElementById(id);
   const mob=()=>matchMedia('(max-width:899px), (pointer:coarse)').matches || location.pathname.includes('mobile.html');
   const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-<<<<<<< HEAD
   const safeStop=ev=>{ev&&ev.preventDefault&&ev.preventDefault();ev&&ev.stopPropagation&&ev.stopPropagation();ev&&ev.stopImmediatePropagation&&ev.stopImmediatePropagation();};
 
   function bookTitle(b){return String(b?.livro||b?.title||b?.nome||b?.name||'').trim();}
@@ -11317,143 +11219,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blResetMenuTop=function(){ resetMenuTop(); return 'menu top reset v329'; };
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,bookSuggestV329:!!$('selBookBusca')?.__bl_v329_bound,bookCountV329:allBooks().length,genreBattleV329:!!document.querySelector('#bat-generos-div.bl-v329-genre-ready'),noHorizontalV329:document.body.scrollWidth<=window.innerWidth+2,menuResetV329:!!$('blMobileMenuPanel')?.__bl_v329_obs}); };
-=======
-  const stop=e=>{try{e.preventDefault()}catch{};try{e.stopPropagation()}catch{};try{e.stopImmediatePropagation()}catch{}};
-  function titleOf(b){return String(b?.livro||b?.title||b?.nome||b?.name||b?.titulo||'').trim();}
-  function coverOf(b){return b?.capa||b?.cover||b?.capaUrl||b?.image||b?.imagem||b?.foto||'';}
-  function allBooks(){
-    const arr=[];
-    try{if(Array.isArray(window._livros))arr.push(...window._livros)}catch{}
-    try{if(typeof livrosCache!=='undefined'&&Array.isArray(livrosCache))arr.push(...livrosCache)}catch{}
-    try{['livros','lendo','pausados','aguardando','library'].forEach(k=>{const v=window._dadosD?.[k]||window.BL?.raw?.[k]; if(Array.isArray(v))arr.push(...v)})}catch{}
-    try{if(Array.isArray(window.NOTES))window.NOTES.forEach(n=>arr.push({livro:n.livro,ano:n.ano,status:'Avaliado'}))}catch{}
-    try{Object.keys(window.BOOK_DAILY||{}).forEach(n=>arr.push({livro:n,status:'Com histórico'}))}catch{}
-    const map=new Map();
-    arr.forEach(b=>{const t=titleOf(b); if(!t)return; const k=norm(t); map.set(k,Object.assign({},map.get(k)||{},b,{livro:t}));});
-    return [...map.values()].sort((a,b)=>titleOf(a).localeCompare(titleOf(b),'pt-BR'));
-  }
-  function scoreBook(b,q){
-    const qq=norm(q), t=norm(titleOf(b)), a=norm(b?.autor), c=norm(b?.colecao), g=norm(b?.genero); if(!qq)return -1;
-    if(t===qq)return 2000; if(t.startsWith(qq))return 1500-(t.length-qq.length); if(t.includes(qq))return 1100-t.indexOf(qq);
-    const words=qq.split(/\s+/).filter(Boolean); if(words.length>1&&words.every(w=>t.includes(w)))return 900;
-    if(a.includes(qq)||c.includes(qq)||g.includes(qq))return 300; return -1;
-  }
-  function selectBook(name){
-    const input=$('selBookBusca'), hidden=$('selBook'), sug=$('blBookSearchSuggest');
-    if(hidden) hidden.value=name; if(input) input.value=name; if(sug) sug.classList.remove('open');
-    try{ if(typeof window.buildBookChart==='function') window.buildBookChart(); }catch(e){console.warn('[BL v328] buildBookChart',e)}
-    try{ if(typeof window.buildBookInfo==='function') window.buildBookInfo(); }catch(e){console.warn('[BL v328] buildBookInfo',e)}
-    setTimeout(()=>{try{const ch=window.Chart&&Chart.getChart('cBook'); if(ch){ch.resize(); ch.update('none');}}catch{}},80);
-  }
-  function ensureBookSuggest(){
-    const input=$('selBookBusca'); if(!input) return null;
-    const holder=input.parentElement; if(holder){holder.style.position='relative'; holder.style.overflow='visible';}
-    input.removeAttribute('oninput'); input.removeAttribute('onblur'); input.oninput=null; input.onblur=null; input.autocomplete='off';
-    const old=$('selBookLista'); if(old){old.style.display='none'; old.innerHTML=''; old.classList.remove('open');}
-    let sug=$('blBookSearchSuggest');
-    if(!sug){sug=document.createElement('div'); sug.id='blBookSearchSuggest'; if(holder) holder.appendChild(sug); else input.insertAdjacentElement('afterend',sug);}
-    return sug;
-  }
-  function renderSuggestions(q){
-    const input=$('selBookBusca'), sug=ensureBookSuggest(); if(!input||!sug) return [];
-    const query=norm(q||input.value); if(!query){sug.innerHTML=''; sug.classList.remove('open'); return []}
-    const found=allBooks().map(b=>({b,s:scoreBook(b,query)})).filter(x=>x.s>=0).sort((a,b)=>b.s-a.s||titleOf(a.b).localeCompare(titleOf(b.b),'pt-BR')).slice(0,24).map(x=>x.b);
-    if(!found.length){sug.innerHTML='<div class="bl-v328-book-empty">Nenhum livro encontrado</div>'; sug.classList.add('open'); return []}
-    sug.innerHTML=found.map(b=>{const st=String(b.status||b.situacao||''); const icon=norm(st).includes('lendo')?'📖':norm(st).includes('paus')?'⏸️':norm(st).includes('compl')?'✅':'📚'; const sub=[b.autor,b.colecao,st].filter(Boolean).join(' · '); const name=titleOf(b); return '<button type="button" class="bl-v328-book-option" data-title="'+esc(name)+'"><span>'+icon+'</span><span><strong>'+esc(name)+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span></button>';}).join('');
-    sug.classList.add('open'); return found;
-  }
-  function patchBookSearch(){
-    const input=$('selBookBusca'); const sug=ensureBookSuggest(); if(!input||!sug) return;
-    window.filtrarSelBook=function(v){return renderSuggestions(v)}; try{filtrarSelBook=window.filtrarSelBook}catch{}
-    if(input.__bl_v328_bound) return; input.__bl_v328_bound=true;
-    ['input','keyup','change'].forEach(evt=>input.addEventListener(evt,()=>renderSuggestions(input.value),{passive:true,capture:false}));
-    input.addEventListener('focus',()=>{if(input.value)renderSuggestions(input.value)},{passive:true});
-    input.addEventListener('keydown',ev=>{if(ev.key==='Enter'){const first=$('blBookSearchSuggest')?.querySelector('[data-title]'); if(first){stop(ev); selectBook(first.dataset.title)}} if(ev.key==='Escape')$('blBookSearchSuggest')?.classList.remove('open')},{passive:false});
-    ['pointerdown','mousedown','touchstart','click'].forEach(evt=>sug.addEventListener(evt,ev=>{const b=ev.target.closest&&ev.target.closest('[data-title]'); if(!b)return; stop(ev); selectBook(b.dataset.title);}, {capture:true,passive:false}));
-    document.addEventListener('pointerdown',ev=>{const s=$('blBookSearchSuggest'), i=$('selBookBusca'); if(!s||!i)return; if(ev.target===i||s.contains(ev.target))return; s.classList.remove('open')}, true);
-  }
-
-  function preloadRankingCovers(){
-    try{allBooks().slice(0,140).forEach(b=>{const src=coverOf(b); if(src){const im=new Image(); im.decoding='async'; im.src=src;}})}catch{}
-    try{document.querySelectorAll('#modal-ranking-completo img').forEach(img=>{img.loading='eager'; img.decoding='sync'; if(img.complete) img.style.visibility='visible'; img.addEventListener('load',()=>{img.style.visibility='visible'},{once:true});})}catch{}
-  }
-  function patchRanking(){
-    const m=$('modal-ranking-completo'); if(!m)return;
-    const isOpen=getComputedStyle(m).display!=='none'; document.body.classList.toggle('bl-v328-rank-open',isOpen);
-    if(isOpen) preloadRankingCovers();
-  }
-
-  function classifyAchievements(){
-    const m=$('modal-todas-conquistas'); if(!m)return;
-    m.querySelectorAll('[style*="grid-template-columns:24px 1fr 72px 72px"],[style*="grid-template-columns: 24px 1fr 72px 72px"]').forEach(r=>{r.classList.remove('bl-v326-ach-row','bl-v327-modal-row'); r.classList.add('bl-v328-ach-row')});
-    m.querySelectorAll('[style*="grid-template-columns:24px 1fr auto"],[style*="grid-template-columns: 24px 1fr auto"]').forEach(r=>{r.classList.remove('bl-v326-title-row','bl-v327-title-row'); r.classList.add('bl-v328-title-row')});
-  }
-
-  function parseGenreRows(gd){
-    const rows=[];
-    const add=(name,a,b)=>{name=String(name||'').trim(); if(!name||name.toLowerCase().includes('milton')||name.toLowerCase().includes('daniel'))return; rows.push({name,pctA:Math.max(0,Math.min(100,parseInt(a,10)||0)),pctB:Math.max(0,Math.min(100,parseInt(b,10)||0))});};
-    gd.querySelectorAll('.bl-v328-genre-row,.bl-v327-genre-row,.bl-v326-genre-row,.bl-v325-genre-row').forEach(r=>{
-      const name=r.querySelector('.bl-v328-genre-name,.bl-v327-genre-name,.bl-v326-genre-name,.bl-v325-genre-name')?.textContent||'';
-      const nums=[...r.querySelectorAll('.bl-v328-genre-pct,.bl-v327-pct,.bl-v326-pct,.bl-v325-pct,.bl-v328-pct')].map(x=>parseInt((x.textContent||'').replace(/[^0-9]/g,''),10)||0);
-      if(name)add(name,nums[0]||0,nums[1]||0);
-    });
-    if(rows.length)return rows;
-    gd.querySelectorAll('[data-desktop-grid="1"],div[style*="grid-template-columns:140px"]').forEach(r=>{
-      const cells=[...r.children]; const name=(cells[0]?.textContent||'').trim();
-      const nums=[...r.querySelectorAll('span')].map(s=>parseInt((s.textContent||'').replace(/[^0-9]/g,''),10)).filter(n=>!isNaN(n));
-      if(name)add(name,nums[0]||0,nums[1]||0);
-    });
-    return rows;
-  }
-  function patchGenreBattle(){
-    const gd=$('bat-generos-div'); if(!gd) return;
-    const oldRows=parseGenreRows(gd);
-    if(!oldRows.length) return;
-    const legend=gd.querySelector('.bl-v328-genre-legend,.bl-v327-genre-legend,.bl-v326-genre-legend,.bl-v325-genre-legend')?.innerHTML || gd.firstElementChild?.innerHTML || '';
-    gd.className='bl-v328-genre'; gd.removeAttribute('style');
-    gd.innerHTML='<div class="bl-v328-genre-legend">'+legend+'</div>'+oldRows.map(x=>{
-      return '<div class="bl-v328-genre-row"><div class="bl-v328-genre-name">'+esc(x.name)+'</div>'+
-        '<div class="bl-v328-genre-line"><span class="bl-v328-genre-pct" style="color:#A855F7">'+x.pctA+'%</span><div class="bl-v328-genre-track"><div class="bl-v328-genre-fill" style="width:'+Math.max(2,x.pctA)+'%;background:linear-gradient(90deg,rgba(168,85,247,.35),#A855F7)"></div></div></div>'+
-        '<div class="bl-v328-genre-line"><span class="bl-v328-genre-pct" style="color:#FB923C">'+x.pctB+'%</span><div class="bl-v328-genre-track"><div class="bl-v328-genre-fill" style="width:'+Math.max(2,x.pctB)+'%;background:linear-gradient(90deg,#FB923C,rgba(249,115,22,.35))"></div></div></div></div>';
-    }).join('');
-  }
-
-  function resetMenuTop(){const p=$('blMobileMenuPanel'); if(p&&p.classList.contains('open')){p.scrollTop=0; try{p.scrollTo({top:0,left:0,behavior:'instant'})}catch{try{p.scrollTo(0,0)}catch{}}}}
-  function patchMenu(){
-    const p=$('blMobileMenuPanel'), f=$('blMobileMenuFab');
-    if(f&&!f.__bl_v328){f.__bl_v328=true; ['click','pointerdown','touchstart'].forEach(evt=>f.addEventListener(evt,()=>{setTimeout(resetMenuTop,0);setTimeout(resetMenuTop,80);setTimeout(resetMenuTop,220)}, {capture:true,passive:true}))}
-    if(p&&!p.__bl_v328_obs){p.__bl_v328_obs=true; let was=false; new MutationObserver(()=>{const open=p.classList.contains('open'); if(open&&!was){setTimeout(resetMenuTop,0);setTimeout(resetMenuTop,120)} was=open;}).observe(p,{attributes:true,attributeFilter:['class','style']});}
-  }
-  function modalState(){
-    const ids=['modal-ranking-completo','modal-todas-conquistas','blCommunityModal','painelSessao','modalSessao','painelGerenciarMeta','modal-gerenciar-meta','modalAtualizarLivro','modalLivro'];
-    let active=false; ids.forEach(id=>{const el=$(id); if(el&&getComputedStyle(el).display!=='none') active=true;});
-    document.body.classList.toggle('bl-v328-modal-open',active);
-    patchRanking();
-  }
-  function clampWide(){
-    const vw=Math.max(1,document.documentElement.clientWidth||window.innerWidth||360);
-    document.querySelectorAll('#pageDashboard *,#pageBatalha *').forEach(el=>{
-      if(el.id==='blMobileMenuPanel'||el.id==='blBookSearchSuggest') return;
-      const r=el.getBoundingClientRect();
-      if(r.width>vw+4 || el.scrollWidth>vw+6) el.classList.add('bl-v328-clamp');
-    });
-  }
-  function boot(){
-    if(!mob())return;
-    document.body.classList.add('bl-v328-mobile-fluid','bl-v326-mobile-same-apk');
-    patchBookSearch(); classifyAchievements(); patchGenreBattle(); patchMenu(); modalState(); clampWide(); preloadRankingCovers();
-  }
-  const oldRender=window.renderBatalha;
-  if(typeof oldRender==='function'&&!oldRender.__bl_v328){window.renderBatalha=function(){const r=oldRender.apply(this,arguments);[60,240,800,1600].forEach(t=>setTimeout(()=>{classifyAchievements();patchGenreBattle();modalState();clampWide();},t));return r};window.renderBatalha.__bl_v328=true;}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  [120,400,1000,2200,4200].forEach(t=>setTimeout(boot,t));
-  setInterval(boot,2500);
-  try{new MutationObserver(()=>setTimeout(boot,80)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']})}catch{}
-  window.blForceBookSuggestV328=function(q){return renderSuggestions(q||$('selBookBusca')?.value||'')};
-  window.blResetMenuTop=function(){resetMenuTop();return 'menu top reset'};
-  const oldDebug=window.blMobileDebug;
-  window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patch:PATCH,bookSuggestV328:!!$('selBookBusca')?.__bl_v328_bound,bookCountV328:allBooks().length,genreV328:!!document.querySelector('#bat-generos-div.bl-v328-genre'),noHorizontalV328:document.body.scrollWidth<=window.innerWidth+2,menuResetV328:!!$('blMobileMenuPanel')?.__bl_v328_obs});};
->>>>>>> ce0987e9bfa94974724e1786ade7be8f4602288d
 })();
 </script>
 

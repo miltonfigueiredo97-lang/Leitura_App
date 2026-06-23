@@ -1,52 +1,9 @@
 {
   "version": 2,
-<<<<<<< HEAD
-=======
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/mobile.html",
-      "dest": "/mobile.html"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/sw.js",
-      "dest": "/sw.js"
-    },
-    {
-      "src": "/icon-192.svg",
-      "dest": "/icon-192.svg"
-    },
-    {
-      "src": "/icon-512.svg",
-      "dest": "/icon-512.svg"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
->>>>>>> ce0987e9bfa94974724e1786ade7be8f4602288d
   "headers": [
     {
       "source": "/mobile.html",
       "headers": [
-<<<<<<< HEAD
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" }
       ]
     }
@@ -64,30 +21,3 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-=======
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-        }
-      ]
-    }
-  ]
-}
->>>>>>> ce0987e9bfa94974724e1786ade7be8f4602288d
