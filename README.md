@@ -1,38 +1,24 @@
-# BookLegacy V3.15 — Mobile + APK GitHub completo (sem index.html)
+# BookLegacy V3.29 — correção pontual revisada
 
-Este pacote é para subir no mesmo repositório `Leitura_App`.
+Arquivos do pacote:
+- mobile.html
+- vercel.json
+- README.md
 
-## Importante
-Este ZIP **não contém `index.html`**.
-O desktop não deve ser substituído.
+Não altera:
+- index.html
+- android/
+- google-services.json
+- booklegacy_config.xml
+- .github/workflows/build-apk.yml
 
-## Arquivos incluídos
-- `mobile.html` — correção mobile atual.
-- `.github/workflows/build-apk.yml` — workflow para gerar APK no GitHub Actions.
-- `android/` — projeto Android WebView para gerar APK.
-- `README.md` — este arquivo.
+Correções focadas:
+- remove o atraso artificial de capas do ranking completo;
+- refaz a busca de Detalhes do Livro como autocomplete real;
+- prende a Competição por Gêneros dentro do quadro;
+- força o mobile.html a não gerar rolagem lateral;
+- faz o menu de três traços abrir sempre no topo;
+- remove o texto fantasma de "Nenhum gênero cadastrado" quando o gráfico existe.
 
-## Como subir pelo GitHub Desktop
-1. Extraia este ZIP.
-2. Copie `mobile.html`, `.github/`, `android/` e `README.md` para a raiz do repositório `Leitura_App`.
-3. No GitHub Desktop, confira que **não existe `index.html`** nas alterações deste pacote.
-4. Commit: `V3.15 mobile apk workflow`.
-5. Clique em `Push origin`.
-
-## Como gerar o APK
-1. Abra o GitHub no navegador.
-2. Entre no repositório `Leitura_App`.
-3. Clique em `Actions`.
-4. Clique em `Build Android APK`.
-5. Clique em `Run workflow`.
-6. Aguarde terminar.
-7. Abra a execução concluída.
-8. Baixe o artifact `BookLegacy-v3-15-debug-apk`.
-9. Extraia o ZIP baixado e instale `app-debug.apk` no Android.
-
-## URL usada pelo APK
-O APK abre:
-
-`https://leitura-app-theta.vercel.app/mobile.html?app=android&v=3.15`
-
-Então o APK usa o mesmo Firebase/Firestore do site. Dados alterados no APK aparecem no site, e dados alterados no site aparecem no APK.
+Debug esperado:
+blMobileDebug().patch = "v3.29-targeted-careful-fix"

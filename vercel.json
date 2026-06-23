@@ -1,1 +1,23 @@
-{"version":2,"builds":[{"src":"package.json","use":"@vercel/static-build","config":{"distDir":"dist"}}],"routes":[{"src":"/mobile.html","dest":"/mobile.html"},{"src":"/manifest.json","dest":"/manifest.json"},{"src":"/sw.js","dest":"/sw.js"},{"src":"/(.*)","dest":"/index.html"}]}
+{
+  "version": 2,
+  "headers": [
+    {
+      "source": "/mobile.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" }
+      ]
+    }
+  ],
+  "routes": [
+    { "src": "/data.json", "dest": "/data.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/mobile.html", "dest": "/mobile.html" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    {
+      "src": "/",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Android|iPhone|iPad|Mobile).*" }],
+      "dest": "/mobile.html"
+    },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
