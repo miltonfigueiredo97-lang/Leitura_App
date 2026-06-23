@@ -8217,7 +8217,8 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.renderBatalha = function(){ fillBattleSelects(); if(typeof oldRender === 'function') return oldRender.apply(this, arguments); };
   window.blV11Debug = function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, button:!!$('btn-user-batalha'), buttonDisplay:$('btn-user-batalha')?.style?.display, users:users(), rawUsers:raw().users, rawFriends:raw().friends}; };
   document.addEventListener('DOMContentLoaded', ()=>{ syncUI(); setTimeout(syncUI,500); setTimeout(syncUI,1500); });
-  setInterval(syncUI, 2000);
+  /* V3.30: removido setInterval(syncUI) contínuo para reduzir travamento no mobile/APK. */
+  [2500,5000].forEach(t=>setTimeout(syncUI,t));
 })();
 </script>
 
@@ -8389,7 +8390,8 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   };
   function tick(){ removeDesktopMobileToggle(); ensureBattleButton(); }
   document.addEventListener('DOMContentLoaded', ()=>{ tick(); setTimeout(tick,500); setTimeout(tick,1500); });
-  setInterval(tick,1500);
+  /* V3.30: removido setInterval(tick) contínuo; reforços pontuais bastam e evitam varrer botões sem parar. */
+  [2500,5000].forEach(t=>setTimeout(tick,t));
 })();
 </script>
 
@@ -8733,7 +8735,8 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
       bodyBattle:document.body.classList.contains('bl-v12-battle')
     });
   };
-  setInterval(forceBattleOnly, 700);
+  /* V3.30: removido setInterval(forceBattleOnly) contínuo; roda só em aberturas e reforços pontuais. */
+  [1500,3000,5000].forEach(t=>setTimeout(()=>{ if(window.usuarioAtual==='Batalha') forceBattleOnly(); },t));
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(forceBattleOnly, 100));
 })();
 </script>
@@ -9119,8 +9122,9 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildMenu); else buildMenu();
   setTimeout(buildMenu, 300);
   setTimeout(buildMenu, 1200);
-  setInterval(removeBottomNav, 1200);
-  setInterval(markCards, 1500);
+  // V3.30: intervalos visuais antigos reduzidos para evitar travamento no mobile/APK.
+  setTimeout(removeBottomNav, 1200);
+  setTimeout(markCards, 1500);
 })();
 </script>
 
@@ -9192,7 +9196,8 @@ body.bl-v12-battle #blBattleBackButtonV25{
     }
   }
   document.addEventListener('DOMContentLoaded', patchLoginButton);
-  setInterval(patchLoginButton, 500);
+  /* V3.30: removido setInterval(patchLoginButton) contínuo; reforços pontuais preservam o login nativo. */
+  [300,900,1800,3500,6000].forEach(t=>setTimeout(patchLoginButton,t));
   window.blAndroidDebug = function(){
     return {
       patch: PATCH,
@@ -9367,7 +9372,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 
   function boot(){ installActionWrappers(); fixProfileImages(); closeFab(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setTimeout(boot,500); setTimeout(boot,1600); setInterval(fixProfileImages,4000);
+  setTimeout(boot,500); setTimeout(boot,1600); /* V3.30: removido setInterval pesado de imagens */
   window.blV319Debug = function(){ return {patch:VERSION, abrirModalWrapped:!!window.abrirModal?.__bl_v319_wrapped, profileLabel:typeof window.blProfileLabel, metaSave:'firebase', fabMenu: $('fabMenu')?.style?.display || null}; };
 })();
 </script>
@@ -9509,7 +9514,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   }
   function boot(){ buildCleanMenu(); markCards(); patchBookSearch(); patchGoalGrid(); patchCharts(); removeBottomNav(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setTimeout(boot,500); setTimeout(boot,1500); setInterval(()=>{ removeBottomNav(); markCards(); patchGoalGrid(); },1500);
+  setTimeout(boot,500); setTimeout(boot,1500); /* V3.30: removido loop permanente de layout */
   document.addEventListener('touchmove', function(e){ const p=menuPanel(); if(document.body.classList.contains('blm-menu-open') && p && !p.contains(e.target)){ e.preventDefault(); } }, {passive:false});
   window.blMobileDebug=function(){ return {patch:VERSION,bottomNav:!!$('mobile-nav'),menu:!!$('blMobileMenuPanel'),menuOpen:!!$('blMobileMenuPanel')?.classList?.contains('open'), ranking:!!$('rankList')?.closest('.bl-v319-ranking-card'), week:!!($('wdAvg')||$('wdSum'))?.closest('.bl-v319-week-card'), generos:!!$('cGeneros')?.closest('.bl-v319-generos-card'), calendario:!!$('calGrid')?.closest('.bl-v319-calendar-card'), metaGrid:!!$('gmLista')}; };
 })();
@@ -9799,7 +9804,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
 
   function boot(){ markCards(); patchModals(); patchBookSearch(); wrapBookChart(); patchGoalModal(); patchCommunity(); normalizeBattle(); setTimeout(()=>{ try{ window.buildWd&&window.buildWd(); window.buildLivrosMes&&window.buildLivrosMes(); window.buildGeneros&&window.buildGeneros(); window.buildDonuts&&window.buildDonuts(); window.buildCalendar&&window.buildCalendar(); }catch(e){ console.warn('v3.21 rebuild', e); } },250); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setTimeout(boot,700); setTimeout(boot,1800); setInterval(()=>{ markCards(); patchGoalModal(); patchCommunity(); },2500);
+  setTimeout(boot,700); setTimeout(boot,1800); /* V3.30: removido loop permanente de modal/comunidade */
   document.addEventListener('touchmove', function(ev){ if(document.body.classList.contains('bl-modal-open')){ const open=document.querySelector('.pwa-overlay.open .pwa-modal, #painelGerenciarMeta[style*="display: flex"], #painelGerenciarMeta[style*="display:flex"]'); if(open && !open.contains(ev.target)) ev.preventDefault(); } }, {passive:false});
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH, communityFit:!!$('blCommunityModal'), modalLock:document.body.classList.contains('bl-modal-open'), rankingV321:!!$('rankList')?.closest('.bl-v321-ranking-card'), cacheDebug:typeof window.blAndroidCacheDebug}); };
@@ -10174,8 +10179,8 @@ body.bl-v12-battle #blBattleBackButtonV25{
     setTimeout(()=>{ try{ window.buildGeneros&&window.buildGeneros(); }catch(e){} },300);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  setTimeout(boot,600); setTimeout(boot,1800); setInterval(watchdog,2500);
-  try{ new MutationObserver(()=>setTimeout(syncLock,30)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']}); }catch(e){}
+  setTimeout(boot,600); setTimeout(boot,1800); setTimeout(watchdog,2500); /* V3.30: sem watchdog infinito */
+  /* V3.30: MutationObserver antigo desativado para reduzir travamento no mobile/APK. */
 
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,scrollLocked:locked,activeModal:hasActiveModal(),bookSearch:!!$('selBookBusca'),generosCanvas:($('cGeneros')?.tagName||''),battleFixed:!!$('bat-generos-div')}); };
@@ -10522,8 +10527,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function boot(){ applyMobileLook(); patchRanking(); patchBookSearch(); patchBattle(); patchMenuActions(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   [250,800,1600,3000].forEach(t=>setTimeout(boot,t));
-  setInterval(boot,2500);
-  try{ new MutationObserver(()=>setTimeout(boot,60)).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  /* V3.30: loop/observer v3.25 desativados; a correção final roda sob demanda. */
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,rankV325:!!window.__bl_v325_rank_wrapped,bookSearchV325:!!$('selBookBusca')?.__bl_v325,headerV325:!!document.querySelector('.bl-v325-user-title'),mobileLook:document.body.classList.contains('bl-v325-mobile-look')}); };
   const oldCache=window.blAndroidCacheDebug;
@@ -10792,8 +10796,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(typeof oldOpen==='function' && !oldOpen.__bl_v326){ window.blOpenCommunityModal=function(){ const r=oldOpen.apply(this,arguments); setTimeout(()=>{patchCommunity();updateModalAndMenuState();},0); setTimeout(()=>{patchCommunity();updateModalAndMenuState();},250); return r; }; window.blOpenCommunityModal.__bl_v326=true; }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   [100,300,800,1600,3000].forEach(t=>setTimeout(boot,t));
-  setInterval(boot,2000);
-  try{ new MutationObserver(()=>setTimeout(boot,40)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']}); }catch(e){}
+  /* V3.30: loop/observer v3.26 desativados; a correção final roda sob demanda. */
   window.blUnlockApp=function(){ unlockApp(); closeMenu(); return 'V3.26 unlock ok'; };
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,bookSearchV326:!!$('selBookBusca')?.__bl_v326_bound,menuData:[...document.querySelectorAll('#blMobileMenuPanel button[data-a]')].map(b=>b.dataset.a),modalActive:document.body.classList.contains('bl-v326-modal-active'),sameApk:document.body.classList.contains('bl-v326-mobile-same-apk')}); };
@@ -11013,8 +11016,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(typeof oldRender==='function'&&!oldRender.__bl_v327){window.renderBatalha=function(){const r=oldRender.apply(this,arguments);[60,250,900,1800].forEach(t=>setTimeout(()=>{patchAchievementsModal();patchGenreBattle();patchArtifacts();},t));return r};window.renderBatalha.__bl_v327=true;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   [100,400,1000,2200,4200].forEach(t=>setTimeout(boot,t));
-  setInterval(boot,2600);
-  try{new MutationObserver(()=>setTimeout(boot,60)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']})}catch(e){}
+  /* V3.30: loop/observer v3.27 desativados; a correção final roda sob demanda. */
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patch:PATCH,rankFilterV327:!!window.buildRankingCompleto,bookSuggestV327:!!$('selBookBusca')?.__bl_v327_bound,genreV327:!!document.querySelector('#bat-generos-div .bl-v327-genre-row'),sameMobileApkV327:document.body.classList.contains('bl-v327-no-x')})};
   const oldCache=window.blAndroidCacheDebug;
@@ -11213,12 +11215,266 @@ body.bl-v12-battle #blBattleBackButtonV25{
   if(typeof oldRender==='function' && !oldRender.__bl_v329){ window.renderBatalha=function(){ const r=oldRender.apply(this,arguments); [80,300,900,1800,3000].forEach(t=>setTimeout(()=>{fixBattleGenres();modalState();},t)); return r; }; window.renderBatalha.__bl_v329=true; }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
   [100,400,1000,2200,4200].forEach(t=>setTimeout(boot,t));
-  setInterval(boot,1200);
-  try{ new MutationObserver(()=>setTimeout(boot,90)).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']}); }catch(e){}
+  /* V3.30: loop/observer v3.29 desativados; v3.30 faz correção pontual sem ficar relendo DOM. */
   window.blForceBookSuggestV329=function(q){ return showBookSuggest(q||$('selBookBusca')?.value||''); };
   window.blResetMenuTop=function(){ resetMenuTop(); return 'menu top reset v329'; };
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){ const prev=typeof oldDebug==='function'?oldDebug():{}; return Object.assign({},prev,{patch:PATCH,bookSuggestV329:!!$('selBookBusca')?.__bl_v329_bound,bookCountV329:allBooks().length,genreBattleV329:!!document.querySelector('#bat-generos-div.bl-v329-genre-ready'),noHorizontalV329:document.body.scrollWidth<=window.innerWidth+2,menuResetV329:!!$('blMobileMenuPanel')?.__bl_v329_obs}); };
+})();
+</script>
+
+
+<!-- BookLegacy Mobile V3.30 — ajuste real mobile/APK sem mexer no desktop -->
+<style id="booklegacy-mobile-v330-css">
+@media (max-width:899px), (pointer:coarse){
+  html, body{width:100% !important;max-width:100% !important;overflow-x:hidden !important;}
+  body.bl-v330-mobile-apk-fix{width:100% !important;max-width:100vw !important;overflow-x:hidden !important;}
+  body.bl-v330-mobile-apk-fix #app,
+  body.bl-v330-mobile-apk-fix main,
+  body.bl-v330-mobile-apk-fix section,
+  body.bl-v330-mobile-apk-fix header,
+  body.bl-v330-mobile-apk-fix .page,
+  body.bl-v330-mobile-apk-fix #pageDashboard,
+  body.bl-v330-mobile-apk-fix #pageBatalha,
+  body.bl-v330-mobile-apk-fix #batalhaContainer{
+    width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;overflow-x:hidden !important;
+  }
+  body.bl-v330-mobile-apk-fix .card,
+  body.bl-v330-mobile-apk-fix .kpi,
+  body.bl-v330-mobile-apk-fix .panel,
+  body.bl-v330-mobile-apk-fix .modal-card,
+  body.bl-v330-mobile-apk-fix .rank-item,
+  body.bl-v330-mobile-apk-fix .rank-row,
+  body.bl-v330-mobile-apk-fix .table-wrap{
+    width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;overflow-x:hidden !important;
+  }
+  body.bl-v330-mobile-apk-fix .grid,
+  body.bl-v330-mobile-apk-fix .grid2,
+  body.bl-v330-mobile-apk-fix .grid3,
+  body.bl-v330-mobile-apk-fix .grid4,
+  body.bl-v330-mobile-apk-fix .grid5,
+  body.bl-v330-mobile-apk-fix .grid6{
+    grid-template-columns:1fr !important;width:100% !important;max-width:100% !important;min-width:0 !important;overflow-x:hidden !important;
+  }
+  body.bl-v330-mobile-apk-fix .ctrl,
+  body.bl-v330-mobile-apk-fix .controls,
+  body.bl-v330-mobile-apk-fix .toolbar{
+    width:100% !important;max-width:100% !important;min-width:0 !important;display:flex !important;flex-wrap:wrap !important;overflow-x:hidden !important;
+  }
+  body.bl-v330-mobile-apk-fix .ctrl > *,
+  body.bl-v330-mobile-apk-fix .controls > *,
+  body.bl-v330-mobile-apk-fix .toolbar > *,
+  body.bl-v330-mobile-apk-fix select,
+  body.bl-v330-mobile-apk-fix input,
+  body.bl-v330-mobile-apk-fix button,
+  body.bl-v330-mobile-apk-fix .btn{
+    max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;
+  }
+  body.bl-v330-mobile-apk-fix .card canvas,
+  body.bl-v330-mobile-apk-fix canvas,
+  body.bl-v330-mobile-apk-fix #cGeneros,
+  body.bl-v330-mobile-apk-fix #cMonthly,
+  body.bl-v330-mobile-apk-fix #cHeat,
+  body.bl-v330-mobile-apk-fix #cDrilldown,
+  body.bl-v330-mobile-apk-fix #cBook,
+  body.bl-v330-mobile-apk-fix #cDonut,
+  body.bl-v330-mobile-apk-fix #cAutores{
+    display:block !important;width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;
+  }
+  body.bl-v330-mobile-apk-fix #calGrid,
+  body.bl-v330-mobile-apk-fix #heatmapGrid,
+  body.bl-v330-mobile-apk-fix #batalhaContainer > div{
+    width:100% !important;max-width:100% !important;min-width:0 !important;overflow-x:hidden !important;box-sizing:border-box !important;
+  }
+  body.bl-v330-mobile-apk-fix img.cover-img,
+  body.bl-v330-mobile-apk-fix .cover-img{
+    background:#111827 !important;contain:content !important;backface-visibility:hidden !important;
+  }
+
+  body.bl-v330-mobile-apk-fix #bat-generos-div,
+  body.bl-v330-mobile-apk-fix #bat-generos-div.bl-v329-genre-ready,
+  body.bl-v330-mobile-apk-fix #bat-generos-div.bl-v328-genre-ready,
+  body.bl-v330-mobile-apk-fix #bat-generos-div.bl-v327-genre-ready,
+  body.bl-v330-mobile-apk-fix #bat-generos-div.bl-v326-genre-ready,
+  body.bl-v330-mobile-apk-fix #bat-generos-div.bl-v325-genre-ready{
+    width:100% !important;max-width:100% !important;min-width:0 !important;overflow:hidden !important;box-sizing:border-box !important;padding:0 !important;margin:0 !important;display:block !important;
+  }
+  body.bl-v330-mobile-apk-fix #bat-generos-div *{box-sizing:border-box !important;min-width:0 !important;max-width:100% !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-genre-legend{
+    display:flex !important;justify-content:center !important;align-items:center !important;gap:10px !important;flex-wrap:wrap !important;width:100% !important;max-width:100% !important;margin:0 0 12px !important;overflow:hidden !important;font-family:'Rajdhani',sans-serif !important;font-size:12px !important;color:#c0c8d8 !important;
+  }
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-genre-row{
+    display:grid !important;grid-template-columns:minmax(68px,86px) minmax(0,1fr) minmax(0,1fr) !important;align-items:center !important;gap:5px !important;width:100% !important;max-width:100% !important;min-width:0 !important;margin:0 0 10px !important;overflow:hidden !important;padding:0 !important;background:transparent !important;border:0 !important;
+  }
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-genre-name{
+    font-family:'Rajdhani',sans-serif !important;font-size:10px !important;line-height:1.05 !important;font-weight:900 !important;letter-spacing:.45px !important;text-transform:uppercase !important;color:#c0c8d8 !important;text-align:right !important;white-space:normal !important;overflow:hidden !important;word-break:break-word !important;
+  }
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-a,
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-b{display:flex !important;align-items:center !important;gap:3px !important;width:100% !important;min-width:0 !important;overflow:hidden !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-a{justify-content:flex-end !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-b{justify-content:flex-start !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-pct{font-family:'Orbitron',sans-serif !important;font-size:9px !important;line-height:1 !important;font-weight:900 !important;flex:0 0 25px !important;text-align:center !important;white-space:nowrap !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-track{height:18px !important;display:flex !important;align-items:stretch !important;overflow:hidden !important;background:rgba(255,255,255,.055) !important;border-radius:6px !important;flex:1 1 auto !important;min-width:0 !important;max-width:100% !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-a .bl-v330-track{justify-content:flex-end !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-side-b .bl-v330-track{justify-content:flex-start !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-fill{height:100% !important;border-radius:6px !important;min-width:2px !important;max-width:100% !important;}
+}
+@media (max-width:380px){
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-genre-row{grid-template-columns:minmax(56px,68px) minmax(0,1fr) minmax(0,1fr) !important;gap:3px !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-genre-name{font-size:9px !important;letter-spacing:.2px !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-pct{font-size:8px !important;flex-basis:21px !important;}
+  body.bl-v330-mobile-apk-fix #bat-generos-div .bl-v330-track{height:16px !important;}
+}
+</style>
+<script id="booklegacy-mobile-v330-fix">
+(function(){
+  'use strict';
+  const PATCH='v3.30-mobile-apk-fit-performance-drilldown';
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const isMob=()=> window.innerWidth<=899 || matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  const pct=v=>Math.max(0,Math.min(100,parseInt(String(v??'').replace(/[^0-9]/g,''),10)||0));
+  window.__BOOKLEGACY_MOBILE_V330=true;
+  window.__BOOKLEGACY_BUILD_MARKER='booklegacy-mobile-v3.30';
+
+  function fixNoX(){
+    if(!isMob()) return;
+    document.body.classList.add('bl-v330-mobile-apk-fix');
+    document.documentElement.style.overflowX='hidden';
+    document.body.style.overflowX='hidden';
+    document.querySelectorAll('.card,.kpi,.panel,.rank-item,.table-wrap,#app,#pageDashboard,#pageBatalha,#batalhaContainer,#batalhaContainer>div,.grid,.grid2,.grid3,.grid4,.grid5,.grid6').forEach(el=>{
+      el.style.maxWidth='100%'; el.style.minWidth='0'; el.style.boxSizing='border-box'; if(el.classList.contains('card')||el.id==='batalhaContainer') el.style.overflowX='hidden';
+    });
+    document.querySelectorAll('canvas,#cGeneros,#cMonthly,#cHeat,#cDrilldown,#cBook,#cDonut,#cAutores,#calGrid,#heatmapGrid').forEach(el=>{
+      el.style.maxWidth='100%'; el.style.minWidth='0'; el.style.width='100%'; el.style.boxSizing='border-box';
+    });
+    const vw=window.innerWidth||document.documentElement.clientWidth||360;
+    document.querySelectorAll('.rank-item').forEach(el=>{ if(el.scrollWidth>vw){ el.style.width='100%'; el.style.maxWidth='100%'; el.style.minWidth='0'; } });
+  }
+
+  const oldProxy=window.proxyUrl;
+  function directFirstProxy(url){
+    const u=String(url||'').trim();
+    if(!u) return '';
+    if(/^data:|^blob:/i.test(u)) return u;
+    if(/^https:\/\//i.test(u)) return u;
+    if(/^http:\/\//i.test(u)){
+      try{ return typeof oldProxy==='function' ? oldProxy(u) : 'https://wsrv.nl/?url='+encodeURIComponent(u.replace(/^https?:\/\//,'')); }catch(e){ return u; }
+    }
+    return u;
+  }
+  window.proxyUrl=directFirstProxy; try{ proxyUrl=directFirstProxy; }catch(e){}
+
+  function coverSources(isbn,customUrl){
+    const out=[]; const add=u=>{u=String(u||'').trim(); if(u&&!out.includes(u)) out.push(u);};
+    if(customUrl){ add(directFirstProxy(customUrl)); if(/^https?:\/\//i.test(customUrl)) add(customUrl); }
+    if(isbn) add('https://covers.openlibrary.org/b/isbn/'+encodeURIComponent(isbn)+'-M.jpg');
+    return out;
+  }
+  function imgErrorHandler(){return "(function(i){try{var a=JSON.parse(i.getAttribute('data-bl-sources')||'[]');var n=(+i.getAttribute('data-bl-i')||0)+1;if(a[n]){i.setAttribute('data-bl-i',n);i.src=a[n];}else{i.style.visibility='hidden';}}catch(e){i.style.visibility='hidden';}})(this)";}
+  function fastCoverImg(isbn, fallback='📖', cls='', customUrl=''){
+    const sources=coverSources(isbn,customUrl); if(!sources.length) return '<span class="cover-fallback">'+esc(fallback)+'</span>';
+    return '<img src="'+esc(sources[0])+'" data-bl-i="0" data-bl-sources="'+esc(JSON.stringify(sources))+'" loading="lazy" decoding="async" fetchpriority="low" class="cover-img '+esc(cls)+'" alt="Capa" onerror="'+imgErrorHandler()+'">';
+  }
+  function fastCoverThumb(isbn, customUrl=''){
+    const sources=coverSources(isbn,customUrl); if(!sources.length) return '';
+    return '<img src="'+esc(sources[0])+'" data-bl-i="0" data-bl-sources="'+esc(JSON.stringify(sources))+'" loading="lazy" decoding="async" fetchpriority="low" class="cover-img" style="width:36px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#111827" alt="" onerror="'+imgErrorHandler()+'">';
+  }
+  window.coverImg=fastCoverImg; window.coverThumb=fastCoverThumb;
+  try{ coverImg=fastCoverImg; }catch(e){} try{ coverThumb=fastCoverThumb; }catch(e){}
+
+  function readBattleRows(gd){
+    const rows=[]; const seen=new Set();
+    function add(name,a,b){
+      name=String(name||'').trim(); if(!name||/^(milton|daniel|jogador a|jogador b)$/i.test(name)) return;
+      const key=name.toLowerCase(); if(seen.has(key)) return; seen.add(key);
+      rows.push({name,pctA:pct(a),pctB:pct(b)});
+    }
+    gd.querySelectorAll('.bl-v329-genre-row,.bl-v328-genre-row,.bl-v327-genre-row,.bl-v326-genre-row,.bl-v325-genre-row,.bl-v330-genre-row').forEach(r=>{
+      const name=r.querySelector('.bl-v330-genre-name,.bl-v329-genre-name,.bl-v328-genre-name,.bl-v327-genre-name,.bl-v326-genre-name,.bl-v325-genre-name')?.textContent||'';
+      const ps=[...r.querySelectorAll('.bl-v330-pct,.bl-v329-genre-pct,.bl-v328-genre-pct,.bl-v327-pct,.bl-v326-pct,.bl-v325-pct')].map(x=>pct(x.textContent));
+      add(name,ps[0],ps[1]);
+    });
+    if(rows.length) return rows;
+    gd.querySelectorAll('div[data-desktop-grid="1"],div[style*="grid-template-columns:140px"],div[style*="grid-template-columns: 140px"]').forEach(r=>{
+      const cells=[...r.children];
+      const name=(cells[0]?.textContent||'').trim();
+      const ps=[...r.querySelectorAll('span')].map(x=>pct(x.textContent));
+      add(name,ps[0],ps[1]);
+    });
+    return rows;
+  }
+  function renderBattleGenresDesktopLike(){
+    if(!isMob()) return;
+    const gd=$('bat-generos-div'); if(!gd) return;
+    const rows=readBattleRows(gd); if(!rows.length) return;
+    const sig=rows.map(r=>r.name+':'+r.pctA+':'+r.pctB).join('|');
+    if(gd.dataset.bl330Sig===sig && gd.classList.contains('bl-v330-genre-ready')) return;
+    gd.dataset.bl330Sig=sig; gd.className='bl-v330-genre-ready'; gd.removeAttribute('style');
+    gd.innerHTML='<div class="bl-v330-genre-legend"><span style="color:#A855F7;font-weight:900">■ Jogador A</span><span style="color:#FB923C;font-weight:900">■ Jogador B</span></div>'+rows.map(r=>{
+      const a=Math.max(2,r.pctA), b=Math.max(2,r.pctB);
+      return '<div class="bl-v330-genre-row"><div class="bl-v330-genre-name">'+esc(r.name)+'</div><div class="bl-v330-side-a"><span class="bl-v330-pct" style="color:#A855F7">'+r.pctA+'%</span><div class="bl-v330-track"><div class="bl-v330-fill" style="width:'+a+'%;background:linear-gradient(90deg,rgba(168,85,247,.35),#A855F7)"></div></div></div><div class="bl-v330-side-b"><div class="bl-v330-track"><div class="bl-v330-fill" style="width:'+b+'%;background:linear-gradient(90deg,#FB923C,rgba(249,115,22,.35))"></div></div><span class="bl-v330-pct" style="color:#FB923C">'+r.pctB+'%</span></div></div>';
+    }).join('');
+  }
+  function scheduleBattleGenres(){[30,120,320,800,1600,3200].forEach(t=>setTimeout(()=>{fixNoX();renderBattleGenresDesktopLike();},t));}
+
+  function fitCanvas(id){
+    const c=$(id); if(!c) return;
+    const p=c.parentElement; if(p){ p.style.width='100%'; p.style.maxWidth='100%'; p.style.minWidth='0'; p.style.overflow='hidden'; }
+    c.style.width='100%'; c.style.maxWidth='100%'; c.style.minWidth='0'; c.style.display='block';
+    try{ const ch=window.Chart&&Chart.getChart(c); if(ch){ ch.resize(); ch.update('none'); } }catch(e){}
+  }
+  function refreshDrilldown(){
+    if(!isMob()) return;
+    fitCanvas('cDrilldown');
+    const c=$('cDrilldown'); if(!c) return;
+    try{
+      const ch=window.Chart&&Chart.getChart(c);
+      const empty=!ch || !ch.data || !ch.data.datasets || !ch.data.datasets.some(ds=>(ds.data||[]).some(v=>Number(v)>0));
+      if(empty && typeof window.__blV330OldBuildDrilldown==='function') window.__blV330OldBuildDrilldown();
+    }catch(e){}
+    setTimeout(()=>fitCanvas('cDrilldown'),80);
+  }
+  function scheduleDrilldown(){[60,220,650,1200,2200].forEach(t=>setTimeout(refreshDrilldown,t));}
+  function wrapDrilldown(){
+    if(typeof window.buildDrilldown==='function' && !window.buildDrilldown.__bl_v330){
+      const old=window.buildDrilldown;
+      window.__blV330OldBuildDrilldown=old;
+      window.buildDrilldown=function(){ const r=old.apply(this,arguments); scheduleDrilldown(); return r; };
+      window.buildDrilldown.__bl_v330=true;
+      try{ buildDrilldown=window.buildDrilldown; }catch(e){}
+    }
+  }
+  function wrapRenderAndUser(){
+    const oldRender=window.renderBatalha;
+    if(typeof oldRender==='function' && !oldRender.__bl_v330){
+      window.renderBatalha=function(){ const r=oldRender.apply(this,arguments); scheduleBattleGenres(); return r; };
+      window.renderBatalha.__bl_v330=true;
+      try{ renderBatalha=window.renderBatalha; }catch(e){}
+    }
+    const oldSet=window.setUsuario;
+    if(typeof oldSet==='function' && !oldSet.__bl_v330){
+      window.setUsuario=function(){ const r=oldSet.apply(this,arguments); fixNoX(); scheduleBattleGenres(); scheduleDrilldown(); return r; };
+      window.setUsuario.__bl_v330=true;
+      try{ setUsuario=window.setUsuario; }catch(e){}
+    }
+  }
+  function boot(){
+    if(!isMob()) return;
+    fixNoX(); wrapDrilldown(); wrapRenderAndUser(); scheduleBattleGenres(); scheduleDrilldown();
+  }
+  document.addEventListener('click',()=>{ if(isMob()){ setTimeout(fixNoX,40); setTimeout(refreshDrilldown,180); setTimeout(renderBattleGenresDesktopLike,220); } },{capture:true,passive:true});
+  window.addEventListener('resize',()=>{fixNoX(); scheduleBattleGenres(); scheduleDrilldown();},{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(boot,350),{passive:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  [100,350,900,1800,3600,6000].forEach(t=>setTimeout(boot,t));
+  window.blForceMobileFixV330=function(){ boot(); return window.blMobileDebug(); };
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){
+    const prev=typeof oldDebug==='function'?oldDebug():{};
+    return Object.assign({},prev,{patch:PATCH,markerV330:window.__BOOKLEGACY_BUILD_MARKER,noHorizontalV330:document.documentElement.scrollWidth<=(window.innerWidth+2),battleGenreV330:!!document.querySelector('#bat-generos-div.bl-v330-genre-ready'),coverModeV330:'direct-url-first-proxy-only-fallback',drilldownV330:!!(window.Chart&&$('cDrilldown')&&Chart.getChart($('cDrilldown'))),desktopUntouched:true});
+  };
+  console.log('[BookLegacy Mobile]', PATCH);
 })();
 </script>
 
