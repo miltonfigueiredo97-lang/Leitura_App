@@ -1,24 +1,21 @@
-# BookLegacy V3.29 — correção pontual revisada
+# BookLegacy V3.32 — Comunidade, Resenhas e Mobile Fit
 
-Arquivos do pacote:
-- mobile.html
-- vercel.json
-- README.md
+Atualização aplicada em cima da base V3.31.
 
-Não altera:
-- index.html
-- android/
-- google-services.json
-- booklegacy_config.xml
-- .github/workflows/build-apk.yml
+## Mobile/APK
+- Correção real do limite horizontal dos quadros: remove min-widths que cortavam a tela e adapta cards, ranking, calendário, gráficos e batalha ao tamanho do celular.
+- Mantidos os pontos que estavam OK: competição por gêneros, performance/capas e detalhe de leitura.
+- Menu dos três tracinhos segue oculto quando popups/modais estão abertos.
+- Em Todas Conquistas, a intenção é preservar a formatação e mexer apenas no fechamento/menu sobreposto.
 
-Correções focadas:
-- remove o atraso artificial de capas do ranking completo;
-- refaz a busca de Detalhes do Livro como autocomplete real;
-- prende a Competição por Gêneros dentro do quadro;
-- força o mobile.html a não gerar rolagem lateral;
-- faz o menu de três traços abrir sempre no topo;
-- remove o texto fantasma de "Nenhum gênero cadastrado" quando o gráfico existe.
+## Desktop + Mobile + APK
+- Aba/botão antigo “Comunidade” passa a representar “Amigos”.
+- Nova aba/botão “Comunidade” abre um feed de sessões e avaliações suas e de amigos.
+- Registrar Sessão agora salva Resenha e Termômetro.
+- Avaliar Livro agora salva Título da resenha, Resenha e Termômetro.
+- Termômetro permite até 3 emojis por registro.
+- Ao concluir 100% de um livro por sessão, ele continua na tela inicial como “Lido — avaliação pendente”, com botões “Avaliar Livro” e “Não avaliar”.
 
-Debug esperado:
-blMobileDebug().patch = "v3.29-targeted-careful-fix"
+## Debug
+- No console: `blMobileDebug()` no mobile/APK.
+- No console: `blCommunityDebug()` para verificar feed/comunidade.
