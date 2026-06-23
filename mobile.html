@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.29">
+<meta name="booklegacy-version" content="v3.31-mobile-apk">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -11329,13 +11329,14 @@ body.bl-v12-battle #blBattleBackButtonV25{
 <script id="booklegacy-mobile-v330-fix">
 (function(){
   'use strict';
-  const PATCH='v3.30-mobile-apk-fit-performance-drilldown';
+  const PATCH='v3.31-mobile-apk-real-fit-modal-menu-cover-size';
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isMob=()=> window.innerWidth<=899 || matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
   const pct=v=>Math.max(0,Math.min(100,parseInt(String(v??'').replace(/[^0-9]/g,''),10)||0));
   window.__BOOKLEGACY_MOBILE_V330=true;
-  window.__BOOKLEGACY_BUILD_MARKER='booklegacy-mobile-v3.30';
+  window.__BOOKLEGACY_MOBILE_V331=true;
+  window.__BOOKLEGACY_BUILD_MARKER='booklegacy-mobile-v3.31';
 
   function fixNoX(){
     if(!isMob()) return;
@@ -11374,7 +11375,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function imgErrorHandler(){return "(function(i){try{var a=JSON.parse(i.getAttribute('data-bl-sources')||'[]');var n=(+i.getAttribute('data-bl-i')||0)+1;if(a[n]){i.setAttribute('data-bl-i',n);i.src=a[n];}else{i.style.visibility='hidden';}}catch(e){i.style.visibility='hidden';}})(this)";}
   function fastCoverImg(isbn, fallback='📖', cls='', customUrl=''){
     const sources=coverSources(isbn,customUrl); if(!sources.length) return '<span class="cover-fallback">'+esc(fallback)+'</span>';
-    return '<img src="'+esc(sources[0])+'" data-bl-i="0" data-bl-sources="'+esc(JSON.stringify(sources))+'" loading="lazy" decoding="async" fetchpriority="low" class="cover-img '+esc(cls)+'" alt="Capa" onerror="'+imgErrorHandler()+'">';
+    return '<img src="'+esc(sources[0])+'" data-bl-i="0" data-bl-sources="'+esc(JSON.stringify(sources))+'" loading="lazy" decoding="async" fetchpriority="low" class="cover-img '+esc(cls)+'" style="width:60px;height:84px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#111827" alt="Capa" onerror="'+imgErrorHandler()+'">';
   }
   function fastCoverThumb(isbn, customUrl=''){
     const sources=coverSources(isbn,customUrl); if(!sources.length) return '';
@@ -11474,6 +11475,216 @@ body.bl-v12-battle #blBattleBackButtonV25{
     const prev=typeof oldDebug==='function'?oldDebug():{};
     return Object.assign({},prev,{patch:PATCH,markerV330:window.__BOOKLEGACY_BUILD_MARKER,noHorizontalV330:document.documentElement.scrollWidth<=(window.innerWidth+2),battleGenreV330:!!document.querySelector('#bat-generos-div.bl-v330-genre-ready'),coverModeV330:'direct-url-first-proxy-only-fallback',drilldownV330:!!(window.Chart&&$('cDrilldown')&&Chart.getChart($('cDrilldown'))),desktopUntouched:true});
   };
+  console.log('[BookLegacy Mobile]', PATCH);
+})();
+</script>
+
+
+
+<style id="booklegacy-mobile-v331-css">
+@media (max-width:899px){
+  body.bl-v331-mobile-apk-fit,
+  body.bl-v331-mobile-apk-fit #app,
+  body.bl-v331-mobile-apk-fit main,
+  body.bl-v331-mobile-apk-fit section,
+  body.bl-v331-mobile-apk-fit header,
+  body.bl-v331-mobile-apk-fit .page,
+  body.bl-v331-mobile-apk-fit #pageDashboard,
+  body.bl-v331-mobile-apk-fit #pageBatalha,
+  body.bl-v331-mobile-apk-fit #batalhaContainer{
+    width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;overflow-x:hidden !important;
+  }
+  body.bl-v331-mobile-apk-fit .card,
+  body.bl-v331-mobile-apk-fit .kpi,
+  body.bl-v331-mobile-apk-fit .panel,
+  body.bl-v331-mobile-apk-fit .rank-item,
+  body.bl-v331-mobile-apk-fit .rank-row,
+  body.bl-v331-mobile-apk-fit .table-wrap,
+  body.bl-v331-mobile-apk-fit #batalhaContainer > div,
+  body.bl-v331-mobile-apk-fit #calGrid,
+  body.bl-v331-mobile-apk-fit #heatmapGrid{
+    width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;overflow-x:hidden !important;
+  }
+  body.bl-v331-mobile-apk-fit [style*="min-width"]{min-width:0 !important;}
+  body.bl-v331-mobile-apk-fit [style*="width:"]{max-width:100% !important;box-sizing:border-box !important;}
+  body.bl-v331-mobile-apk-fit .grid,
+  body.bl-v331-mobile-apk-fit .grid2,
+  body.bl-v331-mobile-apk-fit .grid3,
+  body.bl-v331-mobile-apk-fit .grid4,
+  body.bl-v331-mobile-apk-fit .grid5,
+  body.bl-v331-mobile-apk-fit .grid6{
+    display:grid !important;grid-template-columns:minmax(0,1fr) !important;width:100% !important;max-width:100% !important;min-width:0 !important;overflow-x:hidden !important;
+  }
+  body.bl-v331-mobile-apk-fit .ctrl,
+  body.bl-v331-mobile-apk-fit .controls,
+  body.bl-v331-mobile-apk-fit .toolbar{
+    width:100% !important;max-width:100% !important;min-width:0 !important;display:flex !important;flex-wrap:wrap !important;overflow-x:hidden !important;gap:6px !important;
+  }
+  body.bl-v331-mobile-apk-fit .ctrl > *,
+  body.bl-v331-mobile-apk-fit .controls > *,
+  body.bl-v331-mobile-apk-fit .toolbar > *,
+  body.bl-v331-mobile-apk-fit select,
+  body.bl-v331-mobile-apk-fit input,
+  body.bl-v331-mobile-apk-fit textarea,
+  body.bl-v331-mobile-apk-fit button,
+  body.bl-v331-mobile-apk-fit .btn{
+    max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;
+  }
+  body.bl-v331-mobile-apk-fit canvas,
+  body.bl-v331-mobile-apk-fit .card canvas,
+  body.bl-v331-mobile-apk-fit #cGeneros,
+  body.bl-v331-mobile-apk-fit #cMonthly,
+  body.bl-v331-mobile-apk-fit #cHeat,
+  body.bl-v331-mobile-apk-fit #cDrilldown,
+  body.bl-v331-mobile-apk-fit #cBook,
+  body.bl-v331-mobile-apk-fit #cDonut,
+  body.bl-v331-mobile-apk-fit #cAutores{
+    display:block !important;width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;
+  }
+
+  /* V3.31: recupera o tamanho correto das capas. Na V3.30 elas podiam abrir no tamanho natural e estourar a tela. */
+  body.bl-v331-mobile-apk-fit .cover-img{width:60px !important;height:84px !important;object-fit:cover !important;border-radius:4px !important;flex-shrink:0 !important;max-width:60px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-card .cover-img{width:52px !important;height:73px !important;max-width:52px !important;}
+
+  /* Topo "Lendo/Pausado/Dica": compacto como antes, sem ficar gigante e sem cortar horizontalmente. */
+  body.bl-v331-mobile-apk-fit .lendo-wrap{padding:8px 10px !important;width:100% !important;max-width:100% !important;overflow:hidden !important;}
+  body.bl-v331-mobile-apk-fit .lendo-inner{display:grid !important;grid-template-columns:minmax(0,1fr) !important;gap:8px !important;width:100% !important;max-width:100% !important;min-width:0 !important;margin:0 !important;}
+  body.bl-v331-mobile-apk-fit .lendo-card{width:100% !important;max-width:100% !important;min-width:0 !important;padding:10px !important;border-radius:12px !important;overflow:hidden !important;box-sizing:border-box !important;}
+  body.bl-v331-mobile-apk-fit .lendo-card > div[style*="display:flex"]{display:flex !important;gap:8px !important;align-items:flex-start !important;max-width:100% !important;min-width:0 !important;margin-bottom:7px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-card > div[style*="display:flex"] > div{min-width:0 !important;max-width:100% !important;}
+  body.bl-v331-mobile-apk-fit .lendo-tag{font-size:9px !important;letter-spacing:1px !important;margin-bottom:5px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-book-title{font-size:15px !important;line-height:1.15 !important;margin-bottom:0 !important;white-space:normal !important;word-break:break-word !important;overflow-wrap:anywhere !important;}
+  body.bl-v331-mobile-apk-fit .lendo-stats{display:flex !important;gap:8px !important;flex-wrap:wrap !important;margin-bottom:6px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-stat{min-width:0 !important;}
+  body.bl-v331-mobile-apk-fit .lendo-stat-val{font-size:15px !important;line-height:1 !important;}
+  body.bl-v331-mobile-apk-fit .lendo-stat-lbl{font-size:8px !important;line-height:1.05 !important;letter-spacing:.2px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-progress-wrap{gap:6px !important;max-width:100% !important;}
+  body.bl-v331-mobile-apk-fit .lendo-bar-bg{min-width:0 !important;}
+  body.bl-v331-mobile-apk-fit .lendo-pct-label{font-size:10px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-meta{display:flex !important;flex-wrap:wrap !important;gap:6px !important;align-items:center !important;justify-content:flex-start !important;margin-top:7px !important;}
+  body.bl-v331-mobile-apk-fit .lendo-meta span{font-size:10px !important;line-height:1.15 !important;}
+  body.bl-v331-mobile-apk-fit .lendo-meta button{padding:5px 8px !important;font-size:11px !important;border-radius:16px !important;white-space:normal !important;line-height:1.1 !important;}
+
+  /* Quando qualquer popup/modal está aberto, o botão dos 3 tracinhos não pode ficar por cima do X. */
+  body.bl-v331-modal-open #blMobileMenuFab,
+  body.bl-v331-modal-open #blMobileMenuPanel{
+    display:none !important;visibility:hidden !important;pointer-events:none !important;
+  }
+}
+</style>
+<script id="booklegacy-mobile-v331-fix">
+(function(){
+  'use strict';
+  const PATCH='v3.31-mobile-apk-real-fit-modal-menu-cover-size';
+  const isMob=()=> window.innerWidth<=899 || matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  window.__BOOKLEGACY_MOBILE_V331=true;
+  window.__BOOKLEGACY_BUILD_MARKER='booklegacy-mobile-v3.31';
+
+  function applyFit(){
+    if(!isMob()) return;
+    document.body.classList.add('bl-v331-mobile-apk-fit');
+    document.documentElement.style.overflowX='hidden';
+    document.body.style.overflowX='hidden';
+    const rootW=Math.max(320, Math.min(window.innerWidth||360, document.documentElement.clientWidth||360));
+    const sels=[
+      '#app','main','section','header','.page','#pageDashboard','#pageBatalha','#batalhaContainer','#batalhaContainer>div',
+      '.card','.kpi','.panel','.rank-item','.rank-row','.table-wrap','#calGrid','#heatmapGrid',
+      '.grid','.grid2','.grid3','.grid4','.grid5','.grid6','.lendo-wrap','.lendo-inner','.lendo-card'
+    ].join(',');
+    document.querySelectorAll(sels).forEach(el=>{
+      el.style.maxWidth='100%';
+      el.style.minWidth='0';
+      el.style.boxSizing='border-box';
+      if(el.matches('.card,#batalhaContainer,#pageDashboard,#pageBatalha,.lendo-wrap,.lendo-card')) el.style.overflowX='hidden';
+    });
+    document.querySelectorAll('canvas,#cGeneros,#cMonthly,#cHeat,#cDrilldown,#cBook,#cDonut,#cAutores').forEach(el=>{
+      el.style.width='100%'; el.style.maxWidth='100%'; el.style.minWidth='0'; el.style.boxSizing='border-box';
+      try{ const ch=window.Chart&&Chart.getChart(el); if(ch){ ch.resize(); ch.update('none'); } }catch(e){}
+    });
+    document.querySelectorAll('#app [style*="min-width"], .page [style*="min-width"], #pageBatalha [style*="min-width"]').forEach(el=>{
+      if(el.id==='blMobileMenuPanel') return;
+      el.style.minWidth='0'; el.style.maxWidth='100%'; el.style.boxSizing='border-box';
+    });
+    document.querySelectorAll('.cover-img').forEach(img=>{
+      const inTop=!!img.closest('.lendo-card');
+      if(inTop){ img.style.width='52px'; img.style.height='73px'; img.style.maxWidth='52px'; }
+      else if(!img.getAttribute('style') || !/width\s*:\s*\d/.test(img.getAttribute('style')||'')){ img.style.width='60px'; img.style.height='84px'; img.style.maxWidth='60px'; }
+      img.style.objectFit='cover'; img.style.flexShrink='0'; img.style.borderRadius='4px';
+    });
+    document.querySelectorAll('body *').forEach(el=>{
+      if(el.id==='blMobileMenuFab'||el.id==='blMobileMenuPanel'||el.closest('#blMobileMenuPanel')) return;
+      const r=el.getBoundingClientRect();
+      if(r.width>rootW+2 || r.right>rootW+2){
+        el.style.maxWidth='100%'; el.style.minWidth='0'; el.style.boxSizing='border-box';
+      }
+    });
+  }
+
+  function isVisible(el){
+    if(!el || el.id==='blMobileMenuPanel' || el.id==='blMobileMenuFab') return false;
+    const cs=getComputedStyle(el);
+    if(cs.display==='none' || cs.visibility==='hidden' || cs.opacity==='0') return false;
+    const r=el.getBoundingClientRect();
+    return r.width>20 && r.height>20;
+  }
+  function hasOpenModal(){
+    if(!isMob()) return false;
+    const modalSelectors=[
+      '.pwa-overlay.open',
+      '.pwa-overlay[style*="display: flex"]',
+      '.pwa-overlay[style*="display:flex"]',
+      '#modal-todas-conquistas[style*="display: flex"]',
+      '#modal-todas-conquistas[style*="display:flex"]',
+      '#modal-ranking-completo[style*="display: flex"]',
+      '#modal-ranking-completo[style*="display:flex"]',
+      '#blCommunityModal','#blInviteModal','#blMigrationModal',
+      '[id^="modal-"][style*="display: flex"]',
+      '[id^="modal-"][style*="display:flex"]'
+    ];
+    return modalSelectors.some(sel=>Array.from(document.querySelectorAll(sel)).some(isVisible));
+  }
+  function updateModalState(){
+    if(!isMob()) return;
+    const open=hasOpenModal();
+    document.body.classList.toggle('bl-v331-modal-open', open);
+    if(open){
+      document.body.classList.remove('blm-menu-open');
+      const p=document.getElementById('blMobileMenuPanel'); if(p) p.classList.remove('open');
+    }
+  }
+  function wrapModalFunctions(){
+    if(typeof window.abrirModal==='function' && !window.abrirModal.__bl_v331){
+      const old=window.abrirModal;
+      window.abrirModal=function(){ const r=old.apply(this,arguments); setTimeout(updateModalState,0); setTimeout(updateModalState,120); return r; };
+      window.abrirModal.__bl_v331=true;
+      try{ abrirModal=window.abrirModal; }catch(e){}
+    }
+    if(typeof window.fecharModal==='function' && !window.fecharModal.__bl_v331){
+      const old=window.fecharModal;
+      window.fecharModal=function(){ const r=old.apply(this,arguments); setTimeout(updateModalState,0); setTimeout(updateModalState,120); return r; };
+      window.fecharModal.__bl_v331=true;
+      try{ fecharModal=window.fecharModal; }catch(e){}
+    }
+  }
+  function boot(){ applyFit(); updateModalState(); wrapModalFunctions(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  [80,240,700,1400,2600,5000].forEach(t=>setTimeout(boot,t));
+  document.addEventListener('click',()=>{ setTimeout(()=>{ applyFit(); updateModalState(); },30); setTimeout(updateModalState,180); },{capture:true,passive:true});
+  window.addEventListener('resize',()=>setTimeout(boot,80),{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(boot,300),{passive:true});
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){
+    const prev=typeof oldDebug==='function'?oldDebug():{};
+    return Object.assign({},prev,{
+      patch:PATCH,
+      markerV331:window.__BOOKLEGACY_BUILD_MARKER,
+      noHorizontalV331:document.documentElement.scrollWidth<=(window.innerWidth+2),
+      modalMenuHiddenV331:document.body.classList.contains('bl-v331-modal-open') ? getComputedStyle(document.getElementById('blMobileMenuFab')||document.body).display==='none' : true,
+      coverSizeV331:Array.from(document.querySelectorAll('.lendo-card .cover-img')).slice(0,3).map(i=>({w:i.getBoundingClientRect().width,h:i.getBoundingClientRect().height})),
+      desktopUntouched:true
+    });
+  };
+  window.blForceMobileFixV331=function(){ boot(); return window.blMobileDebug(); };
   console.log('[BookLegacy Mobile]', PATCH);
 })();
 </script>
