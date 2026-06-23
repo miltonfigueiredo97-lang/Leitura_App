@@ -11,3 +11,15 @@ Escopo:
 - Desktop/Mobile/APK: avaliações futuras salvam ratedAt, ratingDate e ratingTime.
 - Mobile/APK: menu com Amigos + Comunidade sem duplicar botões.
 - Mobile/APK: Todas Conquistas com formatação baseada no desktop, alterando apenas o necessário para caber no celular.
+
+
+## BookLegacy V3.38
+
+Correção segura baseada nos testes da V3.37:
+- Mobile usa a base visual da V3.33 e aplica ajuste imediato para evitar demora até caber na tela.
+- Heatmap anual ajustado isoladamente, sem mexer nos demais cards.
+- Menu mobile deduplicado para manter apenas Amigos e Comunidade.
+- Comunidade abre como página/aba dedicada, com scroll liberado e feed carregado em partes.
+- Datas de sessões/avaliações passam a ler formatos BR e usar hora para ordenar eventos no mesmo dia.
+- Avaliações antigas são posicionadas após a conclusão 100%; avaliações novas salvam data e hora reais.
+- Preserva Todas Conquistas sem nova alteração de formatação.
