@@ -4000,7 +4000,7 @@ try {
   // V3.51: no Android/APK força long polling para evitar erro WebChannel/Write 400 e travamentos intermitentes.
   const blUa = navigator.userAgent || '';
   const blIsAndroidLike = /Android|;\s*wv\)|BookLegacy/i.test(blUa) || !!window.BookLegacyNative || !!window.__BOOKLEGACY_ANDROID_APP;
-  window.BL.db.settings(blIsAndroidLike ? { experimentalForceLongPolling: true } : { experimentalAutoDetectLongPolling: true });
+  window.BL.db.settings(blIsAndroidLike ? { experimentalForceLongPolling: true, merge: true } : { experimentalAutoDetectLongPolling: true, merge: true });
 } catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
@@ -14455,5 +14455,82 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy Mobile]',PATCH);
 })();
 </script>
+
+
+<!-- BookLegacy V3.53 — ajuste final do menu + no mobile/APK e Firestore settings merge -->
+<style id="bl-v53-fab-menu-offset-fix">
+  @media (max-width:899px), (pointer:coarse){
+    /* O menu do botão + deve abrir acima do FAB, sem ficar em cima dele. */
+    #fabMenu,
+    .fab-menu#fabMenu{
+      bottom:calc(env(safe-area-inset-bottom,0px) + 98px)!important;
+      right:14px!important;
+      z-index:2601!important;
+      max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 120px)!important;
+      overflow-y:auto!important;
+      overflow-x:visible!important;
+      padding-bottom:6px!important;
+      pointer-events:auto!important;
+    }
+    #fabBtn,
+    .fab#fabBtn{
+      bottom:calc(env(safe-area-inset-bottom,0px) + 18px)!important;
+      right:16px!important;
+      z-index:2602!important;
+      pointer-events:auto!important;
+    }
+    body.bl-v52-pwa-modal-open #fabMenu,
+    body.bl-v52-pwa-modal-open #fabBtn,
+    body.bl-v53-modal-open #fabMenu,
+    body.bl-v53-modal-open #fabBtn{
+      display:none!important;
+      visibility:hidden!important;
+      pointer-events:none!important;
+    }
+  }
+</style>
+<script id="bl-v53-fab-menu-offset-fix-js">
+(function(){
+  'use strict';
+  const PATCH='v3.53-fab-menu-offset-firestore-merge';
+  const $=id=>document.getElementById(id);
+  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
+  function hasOpenModal(){return modalIds.some(id=>$(id)?.classList?.contains('open'));}
+  function sync(){
+    document.body.classList.toggle('bl-v53-modal-open',hasOpenModal());
+    const fm=$('fabMenu');
+    if(fm){
+      fm.style.setProperty('bottom','calc(env(safe-area-inset-bottom,0px) + 98px)','important');
+      fm.style.setProperty('right','14px','important');
+    }
+  }
+  const oldToggle=window.toggleFabMenu;
+  window.toggleFabMenu=function(){
+    const ret=(typeof oldToggle==='function') ? oldToggle.apply(this,arguments) : (function(){
+      const fm=$('fabMenu'), fb=$('fabBtn');
+      const open=fm && getComputedStyle(fm).display!=='none';
+      if(fm) fm.style.display=open?'none':'flex';
+      if(fb) fb.textContent=open?'＋':'✕';
+      return !open;
+    })();
+    setTimeout(sync,0);
+    return ret;
+  };
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){
+    const base=(typeof oldDebug==='function') ? oldDebug() : {};
+    return Object.assign({},base,{
+      patchV53:PATCH,
+      fabMenuBottomV53:$('fabMenu')?getComputedStyle($('fabMenu')).bottom:null,
+      fabBtnBottomV53:$('fabBtn')?getComputedStyle($('fabBtn')).bottom:null,
+      firestoreSettingsMergeV53:true
+    });
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sync,{once:true}); else sync();
+  setTimeout(sync,300); setTimeout(sync,1200);
+  console.log('[BookLegacy Mobile]',PATCH);
+})();
+</script>
+
 </body>
 </html>

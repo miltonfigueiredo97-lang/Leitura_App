@@ -11830,5 +11830,18 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+
+<!-- BookLegacy V3.53 — desktop mantido; Firestore settings já usa merge:true -->
+<script id="bl-v53-desktop-debug">
+(function(){
+  const old=window.blCommunityDebug;
+  window.blCommunityDebug=function(){
+    const base=(typeof old==='function')?old():{};
+    return Object.assign({},base,{patchV53:'v3.53-desktop-no-layout-change-firestore-merge-ok'});
+  };
+})();
+</script>
+
 </body>
 </html>
