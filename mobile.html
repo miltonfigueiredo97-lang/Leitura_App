@@ -3997,11 +3997,18 @@ window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
 try {
-  // V3.51: no Android/APK força long polling para evitar erro WebChannel/Write 400 e travamentos intermitentes.
+  // V3.54: evita conflito do Firebase: experimentalForceLongPolling e experimentalAutoDetectLongPolling nunca podem ficar true ao mesmo tempo.
   const blUa = navigator.userAgent || '';
   const blIsAndroidLike = /Android|;\s*wv\)|BookLegacy/i.test(blUa) || !!window.BookLegacyNative || !!window.__BOOKLEGACY_ANDROID_APP;
-  window.BL.db.settings(blIsAndroidLike ? { experimentalForceLongPolling: true, merge: true } : { experimentalAutoDetectLongPolling: true, merge: true });
-} catch(e) { console.warn('Firestore settings já aplicadas', e); }
+  const blFirestoreSettingsV54 = blIsAndroidLike
+    ? { experimentalForceLongPolling: true, experimentalAutoDetectLongPolling: false, merge: true }
+    : { experimentalAutoDetectLongPolling: true, experimentalForceLongPolling: false, merge: true };
+  window.BL.db.settings(blFirestoreSettingsV54);
+  window.BL.firestoreSettingsV54 = blIsAndroidLike ? 'forceLongPollingOnly' : 'autoDetectOnly';
+} catch(e) {
+  // Não polui o console com erro conhecido de settings já aplicadas; guarda para debug.
+  window.BL.firestoreSettingsErrorV54 = String((e && e.message) || e || '');
+}
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 function blTxt(v){ return String(v ?? '').trim(); }
@@ -14529,6 +14536,27 @@ body.bl-v40-loading #app{display:none!important;}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sync,{once:true}); else sync();
   setTimeout(sync,300); setTimeout(sync,1200);
   console.log('[BookLegacy Mobile]',PATCH);
+})();
+</script>
+
+
+<script id="bl-v54-firestore-longpolling-conflict-fix">
+(function(){
+  const PATCH='v3.54-mobile-firestore-longpolling-conflict-fix';
+  window.__BL_PATCH_V54__ = PATCH;
+  const prev = window.blMobileDebug;
+  window.blMobileDebug = function(){
+    let base = {};
+    try { base = (typeof prev === 'function') ? (prev() || {}) : {}; } catch(e){ base = { previousDebugError: String(e && e.message || e) }; }
+    const out = Object.assign({}, base, {
+      patchV54: PATCH,
+      firestoreSettingsV54: window.BL && window.BL.firestoreSettingsV54,
+      firestoreSettingsErrorV54: window.BL && window.BL.firestoreSettingsErrorV54,
+      longPollingConflictFixedV54: true
+    });
+    try { console.table ? console.table(out) : console.log(out); } catch(e){}
+    return out;
+  };
 })();
 </script>
 
