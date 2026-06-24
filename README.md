@@ -1,1 +1,11 @@
-BookLegacy V3.40 — patch focado em Comunidade, menu dos três tracinhos, datas de avaliação por última sessão 100%, FAB pós-salvar, excluir sessão e seletor de livro no APK. Não altera heatmap, conquistas ou layout geral aprovado.
+# BookLegacy V3.42
+
+Patch focado em limpeza de menu/comunidade, sessão correta no feed, carregamento do desktop e criação de novas metas.
+
+- Corrige menu mobile/APK com um único X de fechamento.
+- Esconde menus antigos antes do app carregar para evitar vazamento visual no desktop.
+- Remove duplicidade de Comunidade no topo/menu.
+- Recria Comunidade por um único render V3.42.
+- Usa fonte canônica de sessões e limite de página atual para reduzir sessões erradas no feed.
+- Corrige primeira renderização dos cards Lendo reconstruindo os buckets por status.
+- Adiciona criação de nova meta pela engrenagem: nome da meta + ano base.
