@@ -1,8 +1,9 @@
-# BookLegacy V3.47
+# BookLegacy V3.48 — metas com ID válido + popups APK compactos
 
-Correção focada nos pontos restantes:
-- metas personalizadas agora usam registry remoto dentro de `users/{uid}/library/__booklegacy_custom_metas_registry__`, caminho que segue a mesma base já usada pela biblioteca;
-- remove scripts V44/V45/V46 que tentavam gravar em caminhos com permission denied;
-- criação/exclusão de meta passa a atualizar o registry remoto e limpar opções locais antigas;
-- reverte o patch V46 de popups compactos que quebrou os botões do +;
-- não altera Comunidade, sessões, heatmap, conquistas ou Modo Batalha.
+Correções pontuais:
+- Troca o registro remoto de metas para um ID válido no Firebase: `booklegacyCustomMetasRegistry`.
+- Corrige criação/exclusão/sincronização de metas entre desktop, mobile e APK.
+- Remove o erro do antigo ID reservado `__booklegacy_custom_metas_registry__`.
+- Corrige o `insertBefore` antigo que gerava erro no console e travava menus.
+- No mobile/APK, remove a barra inferior `#mobile-nav`.
+- No mobile/APK, compacta popups do botão `+` e adiciona X no topo sem quebrar os cliques.

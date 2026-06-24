@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.47">
+<meta name="booklegacy-version" content="v3.48">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -13793,10 +13793,10 @@ body.bl-v40-loading #app{display:none!important;}
 </style>
 <script id="blV47MetaScript">
 (function(){
-  const PATCH='v3.47-meta-library-registry-sync-revert-popup';
+  const PATCH='v3.47-meta-library-registry-sync-revert-popup-safe-id';
   const KEY='blCustomMetasV42';
   const INIT='blCustomMetasV47LibraryRegistryReady';
-  const REG_ID='__booklegacy_custom_metas_registry__';
+  const REG_ID='booklegacyCustomMetasRegistry';
   const $=id=>document.getElementById(id);
   const norm=s=>String(s||'').trim();
   const low=s=>norm(s).toLowerCase();
@@ -13983,6 +13983,165 @@ body.bl-v40-loading #app{display:none!important;}
   document.addEventListener('click',e=>{if(e.target?.closest?.('#btn-refresh,[data-a="refresh"]'))setTimeout(syncV47,1200);},true);
   const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),selectedMetaV47:$('selMetaAno')?.value||'',registryPathV47:'users/{uid}/library/'+REG_ID,registryReadyV47:localStorage.getItem(INIT)==='1'});};
   const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),plusRestoredV47:true,registryPathV47:'library/'+REG_ID});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
+
+
+<!-- BookLegacy V3.48 — meta registry safe id + sync final -->
+<style id="blV48MetaStyle">
+  #blV43DelMetaBtn,#blV43GmDelMetaBtn{cursor:pointer!important;}
+</style>
+<script id="blV48MetaScript">
+(function(){
+  const PATCH='v3.48-meta-safe-registry-final';
+  const KEY='blCustomMetasV42';
+  const INIT='blCustomMetasV48RegistryReady';
+  const REG_ID='booklegacyCustomMetasRegistry';
+  const $=id=>document.getElementById(id);
+  const norm=s=>String(s||'').trim();
+  const low=s=>norm(s).toLowerCase();
+  const now=()=>new Date().toISOString();
+  const isYear=v=>/^20\d{2}$/.test(norm(v));
+  const slug=s=>low(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'meta';
+  function db(){return window.BL?.db||null;}
+  function uid(){return window.BL?.auth?.currentUser?.uid||null;}
+  function ref(){const d=db(),u=uid();return d&&u?d.collection('users').doc(u).collection('library').doc(REG_ID):null;}
+  function inferYear(label,opt){const dy=norm(opt?.dataset?.year);if(isYear(dy))return dy;const m=norm(label).match(/20\d{2}/);return m?m[0]:String(new Date().getFullYear());}
+  function isDefault(label,opt){const v=norm(label);if(!v)return true;if(opt&&(opt.dataset.customMeta==='1'||opt.dataset.blCustomMeta==='1'||opt.dataset.blV48Meta==='1'||opt.dataset.blV47Meta==='1'))return false;if(isYear(v))return true;return ['todos','todas','geral','atual','meta atual','sem meta','ainda não definido','ainda nao definido','pausado'].includes(low(v));}
+  function cleanItem(m){
+    if(!m)return null;
+    const label=norm(m.label||m.nome||m.name||m.value||m.title);
+    if(!label||isDefault(label))return null;
+    const year=String(m.year||m.ano||m.baseYear||inferYear(label));
+    return {id:m.id||('custom_meta_'+slug(label)),label,year,custom:true,createdAt:m.createdAt||now(),updatedAt:now(),source:m.source||PATCH};
+  }
+  function uniq(arr){const map=new Map();(arr||[]).map(cleanItem).filter(Boolean).forEach(m=>map.set(low(m.label),m));return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label),'pt-BR'));}
+  function local(){try{return uniq(JSON.parse(localStorage.getItem(KEY)||'[]')||[])}catch(e){return []}}
+  function setLocal(items){try{localStorage.setItem(KEY,JSON.stringify(uniq(items)));}catch(e){}}
+  function collectFromSelect(){
+    const sel=$('selMetaAno'); if(!sel)return [];
+    return uniq([...sel.options].map(o=>{const label=norm(o.value||o.textContent);if(isDefault(label,o))return null;return {label,year:inferYear(label,o),custom:true,source:'select-v48'};}));
+  }
+  function stripRegistryFromMemory(){
+    const badIds=new Set([REG_ID,'__booklegacy_custom_metas_registry__']);
+    const bad=l=>badIds.has(String(l?.id||l?.docId||l?.bookId||''))||String(l?.type||'')==='booklegacy_meta_registry'||l?.customMetaRegistry===true;
+    try{ if(Array.isArray(window._livros)) window._livros=window._livros.filter(l=>!bad(l)); }catch(e){}
+    try{ const d=window._dadosD; if(d){ ['livros','library','lendo','pausados','aguardando'].forEach(k=>{ if(Array.isArray(d[k])) d[k]=d[k].filter(l=>!bad(l)); }); } }catch(e){}
+  }
+  async function readRegistry(){
+    const r=ref(); if(!r)return {available:false,exists:false,items:null};
+    try{const snap=await r.get(); if(!snap.exists)return {available:true,exists:false,items:[]}; const data=snap.data()||{}; return {available:true,exists:true,items:uniq(data.items||[]),raw:data};}
+    catch(e){console.warn('[BookLegacy]',PATCH,'registry get',e);return {available:false,exists:false,items:null,error:e};}
+  }
+  async function writeRegistry(items){
+    const r=ref(); if(!r)return false; const clean=uniq(items);
+    try{await r.set({type:'booklegacy_meta_registry',customMetaRegistry:true,hidden:true,system:true,title:'Registro interno de metas',bookTitle:'Registro interno de metas',status:'Sistema',totalPages:0,currentPage:0,items:clean,updatedAt:now(),source:PATCH},{merge:false}); localStorage.setItem(INIT,'1'); setLocal(clean); return true;}
+    catch(e){console.warn('[BookLegacy]',PATCH,'registry set',e); return false;}
+  }
+  function ensureMetaObject(label,year){try{if(window._metasPorAno&&!window._metasPorAno[label]) window._metasPorAno[label]={total:0,lidos:0,lendo:0,pausados:0,aguardando:0,paginasTotal:0,paginasLidas:0,paginasFaltando:0,mediaDiaria:0,ritmoAtual:0,dataPrevistoAtual:'—',baseYear:year};}catch(e){}}
+  function applyOptions(items,authoritative=true){
+    stripRegistryFromMemory(); const clean=uniq(items); setLocal(clean); const sel=$('selMetaAno'); if(!sel)return clean; const before=sel.value; const labels=new Set(clean.map(m=>low(m.label)));
+    [...sel.options].forEach(o=>{const label=norm(o.value||o.textContent); const custom=(o.dataset.customMeta==='1'||o.dataset.blCustomMeta==='1'||o.dataset.blV46Meta==='1'||o.dataset.blV47Meta==='1'||o.dataset.blV48Meta==='1'||!isDefault(label,o)); if(authoritative&&custom&&!labels.has(low(label))) o.remove();});
+    clean.forEach(m=>{let opt=[...sel.options].find(o=>low(o.value||o.textContent)===low(m.label)); if(!opt){opt=document.createElement('option'); sel.appendChild(opt);} opt.value=m.label; opt.textContent=m.label; opt.dataset.customMeta='1'; opt.dataset.blCustomMeta='1'; opt.dataset.blV48Meta='1'; opt.dataset.year=m.year; ensureMetaObject(m.label,m.year);});
+    if(before&&[...sel.options].some(o=>o.value===before)) sel.value=before; else {const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;}
+    return clean;
+  }
+  async function sync(opts={}){
+    stripRegistryFromMemory(); const reg=await readRegistry();
+    if(reg.available&&reg.exists) return applyOptions(reg.items,true);
+    if(reg.available&&!reg.exists){
+      const initialized=localStorage.getItem(INIT)==='1';
+      const seed=initialized?[]:uniq([...local(),...collectFromSelect()]);
+      applyOptions(seed,!seed.length);
+      const ok=await writeRegistry(seed);
+      return ok?applyOptions(seed,true):seed;
+    }
+    return applyOptions(local(),false);
+  }
+  async function save(items){const clean=uniq(items); applyOptions(clean,true); const ok=await writeRegistry(clean); if(!ok){alert('Não consegui salvar a meta na base. Verifique o login/conexão e tente novamente.'); return false;} applyOptions(clean,true); try{window.buildMeta&&window.buildMeta();}catch(e){} return true;}
+  function selectedCustom(){const sel=$('selMetaAno'); if(!sel)return null; const opt=sel.options[sel.selectedIndex]; const label=norm(sel.value||opt?.textContent); if(!label||isDefault(label,opt))return null; return local().find(m=>low(m.label)===low(label))||{label,year:inferYear(label,opt),custom:true,source:'selected-v48'};}
+  async function createMeta(label,year){label=norm(label); year=norm(year); if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.'); return false;} const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:(reg.available?uniq([...local(),...collectFromSelect()]):local()); const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]); const ok=await save(next); if(ok){const sel=$('selMetaAno'); if(sel)sel.value=label;} return ok;}
+  async function deleteCurrent(){const info=selectedCustom(); const sel=$('selMetaAno'); if(!info){alert('Essa meta padrão não pode ser excluída por aqui.'); return false;} if(!confirm('Excluir a meta "'+info.label+'"?'))return false; const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:uniq([...local(),...collectFromSelect()]); const next=uniq(base).filter(m=>low(m.label)!==low(info.label)); const ok=await save(next); if(!ok)return false; if(sel){[...sel.options].forEach(o=>{if(low(o.value||o.textContent)===low(info.label))o.remove();}); const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;} closeMetaPanels(); setTimeout(sync,300); return true;}
+  function closeMetaPanels(){['gmOverlay','modalMeta','blV42MetaOverlay','blV42NewMetaOverlay','painelGerenciarMeta','painelGerenciarMetaOverlay'].forEach(id=>{const el=$(id);if(el){el.classList.remove('open','show','active');el.style.display='none';}});}
+  function handleCreate(ev){const label=norm($('blV42MetaLabel')?.value); const year=norm($('blV42MetaYear')?.value); if(!label&&!year)return; ev?.preventDefault?.(); ev?.stopPropagation?.(); ev?.stopImmediatePropagation?.(); createMeta(label,year).then(ok=>{if(ok)closeMetaPanels();}); return false;}
+  function patchButtons(){['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();deleteCurrent();return false;};b.dataset.blV48='1';}}); const saveBtn=$('blV42MetaSave'); if(saveBtn){saveBtn.onclick=handleCreate;if(!saveBtn.__bl_v48){saveBtn.__bl_v48=true;saveBtn.addEventListener('click',handleCreate,true);}}}
+  function wrapRefreshes(){['manualRefresh','blRefreshAndRender','recarregarDados','carregarDados'].forEach(name=>{const fn=window[name]; if(typeof fn==='function'&&!fn.__bl_v48_meta){const wrapped=async function(){try{await sync();}catch(e){} const r=await fn.apply(this,arguments); setTimeout(sync,200); setTimeout(sync,1200); return r;}; wrapped.__bl_v48_meta=true; window[name]=wrapped; try{eval(name+'=window[name]')}catch(e){}}});}
+  window.blSyncCustomMetasV44=sync; window.blSyncCustomMetasV45=sync; window.blSyncCustomMetasV46=sync; window.blSyncCustomMetasV47=sync; window.blSyncCustomMetasV48=sync;
+  window.blSaveCustomMetasV44=save; window.blSaveCustomMetasV45=save; window.blSaveCustomMetasV46=save; window.blSaveCustomMetasV47=save; window.blSaveCustomMetasV48=save;
+  window.blDeleteCurrentMetaV43=deleteCurrent; window.blDeleteCurrentMetaV44=deleteCurrent; window.blDeleteCurrentMetaV45=deleteCurrent; window.blDeleteCurrentMetaV46=deleteCurrent; window.blDeleteCurrentMetaV47=deleteCurrent; window.blDeleteCurrentMetaV48=deleteCurrent;
+  window.blCreateCustomMetaV47=createMeta; window.blCreateCustomMetaV48=createMeta;
+  function boot(){patchButtons();wrapRefreshes();setTimeout(sync,80);setTimeout(sync,900);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  setInterval(()=>{try{patchButtons();}catch(e){}},2500);
+  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(sync,600));}catch(e){}
+  window.addEventListener('focus',()=>setTimeout(sync,300)); window.addEventListener('pageshow',()=>setTimeout(sync,300));
+  const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV48:PATCH,customMetasV48:local(),selectedMetaV48:$('selMetaAno')?.value||'',registryPathV48:'users/{uid}/library/'+REG_ID,registryReadyV48:localStorage.getItem(INIT)==='1'});};
+  const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV48:PATCH,customMetasV48:local(),registryPathV48:'library/'+REG_ID});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
+
+<!-- BookLegacy V3.48 — APK popups compactos sem quebrar cliques + remove barra inferior -->
+<style id="blV48MobilePopupStyle">
+  @media (max-width:899px), (pointer:coarse){
+    #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;}
+    body.mobile-view #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;}
+    body.bl-v48-pwa-modal-open #blMobileMenuFab,
+    body.bl-v48-pwa-modal-open #blMobileMenuPanel,
+    body.bl-v48-pwa-modal-open #blV42MenuFab,
+    body.bl-v48-pwa-modal-open #blV42MenuPanel,
+    body.bl-v48-pwa-modal-open #blV41MenuFab,
+    body.bl-v48-pwa-modal-open #blV41MenuPanel{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+    .pwa-overlay.open{align-items:flex-start!important;justify-content:center!important;padding:calc(env(safe-area-inset-top,0px) + 10px) 10px 12px!important;overflow:hidden!important;}
+    .pwa-overlay.open .pwa-modal{width:calc(100vw - 20px)!important;max-width:520px!important;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 28px)!important;border-radius:18px!important;padding:14px 14px 16px!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;position:relative!important;-webkit-overflow-scrolling:touch!important;}
+    .pwa-overlay.open .pwa-modal h2{font-size:17px!important;line-height:1.15!important;margin:0 42px 12px 0!important;}
+    .pwa-overlay.open .pwa-field{margin-bottom:10px!important;}
+    .pwa-overlay.open .pwa-field label{font-size:12px!important;margin-bottom:4px!important;}
+    .pwa-overlay.open .pwa-field input,.pwa-overlay.open .pwa-field select,.pwa-overlay.open .pwa-field textarea{font-size:14px!important;padding:9px 11px!important;border-radius:9px!important;}
+    .pwa-overlay.open .pwa-row{gap:8px!important;}
+    .pwa-overlay.open .pwa-btn{padding:12px!important;font-size:15px!important;margin-top:6px!important;}
+    .pwa-overlay.open .pwa-btn-cancel{padding:10px!important;font-size:14px!important;margin-top:6px!important;}
+    .bl-v48-modal-x{position:sticky!important;top:0!important;float:right!important;margin:0 0 6px 8px!important;width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.18)!important;background:#1e2535!important;color:#fff!important;font-size:18px!important;line-height:1!important;font-weight:900!important;display:flex!important;align-items:center!important;justify-content:center!important;z-index:10!important;box-shadow:0 6px 18px rgba(0,0,0,.35)!important;cursor:pointer!important;}
+  }
+</style>
+<script id="blV48MobilePopupScript">
+(function(){
+  const PATCH='v3.48-apk-compact-popups-safe';
+  const $=id=>document.getElementById(id);
+  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
+  function typeFromOverlay(id){return String(id||'').replace(/^modal/,'').replace(/^./,c=>c.toLowerCase());}
+  function closeOverlay(overlay){
+    if(!overlay)return;
+    const tipo=typeFromOverlay(overlay.id);
+    try{ if(typeof window.fecharModal==='function') window.fecharModal(tipo); else overlay.classList.remove('open'); }catch(e){ overlay.classList.remove('open'); }
+    updateState();
+  }
+  function ensureX(){
+    modalIds.forEach(id=>{const ov=$(id); const modal=ov?.querySelector?.('.pwa-modal'); if(!ov||!modal)return; let x=modal.querySelector(':scope > .bl-v48-modal-x'); if(!x){x=document.createElement('button');x.type='button';x.className='bl-v48-modal-x';x.setAttribute('aria-label','Fechar');x.textContent='×';modal.insertBefore(x,modal.firstChild);} x.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();closeOverlay(ov);return false;};});
+  }
+  function updateState(){const open=modalIds.some(id=>$(id)?.classList.contains('open'));document.body.classList.toggle('bl-v48-pwa-modal-open',open);if(open){const fm=$('fabMenu');if(fm)fm.style.display='none';const fb=$('fabBtn');if(fb)fb.textContent='＋';try{window.fabOpen=false;}catch(e){}}}
+  const oldAbrir=window.abrirModal;
+  if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v48){
+    window.abrirModal=function(tipo){
+      const fm=$('fabMenu'); if(fm)fm.style.display='none'; const fb=$('fabBtn'); if(fb)fb.textContent='＋'; try{window.fabOpen=false;}catch(e){}
+      const r=oldAbrir.apply(this,arguments);
+      const fm2=$('fabMenu');
+      if(fm2&&getComputedStyle(fm2).display!=='none'&&typeof window.toggleFabMenu==='function'){try{window.toggleFabMenu();}catch(e){fm2.style.display='none';}}
+      else if(fm2){fm2.style.display='none';}
+      const fb2=$('fabBtn'); if(fb2)fb2.textContent='＋';
+      ensureX(); updateState(); setTimeout(()=>{ensureX();updateState();},80); return r;
+    }; window.abrirModal.__bl_v48=true; try{abrirModal=window.abrirModal;}catch(e){}
+  }
+  const oldFechar=window.fecharModal;
+  if(typeof oldFechar==='function'&&!oldFechar.__bl_v48){window.fecharModal=function(){const r=oldFechar.apply(this,arguments);setTimeout(updateState,20);return r;};window.fecharModal.__bl_v48=true;try{fecharModal=window.fecharModal;}catch(e){}}
+  document.addEventListener('click',ev=>{if(ev.target?.closest?.('.bl-v48-modal-x'))return; setTimeout(updateState,20);},true);
+  function boot(){ensureX();updateState();const nav=$('mobile-nav');if(nav){nav.style.setProperty('display','none','important');nav.style.setProperty('visibility','hidden','important');}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  setInterval(boot,1800);
+  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV48:PATCH,modalXCountV48:document.querySelectorAll('.bl-v48-modal-x').length,mobileNavHiddenV48:getComputedStyle($('mobile-nav')||document.createElement('div')).display==='none'});};
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
