@@ -1,9 +1,10 @@
-# BookLegacy V3.45
+# BookLegacy V3.46
 
-Correção focada somente em metas personalizadas.
+Correção final de metas personalizadas sincronizadas e ajuste de popups no APK/mobile.
 
-- Criação de meta agora salva direto na base remota do usuário.
-- Exclusão reconhece metas criadas pelo usuário mesmo quando estavam sem marcador customMeta.
-- Metas custom antigas/stale são removidas do seletor quando não existem mais na base remota.
-- Excluir meta grava lista vazia na base quando necessário, para sincronizar desktop/mobile/APK.
-- Não altera Comunidade, sessões, heatmap, batalha, conquistas ou layout geral.
+- Metas personalizadas agora usam `users/{uid}/goals/customMetasRegistry` como fonte remota autoritativa.
+- Criar/excluir meta deve refletir em desktop, mobile e APK após atualizar.
+- Exclusão grava lista vazia também, para a meta não voltar depois do refresh.
+- Popups do botão + no mobile/APK ficam compactos, com X no topo, e o menu de três listras some enquanto popup está aberto.
+
+Não mexe em Comunidade, sessões, heatmap, conquistas, Modo Batalha ou layout geral.

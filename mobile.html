@@ -14024,5 +14024,198 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+
+<!-- BookLegacy V3.46 — metas remotas reais via goals/customMetasRegistry + popups APK compactos -->
+<style id="blV46MetaStyle">
+  #blV43DelMetaBtn,#blV43GmDelMetaBtn{cursor:pointer!important;}
+</style>
+<script id="blV46MetaScript">
+(function(){
+  const PATCH='v3.46-meta-goals-registry-sync-final';
+  const KEY='blCustomMetasV42';
+  const REG_DOC='customMetasRegistry';
+  const SETTINGS_DOC='customMetas';
+  const $=id=>document.getElementById(id);
+  const norm=s=>String(s||'').trim();
+  const lower=s=>norm(s).toLowerCase();
+  const now=()=>new Date().toISOString();
+  const isYear=v=>/^20\d{2}$/.test(norm(v));
+  const slug=s=>lower(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'meta';
+  function db(){return window.BL?.db || null;}
+  function uid(){return window.BL?.auth?.currentUser?.uid || null;}
+  function inferYear(label,opt){const dy=norm(opt?.dataset?.year);if(isYear(dy))return dy;const m=norm(label).match(/20\d{2}/);return m?m[0]:String(new Date().getFullYear());}
+  function standard(label,opt){const v=norm(label); if(!v)return true; if(opt?.dataset?.customMeta==='1'||opt?.dataset?.blCustomMeta==='1'||opt?.dataset?.blV46Meta==='1')return false; if(isYear(v))return true; return ['todos','todas','geral','atual','meta atual','sem meta','ainda não definido','ainda nao definido'].includes(lower(v));}
+  function cleanItem(m){
+    if(!m)return null;
+    const label=norm(m.label||m.nome||m.name||m.value||m.title);
+    if(!label)return null;
+    const year=String(m.year||m.ano||m.baseYear||inferYear(label));
+    return {id:m.id||('custom_meta_'+slug(label)),label,year,custom:true,createdAt:m.createdAt||now(),updatedAt:m.updatedAt||now(),source:m.source||PATCH};
+  }
+  function uniq(arr){const map=new Map();(arr||[]).map(cleanItem).filter(Boolean).forEach(m=>map.set(lower(m.label),m));return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label),'pt-BR'));}
+  function local(){try{return uniq(JSON.parse(localStorage.getItem(KEY)||'[]')||[])}catch(e){return []}}
+  function setLocal(items){try{localStorage.setItem(KEY,JSON.stringify(uniq(items)));}catch(e){}}
+  function goalsCol(){const u=uid(),d=db();return (u&&d)?d.collection('users').doc(u).collection('goals'):null;}
+  function settingsDoc(){const u=uid(),d=db();return (u&&d)?d.collection('users').doc(u).collection('settings').doc(SETTINGS_DOC):null;}
+  async function readRegistry(){
+    const col=goalsCol(); if(!col)return {available:false,exists:false,items:null};
+    try{
+      const snap=await col.doc(REG_DOC).get();
+      if(!snap.exists)return {available:true,exists:false,items:[]};
+      const data=snap.data()||{};
+      return {available:true,exists:true,items:uniq(data.items||[]),updatedAt:data.updatedAt||'',raw:data};
+    }catch(e){console.warn('[BookLegacy]',PATCH,'read registry',e);return {available:false,exists:false,items:null,error:e};}
+  }
+  async function writeRegistry(items){
+    const col=goalsCol(); const clean=uniq(items); if(!col)return false;
+    try{
+      await col.doc(REG_DOC).set({customMetaRegistry:true,items:clean,updatedAt:now(),source:PATCH},{merge:true});
+      // mantém o caminho antigo espelhado para impedir patches V44/V45 de reintroduzirem lixo local/stale
+      try{await settingsDoc()?.set({items:clean,updatedAt:now(),source:PATCH,mirroredFrom:'goals/'+REG_DOC},{merge:true});}catch(e){}
+      return true;
+    }catch(e){console.warn('[BookLegacy]',PATCH,'write registry',e);return false;}
+  }
+  function applyOptions(items,authoritative=true){
+    const clean=uniq(items); setLocal(clean);
+    const sel=$('selMetaAno'); if(!sel)return clean;
+    const before=sel.value;
+    clean.forEach(m=>{
+      let opt=[...sel.options].find(o=>lower(o.value||o.textContent)===lower(m.label));
+      if(!opt){opt=document.createElement('option');sel.appendChild(opt);}
+      opt.value=m.label; opt.textContent=m.label; opt.dataset.customMeta='1'; opt.dataset.blCustomMeta='1'; opt.dataset.blV46Meta='1'; opt.dataset.year=m.year;
+      if(window._metasPorAno && !window._metasPorAno[m.label]) window._metasPorAno[m.label]={total:0,lidos:0,lendo:0,pausados:0,aguardando:0,paginasTotal:0,paginasLidas:0,paginasFaltando:0,mediaDiaria:0,ritmoAtual:0,dataPrevistoAtual:'—'};
+    });
+    const labels=new Set(clean.map(m=>lower(m.label)));
+    [...sel.options].forEach(o=>{
+      const v=norm(o.value||o.textContent);
+      const looksCustom=(o.dataset.customMeta==='1'||o.dataset.blCustomMeta==='1'||o.dataset.blV46Meta==='1'||!standard(v,o));
+      if(looksCustom && !labels.has(lower(v)) && authoritative) o.remove();
+    });
+    if(before && [...sel.options].some(o=>o.value===before)) sel.value=before;
+    else {const fb=[...sel.options].find(o=>isYear(o.value)) || sel.options[0]; if(fb)sel.value=fb.value;}
+    return clean;
+  }
+  async function syncV46(opts={}){
+    const reg=await readRegistry();
+    if(reg.available && reg.exists){return applyOptions(reg.items,true);}
+    // Primeiro uso da V46: migra uma vez o que existe localmente e cria registro remoto autoritativo.
+    const items=local(); applyOptions(items,false);
+    if(reg.available && !reg.exists){await writeRegistry(items); applyOptions(items,true);}
+    return items;
+  }
+  async function saveV46(items){const clean=uniq(items);setLocal(clean);applyOptions(clean,true);const ok=await writeRegistry(clean);if(!ok)alert('Não consegui salvar a meta na base. Verifique conexão/login e tente atualizar.');return clean;}
+  function selectedInfo(){
+    const sel=$('selMetaAno'); if(!sel)return null;
+    const opt=sel.options[sel.selectedIndex]; const label=norm(sel.value||opt?.textContent); if(!label)return null;
+    const loc=local().find(m=>lower(m.label)===lower(label)); if(loc)return loc;
+    if(!standard(label,opt))return {id:'custom_meta_'+slug(label),label,year:inferYear(label,opt),custom:true,createdAt:now(),updatedAt:now(),source:'inferred-v46'};
+    return null;
+  }
+  async function createMetaV46(label,year){
+    label=norm(label); year=norm(year);
+    if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.');return false;}
+    const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:local();
+    const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]);
+    await saveV46(next);
+    const sel=$('selMetaAno'); if(sel)sel.value=label;
+    try{window.buildMeta&&window.buildMeta();}catch(e){}
+    return true;
+  }
+  async function deleteCurrentV46(){
+    const sel=$('selMetaAno'); const info=selectedInfo();
+    if(!sel||!info){alert('Essa meta é padrão e não pode ser excluída por aqui.');return;}
+    const label=info.label;
+    if(!confirm('Excluir a meta "'+label+'"?'))return;
+    const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:local();
+    const next=uniq(base).filter(m=>lower(m.label)!==lower(label));
+    setLocal(next); applyOptions(next,true); await writeRegistry(next); // grava até vazio; vazio também é estado remoto válido
+    [...sel.options].forEach(o=>{if(lower(o.value||o.textContent)===lower(label))o.remove();});
+    const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;
+    ['gmOverlay','modalMeta','blV42MetaOverlay','blV42NewMetaOverlay','painelGerenciarMeta','painelGerenciarMetaOverlay'].forEach(id=>{const el=$(id);if(el){el.classList.remove('open','show','active');el.style.display='none';}});
+    try{window.buildMeta&&window.buildMeta();}catch(e){}
+    setTimeout(syncV46,350);
+  }
+  function handleCreate(ev){
+    const label=norm($('blV42MetaLabel')?.value); const year=norm($('blV42MetaYear')?.value);
+    if(!label&&!year)return;
+    ev?.preventDefault?.();ev?.stopPropagation?.();ev?.stopImmediatePropagation?.();
+    createMetaV46(label,year).then(ok=>{if(ok){const ov=$('blV42NewMetaOverlay')||$('blV42MetaOverlay'); if(ov){ov.classList.remove('open','show','active');ov.style.display='none';}}});
+    return false;
+  }
+  function patchButtons(){
+    ['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();deleteCurrentV46();return false;};b.dataset.blV46='1';}});
+    const save=$('blV42MetaSave'); if(save){save.onclick=handleCreate; if(!save.__bl_v46){save.__bl_v46=true;save.addEventListener('click',handleCreate,true);}}
+  }
+  // Substitui os nomes antigos para qualquer botão antigo chamar a rotina nova.
+  window.blSyncCustomMetasV44=syncV46; window.blSyncCustomMetasV45=syncV46; window.blSyncCustomMetasV46=syncV46;
+  window.blSaveCustomMetasV44=saveV46; window.blSaveCustomMetasV45=saveV46; window.blSaveCustomMetasV46=saveV46;
+  window.blDeleteCurrentMetaV43=deleteCurrentV46; window.blDeleteCurrentMetaV44=deleteCurrentV46; window.blDeleteCurrentMetaV45=deleteCurrentV46; window.blDeleteCurrentMetaV46=deleteCurrentV46;
+  function boot(){patchButtons();setTimeout(syncV46,50);setTimeout(syncV46,900);setTimeout(syncV46,2600);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  setInterval(()=>{try{patchButtons();}catch(e){}},1500);
+  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncV46,700));}catch(e){}
+  window.addEventListener('focus',()=>setTimeout(syncV46,500));
+  window.addEventListener('pageshow',()=>setTimeout(syncV46,500));
+  const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV46:PATCH,customMetasV46:local(),selectedMetaV46:$('selMetaAno')?.value||'',registrySyncV46:typeof window.blSyncCustomMetasV46==='function'});};
+  const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV46:PATCH,customMetasV46:local(),registrySyncV46:typeof window.blSyncCustomMetasV46==='function'});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
+
+<!-- BookLegacy V3.46 — APK popups compactos com X fixo e menu escondido -->
+<style id="blV46PopupStyle">
+  body.bl-v46-modal-open #blV42MenuFab,
+  body.bl-v46-modal-open #blV41MenuFab,
+  body.bl-v46-modal-open #blV40MenuFab,
+  body.bl-v46-modal-open .hamburger,
+  body.bl-v46-modal-open .menu-toggle,
+  body.bl-v46-modal-open [id*="MenuFab"]{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+  body.bl-v46-modal-open .pwa-overlay.open{z-index:99990!important;align-items:center!important;justify-content:center!important;padding:10px!important;box-sizing:border-box!important;overflow:hidden!important;}
+  body.bl-v46-modal-open .pwa-overlay.open .pwa-modal{position:relative!important;width:calc(100vw - 20px)!important;max-width:520px!important;max-height:calc(100dvh - 22px)!important;min-height:0!important;border-radius:16px!important;padding:14px 14px 18px!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;}
+  body.bl-v46-modal-open .pwa-overlay.open .pwa-modal h2{font-size:18px!important;margin:0 42px 12px 0!important;line-height:1.15!important;}
+  body.bl-v46-modal-open .pwa-row{grid-template-columns:1fr!important;gap:8px!important;}
+  body.bl-v46-modal-open .pwa-field{margin-bottom:8px!important;}
+  body.bl-v46-modal-open .pwa-field input,
+  body.bl-v46-modal-open .pwa-field select,
+  body.bl-v46-modal-open .pwa-field textarea{font-size:14px!important;padding:9px 11px!important;}
+  .bl-v46-modal-x{position:sticky!important;top:0!important;float:right!important;margin:0 0 8px 8px!important;width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.18)!important;background:rgba(15,23,42,.96)!important;color:#fff!important;font-size:18px!important;font-weight:900!important;line-height:32px!important;text-align:center!important;display:flex!important;align-items:center!important;justify-content:center!important;z-index:20!important;box-shadow:0 8px 20px rgba(0,0,0,.35)!important;}
+  .bl-v46-modal-x:active{transform:scale(.96)!important;}
+  body.bl-v46-modal-open #fabMenu{display:none!important;}
+</style>
+<script id="blV46PopupScript">
+(function(){
+  const PATCH='v3.46-apk-compact-popups-close-x';
+  const $=id=>document.getElementById(id);
+  function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);}
+  function closeFab(){try{window.fabOpen=false;}catch(e){} const m=$('fabMenu'); if(m)m.style.display='none'; const b=$('fabBtn'); if(b)b.textContent='＋';}
+  function anyOpen(){return !!document.querySelector('.pwa-overlay.open');}
+  function updateBody(){document.body.classList.toggle('bl-v46-modal-open',anyOpen()); if(anyOpen())closeFab();}
+  function modalTypeFromOverlay(ov){const id=ov?.id||''; if(id.startsWith('modal')){const raw=id.slice(5);return raw?raw.charAt(0).toLowerCase()+raw.slice(1):'';} return '';}
+  function addCloseButtons(){
+    document.querySelectorAll('.pwa-overlay').forEach(ov=>{
+      const modal=ov.querySelector('.pwa-modal'); if(!modal)return;
+      modal.style.position='relative';
+      let btn=modal.querySelector(':scope > .bl-v46-modal-x');
+      if(!btn){btn=document.createElement('button');btn.type='button';btn.className='bl-v46-modal-x';btn.textContent='×';btn.setAttribute('aria-label','Fechar');modal.insertBefore(btn,modal.firstChild);}
+      btn.onclick=e=>{e.preventDefault();e.stopPropagation();const tipo=modalTypeFromOverlay(ov);try{if(tipo&&typeof window.fecharModal==='function')window.fecharModal(tipo);else ov.classList.remove('open');}catch(err){ov.classList.remove('open');}closeFab();setTimeout(updateBody,30);return false;};
+    });
+  }
+  function enhance(){addCloseButtons();updateBody();}
+  const oldAbrir=window.abrirModal;
+  if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v46){window.abrirModal=function(tipo){const r=oldAbrir.apply(this,arguments);[20,120,350].forEach(t=>setTimeout(enhance,t));return r;};window.abrirModal.__bl_v46=true;try{abrirModal=window.abrirModal;}catch(e){}}
+  const oldFechar=window.fecharModal;
+  if(typeof oldFechar==='function'&&!oldFechar.__bl_v46){window.fecharModal=function(tipo){const r=oldFechar.apply(this,arguments);closeFab();setTimeout(updateBody,30);return r;};window.fecharModal.__bl_v46=true;try{fecharModal=window.fecharModal;}catch(e){}}
+  document.addEventListener('click',e=>{if(e.target?.closest?.('.pwa-overlay.open'))setTimeout(enhance,20);},true);
+  const mo=new MutationObserver(()=>enhance());
+  if(document.body)mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style'],childList:true});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});else enhance();
+  setTimeout(enhance,800);setInterval(enhance,2200);
+  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV46:PATCH,modalOpenV46:anyOpen(),modalCloseButtonsV46:document.querySelectorAll('.bl-v46-modal-x').length});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
 </body>
 </html>
