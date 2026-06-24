@@ -3997,8 +3997,10 @@ window.BL.auth = firebase.auth();
 window.BL.provider = new firebase.auth.GoogleAuthProvider();
 window.BL.db = firebase.firestore();
 try {
-  // Evita travar em alguns navegadores/rede quando o Firestore tenta usar stream/websocket.
-  window.BL.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+  // V3.51: no Android/APK força long polling para evitar erro WebChannel/Write 400 e travamentos intermitentes.
+  const blUa = navigator.userAgent || '';
+  const blIsAndroidLike = /Android|;\s*wv\)|BookLegacy/i.test(blUa) || !!window.BookLegacyNative || !!window.__BOOKLEGACY_ANDROID_APP;
+  window.BL.db.settings(blIsAndroidLike ? { experimentalForceLongPolling: true } : { experimentalAutoDetectLongPolling: true });
 } catch(e) { console.warn('Firestore settings já aplicadas', e); }
 
 function blNum(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
@@ -13025,8 +13027,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function boot(){cleanupTopButtons();rebuildMobileMenu();ensurePage();hideOldCommunity();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   [0,80,220,600,1300,2600,5200].forEach(t=>setTimeout(boot,t));
-  const mo=new MutationObserver(()=>{clearTimeout(window.__blV339MenuTimer);window.__blV339MenuTimer=setTimeout(()=>{cleanupTopButtons();const p=$('blMobileMenuPanel');if(p&&!p.__bl_v339_menu)rebuildMobileMenu();},80);});
-  try{mo.observe(document.body,{childList:true,subtree:true});}catch(e){}
+  /* V3.51: MutationObserver V39 em document.body removido; reconstruções ficam nos timeouts iniciais. */
   const oldC=window.blCommunityDebug;
   window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};let items=[];try{items=buildFeed();}catch(e){}const p=$('blMobileMenuPanel');return Object.assign({},prev,{patchV339:PATCH,feedItemsV339:items.length,firstItemsV339:items.slice(0,10).map(i=>({type:i.type,title:i.title,date:i.date,sort:i.sort,current:i.current,total:i.total})),menuCommunityButtonsV339:p?[...p.querySelectorAll('button')].filter(b=>norm(b.textContent).includes('comunidade')).length:null,menuFriendsButtonsV339:p?[...p.querySelectorAll('button')].filter(b=>norm(b.textContent).includes('amigos')).length:null,topCommunityButtonsV339:[...document.querySelectorAll('#btn-community-page,#btn-community-feed,#btn-community-page-v39')].length});};
   const oldM=window.blMobileDebug;
@@ -13237,8 +13238,8 @@ body.bl-v40-loading #app{display:none!important;}
   function boot(){buildMenu();cleanupTopButtons();ensureCommunityPage();hideOldCommunityOverlays();ensureSessionPicker();syncLoading();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   [0,80,220,600,1200,2500,5200,9000].forEach(t=>setTimeout(boot,t));
-  setInterval(syncLoading,800);
-  const mo=new MutationObserver(()=>{clearTimeout(window.__blV40Timer);window.__blV40Timer=setTimeout(()=>{buildMenu();cleanupTopButtons();ensureSessionPicker();},120);});try{mo.observe(document.body,{childList:true,subtree:true});}catch(e){}
+  /* V3.51: setInterval(syncLoading,800) removido para evitar travamento; carregamento roda por eventos/boot. */
+  /* V3.51: MutationObserver antigo em document.body removido para evitar loop/travamento. */
   const oldDebug=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};let items=[];try{items=window.buildFeedV340();}catch(e){}const p=$('blMobileMenuPanel');return Object.assign({},prev,{patch:PATCH,patchV340:PATCH,feedItemsV340:items.length,firstItemsV340:items.slice(0,12).map(i=>({type:i.type,title:i.title,date:i.date,current:i.current,total:i.total,sortMs:i.sortMs,completionDate:i.completionDate||''})),menuCommunityButtonsV340:p?[...p.querySelectorAll('button')].filter(b=>norm(b.textContent).includes('comunidade')).length:null,menuFriendsButtonsV340:p?[...p.querySelectorAll('button')].filter(b=>norm(b.textContent).includes('amigos')).length:null,menuBattleButtonsV340:p?[...p.querySelectorAll('button')].filter(b=>norm(b.textContent).includes('modo batalha')).length:null,communityOpenV340:document.body.classList.contains('bl-v40-community-open')});};
   const oldMob=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldMob==='function'?oldMob():{};return Object.assign({},prev,window.blCommunityDebug(),{patch:PATCH});};
   console.log('[BookLegacy]',PATCH);
@@ -13427,8 +13428,8 @@ body.bl-v40-loading #app{display:none!important;}
   function boot(){buildV41Menu();cleanupTopButtons();ensureCommunityPage();enhanceSessionPicker();bootGuard();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   [0,80,250,700,1400,2800,5200,9000].forEach(t=>setTimeout(boot,t));
-  setInterval(()=>{cleanupTopButtons();enhanceSessionPicker();bootGuard();},1500);
-  const mo=new MutationObserver(()=>{clearTimeout(window.__blV41Timer);window.__blV41Timer=setTimeout(()=>{buildV41Menu();cleanupTopButtons();enhanceSessionPicker();},100);});try{mo.observe(document.body,{childList:true,subtree:true});}catch(e){}
+  /* V3.51: watchdog V41 removido; causava DOM churn no mobile. */
+  /* V3.51: MutationObserver antigo em document.body removido para evitar loop/travamento. */
   const oldDebug=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};let items=[];try{items=window.buildFeedV341();}catch(e){}return Object.assign({},prev,{patch:PATCH,patchV341:PATCH,feedItemsV341:items.length,firstItemsV341:items.slice(0,12).map(i=>({type:i.type,title:i.title,date:i.date,current:i.current,total:i.total,pages:i.pages,sortMs:i.sortMs,source:i.source,completionDate:i.completionDate||''})),menuCommunityButtonsV341:1,topCommunityButtonsV341:[...document.querySelectorAll('#btn-community-page-v41')].length,sessionSelectV341:!!$('blV41SessionSelect')});};
   const oldMob=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldMob==='function'?oldMob():{};return Object.assign({},prev,window.blCommunityDebug(),{patch:PATCH});};
   console.log('[BookLegacy]',PATCH);
@@ -13592,7 +13593,7 @@ body.bl-v40-loading #app{display:none!important;}
   const oldOpenGM=window.abrirGerenciarMeta;if(typeof oldOpenGM==='function'&&!oldOpenGM.__bl_v42){window.abrirGerenciarMeta=function(){const r=oldOpenGM.apply(this,arguments);setTimeout(ensureMetaFeature,40);return r;};window.abrirGerenciarMeta.__bl_v42=true;}
   function boot(){document.body.classList.add('bl-v42-ready');buildMenu();cleanupHeader();hideLegacyMenus();ensureCommunityPage();ensureMetaFeature();try{normalizeStatusBuckets();}catch(e){}try{window.renderLendoCards&&window.renderLendoCards();}catch(e){} }
   ready(()=>{boot();setTimeout(boot,250);setTimeout(boot,1000);});
-  setInterval(()=>{try{cleanupHeader();hideLegacyMenus();ensureMetaFeature();if(isMobile()&&!document.body.classList.contains('bl-v42-menu-open')&&!document.body.classList.contains('bl-v42-community-open')){buildMenu();const f=$('blV42MenuFab');if(f){f.style.setProperty('display','flex','important');f.style.setProperty('visibility','visible','important');}}}catch(e){}},1600);
+  /* V3.51: watchdog V42 removido; menu não deve reconstruir a cada 1.6s. */
   const oldDebug=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};let items=[];try{items=window.buildFeedV42();}catch(e){}return Object.assign({},prev,{patch:PATCH,patchV42:PATCH,feedItemsV42:items.length,firstItemsV42:items.slice(0,12).map(i=>({type:i.type,title:i.title,date:i.date,current:i.current,total:i.total,pages:i.pages,source:i.source,completionDate:i.completionDate||''})),topCommunityButtonsV42:[...document.querySelectorAll('#blV42SocialBtn')].length,headerCommunityTextV42:$('btn-community')?.textContent||'',menuV42:!!$('blV42MenuPanel'),customMetasV42:metaStore()});};
   const oldMob=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldMob==='function'?oldMob():{};return Object.assign({},prev,window.blCommunityDebug(),{patch:PATCH,menuFabV42:!!$('blV42MenuFab'),menuOpenV42:document.body.classList.contains('bl-v42-menu-open')});};
   console.log('[BookLegacy]',PATCH);
@@ -13781,7 +13782,7 @@ body.bl-v40-loading #app{display:none!important;}
   function ensureMetaDelete(){const sel=$('selMetaAno');const gear=document.querySelector('button[onclick="abrirGerenciarMeta()"]')||$('blV42NewMetaBtn');if(sel&&gear&&!$('blV43DelMetaBtn')){const b=document.createElement('button');b.id='blV43DelMetaBtn';b.type='button';b.title='Excluir meta selecionada';b.textContent='🗑️';b.style.cssText=(gear.getAttribute('style')||'')+';margin-left:2px;';b.onclick=e=>{e.preventDefault();e.stopPropagation();window.blDeleteCurrentMetaV43();};gear.insertAdjacentElement('afterend',b);}const gm=$('gmTitulo');if(gm&&!$('blV43GmDelMetaBtn')){const b=document.createElement('button');b.id='blV43GmDelMetaBtn';b.type='button';b.textContent='Excluir meta';b.style.cssText='margin-left:8px;background:rgba(255,107,107,.12);border:1px solid #ff6b6b;color:#ffb3b3;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:900;cursor:pointer;';b.onclick=e=>{e.preventDefault();window.blDeleteCurrentMetaV43();};gm.appendChild(b);}}
   function boot(){stabilizeHeader();ensureMetaDelete();const p=$('blV42MenuPanel');if(p)p.classList.add('bl-v43-menu-panel');}
   ready(()=>{boot();setTimeout(boot,250);setTimeout(boot,1000);});
-  setInterval(()=>{try{stabilizeHeader();ensureMetaDelete();}catch(e){}},1200);
+  /* V3.51: watchdog V43 removido; evita pisca/travamento. */
   const oldDebug=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};let items=[];try{items=buildFeed();}catch(e){}return Object.assign({},prev,{patchV43:PATCH,feedItemsV43:items.length,firstItemsV43:items.slice(0,15).map(i=>({type:i.type,title:i.title,date:i.date,current:i.current,total:i.total,pages:i.pages,source:i.source,completionDate:i.completionDate||''})),topCommunityButtonsV43:[...document.querySelectorAll('#blV42SocialBtn')].filter(b=>getComputedStyle(b).display!=='none').length,customMetasV43:metaStore()});};
   const oldMob=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldMob==='function'?oldMob():{};return Object.assign({},prev,window.blCommunityDebug(),{patch:PATCH,menuCloseV43:!!document.querySelector('#blV42MenuPanel .blv42-close')});};
   console.log('[BookLegacy]',PATCH);
@@ -14022,7 +14023,7 @@ body.bl-v40-loading #app{display:none!important;}
   window.blCreateCustomMetaV47=createMeta;
   function boot(){patchButtons();wrapRefreshes();restorePlusClicks();setTimeout(syncV47,80);setTimeout(syncV47,800);setTimeout(syncV47,2500);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setInterval(()=>{try{patchButtons();restorePlusClicks();}catch(e){}},1800);
+  /* V3.51: watchdog V47 removido; evita chamadas remotas/DOM repetidas. */
   try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncV47,500));}catch(e){}
   window.addEventListener('focus',()=>setTimeout(syncV47,250));
   window.addEventListener('pageshow',()=>setTimeout(syncV47,250));
@@ -14120,7 +14121,7 @@ body.bl-v40-loading #app{display:none!important;}
   window.blCreateCustomMetaV47=createMeta; window.blCreateCustomMetaV48=createMeta;
   function boot(){patchButtons();wrapRefreshes();setTimeout(sync,80);setTimeout(sync,900);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setInterval(()=>{try{patchButtons();}catch(e){}},2500);
+  /* V3.51: watchdog V48 removido; evita chamadas remotas/DOM repetidas. */
   try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(sync,600));}catch(e){}
   window.addEventListener('focus',()=>setTimeout(sync,300)); window.addEventListener('pageshow',()=>setTimeout(sync,300));
   const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV48:PATCH,customMetasV48:local(),selectedMetaV48:$('selMetaAno')?.value||'',registryPathV48:'users/{uid}/library/'+REG_ID,registryReadyV48:localStorage.getItem(INIT)==='1'});};
@@ -14186,7 +14187,7 @@ body.bl-v40-loading #app{display:none!important;}
   document.addEventListener('click',ev=>{if(ev.target?.closest?.('.bl-v48-modal-x'))return; setTimeout(updateState,20);},true);
   function boot(){ensureX();updateState();const nav=$('mobile-nav');if(nav){nav.style.setProperty('display','none','important');nav.style.setProperty('visibility','hidden','important');}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setInterval(boot,1800);
+  /* V3.51: boot contínuo V48 removido; era uma das causas de travamento. */ [300,1200,3000].forEach(t=>setTimeout(boot,t));
   const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV48:PATCH,modalXCountV48:document.querySelectorAll('.bl-v48-modal-x').length,mobileNavHiddenV48:getComputedStyle($('mobile-nav')||document.createElement('div')).display==='none'});};
   console.log('[BookLegacy]',PATCH);
 })();
@@ -14453,5 +14454,61 @@ body.bl-v40-loading #app{display:none!important;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
   const oldDebug=window.blMobileDebug;
   window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patchPopupV50:PATCH,isApkV50:isApk(),apkClassV50:document.body.classList.contains('bl-v50-apk'),modalOpenV50:document.body.classList.contains('bl-v50-apk-modal-open'),apkXCountV50:document.querySelectorAll('.bl-v50-apk-x').length});};
+})();
+</script>
+
+<!-- BookLegacy V3.51 — estabilidade mobile: sem loops antigos, debug direto e Firestore long polling -->
+<style id="bl-v51-mobile-stability-css">
+  body.bl-v51-stable #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;}
+</style>
+<script id="bl-v51-mobile-stability-js">
+(function(){
+  const PATCH='v3.51-mobile-freeze-firestore-debug-fix';
+  const $=id=>document.getElementById(id);
+  window.__blV51Errors = window.__blV51Errors || [];
+  function rec(kind,msg){
+    try{
+      const text=String(msg&&msg.message?msg.message:msg||'');
+      if(/firestore|webchannel|bad request|Write\/channel|insertBefore|total/i.test(text)){
+        window.__blV51Errors.push({kind,message:text.slice(0,220),time:new Date().toISOString()});
+        if(window.__blV51Errors.length>12) window.__blV51Errors.shift();
+      }
+    }catch(e){}
+  }
+  window.addEventListener('error',e=>rec('error',e.error||e.message),true);
+  window.addEventListener('unhandledrejection',e=>rec('promise',e.reason),true);
+  function isApk(){const ua=navigator.userAgent||'';return !!(window.__BOOKLEGACY_ANDROID_APP||window.BookLegacyNative||/;\s*wv\)/i.test(ua)||/BookLegacy/i.test(ua));}
+  function openModals(){return [...document.querySelectorAll('.pwa-overlay.open,.modal.open,[id^="modal"].open')].map(e=>e.id||e.className).slice(0,10);}
+  function boot(){
+    document.body.classList.add('bl-v51-stable');
+    const nav=$('mobile-nav'); if(nav){nav.style.display='none';nav.style.visibility='hidden';nav.style.pointerEvents='none';}
+    if(typeof window.blForceSyncCustomMetasV51!=='function'){
+      window.blForceSyncCustomMetasV51=function(){try{return (window.blSyncCustomMetasV48||window.blSyncCustomMetasV47||function(){return null;})();}catch(e){rec('meta-sync',e);return null;}};
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  [500,1500,4000].forEach(t=>setTimeout(boot,t));
+  window.blMobileDebug=function(){
+    return {
+      patchV51:PATCH,
+      debugDirectV51:true,
+      readyState:document.readyState,
+      isApkV51:isApk(),
+      userAgent:(navigator.userAgent||'').slice(0,140),
+      bodyClasses:String(document.body&&document.body.className||'').slice(0,260),
+      openModalsV51:openModals(),
+      fabMenuDisplayV51:getComputedStyle($('fabMenu')||document.createElement('div')).display,
+      mobileNavHiddenV51:!$('mobile-nav') || getComputedStyle($('mobile-nav')).display==='none',
+      firestoreSettingsV51:isApk()?'experimentalForceLongPolling':'experimentalAutoDetectLongPolling',
+      oldWatchdogsRemovedV51:true,
+      lastErrorsV51:window.__blV51Errors.slice(-6)
+    };
+  };
+  const oldC=window.blCommunityDebug;
+  window.blCommunityDebug=function(){
+    let prev={}; try{ if(typeof oldC==='function') prev=oldC()||{}; }catch(e){rec('community-debug',e);prev={communityDebugError:String(e&&e.message||e)}}
+    return Object.assign({},prev,{patchV51:PATCH,mobileDebugDirectV51:true,lastErrorsV51:window.__blV51Errors.slice(-6)});
+  };
+  console.log('[BookLegacy Mobile]',PATCH);
 })();
 </script>
