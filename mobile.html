@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
+<script id="bl-v349-early-console-guard">
+(function(){
+  'use strict';
+  const PATCH='v3.49-console-guard-buildwd-insertbefore';
+  if(!window.__blV349SafeInsertBefore){
+    window.__blV349SafeInsertBefore=true;
+    const orig=Node.prototype.insertBefore;
+    Node.prototype.insertBefore=function(newNode, referenceNode){
+      try{
+        if(referenceNode && referenceNode.parentNode !== this){
+          console.warn('[BookLegacy]', PATCH, 'insertBefore inválido neutralizado');
+          return this.appendChild(newNode);
+        }
+        return orig.call(this,newNode,referenceNode||null);
+      }catch(e){
+        if(e && (e.name==='NotFoundError' || String(e.message||'').includes('not a child'))){
+          console.warn('[BookLegacy]', PATCH, 'insertBefore NotFoundError neutralizado', e);
+          return this.appendChild(newNode);
+        }
+        throw e;
+      }
+    };
+  }
+  window.blConsoleGuardV349=function(){return {patchV49:PATCH,safeInsertBefore:!!window.__blV349SafeInsertBefore};};
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="booklegacy-version" content="v3.48">
 <script>
@@ -2217,8 +2245,23 @@ function buildWd() {
   const yr = document.getElementById('selWd')?.value || 'total';
 
   ['avg','sum'].forEach(type => {
-    const src  = type==='avg' ? WD_AVG : WD_SUM;
-    const vals = src[yr] || src['total'] || [0,0,0,0,0,0,0];
+    const src  = (type==='avg' ? WD_AVG : WD_SUM) || {};
+    let vals = (src && (src[yr] || src['total'] || src.total)) || [0,0,0,0,0,0,0];
+
+    // V3.49: evita crash quando o gráfico de dias da semana roda antes dos dados estarem completos.
+    // Em algumas cargas o src vinha undefined/objeto, e o app ficava repetindo:
+    // Cannot read properties of undefined (reading 'total').
+    if (!Array.isArray(vals)) {
+      if (vals && typeof vals === 'object') {
+        const keys = ['0','1','2','3','4','5','6'];
+        vals = keys.map((k, idx) => Number(vals[k] ?? vals[idx] ?? 0) || 0);
+      } else {
+        vals = [0,0,0,0,0,0,0];
+      }
+    }
+    vals = vals.slice(0,7).map(v => Number(v) || 0);
+    while (vals.length < 7) vals.push(0);
+
     const maxV = Math.max(...vals, 1);
     const el   = document.getElementById(type==='avg' ? 'wdAvg' : 'wdSum');
     if (!el) return;
@@ -2265,11 +2308,14 @@ function inicializarGraficos() {
 
   // Seletor anos dia da semana
   const selWd = document.getElementById('selWd');
-  const anosWd = Object.keys(WD_AVG).filter(k => k !== 'total').sort();
-  selWd.innerHTML = '<option value="total">Total</option>';
-  anosWd.forEach(a => {
-    selWd.innerHTML += `<option value="${a}">${a}</option>`;
-  });
+  const wdAvgSafe = (typeof WD_AVG !== 'undefined' && WD_AVG) ? WD_AVG : {};
+  const anosWd = Object.keys(wdAvgSafe).filter(k => k !== 'total').sort();
+  if (selWd) {
+    selWd.innerHTML = '<option value="total">Total</option>';
+    anosWd.forEach(a => {
+      selWd.innerHTML += `<option value="${a}">${a}</option>`;
+    });
+  }
 })();
 
 // ════════════════════════════════════════════════
@@ -14142,6 +14188,54 @@ body.bl-v40-loading #app{display:none!important;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
   setInterval(boot,1800);
   const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV48:PATCH,modalXCountV48:document.querySelectorAll('.bl-v48-modal-x').length,mobileNavHiddenV48:getComputedStyle($('mobile-nav')||document.createElement('div')).display==='none'});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
+
+<script id="bl-v349-buildwd-safe-wrapper">
+(function(){
+  'use strict';
+  const PATCH='v3.49-console-buildwd-safe-wrapper';
+  function safeArray(vals){
+    if(Array.isArray(vals)) return vals.slice(0,7).map(v=>Number(v)||0);
+    if(vals && typeof vals==='object') return ['0','1','2','3','4','5','6'].map((k,i)=>Number(vals[k]??vals[i]??0)||0);
+    return [0,0,0,0,0,0,0];
+  }
+  function hardSafeBuildWd(){
+    try{
+      const yr=document.getElementById('selWd')?.value||'total';
+      ['avg','sum'].forEach(type=>{
+        const src=(type==='avg'?(window.WD_AVG||{}):(window.WD_SUM||{}));
+        let vals=safeArray(src[yr]||src.total||src['total']);
+        while(vals.length<7) vals.push(0);
+        const maxV=Math.max(...vals,1);
+        const el=document.getElementById(type==='avg'?'wdAvg':'wdSum');
+        if(!el) return;
+        const labels=window.WD_LABELS||['D','S','T','Q','Q','S','S'];
+        const colors=window.WD_COLORS||['#4ecdc4','#4ecdc4','#4ecdc4','#4ecdc4','#4ecdc4','#4ecdc4','#4ecdc4'];
+        el.innerHTML='';
+        vals.forEach((v,i)=>{
+          const h=Math.max(6,Math.round(v/maxV*90));
+          const disp=type==='avg'?v.toFixed(0):v.toLocaleString('pt-BR');
+          el.insertAdjacentHTML('beforeend',`<div class="wd-col"><span class="wd-val">${disp}</span><div class="wd-bar" style="height:${h}px;background:${colors[i]}"></div><span class="wd-lbl">${labels[i]}</span></div>`);
+        });
+      });
+    }catch(e){console.warn('[BookLegacy]',PATCH,'buildWd fallback falhou',e);}
+  }
+  const old=window.buildWd;
+  if(typeof old==='function' && !old.__blV49){
+    const wrapped=function(){try{return old.apply(this,arguments);}catch(e){console.warn('[BookLegacy]',PATCH,'buildWd original neutralizado',e);return hardSafeBuildWd();}};
+    wrapped.__blV49=true;
+    window.buildWd=wrapped;
+  }else if(typeof old!=='function'){
+    window.buildWd=hardSafeBuildWd;
+    window.buildWd.__blV49=true;
+  }
+  const oldC=window.blCommunityDebug;
+  window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,window.blConsoleGuardV349?.()||{},{patchV49:PATCH,buildWdWrappedV49:!!(window.buildWd&&window.buildWd.__blV49)});};
+  const oldM=window.blMobileDebug;
+  window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,window.blConsoleGuardV349?.()||{},{patchV49:PATCH,buildWdWrappedV49:!!(window.buildWd&&window.buildWd.__blV49)});};
   console.log('[BookLegacy]',PATCH);
 })();
 </script>

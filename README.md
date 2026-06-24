@@ -1,9 +1,7 @@
-# BookLegacy V3.48 — metas com ID válido + popups APK compactos
+# BookLegacy V3.49 - Console cleanup
 
-Correções pontuais:
-- Troca o registro remoto de metas para um ID válido no Firebase: `booklegacyCustomMetasRegistry`.
-- Corrige criação/exclusão/sincronização de metas entre desktop, mobile e APK.
-- Remove o erro do antigo ID reservado `__booklegacy_custom_metas_registry__`.
-- Corrige o `insertBefore` antigo que gerava erro no console e travava menus.
-- No mobile/APK, remove a barra inferior `#mobile-nav`.
-- No mobile/APK, compacta popups do botão `+` e adiciona X no topo sem quebrar os cliques.
+Correção focada nos erros de console reportados:
+- buildWd não quebra mais quando WD_AVG/WD_SUM ainda não carregaram ou vêm incompletos.
+- insertBefore inválido de patches antigos é neutralizado para não travar o app.
+
+Sem alteração em metas, Comunidade, popups, heatmap, batalha ou layout geral.
