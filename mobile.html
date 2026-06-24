@@ -14242,3 +14242,216 @@ body.bl-v40-loading #app{display:none!important;}
 
 </body>
 </html>
+
+
+<!-- BookLegacy V3.50 — APK: popups do botão + compactos sem afetar mobile web/desktop -->
+<style id="bl-v50-apk-plus-popup-css">
+  /* Ativo somente quando o app detectar APK/WebView nativo */
+  body.bl-v50-apk #fabMenu{
+    right:10px!important;
+    bottom:76px!important;
+    gap:7px!important;
+    max-width:calc(100vw - 20px)!important;
+    z-index:2601!important;
+  }
+  body.bl-v50-apk #fabMenu .fab-item{gap:7px!important;}
+  body.bl-v50-apk #fabMenu .fab-item span{
+    padding:4px 8px!important;
+    border-radius:8px!important;
+    font-size:12px!important;
+    line-height:1.1!important;
+    max-width:210px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  body.bl-v50-apk #fabMenu .fab-item button{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+    font-size:18px!important;
+    box-shadow:0 2px 10px rgba(0,0,0,.32)!important;
+  }
+  body.bl-v50-apk .fab#fabBtn,
+  body.bl-v50-apk #fabBtn{
+    width:52px!important;
+    height:52px!important;
+    right:12px!important;
+    bottom:14px!important;
+    font-size:24px!important;
+  }
+  body.bl-v50-apk.bl-v50-apk-modal-open #blMobileMenuFab,
+  body.bl-v50-apk.bl-v50-apk-modal-open #blMobileMenuPanel,
+  body.bl-v50-apk.bl-v50-apk-modal-open #blV42MenuFab,
+  body.bl-v50-apk.bl-v50-apk-modal-open #blV42MenuPanel,
+  body.bl-v50-apk.bl-v50-apk-modal-open #blV41MenuFab,
+  body.bl-v50-apk.bl-v50-apk-modal-open #blV41MenuPanel{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open{
+    align-items:flex-start!important;
+    justify-content:center!important;
+    padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px!important;
+    overflow:hidden!important;
+    overscroll-behavior:contain!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-modal{
+    width:min(94vw,430px)!important;
+    max-width:430px!important;
+    max-height:min(78dvh,620px)!important;
+    border-radius:16px!important;
+    padding:10px 12px 12px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    box-sizing:border-box!important;
+    position:relative!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-modal h2{
+    font-size:16px!important;
+    line-height:1.15!important;
+    margin:0 38px 9px 0!important;
+    padding:0!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-field{margin-bottom:7px!important;}
+  body.bl-v50-apk .pwa-overlay.open .pwa-field label{
+    font-size:11px!important;
+    line-height:1.2!important;
+    margin-bottom:3px!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-field input,
+  body.bl-v50-apk .pwa-overlay.open .pwa-field select,
+  body.bl-v50-apk .pwa-overlay.open .pwa-field textarea{
+    font-size:13px!important;
+    padding:8px 10px!important;
+    border-radius:9px!important;
+    min-height:36px!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-field textarea{min-height:58px!important;max-height:92px!important;}
+  body.bl-v50-apk .pwa-overlay.open .pwa-btn{
+    padding:10px!important;
+    font-size:14px!important;
+    line-height:1.15!important;
+    margin-top:5px!important;
+    border-radius:10px!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-btn-cancel{
+    padding:9px!important;
+    font-size:13px!important;
+    margin-top:5px!important;
+    border-radius:10px!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .pwa-msg{
+    padding:8px!important;
+    font-size:12px!important;
+    margin-top:6px!important;
+  }
+  body.bl-v50-apk .pwa-overlay.open .bl-v48-modal-x{display:none!important;}
+  body.bl-v50-apk .pwa-overlay.open .bl-v50-apk-x{
+    position:absolute!important;
+    top:8px!important;
+    right:8px!important;
+    width:32px!important;
+    height:32px!important;
+    border-radius:50%!important;
+    border:1px solid rgba(255,255,255,.18)!important;
+    background:#1e2535!important;
+    color:#fff!important;
+    font-size:20px!important;
+    line-height:1!important;
+    font-weight:900!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    z-index:20!important;
+    box-shadow:0 4px 14px rgba(0,0,0,.35)!important;
+    cursor:pointer!important;
+    padding:0!important;
+  }
+</style>
+<script id="bl-v50-apk-plus-popup-js">
+(function(){
+  const PATCH='v3.50-apk-plus-popup-compact-only';
+  const $=id=>document.getElementById(id);
+  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
+  function isApk(){
+    const ua=navigator.userAgent||'';
+    return !!(window.__BOOKLEGACY_ANDROID_APP || window.BookLegacyNative || /;\s*wv\)/i.test(ua) || /BookLegacy/i.test(ua));
+  }
+  function closeTypeFromId(id){return String(id||'').replace(/^modal/,'').replace(/^./,c=>c.toLowerCase());}
+  function closeOverlay(ov){
+    if(!ov)return;
+    const tipo=closeTypeFromId(ov.id);
+    try{ if(typeof window.fecharModal==='function') window.fecharModal(tipo); else ov.classList.remove('open'); }
+    catch(e){ ov.classList.remove('open'); }
+    setTimeout(updateState,20);
+  }
+  function ensureX(){
+    if(!isApk())return;
+    modalIds.forEach(id=>{
+      const ov=$(id), modal=ov?.querySelector?.('.pwa-modal');
+      if(!ov||!modal)return;
+      let x=modal.querySelector(':scope > .bl-v50-apk-x');
+      if(!x){
+        x=document.createElement('button');
+        x.type='button';
+        x.className='bl-v50-apk-x';
+        x.setAttribute('aria-label','Fechar');
+        x.textContent='×';
+        modal.appendChild(x);
+      }
+      x.onclick=function(ev){ev.preventDefault();ev.stopPropagation();closeOverlay(ov);return false;};
+    });
+  }
+  function updateState(){
+    if(!isApk())return;
+    document.body.classList.add('bl-v50-apk');
+    const open=modalIds.some(id=>$(id)?.classList.contains('open'));
+    document.body.classList.toggle('bl-v50-apk-modal-open',open);
+    if(open){
+      const fm=$('fabMenu'); if(fm)fm.style.display='none';
+      const fb=$('fabBtn'); if(fb)fb.textContent='＋';
+      try{window.fabOpen=false;}catch(e){}
+      ensureX();
+    }
+  }
+  function boot(){
+    if(isApk())document.body.classList.add('bl-v50-apk');
+    ensureX(); updateState();
+    const oldAbrir=window.abrirModal;
+    if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v50){
+      window.abrirModal=function(tipo){
+        const r=oldAbrir.apply(this,arguments);
+        if(isApk()){
+          const fm=$('fabMenu'); if(fm)fm.style.display='none';
+          const fb=$('fabBtn'); if(fb)fb.textContent='＋';
+          try{window.fabOpen=false;}catch(e){}
+          [20,90,220].forEach(t=>setTimeout(updateState,t));
+        }
+        return r;
+      };
+      window.abrirModal.__bl_v50=true;
+      try{abrirModal=window.abrirModal;}catch(e){}
+    }
+    const oldToggle=window.toggleFabMenu;
+    if(typeof oldToggle==='function'&&!oldToggle.__bl_v50){
+      window.toggleFabMenu=function(){
+        const r=oldToggle.apply(this,arguments);
+        if(isApk())setTimeout(updateState,10);
+        return r;
+      };
+      window.toggleFabMenu.__bl_v50=true;
+      try{toggleFabMenu=window.toggleFabMenu;}catch(e){}
+    }
+    document.addEventListener('click',function(){setTimeout(updateState,25);},true);
+    const mo=new MutationObserver(()=>updateState());
+    modalIds.forEach(id=>{const ov=$(id); if(ov)mo.observe(ov,{attributes:true,attributeFilter:['class','style']});});
+    [300,900,1600,3000].forEach(t=>setTimeout(updateState,t));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  const oldDebug=window.blMobileDebug;
+  window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patchPopupV50:PATCH,isApkV50:isApk(),apkClassV50:document.body.classList.contains('bl-v50-apk'),modalOpenV50:document.body.classList.contains('bl-v50-apk-modal-open'),apkXCountV50:document.querySelectorAll('.bl-v50-apk-x').length});};
+})();
+</script>
