@@ -14131,69 +14131,6 @@ body.bl-v40-loading #app{display:none!important;}
 </script>
 
 
-<!-- BookLegacy V3.48 — APK popups compactos sem quebrar cliques + remove barra inferior -->
-<style id="blV48MobilePopupStyle">
-  @media (max-width:899px), (pointer:coarse){
-    #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;}
-    body.mobile-view #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;}
-    body.bl-v48-pwa-modal-open #blMobileMenuFab,
-    body.bl-v48-pwa-modal-open #blMobileMenuPanel,
-    body.bl-v48-pwa-modal-open #blV42MenuFab,
-    body.bl-v48-pwa-modal-open #blV42MenuPanel,
-    body.bl-v48-pwa-modal-open #blV41MenuFab,
-    body.bl-v48-pwa-modal-open #blV41MenuPanel{display:none!important;visibility:hidden!important;pointer-events:none!important;}
-    .pwa-overlay.open{align-items:flex-start!important;justify-content:center!important;padding:calc(env(safe-area-inset-top,0px) + 10px) 10px 12px!important;overflow:hidden!important;}
-    .pwa-overlay.open .pwa-modal{width:calc(100vw - 20px)!important;max-width:520px!important;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 28px)!important;border-radius:18px!important;padding:14px 14px 16px!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;position:relative!important;-webkit-overflow-scrolling:touch!important;}
-    .pwa-overlay.open .pwa-modal h2{font-size:17px!important;line-height:1.15!important;margin:0 42px 12px 0!important;}
-    .pwa-overlay.open .pwa-field{margin-bottom:10px!important;}
-    .pwa-overlay.open .pwa-field label{font-size:12px!important;margin-bottom:4px!important;}
-    .pwa-overlay.open .pwa-field input,.pwa-overlay.open .pwa-field select,.pwa-overlay.open .pwa-field textarea{font-size:14px!important;padding:9px 11px!important;border-radius:9px!important;}
-    .pwa-overlay.open .pwa-row{gap:8px!important;}
-    .pwa-overlay.open .pwa-btn{padding:12px!important;font-size:15px!important;margin-top:6px!important;}
-    .pwa-overlay.open .pwa-btn-cancel{padding:10px!important;font-size:14px!important;margin-top:6px!important;}
-    .bl-v48-modal-x{position:sticky!important;top:0!important;float:right!important;margin:0 0 6px 8px!important;width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.18)!important;background:#1e2535!important;color:#fff!important;font-size:18px!important;line-height:1!important;font-weight:900!important;display:flex!important;align-items:center!important;justify-content:center!important;z-index:10!important;box-shadow:0 6px 18px rgba(0,0,0,.35)!important;cursor:pointer!important;}
-  }
-</style>
-<script id="blV48MobilePopupScript">
-(function(){
-  const PATCH='v3.48-apk-compact-popups-safe';
-  const $=id=>document.getElementById(id);
-  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
-  function typeFromOverlay(id){return String(id||'').replace(/^modal/,'').replace(/^./,c=>c.toLowerCase());}
-  function closeOverlay(overlay){
-    if(!overlay)return;
-    const tipo=typeFromOverlay(overlay.id);
-    try{ if(typeof window.fecharModal==='function') window.fecharModal(tipo); else overlay.classList.remove('open'); }catch(e){ overlay.classList.remove('open'); }
-    updateState();
-  }
-  function ensureX(){
-    modalIds.forEach(id=>{const ov=$(id); const modal=ov?.querySelector?.('.pwa-modal'); if(!ov||!modal)return; let x=modal.querySelector(':scope > .bl-v48-modal-x'); if(!x){x=document.createElement('button');x.type='button';x.className='bl-v48-modal-x';x.setAttribute('aria-label','Fechar');x.textContent='×';modal.insertBefore(x,modal.firstChild);} x.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();closeOverlay(ov);return false;};});
-  }
-  function updateState(){const open=modalIds.some(id=>$(id)?.classList.contains('open'));document.body.classList.toggle('bl-v48-pwa-modal-open',open);if(open){const fm=$('fabMenu');if(fm)fm.style.display='none';const fb=$('fabBtn');if(fb)fb.textContent='＋';try{window.fabOpen=false;}catch(e){}}}
-  const oldAbrir=window.abrirModal;
-  if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v48){
-    window.abrirModal=function(tipo){
-      const fm=$('fabMenu'); if(fm)fm.style.display='none'; const fb=$('fabBtn'); if(fb)fb.textContent='＋'; try{window.fabOpen=false;}catch(e){}
-      const r=oldAbrir.apply(this,arguments);
-      const fm2=$('fabMenu');
-      if(fm2&&getComputedStyle(fm2).display!=='none'&&typeof window.toggleFabMenu==='function'){try{window.toggleFabMenu();}catch(e){fm2.style.display='none';}}
-      else if(fm2){fm2.style.display='none';}
-      const fb2=$('fabBtn'); if(fb2)fb2.textContent='＋';
-      ensureX(); updateState(); setTimeout(()=>{ensureX();updateState();},80); return r;
-    }; window.abrirModal.__bl_v48=true; try{abrirModal=window.abrirModal;}catch(e){}
-  }
-  const oldFechar=window.fecharModal;
-  if(typeof oldFechar==='function'&&!oldFechar.__bl_v48){window.fecharModal=function(){const r=oldFechar.apply(this,arguments);setTimeout(updateState,20);return r;};window.fecharModal.__bl_v48=true;try{fecharModal=window.fecharModal;}catch(e){}}
-  document.addEventListener('click',ev=>{if(ev.target?.closest?.('.bl-v48-modal-x'))return; setTimeout(updateState,20);},true);
-  function boot(){ensureX();updateState();const nav=$('mobile-nav');if(nav){nav.style.setProperty('display','none','important');nav.style.setProperty('visibility','hidden','important');}}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  /* V3.51: boot contínuo V48 removido; era uma das causas de travamento. */ [300,1200,3000].forEach(t=>setTimeout(boot,t));
-  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV48:PATCH,modalXCountV48:document.querySelectorAll('.bl-v48-modal-x').length,mobileNavHiddenV48:getComputedStyle($('mobile-nav')||document.createElement('div')).display==='none'});};
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
-
 <script id="bl-v349-buildwd-safe-wrapper">
 (function(){
   'use strict';
@@ -14241,221 +14178,8 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
-</body>
-</html>
 
 
-<!-- BookLegacy V3.50 — APK: popups do botão + compactos sem afetar mobile web/desktop -->
-<style id="bl-v50-apk-plus-popup-css">
-  /* Ativo somente quando o app detectar APK/WebView nativo */
-  body.bl-v50-apk #fabMenu{
-    right:10px!important;
-    bottom:76px!important;
-    gap:7px!important;
-    max-width:calc(100vw - 20px)!important;
-    z-index:2601!important;
-  }
-  body.bl-v50-apk #fabMenu .fab-item{gap:7px!important;}
-  body.bl-v50-apk #fabMenu .fab-item span{
-    padding:4px 8px!important;
-    border-radius:8px!important;
-    font-size:12px!important;
-    line-height:1.1!important;
-    max-width:210px!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-  }
-  body.bl-v50-apk #fabMenu .fab-item button{
-    width:42px!important;
-    height:42px!important;
-    min-width:42px!important;
-    min-height:42px!important;
-    font-size:18px!important;
-    box-shadow:0 2px 10px rgba(0,0,0,.32)!important;
-  }
-  body.bl-v50-apk .fab#fabBtn,
-  body.bl-v50-apk #fabBtn{
-    width:52px!important;
-    height:52px!important;
-    right:12px!important;
-    bottom:14px!important;
-    font-size:24px!important;
-  }
-  body.bl-v50-apk.bl-v50-apk-modal-open #blMobileMenuFab,
-  body.bl-v50-apk.bl-v50-apk-modal-open #blMobileMenuPanel,
-  body.bl-v50-apk.bl-v50-apk-modal-open #blV42MenuFab,
-  body.bl-v50-apk.bl-v50-apk-modal-open #blV42MenuPanel,
-  body.bl-v50-apk.bl-v50-apk-modal-open #blV41MenuFab,
-  body.bl-v50-apk.bl-v50-apk-modal-open #blV41MenuPanel{
-    display:none!important;
-    visibility:hidden!important;
-    pointer-events:none!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open{
-    align-items:flex-start!important;
-    justify-content:center!important;
-    padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px!important;
-    overflow:hidden!important;
-    overscroll-behavior:contain!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-modal{
-    width:min(94vw,430px)!important;
-    max-width:430px!important;
-    max-height:min(78dvh,620px)!important;
-    border-radius:16px!important;
-    padding:10px 12px 12px!important;
-    overflow-y:auto!important;
-    overflow-x:hidden!important;
-    box-sizing:border-box!important;
-    position:relative!important;
-    -webkit-overflow-scrolling:touch!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-modal h2{
-    font-size:16px!important;
-    line-height:1.15!important;
-    margin:0 38px 9px 0!important;
-    padding:0!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-field{margin-bottom:7px!important;}
-  body.bl-v50-apk .pwa-overlay.open .pwa-field label{
-    font-size:11px!important;
-    line-height:1.2!important;
-    margin-bottom:3px!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-field input,
-  body.bl-v50-apk .pwa-overlay.open .pwa-field select,
-  body.bl-v50-apk .pwa-overlay.open .pwa-field textarea{
-    font-size:13px!important;
-    padding:8px 10px!important;
-    border-radius:9px!important;
-    min-height:36px!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-field textarea{min-height:58px!important;max-height:92px!important;}
-  body.bl-v50-apk .pwa-overlay.open .pwa-btn{
-    padding:10px!important;
-    font-size:14px!important;
-    line-height:1.15!important;
-    margin-top:5px!important;
-    border-radius:10px!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-btn-cancel{
-    padding:9px!important;
-    font-size:13px!important;
-    margin-top:5px!important;
-    border-radius:10px!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .pwa-msg{
-    padding:8px!important;
-    font-size:12px!important;
-    margin-top:6px!important;
-  }
-  body.bl-v50-apk .pwa-overlay.open .bl-v48-modal-x{display:none!important;}
-  body.bl-v50-apk .pwa-overlay.open .bl-v50-apk-x{
-    position:absolute!important;
-    top:8px!important;
-    right:8px!important;
-    width:32px!important;
-    height:32px!important;
-    border-radius:50%!important;
-    border:1px solid rgba(255,255,255,.18)!important;
-    background:#1e2535!important;
-    color:#fff!important;
-    font-size:20px!important;
-    line-height:1!important;
-    font-weight:900!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    z-index:20!important;
-    box-shadow:0 4px 14px rgba(0,0,0,.35)!important;
-    cursor:pointer!important;
-    padding:0!important;
-  }
-</style>
-<script id="bl-v50-apk-plus-popup-js">
-(function(){
-  const PATCH='v3.50-apk-plus-popup-compact-only';
-  const $=id=>document.getElementById(id);
-  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
-  function isApk(){
-    const ua=navigator.userAgent||'';
-    return !!(window.__BOOKLEGACY_ANDROID_APP || window.BookLegacyNative || /;\s*wv\)/i.test(ua) || /BookLegacy/i.test(ua));
-  }
-  function closeTypeFromId(id){return String(id||'').replace(/^modal/,'').replace(/^./,c=>c.toLowerCase());}
-  function closeOverlay(ov){
-    if(!ov)return;
-    const tipo=closeTypeFromId(ov.id);
-    try{ if(typeof window.fecharModal==='function') window.fecharModal(tipo); else ov.classList.remove('open'); }
-    catch(e){ ov.classList.remove('open'); }
-    setTimeout(updateState,20);
-  }
-  function ensureX(){
-    if(!isApk())return;
-    modalIds.forEach(id=>{
-      const ov=$(id), modal=ov?.querySelector?.('.pwa-modal');
-      if(!ov||!modal)return;
-      let x=modal.querySelector(':scope > .bl-v50-apk-x');
-      if(!x){
-        x=document.createElement('button');
-        x.type='button';
-        x.className='bl-v50-apk-x';
-        x.setAttribute('aria-label','Fechar');
-        x.textContent='×';
-        modal.appendChild(x);
-      }
-      x.onclick=function(ev){ev.preventDefault();ev.stopPropagation();closeOverlay(ov);return false;};
-    });
-  }
-  function updateState(){
-    if(!isApk())return;
-    document.body.classList.add('bl-v50-apk');
-    const open=modalIds.some(id=>$(id)?.classList.contains('open'));
-    document.body.classList.toggle('bl-v50-apk-modal-open',open);
-    if(open){
-      const fm=$('fabMenu'); if(fm)fm.style.display='none';
-      const fb=$('fabBtn'); if(fb)fb.textContent='＋';
-      try{window.fabOpen=false;}catch(e){}
-      ensureX();
-    }
-  }
-  function boot(){
-    if(isApk())document.body.classList.add('bl-v50-apk');
-    ensureX(); updateState();
-    const oldAbrir=window.abrirModal;
-    if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v50){
-      window.abrirModal=function(tipo){
-        const r=oldAbrir.apply(this,arguments);
-        if(isApk()){
-          const fm=$('fabMenu'); if(fm)fm.style.display='none';
-          const fb=$('fabBtn'); if(fb)fb.textContent='＋';
-          try{window.fabOpen=false;}catch(e){}
-          [20,90,220].forEach(t=>setTimeout(updateState,t));
-        }
-        return r;
-      };
-      window.abrirModal.__bl_v50=true;
-      try{abrirModal=window.abrirModal;}catch(e){}
-    }
-    const oldToggle=window.toggleFabMenu;
-    if(typeof oldToggle==='function'&&!oldToggle.__bl_v50){
-      window.toggleFabMenu=function(){
-        const r=oldToggle.apply(this,arguments);
-        if(isApk())setTimeout(updateState,10);
-        return r;
-      };
-      window.toggleFabMenu.__bl_v50=true;
-      try{toggleFabMenu=window.toggleFabMenu;}catch(e){}
-    }
-    document.addEventListener('click',function(){setTimeout(updateState,25);},true);
-    const mo=new MutationObserver(()=>updateState());
-    modalIds.forEach(id=>{const ov=$(id); if(ov)mo.observe(ov,{attributes:true,attributeFilter:['class','style']});});
-    [300,900,1600,3000].forEach(t=>setTimeout(updateState,t));
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  const oldDebug=window.blMobileDebug;
-  window.blMobileDebug=function(){const prev=typeof oldDebug==='function'?oldDebug():{};return Object.assign({},prev,{patchPopupV50:PATCH,isApkV50:isApk(),apkClassV50:document.body.classList.contains('bl-v50-apk'),modalOpenV50:document.body.classList.contains('bl-v50-apk-modal-open'),apkXCountV50:document.querySelectorAll('.bl-v50-apk-x').length});};
-})();
-</script>
 
 <!-- BookLegacy V3.51 — estabilidade mobile: sem loops antigos, debug direto e Firestore long polling -->
 <style id="bl-v51-mobile-stability-css">
@@ -14512,3 +14236,224 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy Mobile]',PATCH);
 })();
 </script>
+
+
+<!-- BookLegacy V3.52 — mobile/APK: modais do botão + compactos, com X e menu escondido -->
+<style id="bl-v52-plus-modal-fix-css">
+  @media (max-width:899px), (pointer:coarse){
+    /* Sem barra inferior acidental */
+    #mobile-nav{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;max-height:0!important;overflow:hidden!important;}
+
+    /* Quando um popup PWA está aberto, nenhum menu superior pode ficar por cima */
+    body.bl-v52-pwa-modal-open #blMobileMenuFab,
+    body.bl-v52-pwa-modal-open #blMobileMenuPanel,
+    body.bl-v52-pwa-modal-open #blV40MenuFab,
+    body.bl-v52-pwa-modal-open #blV40MenuPanel,
+    body.bl-v52-pwa-modal-open #blV41MenuFab,
+    body.bl-v52-pwa-modal-open #blV41MenuPanel,
+    body.bl-v52-pwa-modal-open #blV42MenuFab,
+    body.bl-v52-pwa-modal-open #blV42MenuPanel,
+    body.bl-v52-pwa-modal-open .bl-v326-menu-backdrop,
+    body.bl-v52-pwa-modal-open [id*="MenuFab"],
+    body.bl-v52-pwa-modal-open [id*="MenuPanel"]{
+      display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important;
+    }
+
+    /* overlay dos popups do + */
+    .pwa-overlay.open{
+      position:fixed!important;
+      inset:0!important;
+      z-index:2147483400!important;
+      display:flex!important;
+      align-items:flex-start!important;
+      justify-content:center!important;
+      padding:calc(env(safe-area-inset-top,0px) + 8px) 8px calc(env(safe-area-inset-bottom,0px) + 8px)!important;
+      background:rgba(0,0,0,.74)!important;
+      overflow:hidden!important;
+      overscroll-behavior:contain!important;
+      box-sizing:border-box!important;
+    }
+    .pwa-overlay.open .pwa-modal{
+      width:min(96vw,520px)!important;
+      max-width:520px!important;
+      height:auto!important;
+      max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 18px)!important;
+      overflow-y:auto!important;
+      overflow-x:hidden!important;
+      -webkit-overflow-scrolling:touch!important;
+      overscroll-behavior:contain!important;
+      border-radius:16px!important;
+      padding:10px 12px 12px!important;
+      box-sizing:border-box!important;
+      background:var(--bg2)!important;
+      position:relative!important;
+      transform:none!important;
+      margin:0!important;
+    }
+    .pwa-overlay.open .pwa-modal *{box-sizing:border-box!important;max-width:100%!important;}
+    .pwa-overlay.open .pwa-modal h2{
+      font-size:16px!important;
+      line-height:1.15!important;
+      margin:0 42px 10px 0!important;
+      padding:0!important;
+    }
+    .pwa-overlay.open .pwa-field{margin-bottom:8px!important;}
+    .pwa-overlay.open .pwa-field label{font-size:11px!important;line-height:1.2!important;margin-bottom:3px!important;}
+    .pwa-overlay.open .pwa-field input,
+    .pwa-overlay.open .pwa-field select,
+    .pwa-overlay.open .pwa-field textarea{
+      font-size:13px!important;
+      line-height:1.2!important;
+      padding:8px 10px!important;
+      border-radius:9px!important;
+      min-height:36px!important;
+    }
+    .pwa-overlay.open .pwa-field textarea{min-height:58px!important;max-height:110px!important;}
+    .pwa-overlay.open .pwa-row{gap:7px!important;}
+    .pwa-overlay.open .pwa-btn{padding:10px!important;font-size:14px!important;line-height:1.15!important;margin-top:5px!important;border-radius:10px!important;}
+    .pwa-overlay.open .pwa-btn-cancel{padding:9px!important;font-size:13px!important;margin-top:5px!important;border-radius:10px!important;}
+    .pwa-overlay.open .pwa-msg{padding:8px!important;font-size:12px!important;margin-top:6px!important;}
+
+    /* Botões de fechar antigos escondidos; só fica o X V3.52 */
+    .pwa-overlay.open .bl-v48-modal-x,
+    .pwa-overlay.open .bl-v50-apk-x{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+    .pwa-overlay.open .bl-v52-modal-x{
+      position:sticky!important;
+      top:0!important;
+      float:right!important;
+      margin:0 0 6px 8px!important;
+      width:34px!important;
+      height:34px!important;
+      min-width:34px!important;
+      min-height:34px!important;
+      border-radius:50%!important;
+      border:1px solid rgba(255,255,255,.20)!important;
+      background:#1e2535!important;
+      color:#fff!important;
+      font-size:20px!important;
+      line-height:1!important;
+      font-weight:900!important;
+      display:flex!important;
+      align-items:center!important;
+      justify-content:center!important;
+      z-index:2147483500!important;
+      box-shadow:0 5px 18px rgba(0,0,0,.42)!important;
+      cursor:pointer!important;
+      padding:0!important;
+      appearance:none!important;
+      -webkit-appearance:none!important;
+    }
+
+    /* Menu do + permanece clicável e compacto; não vira modal gigante */
+    #fabMenu{z-index:2600!important;right:12px!important;bottom:76px!important;gap:8px!important;max-width:calc(100vw - 24px)!important;}
+    #fabMenu .fab-item{gap:7px!important;}
+    #fabMenu .fab-item span{font-size:12px!important;padding:4px 8px!important;line-height:1.1!important;border-radius:8px!important;max-width:220px!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+    #fabMenu .fab-item button{width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;font-size:18px!important;}
+  }
+</style>
+<script id="bl-v52-plus-modal-fix-js">
+(function(){
+  'use strict';
+  const PATCH='v3.52-plus-popups-mobile-apk-compact-x-menuhide';
+  const $=id=>document.getElementById(id);
+  const modalIds=['modalSessao','modalNota','modalNovoLivro','modalLivro','modalRoleta','modalExcluir','modalExcluirSessao','modalEditarSessao','modalTesteIsbndb','modalTesteOpenLibrary'];
+  const mainTypes=['sessao','nota','novoLivro','livro','roleta','excluir','excluirSessao','editarSessao','testeIsbndb','testeOpenLibrary'];
+  function modalId(tipo){return 'modal'+String(tipo||'').charAt(0).toUpperCase()+String(tipo||'').slice(1);}
+  function tipoFromId(id){return String(id||'').replace(/^modal/,'').replace(/^./,c=>c.toLowerCase());}
+  function isSmall(){return matchMedia('(max-width:899px)').matches || matchMedia('(pointer:coarse)').matches;}
+  function closeFab(){
+    const fm=$('fabMenu'); if(fm) fm.style.display='none';
+    const fb=$('fabBtn'); if(fb) fb.textContent='＋';
+    try{fabOpen=false;}catch(e){}
+    try{window.fabOpen=false;}catch(e){}
+  }
+  function closeTopMenu(){
+    try{document.body.classList.remove('blm-menu-open','bl-v326-menu-open','bl-v42-menu-open');document.documentElement.classList.remove('blm-menu-open','bl-v326-menu-open','bl-v42-menu-open');}catch(e){}
+    ['blMobileMenuPanel','blV40MenuPanel','blV41MenuPanel','blV42MenuPanel'].forEach(id=>{const el=$(id); if(el) el.classList.remove('open');});
+  }
+  function hasOpenModal(){return modalIds.some(id=>$(id)?.classList.contains('open'));}
+  function updateState(){
+    const open=hasOpenModal();
+    document.body.classList.toggle('bl-v52-pwa-modal-open',open);
+    if(open){closeFab(); closeTopMenu(); ensureX();}
+  }
+  function hardClose(ov){ if(!ov)return; ov.classList.remove('open'); updateState(); }
+  function closeModalByTipo(tipo){
+    const ov=$(modalId(tipo));
+    if(!ov) return;
+    ov.classList.remove('open');
+    ['s-msg','n-msg','l-msg','nl-msg','ex-msg','es-msg','isbndb-msg','ol-msg'].forEach(id=>{const el=$(id); if(el){el.className='pwa-msg'; el.textContent='';}});
+    try{ if(tipo==='nota' && typeof limparBuscaSelect==='function') limparBuscaSelect('n'); }catch(e){}
+    try{ if(tipo==='testeIsbndb'){ const b=$('isbndb-busca'), r=$('isbndb-resultado'); if(b)b.value=''; if(r)r.style.display='none'; } }catch(e){}
+    try{ if(tipo==='testeOpenLibrary'){ const b=$('ol-busca'), r=$('ol-resultado'); if(b)b.value=''; if(r)r.style.display='none'; } }catch(e){}
+    updateState();
+  }
+  function ensureX(){
+    modalIds.forEach(id=>{
+      const ov=$(id), modal=ov?.querySelector?.('.pwa-modal'); if(!ov||!modal) return;
+      modal.querySelectorAll(':scope > .bl-v48-modal-x,:scope > .bl-v50-apk-x').forEach(x=>{x.style.display='none';});
+      let x=modal.querySelector(':scope > .bl-v52-modal-x');
+      if(!x){x=document.createElement('button'); x.type='button'; x.className='bl-v52-modal-x'; x.setAttribute('aria-label','Fechar'); x.textContent='×'; modal.insertBefore(x,modal.firstChild);}
+      x.onclick=function(ev){ev.preventDefault();ev.stopPropagation(); closeModalByTipo(tipoFromId(ov.id)); return false;};
+    });
+  }
+  function openModalClean(tipo){
+    closeFab(); closeTopMenu();
+    const ov=$(modalId(tipo));
+    if(!ov) return;
+    ov.classList.add('open');
+    const modal=ov.querySelector('.pwa-modal'); if(modal) modal.scrollTop=0;
+    if(tipo==='sessao'){
+      const d=$('s-data'); if(d&&!d.value) d.value=new Date().toISOString().slice(0,10);
+      try{ if(typeof carregarLivros==='function') carregarLivros(); }catch(e){}
+    }
+    if(tipo==='nota'||tipo==='livro'||tipo==='excluir'){
+      try{ if(typeof carregarLivros==='function') carregarLivros(); }catch(e){}
+    }
+    if(tipo==='roleta'){
+      try{ if(typeof setModoRoleta==='function') setModoRoleta('meta'); }catch(e){}
+    }
+    if(tipo==='excluirSessao'){
+      const f=$('es-filtro'); if(f) f.value='';
+      try{ if(typeof renderSessoesExcluir==='function') renderSessoesExcluir(); }catch(e){}
+    }
+    ensureX(); updateState();
+    setTimeout(()=>{ensureX();updateState();},40);
+  }
+  function installCleanAPI(){
+    window.abrirModal=function(tipo){openModalClean(tipo);};
+    window.fecharModal=function(tipo){closeModalByTipo(tipo);};
+    window.toggleFabMenu=function(){
+      const fm=$('fabMenu'), fb=$('fabBtn');
+      const isOpen=fm && getComputedStyle(fm).display!=='none';
+      if(fm) fm.style.display=isOpen?'none':'flex';
+      if(fb) fb.textContent=isOpen?'＋':'✕';
+      try{fabOpen=!isOpen;}catch(e){}
+      return !isOpen;
+    };
+    try{abrirModal=window.abrirModal;fecharModal=window.fecharModal;toggleFabMenu=window.toggleFabMenu;}catch(e){}
+  }
+  function boot(){
+    ensureX(); installCleanAPI(); updateState();
+    document.addEventListener('click',function(){setTimeout(updateState,20);},{capture:true});
+    document.addEventListener('keydown',function(ev){if(ev.key==='Escape'){modalIds.forEach(id=>{const ov=$(id); if(ov?.classList.contains('open')) hardClose(ov);});}},true);
+    const nav=$('mobile-nav'); if(nav){nav.style.setProperty('display','none','important');nav.style.setProperty('visibility','hidden','important');nav.style.setProperty('height','0','important');}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  setTimeout(boot,500); setTimeout(boot,1800);
+  window.blMobileDebug=function(){
+    return {
+      patchV52:PATCH,
+      openModalsV52:modalIds.filter(id=>$(id)?.classList.contains('open')),
+      modalXCountV52:document.querySelectorAll('.bl-v52-modal-x').length,
+      bodyModalOpenV52:document.body.classList.contains('bl-v52-pwa-modal-open'),
+      fabMenuDisplayV52:$('fabMenu')?getComputedStyle($('fabMenu')).display:null,
+      topMenuFabDisplayV52:$('blMobileMenuFab')?getComputedStyle($('blMobileMenuFab')).display:null,
+      mobileNavDisplayV52:$('mobile-nav')?getComputedStyle($('mobile-nav')).display:null
+    };
+  };
+  console.log('[BookLegacy Mobile]',PATCH);
+})();
+</script>
+</body>
+</html>
