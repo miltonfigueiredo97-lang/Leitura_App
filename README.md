@@ -1,11 +1,12 @@
-# BookLegacy V3.42
+# BookLegacy V3.43
 
-Patch focado em limpeza de menu/comunidade, sessão correta no feed, carregamento do desktop e criação de novas metas.
+Correção focada em Comunidade, menu e meta:
 
-- Corrige menu mobile/APK com um único X de fechamento.
-- Esconde menus antigos antes do app carregar para evitar vazamento visual no desktop.
-- Remove duplicidade de Comunidade no topo/menu.
-- Recria Comunidade por um único render V3.42.
-- Usa fonte canônica de sessões e limite de página atual para reduzir sessões erradas no feed.
-- Corrige primeira renderização dos cards Lendo reconstruindo os buckets por status.
-- Adiciona criação de nova meta pela engrenagem: nome da meta + ano base.
+- Comunidade passa a calcular sessões por fonte canônica e acumulado real de páginas lidas.
+- Total do livro não é mais lido do campo `paginas` da sessão, evitando erros como “32 de 24”.
+- Menu mobile/APK com apenas um X pequeno no canto direito.
+- Topo desktop estabilizado para evitar botões Comunidade duplicados/piscando.
+- Comunidade renderizada por página própria V3.43.
+- Meta personalizada agora pode ser excluída.
+
+Não altera heatmap, conquistas, modo batalha visual, gráfico de gêneros ou layout geral.
