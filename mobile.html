@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.43">
+<meta name="booklegacy-version" content="v3.47">
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
@@ -13778,441 +13778,211 @@ body.bl-v40-loading #app{display:none!important;}
     #blV42MenuPanel .blv42-head{top:calc(env(safe-area-inset-top, 0px) + 28px)!important;right:12px!important;}
   }
 </style>
-<script id="blV44Script">
-(function(){
-  const PATCH='v3.44-menu-position-remote-meta-delete';
-  const KEY='blCustomMetasV42';
-  const DOC='customMetas';
-  const $=id=>document.getElementById(id);
-  const norm=s=>String(s||'').trim();
-  const valid=m=>m&&norm(m.label)&&/^20\d{2}$/.test(String(m.year||''));
-  const uniq=arr=>{const map=new Map();(arr||[]).filter(valid).forEach(m=>{const label=norm(m.label),year=String(m.year);map.set(label.toLowerCase(),{label,year,createdAt:m.createdAt||new Date().toISOString(),updatedAt:m.updatedAt||m.createdAt||new Date().toISOString()});});return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label)));};
-  function local(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')||[]}catch(e){return []}}
-  function setLocal(items){try{localStorage.setItem(KEY,JSON.stringify(uniq(items)));}catch(e){}}
-  function uid(){return window.BL?.auth?.currentUser?.uid||null}
-  function db(){return window.BL?.db||null}
-  async function remoteGet(){const u=uid(),d=db();if(!u||!d)return {exists:false,items:null};try{const snap=await d.collection('users').doc(u).collection('settings').doc(DOC).get();if(!snap.exists)return {exists:false,items:null};const data=snap.data()||{};return {exists:true,items:uniq(data.items||[]),updatedAt:data.updatedAt||''};}catch(e){console.warn('[BookLegacy]',PATCH,'remote get meta',e);return {exists:false,items:null,error:e};}}
-  async function remoteSet(items){const u=uid(),d=db();if(!u||!d)return false;try{await d.collection('users').doc(u).collection('settings').doc(DOC).set({items:uniq(items),updatedAt:new Date().toISOString(),source:PATCH},{merge:true});return true;}catch(e){console.warn('[BookLegacy]',PATCH,'remote set meta',e);return false;}}
-  function ensureOptions(items){items=uniq(items||local());setLocal(items);const sel=$('selMetaAno');if(!sel)return;const existing=[...sel.options].map(o=>o.value);items.forEach(m=>{let opt=[...sel.options].find(o=>o.value===m.label);if(!opt){opt=document.createElement('option');opt.value=m.label;opt.textContent=m.label;opt.dataset.customMeta='1';opt.dataset.year=m.year;sel.appendChild(opt);}else{opt.textContent=m.label;opt.dataset.customMeta='1';opt.dataset.year=m.year;}});[...sel.options].forEach(o=>{if(o.dataset.customMeta==='1'&&!items.some(m=>m.label===o.value))o.remove();});}
-  async function syncMetas(){const r=await remoteGet();let items;if(r.exists){items=uniq(r.items||[]);setLocal(items);}else{items=uniq(local());if(items.length)remoteSet(items);}ensureOptions(items);return items;}
-  async function saveMetas(items){items=uniq(items);setLocal(items);ensureOptions(items);await remoteSet(items);return items;}
-  window.blSyncCustomMetasV44=syncMetas;
-  window.blSaveCustomMetasV44=saveMetas;
-  function selectedCustom(){const sel=$('selMetaAno');if(!sel)return null;const label=sel.value;const item=local().find(m=>m.label===label);return item||null;}
-  window.blDeleteCurrentMetaV43=async function(){return window.blDeleteCurrentMetaV44();};
-  window.blDeleteCurrentMetaV44=async function(){
-    const sel=$('selMetaAno');const item=selectedCustom();
-    if(!sel||!item){alert('Essa meta padrão não pode ser excluída por aqui.');return;}
-    if(!confirm('Excluir a meta "'+item.label+'"?'))return;
-    const next=local().filter(m=>m.label!==item.label);
-    await saveMetas(next);
-    [...sel.options].forEach(o=>{if(o.value===item.label)o.remove();});
-    const fallback=[...sel.options].find(o=>!o.dataset.customMeta)||sel.options[sel.options.length-1];
-    if(fallback)sel.value=fallback.value;
-    try{window.buildMeta&&window.buildMeta();}catch(e){}
-    // Importante: não reabre a engrenagem/gerenciador depois de excluir.
-    const overlays=['gmOverlay','modalMeta','blV42MetaOverlay'];
-    overlays.forEach(id=>{const el=$(id);if(el){el.classList.remove('open','show','active');el.style.display='none';}});
-  };
-  function patchDeleteButtons(){
-    ['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b&&!b.__bl_v44){b.__bl_v44=true;b.onclick=e=>{e.preventDefault();e.stopPropagation();window.blDeleteCurrentMetaV44();};}});
-  }
-  function patchCreateSave(){
-    const save=$('blV42MetaSave');
-    if(save&&!save.__bl_v44){
-      save.__bl_v44=true;
-      save.addEventListener('click',async function(ev){
-        // roda depois do handler antigo salvar no localStorage; então sincroniza remoto e não força abrir engrenagem.
-        setTimeout(async()=>{await syncMetas();const ov=$('blV42MetaOverlay');if(ov){ov.classList.remove('open','show','active');ov.style.display='none';}},120);
-      },true);
-    }
-  }
-  function fixMenuPosition(){
-    const fab=$('blV42MenuFab');if(fab){fab.style.setProperty('top','calc(env(safe-area-inset-top, 0px) + 28px)','important');fab.style.setProperty('right','14px','important');}
-    const close=document.querySelector('#blV42MenuPanel .blv42-close');if(close){close.textContent='×';close.setAttribute('aria-label','Fechar menu');}
-  }
-  function boot(){fixMenuPosition();patchDeleteButtons();patchCreateSave();ensureOptions(local());syncMetas();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setTimeout(boot,800);setTimeout(boot,2500);
-  setInterval(()=>{try{fixMenuPosition();patchDeleteButtons();patchCreateSave();ensureOptions(local());}catch(e){}},2500);
-  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncMetas,600));}catch(e){}
-  window.addEventListener('storage',e=>{if(e.key===KEY)ensureOptions(local());});
-  const oldC=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV44:PATCH,customMetasV44:local(),selectedMetaV44:$('selMetaAno')?.value||'',menuFabTopV44:$('blV42MenuFab')?.style.top||'',menuCloseV44:!!document.querySelector('#blV42MenuPanel .blv42-close')});};
-  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV44:PATCH,menuFabTopV44:$('blV42MenuFab')?.style.top||''});};
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
 <!-- BookLegacy V3.45 — metas personalizadas sincronizadas por base e exclusão sem falso padrão -->
-<style id="blV45Style">
-  #blV43DelMetaBtn,#blV43GmDelMetaBtn{cursor:pointer!important;}
-</style>
-<script id="blV45Script">
-(function(){
-  const PATCH='v3.45-custom-meta-remote-source-delete-fix';
-  const KEY='blCustomMetasV42';
-  const DOC='customMetas';
-  const $=id=>document.getElementById(id);
-  const norm=s=>String(s||'').trim();
-  const lower=s=>norm(s).toLowerCase();
-  const now=()=>new Date().toISOString();
-  function isYear(v){return /^20\d{2}$/.test(norm(v));}
-  function inferYear(label,opt){
-    const dy=norm(opt?.dataset?.year);
-    if(isYear(dy))return dy;
-    const m=norm(label).match(/20\d{2}/);
-    return m?m[0]:String(new Date().getFullYear());
-  }
-  function isStandardMeta(label,opt){
-    const v=norm(label);
-    if(!v)return true;
-    if(opt?.dataset?.customMeta==='1'||opt?.dataset?.blCustomMeta==='1')return false;
-    if(isYear(v))return true;
-    const k=lower(v);
-    return ['todos','todas','geral','atual','meta atual','sem meta','ainda não definido','ainda nao definido'].includes(k);
-  }
-  function cleanItem(m){
-    if(!m)return null;
-    const label=norm(m.label||m.nome||m.name||m.value);
-    if(!label)return null;
-    const year=String(m.year||m.ano||m.baseYear||inferYear(label));
-    return {id:m.id||('meta_'+label.toLowerCase().replace(/[^a-z0-9]+/g,'_')),label,year,custom:true,createdAt:m.createdAt||now(),updatedAt:m.updatedAt||now(),source:m.source||PATCH};
-  }
-  function uniq(arr){
-    const map=new Map();
-    (arr||[]).map(cleanItem).filter(Boolean).forEach(m=>map.set(lower(m.label),m));
-    return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label),'pt-BR'));
-  }
-  function local(){try{return uniq(JSON.parse(localStorage.getItem(KEY)||'[]')||[])}catch(e){return []}}
-  function setLocal(items){try{localStorage.setItem(KEY,JSON.stringify(uniq(items)));}catch(e){}}
-  function uid(){return window.BL?.auth?.currentUser?.uid||null}
-  function db(){return window.BL?.db||null}
-  async function remoteGet(){
-    const u=uid(),d=db();
-    if(!u||!d)return {available:false,exists:false,items:null};
-    try{
-      const snap=await d.collection('users').doc(u).collection('settings').doc(DOC).get();
-      if(!snap.exists)return {available:true,exists:false,items:[]};
-      const data=snap.data()||{};
-      return {available:true,exists:true,items:uniq(data.items||[]),updatedAt:data.updatedAt||''};
-    }catch(e){console.warn('[BookLegacy]',PATCH,'remote get',e);return {available:false,exists:false,items:null,error:e};}
-  }
-  async function remoteSet(items){
-    const u=uid(),d=db();
-    const clean=uniq(items);
-    if(!u||!d)return false;
-    try{
-      await d.collection('users').doc(u).collection('settings').doc(DOC).set({items:clean,updatedAt:now(),source:PATCH},{merge:true});
-      return true;
-    }catch(e){console.warn('[BookLegacy]',PATCH,'remote set',e);return false;}
-  }
-  function applyOptions(items,remoteAuthoritative){
-    const sel=$('selMetaAno');
-    const clean=uniq(items);
-    setLocal(clean);
-    if(!sel)return;
-    const selectedBefore=sel.value;
-    clean.forEach(m=>{
-      let opt=[...sel.options].find(o=>o.value===m.label||o.textContent.trim()===m.label);
-      if(!opt){opt=document.createElement('option');sel.appendChild(opt);}
-      opt.value=m.label;opt.textContent=m.label;opt.dataset.customMeta='1';opt.dataset.blCustomMeta='1';opt.dataset.year=m.year;
-    });
-    const labels=new Set(clean.map(m=>lower(m.label)));
-    [...sel.options].forEach(o=>{
-      const v=norm(o.value||o.textContent);
-      const customLike=!isStandardMeta(v,o);
-      if((o.dataset.customMeta==='1'||o.dataset.blCustomMeta==='1'||customLike) && !labels.has(lower(v))){
-        // Quando a base remota já existe, ela manda: remove opções custom antigas/stale do seletor.
-        if(remoteAuthoritative || o.dataset.customMeta==='1' || o.dataset.blCustomMeta==='1') o.remove();
-      }
-    });
-    if(selectedBefore && [...sel.options].some(o=>o.value===selectedBefore)) sel.value=selectedBefore;
-    else {
-      const fallback=[...sel.options].find(o=>isYear(o.value)) || sel.options[0];
-      if(fallback) sel.value=fallback.value;
-    }
-  }
-  async function syncMetasV45(opts={}){
-    const r=await remoteGet();
-    if(r.available && r.exists){
-      applyOptions(r.items||[],true);
-      return r.items||[];
-    }
-    // Sem documento remoto: mantém local como fallback e cria documento só se houver meta local válida.
-    const items=local();
-    applyOptions(items,false);
-    if(r.available && !r.exists && items.length) await remoteSet(items);
-    return items;
-  }
-  async function saveMetasV45(items){
-    const clean=uniq(items);
-    setLocal(clean);
-    applyOptions(clean,true);
-    await remoteSet(clean);
-    return clean;
-  }
-  window.blSyncCustomMetasV44=syncMetasV45;
-  window.blSyncCustomMetasV45=syncMetasV45;
-  window.blSaveCustomMetasV44=saveMetasV45;
-  window.blSaveCustomMetasV45=saveMetasV45;
-  function selectedMetaInfo(){
-    const sel=$('selMetaAno');
-    if(!sel)return null;
-    const opt=sel.options[sel.selectedIndex];
-    const label=norm(sel.value||opt?.textContent);
-    if(!label)return null;
-    const loc=local().find(m=>lower(m.label)===lower(label));
-    const customByShape=!isStandardMeta(label,opt);
-    const year=inferYear(label,opt);
-    if(loc)return loc;
-    if(customByShape)return {id:'meta_'+lower(label).replace(/[^a-z0-9]+/g,'_'),label,year,custom:true,createdAt:now(),updatedAt:now(),source:'inferred-v45'};
-    return null;
-  }
-  async function deleteCurrentMetaV45(){
-    const sel=$('selMetaAno');
-    const info=selectedMetaInfo();
-    if(!sel||!info){alert('Essa meta é padrão e não pode ser excluída por aqui.');return;}
-    const label=info.label;
-    if(!confirm('Excluir a meta "'+label+'"?'))return;
-    const r=await remoteGet();
-    const base=(r.available && r.exists)?r.items:local();
-    const next=uniq(base).filter(m=>lower(m.label)!==lower(label));
-    setLocal(next);
-    await remoteSet(next); // grava até lista vazia, para apagar nos outros aparelhos
-    [...sel.options].forEach(o=>{const v=norm(o.value||o.textContent);if(lower(v)===lower(label))o.remove();});
-    const fallback=[...sel.options].find(o=>isYear(o.value)) || sel.options[0];
-    if(fallback) sel.value=fallback.value;
-    ['gmOverlay','modalMeta','blV42MetaOverlay','painelGerenciarMeta','painelGerenciarMetaOverlay'].forEach(id=>{const el=$(id);if(el){el.classList.remove('open','show','active');el.style.display='none';}});
-    try{window.buildMeta&&window.buildMeta();}catch(e){}
-    setTimeout(()=>syncMetasV45(),450);
-  }
-  window.blDeleteCurrentMetaV43=deleteCurrentMetaV45;
-  window.blDeleteCurrentMetaV44=deleteCurrentMetaV45;
-  window.blDeleteCurrentMetaV45=deleteCurrentMetaV45;
-  function handleCreateClick(ev){
-    const label=norm($('blV42MetaLabel')?.value);
-    const year=norm($('blV42MetaYear')?.value);
-    if(!label&&!year)return; // deixa o handler antigo validar quando estiver vazio
-    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.();
-    if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.');return false;}
-    (async()=>{
-      const r=await remoteGet();
-      const base=(r.available && r.exists)?r.items:local();
-      const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]);
-      await saveMetasV45(next);
-      const sel=$('selMetaAno'); if(sel) sel.value=label;
-      const ov=$('blV42MetaOverlay'); if(ov){ov.classList.remove('open','show','active');ov.style.display='none';}
-      try{window.buildMeta&&window.buildMeta();}catch(e){}
-    })();
-    return false;
-  }
-  function patchButtons(){
-    ['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b&&!b.__bl_v45){b.__bl_v45=true;b.onclick=e=>{e.preventDefault();e.stopPropagation();deleteCurrentMetaV45();};}});
-    const save=$('blV42MetaSave');
-    if(save&&!save.__bl_v45){save.__bl_v45=true;save.addEventListener('click',handleCreateClick,true);save.onclick=handleCreateClick;}
-  }
-  function boot(){patchButtons();syncMetasV45();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setTimeout(boot,600);setTimeout(boot,1800);setTimeout(boot,4200);
-  setInterval(()=>{try{patchButtons();}catch(e){}},2200);
-  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncMetasV45,700));}catch(e){}
-  window.addEventListener('focus',()=>syncMetasV45());
-  window.addEventListener('storage',e=>{if(e.key===KEY)syncMetasV45();});
-  const oldC=window.blCommunityDebug;window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};const sel=$('selMetaAno');return Object.assign({},prev,{patchV45:PATCH,customMetasV45:local(),selectedMetaV45:sel?.value||'',deleteCurrentMetaV45:typeof window.blDeleteCurrentMetaV45==='function'});};
-  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV45:PATCH,customMetasV45:local()});};
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
-
-
 <!-- BookLegacy V3.46 — metas remotas reais via goals/customMetasRegistry + popups APK compactos -->
-<style id="blV46MetaStyle">
+<!-- BookLegacy V3.46 — APK popups compactos com X fixo e menu escondido -->
+
+
+<!-- BookLegacy V3.47 — metas por registry em library + revert popups V46 -->
+<style id="blV47Style">
+  /* V47: desfaz efeitos do patch de popup V46 que travavam botões do + */
+  body.bl-v46-modal-open{overflow:auto!important;position:static!important;}
+  .bl-v46-modal-x{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+  #fabMenu, #fabMenu *, .fab-menu, .fab-menu *, .pwa-overlay, .pwa-overlay *, .pwa-modal, .pwa-modal *{pointer-events:auto;}
   #blV43DelMetaBtn,#blV43GmDelMetaBtn{cursor:pointer!important;}
 </style>
-<script id="blV46MetaScript">
+<script id="blV47MetaScript">
 (function(){
-  const PATCH='v3.46-meta-goals-registry-sync-final';
+  const PATCH='v3.47-meta-library-registry-sync-revert-popup';
   const KEY='blCustomMetasV42';
-  const REG_DOC='customMetasRegistry';
-  const SETTINGS_DOC='customMetas';
+  const INIT='blCustomMetasV47LibraryRegistryReady';
+  const REG_ID='__booklegacy_custom_metas_registry__';
   const $=id=>document.getElementById(id);
   const norm=s=>String(s||'').trim();
-  const lower=s=>norm(s).toLowerCase();
+  const low=s=>norm(s).toLowerCase();
   const now=()=>new Date().toISOString();
   const isYear=v=>/^20\d{2}$/.test(norm(v));
-  const slug=s=>lower(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'meta';
-  function db(){return window.BL?.db || null;}
-  function uid(){return window.BL?.auth?.currentUser?.uid || null;}
+  const slug=s=>low(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'meta';
+  function db(){return window.BL?.db||null;}
+  function uid(){return window.BL?.auth?.currentUser?.uid||null;}
+  function regRef(){const d=db(),u=uid();return d&&u?d.collection('users').doc(u).collection('library').doc(REG_ID):null;}
   function inferYear(label,opt){const dy=norm(opt?.dataset?.year);if(isYear(dy))return dy;const m=norm(label).match(/20\d{2}/);return m?m[0]:String(new Date().getFullYear());}
-  function standard(label,opt){const v=norm(label); if(!v)return true; if(opt?.dataset?.customMeta==='1'||opt?.dataset?.blCustomMeta==='1'||opt?.dataset?.blV46Meta==='1')return false; if(isYear(v))return true; return ['todos','todas','geral','atual','meta atual','sem meta','ainda não definido','ainda nao definido'].includes(lower(v));}
+  function isDefault(label,opt){const v=norm(label);if(!v)return true;if(opt&&(opt.dataset.customMeta==='1'||opt.dataset.blCustomMeta==='1'||opt.dataset.blV47Meta==='1'))return false;if(isYear(v))return true;return ['todos','todas','geral','atual','meta atual','sem meta','ainda não definido','ainda nao definido'].includes(low(v));}
   function cleanItem(m){
     if(!m)return null;
     const label=norm(m.label||m.nome||m.name||m.value||m.title);
-    if(!label)return null;
+    if(!label||isDefault(label))return null;
     const year=String(m.year||m.ano||m.baseYear||inferYear(label));
     return {id:m.id||('custom_meta_'+slug(label)),label,year,custom:true,createdAt:m.createdAt||now(),updatedAt:m.updatedAt||now(),source:m.source||PATCH};
   }
-  function uniq(arr){const map=new Map();(arr||[]).map(cleanItem).filter(Boolean).forEach(m=>map.set(lower(m.label),m));return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label),'pt-BR'));}
+  function uniq(arr){const map=new Map();(arr||[]).map(cleanItem).filter(Boolean).forEach(m=>map.set(low(m.label),m));return [...map.values()].sort((a,b)=>String(a.year).localeCompare(String(b.year))||String(a.label).localeCompare(String(b.label),'pt-BR'));}
   function local(){try{return uniq(JSON.parse(localStorage.getItem(KEY)||'[]')||[])}catch(e){return []}}
   function setLocal(items){try{localStorage.setItem(KEY,JSON.stringify(uniq(items)));}catch(e){}}
-  function goalsCol(){const u=uid(),d=db();return (u&&d)?d.collection('users').doc(u).collection('goals'):null;}
-  function settingsDoc(){const u=uid(),d=db();return (u&&d)?d.collection('users').doc(u).collection('settings').doc(SETTINGS_DOC):null;}
+  function collectFromSelect(){
+    const sel=$('selMetaAno'); if(!sel)return [];
+    return uniq([...sel.options].map(o=>{
+      const label=norm(o.value||o.textContent);
+      if(isDefault(label,o))return null;
+      return {label,year:inferYear(label,o),custom:true,source:'select-migration-v47'};
+    }));
+  }
+  function stripRegistryFromMemory(){
+    try{ if(Array.isArray(window._livros)) window._livros=window._livros.filter(l=>String(l?.id||l?.docId||l?.bookId||'')!==REG_ID && String(l?.type||'')!=='booklegacy_meta_registry'); }catch(e){}
+    try{ const d=window._dadosD; if(d){ ['livros','library','lendo','pausados','aguardando'].forEach(k=>{ if(Array.isArray(d[k])) d[k]=d[k].filter(l=>String(l?.id||l?.docId||l?.bookId||'')!==REG_ID && String(l?.type||'')!=='booklegacy_meta_registry'); }); } }catch(e){}
+  }
   async function readRegistry(){
-    const col=goalsCol(); if(!col)return {available:false,exists:false,items:null};
+    const ref=regRef(); if(!ref)return {available:false,exists:false,items:null};
     try{
-      const snap=await col.doc(REG_DOC).get();
+      const snap=await ref.get();
       if(!snap.exists)return {available:true,exists:false,items:[]};
       const data=snap.data()||{};
+      if(data.type!=='booklegacy_meta_registry' && data.customMetaRegistry!==true) return {available:true,exists:false,items:[]};
       return {available:true,exists:true,items:uniq(data.items||[]),updatedAt:data.updatedAt||'',raw:data};
-    }catch(e){console.warn('[BookLegacy]',PATCH,'read registry',e);return {available:false,exists:false,items:null,error:e};}
+    }catch(e){console.warn('[BookLegacy]',PATCH,'library registry get',e);return {available:false,exists:false,items:null,error:e};}
   }
   async function writeRegistry(items){
-    const col=goalsCol(); const clean=uniq(items); if(!col)return false;
+    const ref=regRef(); const clean=uniq(items); if(!ref)return false;
     try{
-      await col.doc(REG_DOC).set({customMetaRegistry:true,items:clean,updatedAt:now(),source:PATCH},{merge:true});
-      // mantém o caminho antigo espelhado para impedir patches V44/V45 de reintroduzirem lixo local/stale
-      try{await settingsDoc()?.set({items:clean,updatedAt:now(),source:PATCH,mirroredFrom:'goals/'+REG_DOC},{merge:true});}catch(e){}
+      await ref.set({
+        type:'booklegacy_meta_registry', customMetaRegistry:true, system:true, hidden:true,
+        title:'', bookTitle:'', status:'Sistema', totalPages:0, currentPage:0,
+        items:clean, updatedAt:now(), source:PATCH
+      },{merge:false});
+      localStorage.setItem(INIT,'1');
+      setLocal(clean);
       return true;
-    }catch(e){console.warn('[BookLegacy]',PATCH,'write registry',e);return false;}
+    }catch(e){console.warn('[BookLegacy]',PATCH,'library registry set',e);return false;}
   }
-  function applyOptions(items,authoritative=true){
+  function ensureMetaObject(label,year){
+    if(window._metasPorAno && !window._metasPorAno[label]){
+      window._metasPorAno[label]={total:0,lidos:0,lendo:0,pausados:0,aguardando:0,paginasTotal:0,paginasLidas:0,paginasFaltando:0,mediaDiaria:0,ritmoAtual:0,dataPrevistoAtual:'—',baseYear:year};
+    }
+  }
+  function applyOptions(items, authoritative=true){
+    stripRegistryFromMemory();
     const clean=uniq(items); setLocal(clean);
     const sel=$('selMetaAno'); if(!sel)return clean;
     const before=sel.value;
-    clean.forEach(m=>{
-      let opt=[...sel.options].find(o=>lower(o.value||o.textContent)===lower(m.label));
-      if(!opt){opt=document.createElement('option');sel.appendChild(opt);}
-      opt.value=m.label; opt.textContent=m.label; opt.dataset.customMeta='1'; opt.dataset.blCustomMeta='1'; opt.dataset.blV46Meta='1'; opt.dataset.year=m.year;
-      if(window._metasPorAno && !window._metasPorAno[m.label]) window._metasPorAno[m.label]={total:0,lidos:0,lendo:0,pausados:0,aguardando:0,paginasTotal:0,paginasLidas:0,paginasFaltando:0,mediaDiaria:0,ritmoAtual:0,dataPrevistoAtual:'—'};
-    });
-    const labels=new Set(clean.map(m=>lower(m.label)));
+    const labels=new Set(clean.map(m=>low(m.label)));
+    // remove qualquer custom que não exista no registry autoritativo
     [...sel.options].forEach(o=>{
-      const v=norm(o.value||o.textContent);
-      const looksCustom=(o.dataset.customMeta==='1'||o.dataset.blCustomMeta==='1'||o.dataset.blV46Meta==='1'||!standard(v,o));
-      if(looksCustom && !labels.has(lower(v)) && authoritative) o.remove();
+      const label=norm(o.value||o.textContent);
+      const custom=(o.dataset.customMeta==='1'||o.dataset.blCustomMeta==='1'||o.dataset.blV46Meta==='1'||o.dataset.blV47Meta==='1'||!isDefault(label,o));
+      if(authoritative && custom && !labels.has(low(label))) o.remove();
+    });
+    clean.forEach(m=>{
+      let opt=[...sel.options].find(o=>low(o.value||o.textContent)===low(m.label));
+      if(!opt){opt=document.createElement('option');sel.appendChild(opt);}
+      opt.value=m.label; opt.textContent=m.label;
+      opt.dataset.customMeta='1'; opt.dataset.blCustomMeta='1'; opt.dataset.blV47Meta='1'; opt.dataset.year=m.year;
+      ensureMetaObject(m.label,m.year);
     });
     if(before && [...sel.options].some(o=>o.value===before)) sel.value=before;
     else {const fb=[...sel.options].find(o=>isYear(o.value)) || sel.options[0]; if(fb)sel.value=fb.value;}
     return clean;
   }
-  async function syncV46(opts={}){
+  async function syncV47(opts={}){
+    stripRegistryFromMemory();
     const reg=await readRegistry();
-    if(reg.available && reg.exists){return applyOptions(reg.items,true);}
-    // Primeiro uso da V46: migra uma vez o que existe localmente e cria registro remoto autoritativo.
-    const items=local(); applyOptions(items,false);
-    if(reg.available && !reg.exists){await writeRegistry(items); applyOptions(items,true);}
-    return items;
+    if(reg.available && reg.exists){ return applyOptions(reg.items,true); }
+    if(reg.available && !reg.exists){
+      const initialized=localStorage.getItem(INIT)==='1';
+      const seed=initialized?[]:uniq([...local(),...collectFromSelect()]);
+      applyOptions(seed,!seed.length);
+      const ok=await writeRegistry(seed); // cria registry até vazio, para exclusão persistir
+      if(ok) return applyOptions(seed,true);
+      return seed;
+    }
+    // Sem remoto: não inventa sync falso. Mantém local, mas avisa no debug.
+    return applyOptions(local(),false);
   }
-  async function saveV46(items){const clean=uniq(items);setLocal(clean);applyOptions(clean,true);const ok=await writeRegistry(clean);if(!ok)alert('Não consegui salvar a meta na base. Verifique conexão/login e tente atualizar.');return clean;}
-  function selectedInfo(){
-    const sel=$('selMetaAno'); if(!sel)return null;
-    const opt=sel.options[sel.selectedIndex]; const label=norm(sel.value||opt?.textContent); if(!label)return null;
-    const loc=local().find(m=>lower(m.label)===lower(label)); if(loc)return loc;
-    if(!standard(label,opt))return {id:'custom_meta_'+slug(label),label,year:inferYear(label,opt),custom:true,createdAt:now(),updatedAt:now(),source:'inferred-v46'};
-    return null;
-  }
-  async function createMetaV46(label,year){
-    label=norm(label); year=norm(year);
-    if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.');return false;}
-    const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:local();
-    const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]);
-    await saveV46(next);
-    const sel=$('selMetaAno'); if(sel)sel.value=label;
+  async function saveV47(items){
+    const clean=uniq(items);
+    applyOptions(clean,true);
+    const ok=await writeRegistry(clean);
+    if(!ok){alert('Não consegui salvar a meta na base. Ela não vai sincronizar entre desktop/mobile/APK até o salvamento remoto funcionar.');return false;}
+    applyOptions(clean,true);
     try{window.buildMeta&&window.buildMeta();}catch(e){}
     return true;
   }
-  async function deleteCurrentV46(){
-    const sel=$('selMetaAno'); const info=selectedInfo();
-    if(!sel||!info){alert('Essa meta é padrão e não pode ser excluída por aqui.');return;}
-    const label=info.label;
-    if(!confirm('Excluir a meta "'+label+'"?'))return;
-    const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:local();
-    const next=uniq(base).filter(m=>lower(m.label)!==lower(label));
-    setLocal(next); applyOptions(next,true); await writeRegistry(next); // grava até vazio; vazio também é estado remoto válido
-    [...sel.options].forEach(o=>{if(lower(o.value||o.textContent)===lower(label))o.remove();});
-    const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;
+  function selectedCustom(){
+    const sel=$('selMetaAno'); if(!sel)return null;
+    const opt=sel.options[sel.selectedIndex]; const label=norm(sel.value||opt?.textContent);
+    if(!label || isDefault(label,opt))return null;
+    const existing=local().find(m=>low(m.label)===low(label));
+    return existing || {label,year:inferYear(label,opt),custom:true,source:'selected-v47'};
+  }
+  async function createMeta(label,year){
+    label=norm(label); year=norm(year);
+    if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.');return false;}
+    const reg=await readRegistry();
+    const base=(reg.available&&reg.exists)?reg.items:(reg.available?uniq([...local(),...collectFromSelect()]):local());
+    const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]);
+    const ok=await saveV47(next);
+    if(ok){const sel=$('selMetaAno'); if(sel)sel.value=label;}
+    return ok;
+  }
+  async function deleteCurrent(){
+    const info=selectedCustom(); const sel=$('selMetaAno');
+    if(!info){alert('Essa meta padrão não pode ser excluída por aqui.');return false;}
+    if(!confirm('Excluir a meta "'+info.label+'"?'))return false;
+    const reg=await readRegistry();
+    const base=(reg.available&&reg.exists)?reg.items:uniq([...local(),...collectFromSelect()]);
+    const next=uniq(base).filter(m=>low(m.label)!==low(info.label));
+    const ok=await saveV47(next);
+    if(!ok)return false;
+    if(sel){[...sel.options].forEach(o=>{if(low(o.value||o.textContent)===low(info.label))o.remove();}); const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;}
+    closeMetaPanels();
+    setTimeout(syncV47,250);
+    return true;
+  }
+  function closeMetaPanels(){
     ['gmOverlay','modalMeta','blV42MetaOverlay','blV42NewMetaOverlay','painelGerenciarMeta','painelGerenciarMetaOverlay'].forEach(id=>{const el=$(id);if(el){el.classList.remove('open','show','active');el.style.display='none';}});
-    try{window.buildMeta&&window.buildMeta();}catch(e){}
-    setTimeout(syncV46,350);
   }
   function handleCreate(ev){
     const label=norm($('blV42MetaLabel')?.value); const year=norm($('blV42MetaYear')?.value);
-    if(!label&&!year)return;
-    ev?.preventDefault?.();ev?.stopPropagation?.();ev?.stopImmediatePropagation?.();
-    createMetaV46(label,year).then(ok=>{if(ok){const ov=$('blV42NewMetaOverlay')||$('blV42MetaOverlay'); if(ov){ov.classList.remove('open','show','active');ov.style.display='none';}}});
+    if(!label && !year)return;
+    ev?.preventDefault?.(); ev?.stopPropagation?.(); ev?.stopImmediatePropagation?.();
+    createMeta(label,year).then(ok=>{if(ok)closeMetaPanels();});
     return false;
   }
   function patchButtons(){
-    ['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();deleteCurrentV46();return false;};b.dataset.blV46='1';}});
-    const save=$('blV42MetaSave'); if(save){save.onclick=handleCreate; if(!save.__bl_v46){save.__bl_v46=true;save.addEventListener('click',handleCreate,true);}}
+    ['blV43DelMetaBtn','blV43GmDelMetaBtn'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();deleteCurrent();return false;};b.dataset.blV47='1';}});
+    const save=$('blV42MetaSave'); if(save){save.onclick=handleCreate; if(!save.__bl_v47){save.__bl_v47=true;save.addEventListener('click',handleCreate,true);}}
   }
-  // Substitui os nomes antigos para qualquer botão antigo chamar a rotina nova.
-  window.blSyncCustomMetasV44=syncV46; window.blSyncCustomMetasV45=syncV46; window.blSyncCustomMetasV46=syncV46;
-  window.blSaveCustomMetasV44=saveV46; window.blSaveCustomMetasV45=saveV46; window.blSaveCustomMetasV46=saveV46;
-  window.blDeleteCurrentMetaV43=deleteCurrentV46; window.blDeleteCurrentMetaV44=deleteCurrentV46; window.blDeleteCurrentMetaV45=deleteCurrentV46; window.blDeleteCurrentMetaV46=deleteCurrentV46;
-  function boot(){patchButtons();setTimeout(syncV46,50);setTimeout(syncV46,900);setTimeout(syncV46,2600);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  setInterval(()=>{try{patchButtons();}catch(e){}},1500);
-  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncV46,700));}catch(e){}
-  window.addEventListener('focus',()=>setTimeout(syncV46,500));
-  window.addEventListener('pageshow',()=>setTimeout(syncV46,500));
-  const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV46:PATCH,customMetasV46:local(),selectedMetaV46:$('selMetaAno')?.value||'',registrySyncV46:typeof window.blSyncCustomMetasV46==='function'});};
-  const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV46:PATCH,customMetasV46:local(),registrySyncV46:typeof window.blSyncCustomMetasV46==='function'});};
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
-
-<!-- BookLegacy V3.46 — APK popups compactos com X fixo e menu escondido -->
-<style id="blV46PopupStyle">
-  body.bl-v46-modal-open #blV42MenuFab,
-  body.bl-v46-modal-open #blV41MenuFab,
-  body.bl-v46-modal-open #blV40MenuFab,
-  body.bl-v46-modal-open .hamburger,
-  body.bl-v46-modal-open .menu-toggle,
-  body.bl-v46-modal-open [id*="MenuFab"]{display:none!important;visibility:hidden!important;pointer-events:none!important;}
-  body.bl-v46-modal-open .pwa-overlay.open{z-index:99990!important;align-items:center!important;justify-content:center!important;padding:10px!important;box-sizing:border-box!important;overflow:hidden!important;}
-  body.bl-v46-modal-open .pwa-overlay.open .pwa-modal{position:relative!important;width:calc(100vw - 20px)!important;max-width:520px!important;max-height:calc(100dvh - 22px)!important;min-height:0!important;border-radius:16px!important;padding:14px 14px 18px!important;overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;}
-  body.bl-v46-modal-open .pwa-overlay.open .pwa-modal h2{font-size:18px!important;margin:0 42px 12px 0!important;line-height:1.15!important;}
-  body.bl-v46-modal-open .pwa-row{grid-template-columns:1fr!important;gap:8px!important;}
-  body.bl-v46-modal-open .pwa-field{margin-bottom:8px!important;}
-  body.bl-v46-modal-open .pwa-field input,
-  body.bl-v46-modal-open .pwa-field select,
-  body.bl-v46-modal-open .pwa-field textarea{font-size:14px!important;padding:9px 11px!important;}
-  .bl-v46-modal-x{position:sticky!important;top:0!important;float:right!important;margin:0 0 8px 8px!important;width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.18)!important;background:rgba(15,23,42,.96)!important;color:#fff!important;font-size:18px!important;font-weight:900!important;line-height:32px!important;text-align:center!important;display:flex!important;align-items:center!important;justify-content:center!important;z-index:20!important;box-shadow:0 8px 20px rgba(0,0,0,.35)!important;}
-  .bl-v46-modal-x:active{transform:scale(.96)!important;}
-  body.bl-v46-modal-open #fabMenu{display:none!important;}
-</style>
-<script id="blV46PopupScript">
-(function(){
-  const PATCH='v3.46-apk-compact-popups-close-x';
-  const $=id=>document.getElementById(id);
-  function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);}
-  function closeFab(){try{window.fabOpen=false;}catch(e){} const m=$('fabMenu'); if(m)m.style.display='none'; const b=$('fabBtn'); if(b)b.textContent='＋';}
-  function anyOpen(){return !!document.querySelector('.pwa-overlay.open');}
-  function updateBody(){document.body.classList.toggle('bl-v46-modal-open',anyOpen()); if(anyOpen())closeFab();}
-  function modalTypeFromOverlay(ov){const id=ov?.id||''; if(id.startsWith('modal')){const raw=id.slice(5);return raw?raw.charAt(0).toLowerCase()+raw.slice(1):'';} return '';}
-  function addCloseButtons(){
-    document.querySelectorAll('.pwa-overlay').forEach(ov=>{
-      const modal=ov.querySelector('.pwa-modal'); if(!modal)return;
-      modal.style.position='relative';
-      let btn=modal.querySelector(':scope > .bl-v46-modal-x');
-      if(!btn){btn=document.createElement('button');btn.type='button';btn.className='bl-v46-modal-x';btn.textContent='×';btn.setAttribute('aria-label','Fechar');modal.insertBefore(btn,modal.firstChild);}
-      btn.onclick=e=>{e.preventDefault();e.stopPropagation();const tipo=modalTypeFromOverlay(ov);try{if(tipo&&typeof window.fecharModal==='function')window.fecharModal(tipo);else ov.classList.remove('open');}catch(err){ov.classList.remove('open');}closeFab();setTimeout(updateBody,30);return false;};
+  function wrapRefreshes(){
+    ['manualRefresh','blRefreshAndRender','recarregarDados','carregarDados'].forEach(name=>{
+      const fn=window[name];
+      if(typeof fn==='function' && !fn.__bl_v47_meta){
+        const wrapped=async function(){
+          try{await syncV47();}catch(e){}
+          const r=await fn.apply(this,arguments);
+          setTimeout(syncV47,150); setTimeout(syncV47,900);
+          return r;
+        };
+        wrapped.__bl_v47_meta=true; window[name]=wrapped; try{eval(name+'=window[name]')}catch(e){}
+      }
     });
   }
-  function enhance(){addCloseButtons();updateBody();}
-  const oldAbrir=window.abrirModal;
-  if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v46){window.abrirModal=function(tipo){const r=oldAbrir.apply(this,arguments);[20,120,350].forEach(t=>setTimeout(enhance,t));return r;};window.abrirModal.__bl_v46=true;try{abrirModal=window.abrirModal;}catch(e){}}
-  const oldFechar=window.fecharModal;
-  if(typeof oldFechar==='function'&&!oldFechar.__bl_v46){window.fecharModal=function(tipo){const r=oldFechar.apply(this,arguments);closeFab();setTimeout(updateBody,30);return r;};window.fecharModal.__bl_v46=true;try{fecharModal=window.fecharModal;}catch(e){}}
-  document.addEventListener('click',e=>{if(e.target?.closest?.('.pwa-overlay.open'))setTimeout(enhance,20);},true);
-  const mo=new MutationObserver(()=>enhance());
-  if(document.body)mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style'],childList:true});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance,{once:true});else enhance();
-  setTimeout(enhance,800);setInterval(enhance,2200);
-  const oldM=window.blMobileDebug;window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchPopupV46:PATCH,modalOpenV46:anyOpen(),modalCloseButtonsV46:document.querySelectorAll('.bl-v46-modal-x').length});};
+  function restorePlusClicks(){
+    document.body?.classList.remove('bl-v46-modal-open');
+    document.querySelectorAll('.bl-v46-modal-x').forEach(x=>x.remove());
+    const fab=$('fabMenu'); if(fab){fab.style.pointerEvents='auto';}
+    document.querySelectorAll('#fabMenu button,.fab-menu button,.pwa-modal button,.pwa-btn').forEach(b=>{b.style.pointerEvents='auto'; if(b.disabled && !b.dataset.blReallyDisabled) b.disabled=false;});
+  }
+  window.blSyncCustomMetasV44=syncV47; window.blSyncCustomMetasV45=syncV47; window.blSyncCustomMetasV46=syncV47; window.blSyncCustomMetasV47=syncV47;
+  window.blSaveCustomMetasV44=saveV47; window.blSaveCustomMetasV45=saveV47; window.blSaveCustomMetasV46=saveV47; window.blSaveCustomMetasV47=saveV47;
+  window.blDeleteCurrentMetaV43=deleteCurrent; window.blDeleteCurrentMetaV44=deleteCurrent; window.blDeleteCurrentMetaV45=deleteCurrent; window.blDeleteCurrentMetaV46=deleteCurrent; window.blDeleteCurrentMetaV47=deleteCurrent;
+  window.blCreateCustomMetaV47=createMeta;
+  function boot(){patchButtons();wrapRefreshes();restorePlusClicks();setTimeout(syncV47,80);setTimeout(syncV47,800);setTimeout(syncV47,2500);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  setInterval(()=>{try{patchButtons();restorePlusClicks();}catch(e){}},1800);
+  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncV47,500));}catch(e){}
+  window.addEventListener('focus',()=>setTimeout(syncV47,250));
+  window.addEventListener('pageshow',()=>setTimeout(syncV47,250));
+  document.addEventListener('click',e=>{if(e.target?.closest?.('#btn-refresh,[data-a="refresh"]'))setTimeout(syncV47,1200);},true);
+  const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),selectedMetaV47:$('selMetaAno')?.value||'',registryPathV47:'users/{uid}/library/'+REG_ID,registryReadyV47:localStorage.getItem(INIT)==='1'});};
+  const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),plusRestoredV47:true,registryPathV47:'library/'+REG_ID});};
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
