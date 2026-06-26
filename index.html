@@ -12088,5 +12088,222 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+<style id="bl-v356-session-progress-picker-css">
+/* BookLegacy V3.56 — correção cirúrgica de progresso 100% + Registrar Sessão */
+#modalSessao #blV41SessionSelect,
+#modalSessao #blV55SessionSelect,
+#modalSessao .bl-v41-select-hint{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+#modalSessao #s-livro-busca{
+  display:block!important;
+  pointer-events:auto!important;
+  user-select:text!important;
+  -webkit-user-select:text!important;
+  position:relative!important;
+  z-index:5!important;
+  opacity:1!important;
+}
+#modalSessao #s-livro-lista{
+  position:relative!important;
+  z-index:50!important;
+  pointer-events:auto!important;
+}
+#modalSessao #blV56SessionSelect{
+  display:block!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  margin-top:8px!important;
+  padding:11px 12px!important;
+  background:var(--bg3,#21262d)!important;
+  color:var(--text,#e2e8f0)!important;
+  border:1px solid var(--border,#30363d)!important;
+  border-radius:10px!important;
+  font-size:14px!important;
+  line-height:1.3!important;
+  pointer-events:auto!important;
+}
+#modalSessao .bl-v356-session-hint{
+  display:block!important;
+  margin:5px 0 0!important;
+  font-size:12px!important;
+  color:var(--muted,#8892a8)!important;
+}
+</style>
+<script id="bl-v356-session-progress-picker-js">
+(function(){
+  'use strict';
+  const PATCH='v3.56-mobile-session-picker-progress-100-fix';
+  const $=id=>document.getElementById(id);
+  const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const num=v=>{const n=Number(String(v??'').replace(',','.'));return Number.isFinite(n)?n:0;};
+  const titleOf=o=>String(o?.title||o?.livro||o?.bookTitle||o?.nome||'').trim();
+  const authorOf=o=>String(o?.author||o?.autor||'').trim();
+  const totalOf=o=>num(o?.totalPages||o?.totalPag||o?.pagesTotal||o?.paginasTotal||o?.paginasLivro||0);
+  const currentOf=o=>num(o?.currentPage||o?.pagAtual||o?.paginaAtual||o?.current||0);
+  const pagesOf=o=>num(o?.pages||o?.paginas||o?.paginasLidas||0);
+  const minutesOf=o=>num(o?.minutes||o?.minutos||0);
+  const isoDate=v=>{const s=String(v||'').trim(); if(!s)return''; if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10); const m=s.match(/^(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?/); if(m){const d=m[1].padStart(2,'0'),mo=m[2].padStart(2,'0'),y=(m[3]||new Date().getFullYear()).padStart(4,'20'); return `${y}-${mo}-${d}`;} return s.slice(0,10);};
+  const statusOf=o=>String(o?.status||'').toLowerCase();
+  const isRegistry=o=>String(o?.type||'')==='booklegacy_meta_registry'||o?.customMetaRegistry===true||o?.system===true;
+  const isDone=o=>/completo|lido|finalizado|conclu/.test(statusOf(o)) || num(o?.progress)>=0.999 || num(o?.pct)>=0.999 || !!(o?.completionDate||o?.dataConclusao||o?.anoConclusao||o?.completionYear);
+  function sessionKey(s){return s?.id?`id:${s.id}`:[norm(titleOf(s)),isoDate(s?.date||s?.data),pagesOf(s),minutesOf(s),String(s?.bookId||'')].join('|');}
+  function getBundle(){return window.BL?.raw?.users?.[0]||{library:window._livros||[],sessions:window._sessoes||[],label:window.BL?.auth?.currentUser?.displayName||'Usuário'};}
+  function canonicalSessionsV56(sessions){
+    const map=new Map();
+    (sessions||[]).filter(Boolean).forEach(s=>{
+      const title=titleOf(s); if(!title)return;
+      const pages=pagesOf(s); if(pages<=0)return;
+      const k=sessionKey(s); if(map.has(k))return;
+      map.set(k,Object.assign({},s,{title,livro:title,date:isoDate(s.date||s.data),data:isoDate(s.date||s.data),pages,paginas:pages,minutes:minutesOf(s),minutos:minutesOf(s)}));
+    });
+    return [...map.values()].sort((a,b)=>String(a.date||a.data||'').localeCompare(String(b.date||b.data||''))||String(a.createdAt||a.updatedAt||'').localeCompare(String(b.createdAt||b.updatedAt||''))||String(a.id||'').localeCompare(String(b.id||'')));
+  }
+  function sessionsForTitleV56(sessions,title){const t=norm(title);return canonicalSessionsV56(sessions).filter(s=>norm(titleOf(s))===t);}
+  function canonicalLibraryV56(libs,sessions){
+    const groups=new Map();
+    (libs||[]).filter(l=>l&&titleOf(l)&&!isRegistry(l)).forEach(l=>{const k=norm(titleOf(l)); if(!groups.has(k))groups.set(k,[]); groups.get(k).push(l);});
+    const out=[];
+    groups.forEach((arr,k)=>{
+      const sorted=[...arr].sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')));
+      const anyDone=sorted.some(isDone);
+      const withTotal=sorted.map(totalOf).filter(v=>v>0);
+      const total=withTotal.length?Math.max(...withTotal):0;
+      const currents=sorted.map(currentOf).filter(v=>v>0);
+      const sess=sessionsForTitleV56(sessions,titleOf(sorted[0]));
+      const sumPages=sess.reduce((a,s)=>a+pagesOf(s),0);
+      const doneBase=sorted.find(isDone);
+      const base=Object.assign({},doneBase||sorted[0]);
+      let current=0;
+      if(anyDone){
+        current=total || Math.max(...currents, sumPages, 0);
+      }else if(currents.length){
+        const min=Math.min(...currents), max=Math.max(...currents);
+        current=(max>0 && min>0 && max>min*1.35)?min:max;
+        if(sumPages>0 && total && sumPages<=total && Math.abs(sumPages-current)<=2) current=sumPages;
+      }else if(sumPages>0){
+        current=sumPages;
+      }
+      if(total) current=Math.min(total,current);
+      if(anyDone && total) current=total;
+      base.totalPages=base.totalPages||total; base.totalPag=base.totalPag||total; base.pagesTotal=base.pagesTotal||total;
+      base.currentPage=current; base.pagAtual=current; base.paginaAtual=current;
+      base.progress=total?Math.min(1,current/total):(base.progress||base.pct||0); base.pct=base.progress;
+      if(anyDone){base.status='Completo'; base.pendingRating=base.pendingRating!==false?base.pendingRating:false;}
+      else if(current>0 && !/pausad/.test(statusOf(base))) base.status='Lendo';
+      base.__blDuplicateIds=sorted.map(x=>x.id).filter(Boolean);
+      out.push(base);
+    });
+    return out;
+  }
+  function applyCanonicalV56(){
+    try{
+      const raw=window.BL?.raw;
+      if(raw?.users){raw.users.forEach(b=>{b.sessions=canonicalSessionsV56(b.sessions||[]); b.library=canonicalLibraryV56(b.library||[],b.sessions||[]);});}
+      const bundle=getBundle();
+      const sess=canonicalSessionsV56((bundle.sessions&&bundle.sessions.length?bundle.sessions:window._sessoes)||[]);
+      const libs=canonicalLibraryV56((bundle.library&&bundle.library.length?bundle.library:window._livros)||[],sess);
+      window._sessoes=sess; window._livros=libs;
+      if(window._dadosD){
+        window._dadosD.sessoes=canonicalSessionsV56(window._dadosD.sessoes&&window._dadosD.sessoes.length?window._dadosD.sessoes:sess);
+        window._dadosD.livros=canonicalLibraryV56(window._dadosD.livros&&window._dadosD.livros.length?window._dadosD.livros:libs,window._dadosD.sessoes);
+        window._dadosD.lendo=window._dadosD.livros.filter(l=>!/pausad/.test(statusOf(l)) && !isDone(l) && currentOf(l)>0);
+        window._dadosD.pausados=window._dadosD.livros.filter(l=>/pausad/.test(statusOf(l)) && !isDone(l));
+        window._dadosD.aguardando=window._dadosD.livros.filter(l=>!isDone(l)&&currentOf(l)<=0&&!/pausad/.test(statusOf(l)));
+      }
+    }catch(e){console.warn('[BookLegacy]',PATCH,'canonical',e);}
+  }
+  window.blApplyCanonicalDataV56=applyCanonicalV56;
+
+  function removeOldSessionSelects(){
+    document.querySelectorAll('#modalSessao #blV41SessionSelect,#modalSessao #blV55SessionSelect,#modalSessao .bl-v41-select-hint,#modalSessao .bl-v55-select-hint').forEach(el=>{try{el.remove();}catch(e){el.style.display='none';}});
+  }
+  function selectableBooksV56(){
+    applyCanonicalV56();
+    const bundle=getBundle();
+    const books=canonicalLibraryV56((bundle.library&&bundle.library.length?bundle.library:window._livros)||[],canonicalSessionsV56((bundle.sessions&&bundle.sessions.length?bundle.sessions:window._sessoes)||[]));
+    const open=books.filter(l=>!isDone(l));
+    return (open.length?open:books).sort((a,b)=>titleOf(a).localeCompare(titleOf(b),'pt-BR'));
+  }
+  function selectBookV56(l){
+    if(!l)return; const title=titleOf(l); const inp=$('s-livro-busca'),hid=$('s-livro'),sel=$('s-livro-selecionado'),list=$('s-livro-lista');
+    try{ if(typeof window.selecionarLivroSessao==='function') window.selecionarLivroSessao(l); }catch(e){}
+    if(inp){inp.disabled=false;inp.removeAttribute('disabled');inp.value=title;inp.placeholder='Digite para buscar...';}
+    if(hid)hid.value=title;
+    if(sel){sel.textContent='📖 '+title+' ✕'; sel.style.display='block';}
+    if(list)list.style.display='none';
+  }
+  function renderSearchListV56(term){
+    const list=$('s-livro-lista'); if(!list)return;
+    const q=norm(term); const books=selectableBooksV56().filter(l=>!q||norm(titleOf(l)).includes(q)||norm(authorOf(l)).includes(q)).slice(0,45);
+    list.innerHTML='';
+    books.forEach(l=>{
+      const item=document.createElement('div'); const total=totalOf(l),cur=currentOf(l);
+      item.style.cssText='padding:11px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border,#30363d);background:var(--bg3,#21262d);color:var(--text,#e2e8f0);line-height:1.25;';
+      item.textContent=`${/pausad/.test(statusOf(l))?'⏸️':cur>0?'📖':'📋'} ${titleOf(l)}${total?` — ${cur}/${total}`:''}`;
+      item.addEventListener('mousedown',ev=>{ev.preventDefault();selectBookV56(l);});
+      item.addEventListener('touchstart',ev=>{ev.preventDefault();selectBookV56(l);},{passive:false});
+      list.appendChild(item);
+    });
+    list.style.display=books.length?'block':'none';
+  }
+  function rebuildSessionPickerV56(){
+    const inp=$('s-livro-busca'),list=$('s-livro-lista'); if(!inp)return;
+    removeOldSessionSelects();
+    inp.disabled=false; inp.removeAttribute('disabled'); inp.style.pointerEvents='auto'; inp.style.display='block'; inp.autocomplete='off';
+    let sel=$('blV56SessionSelect');
+    if(!sel){
+      sel=document.createElement('select'); sel.id='blV56SessionSelect';
+      const anchor=list||inp; anchor.insertAdjacentElement('afterend',sel);
+      const hint=document.createElement('span'); hint.className='bl-v356-session-hint'; hint.textContent='No APK, use esta lista se a busca não abrir.'; sel.insertAdjacentElement('afterend',hint);
+    }
+    const books=selectableBooksV56();
+    sel.innerHTML='<option value="">Selecionar livro...</option>'+books.map((l,i)=>`<option value="${i}">${esc(titleOf(l))}${totalOf(l)?` — ${currentOf(l)}/${totalOf(l)}`:''}</option>`).join('');
+    sel.onchange=()=>{const l=books[Number(sel.value)]; if(l)selectBookV56(l);};
+    inp.oninput=ev=>renderSearchListV56(ev.target.value||'');
+    inp.onfocus=()=>renderSearchListV56(inp.value||'');
+    inp.onclick=()=>renderSearchListV56(inp.value||'');
+    inp.onblur=()=>setTimeout(()=>{if(list)list.style.display='none';},220);
+  }
+  window.blRebuildSessionPickerV56=rebuildSessionPickerV56;
+  window.filtrarLivrosSessao=function(termo){renderSearchListV56(termo);};
+  try{filtrarLivrosSessao=window.filtrarLivrosSessao;}catch(e){}
+
+  const oldAbrir=window.abrirModal;
+  if(typeof oldAbrir==='function'&&!oldAbrir.__bl_v56){
+    window.abrirModal=function(tipo){const r=oldAbrir.apply(this,arguments); if(tipo==='sessao')setTimeout(()=>{applyCanonicalV56();rebuildSessionPickerV56();},80); return r;};
+    window.abrirModal.__bl_v56=true; try{abrirModal=window.abrirModal;}catch(e){}
+  }
+  const oldAdapt=window.blAdaptFirestoreToLegacy;
+  if(typeof oldAdapt==='function'&&!oldAdapt.__bl_v56){
+    window.blAdaptFirestoreToLegacy=function(raw){const d=oldAdapt.apply(this,arguments); try{applyCanonicalV56();}catch(e){} return d;};
+    window.blAdaptFirestoreToLegacy.__bl_v56=true;
+  }
+  const oldRender=window.renderLendoCards;
+  if(typeof oldRender==='function'&&!oldRender.__bl_v56){
+    window.renderLendoCards=function(){try{applyCanonicalV56();}catch(e){} return oldRender.apply(this,arguments);};
+    window.renderLendoCards.__bl_v56=true; try{renderLendoCards=window.renderLendoCards;}catch(e){}
+  }
+  function boot(){applyCanonicalV56(); removeOldSessionSelects(); if($('modalSessao')?.style.display==='flex'||$('modalSessao')?.classList.contains('active')) rebuildSessionPickerV56();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  [250,900,2200,4200].forEach(t=>setTimeout(boot,t));
+  const oldC=window.blCommunityDebug;
+  window.blCommunityDebug=function(){let prev={};try{prev=typeof oldC==='function'?oldC():{};}catch(e){} return Object.assign({},prev,{patchV56:PATCH,completedPreservedV56:true,sessionSelectV56:!!$('blV56SessionSelect'),oldSessionSelectsRemovedV56:document.querySelectorAll('#blV41SessionSelect,#blV55SessionSelect').length===0,booksOpenV56:selectableBooksV56().slice(0,8).map(l=>({title:titleOf(l),current:currentOf(l),total:totalOf(l),status:l.status}))});};
+  const oldM=window.blMobileDebug;
+  window.blMobileDebug=function(){let prev={};try{prev=typeof oldM==='function'?oldM():{};}catch(e){} return Object.assign({},prev,{patchV56:PATCH,debugDirectV56:true,sessionSelectV56:!!$('blV56SessionSelect')});};
+  console.log('[BookLegacy]',PATCH);
+})();
+</script>
+
 </body>
 </html>
