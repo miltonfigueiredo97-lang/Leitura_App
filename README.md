@@ -1,3 +1,4 @@
-# BookLegacy V3.54
+BookLegacy V3.58
 
-Correção pontual mobile: conflito Firestore long polling/autodetect long polling no console.
+Correção focada em leitura de página atual por soma de sessões, Avaliar Depois, isolamento de conta nova e botão voltar Android.
+Base: V3.57 rollback seguro.
