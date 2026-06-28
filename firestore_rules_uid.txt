@@ -1,0 +1,29 @@
+// Regra mínima recomendada para o BookLegacy multiusuário por UID.
+// O app também bloqueia no front-end, mas a proteção real precisa estar aqui.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+
+      match /{subcollection}/{docId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    match /publicProfiles/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /books/{bookId} {
+      allow read: if request.auth != null;
+      // Se quiser que qualquer usuário consiga criar catálogo global via importação:
+      allow create, update: if request.auth != null;
+      allow delete: if false;
+    }
+  }
+}
