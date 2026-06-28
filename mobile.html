@@ -4545,6 +4545,26 @@ async function blCommitBatchChunks(writeFns, onProgress){
   }
 }
 
+function blCleanFirestorePayload(value){
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === 'number' && !Number.isFinite(value)) return null;
+  if (Array.isArray(value)) {
+    return value
+      .map(blCleanFirestorePayload)
+      .filter(v => v !== undefined);
+  }
+  if (typeof value === 'object') {
+    const out = {};
+    Object.entries(value).forEach(([k,v]) => {
+      const clean = blCleanFirestorePayload(v);
+      if (clean !== undefined) out[k] = clean;
+    });
+    return out;
+  }
+  return value;
+}
+
 async function blImportMigrationData(data){
   const user = window.BL.auth.currentUser;
   if (!user) throw new Error('Entre com Google antes de importar.');
@@ -4553,7 +4573,10 @@ async function blImportMigrationData(data){
   const db = window.BL.db;
   const now = new Date().toISOString();
   const writes = [];
-  const addSet = (ref, payload) => writes.push(batch => batch.set(ref, {...payload, importedAt: payload.importedAt || now}, { merge:true }));
+  const addSet = (ref, payload) => writes.push(batch => {
+    const cleanPayload = blCleanFirestorePayload({...payload, importedAt: payload.importedAt || now});
+    batch.set(ref, cleanPayload, { merge:true });
+  });
 
   (data.books||[]).forEach(b => {
     const id = b.id || b.bookId || ('book_' + blSlug(b.title || b.livro || b.nome));
