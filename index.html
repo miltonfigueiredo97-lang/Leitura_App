@@ -12097,5 +12097,248 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+
+<!-- BOOKLEGACY V3.56 — correção real: ranking por média dos 10 critérios, perfil de amigo, dedupe e avaliar depois -->
+<script id="bl-v56-real-fix-js">
+(function(){
+  'use strict';
+  const PATCH='v3.56-real-fix-ranking-friends-dedupe-pending';
+  window.__BL_PATCH_V56__=PATCH;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const norm=v=>String(v??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  const num=v=>{ if(v===null||v===undefined||v==='') return 0; const n=Number(String(v).replace(',','.').replace(/[^0-9.\-]/g,'')); return Number.isFinite(n)?n:0; };
+  const raw=()=>window.BL?.raw||{};
+  const db=()=>window.BL?.db||null;
+  const authUser=()=>window.BL?.auth?.currentUser||window.firebaseAuth?.currentUser||window.auth?.currentUser||null;
+  const myUid=()=>raw().uid||authUser()?.uid||'';
+  const titleOf=o=>o?.title||o?.livro||o?.bookTitle||o?.nome||'';
+  const authorOf=o=>o?.author||o?.autor||'';
+  const collOf=o=>o?.collection||o?.colecao||'';
+  const genreOf=o=>o?.genre||o?.genero||'';
+  const pagesOf=o=>num(o?.totalPages||o?.totalPag||o?.pages||o?.paginasTotais||o?.total);
+  const currentOf=o=>num(o?.currentPage||o?.pagAtual||o?.paginaAtual||o?.paginaAtualTotal||o?.pagina);
+  const statusNorm=s=>norm(s);
+  const isDone=s=>['completo','lido','concluido','finalizado','done','complete'].includes(statusNorm(s));
+  const isReading=s=>['lendo','reading','em leitura'].includes(statusNorm(s));
+  const isPaused=s=>['pausado','pausada','paused','pause'].includes(statusNorm(s));
+  const isWaiting=s=>['aguardando','pendente','planejado','planejada','to read'].includes(statusNorm(s));
+  const statusWeight=s=>isReading(s)?6:isPaused(s)?5:isDone(s)?4:isWaiting(s)?2:1;
+  const keyTitle=o=>norm(titleOf(o));
+  const keyBook=o=>keyTitle(o)||norm(o?.bookId||o?.id||'');
+  const userLabel=u=>String(u?.label||u?.displayName||u?.name||u?.email||u?.uid||'Usuário');
+  const same=(a,b)=>norm(a)===norm(b);
+  function bookMap(){const m=new Map();(raw().books||[]).forEach(b=>{ if(b?.id)m.set(String(b.id),b); if(titleOf(b))m.set('t:'+keyTitle(b),b); });return m;}
+  function criteriaFromRating(r){
+    const cat=r?.criteria||r?.criterios||r?.categories||{};
+    const get=(keys)=>{ for(const k of keys){ let v=num(r?.[k]); if(v>0)return v; v=num(cat?.[k]); if(v>0)return v; } return 0; };
+    return {
+      'Diálogos':get(['dialogos','dialogue','Diálogos','DIALOGOS']),
+      'Enredo':get(['enredo','plot','Enredo','ENREDO']),
+      'Estilo Visual':get(['estiloVisual','estilo_visual','visualStyle','Estilo Visual','ESTILO VISUAL']),
+      'Finalização':get(['finalizacao','finalizacaoConclusao','finalizacaoConclusão','conclusao','conclusão','Finalização','FINALIZAÇÃO/CONCLUSÃO']),
+      'Imersão':get(['imersao','imersão','imersaoAtmosfera','Imersão','IMERSÃO']),
+      'Impacto Emocional':get(['impactoEmocional','impacto_emocional','Impacto Emocional','IMPACTO EMOCIONAL']),
+      'Originalidade':get(['originalidade','Originalidade','ORIGINALIDADE']),
+      'Personagens':get(['personagens','Personagens','PERSONAGENS']),
+      'Ritmo':get(['ritmo','ritmoProgressao','ritmoProgressão','Ritmo','RITMO/PROGRESSÃO']),
+      'Temas':get(['temas','Temas','TEMAS'])
+    };
+  }
+  function ratingAverage(r){
+    const criterios=criteriaFromRating(r);
+    const vals=Object.values(criterios).filter(v=>v>0);
+    if(vals.length) return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
+    const direct=num(r?.media||r?.notaFinal||r?.notaPonderada||r?.nota||r?.rating||r?.score);
+    return direct>0?Number(Math.max(0,Math.min(10,direct)).toFixed(2)):0;
+  }
+  function ratingYear(r){const y=num(r?.readingYear||r?.anoDeLeitura||r?.anoLeitura||r?.year||r?.ano||r?.completionYear);return y>1900?y:0;}
+  function normalizeRating(r,label){
+    const criterios=criteriaFromRating(r), media=ratingAverage(r), ano=ratingYear(r);
+    return Object.assign({},r,{title:titleOf(r),bookTitle:titleOf(r),livro:titleOf(r),ano,readingYear:ano||'',media,nota:media,notaFinal:media,notaPonderada:media,criterios,criteria:criterios,usuario:label||r?.usuario||r?.legacyUser||''},{
+      dialogos:criterios['Diálogos'],enredo:criterios['Enredo'],estiloVisual:criterios['Estilo Visual'],finalizacao:criterios['Finalização'],imersao:criterios['Imersão'],impactoEmocional:criterios['Impacto Emocional'],originalidade:criterios['Originalidade'],personagens:criterios['Personagens'],ritmo:criterios['Ritmo'],temas:criterios['Temas']
+    });
+  }
+  function legacySession(s,label){return {id:s?.id,bookId:s?.bookId||'',livro:titleOf(s),title:titleOf(s),colecao:collOf(s),data:String(s?.date||s?.data||'').slice(0,10),paginas:num(s?.pages||s?.paginas||s?.pagesRead),minutes:num(s?.minutes||s?.minutos),minutos:num(s?.minutes||s?.minutos),segundos:num(s?.seconds||s?.segundos),ano:num(s?.year||s?.ano||String(s?.date||s?.data||'').slice(0,4)),usuario:label||s?.usuario||''};}
+  function legacyBook(l,label,bm,sessionSums){
+    const b=(l?.bookId&&bm.get(String(l.bookId)))||bm.get('t:'+keyTitle(l))||{};
+    const title=titleOf(l)||titleOf(b); if(!title) return null;
+    const total=pagesOf(l)||pagesOf(b);
+    const key=(label||'')+'::'+norm(title);
+    const sum=sessionSums?.get(key)||0;
+    let cur=currentOf(l);
+    let st=l?.status||'Aguardando';
+    if(sum>0){cur=total?Math.min(total,sum):sum; st=(total&&cur>=total)?'Completo':(isPaused(st)?'Pausado':'Lendo');}
+    else if(total&&isDone(st)) cur=total;
+    else if(total&&cur>total) cur=total;
+    if(total&&cur>=total) st='Completo';
+    else if(cur>0&&!isPaused(st)) st='Lendo';
+    const progress=total?Math.max(0,Math.min(1,cur/total)):num(l?.progress||l?.pct);
+    const imported=String(l?.source||l?.legacyUser||l?.importedAt||'').toLowerCase();
+    const isOldImport=imported.includes('json')||!!l?.legacyUser||!!l?.importedAt;
+    const pendingAllowed=l?.pendingRating===true && l?.dismissCompletedPrompt!==true && l?.pendingRatingSource==='session_completion';
+    return {
+      id:l?.id,bookId:l?.bookId||b?.id||'',livro:title,title,autor:authorOf(l)||authorOf(b),author:authorOf(l)||authorOf(b),isbn:l?.isbn||b?.isbn||'',coverUrl:l?.coverUrl||l?.capa||b?.coverUrl||b?.capa||'',metaAno:l?.targetYear||l?.metaAno||l?.year||'',anoConclusao:l?.completionYear||l?.anoConclusao||'',depende:l?.dependency||l?.depende||'',colecao:collOf(l)||collOf(b),collection:collOf(l)||collOf(b),ordemColecao:num(l?.collectionOrder||l?.ordemColecao),ordem:num(l?.order||l?.ordem),status:st,totalPag:total,totalPages:total,pagAtual:cur,currentPage:cur,pct:progress,progress,usuario:label||l?.usuario||l?.legacyUser||'',genero:genreOf(l)||genreOf(b),genre:genreOf(l)||genreOf(b),pendingRating:pendingAllowed,dismissCompletedPrompt:pendingAllowed?false:true
+    };
+  }
+  function dedupeBooks(list,sessions){
+    const sums=new Map();
+    (sessions||[]).forEach(s=>{const label=s.usuario||'';const t=norm(s.livro||s.title);if(t)sums.set(label+'::'+t,(sums.get(label+'::'+t)||0)+num(s.paginas||s.pages));});
+    const map=new Map();
+    (list||[]).filter(x=>titleOf(x)).forEach(l=>{
+      const label=l.usuario||''; const k=label+'::'+keyTitle(l); const old=map.get(k);
+      if(!old){map.set(k,Object.assign({},l));return;}
+      const merged=Object.assign({},old,l);
+      const total=Math.max(pagesOf(old),pagesOf(l));
+      const sum=sums.get(k)||0;
+      let cur=sum>0?(total?Math.min(total,sum):sum):Math.max(currentOf(old),currentOf(l));
+      let st=sum>0?(total&&cur>=total?'Completo':'Lendo'):(statusWeight(l.status)>statusWeight(old.status)?l.status:old.status);
+      if(total&&cur>=total)st='Completo'; else if(cur>0&&isDone(st))st='Lendo';
+      merged.totalPag=total; merged.totalPages=total; merged.pagAtual=cur; merged.currentPage=cur; merged.pct=total?Math.max(0,Math.min(1,cur/total)):num(merged.pct||merged.progress); merged.progress=merged.pct; merged.status=st;
+      merged.pendingRating=(old.pendingRating===true||l.pendingRating===true)&&old.pendingRatingSource==='session_completion'||l.pendingRatingSource==='session_completion';
+      merged.dismissCompletedPrompt=merged.pendingRating?false:true;
+      map.set(k,merged);
+    });
+    return [...map.values()];
+  }
+  function rebuildDataFromRaw(d){
+    d=d||{}; const bundles=raw().users||[]; if(!bundles.length)return normalizeExistingData(d);
+    const bm=bookMap(); const allSessions=[];
+    bundles.forEach(u=>{const label=userLabel(u);(u.sessions||[]).forEach(s=>{const ls=legacySession(s,label);if(ls.livro&&ls.data)allSessions.push(ls);});});
+    const sumForBooks=new Map(); allSessions.forEach(s=>{const k=(s.usuario||'')+'::'+norm(s.livro);sumForBooks.set(k,(sumForBooks.get(k)||0)+num(s.paginas));});
+    const allBooks=[]; const allRatings=[];
+    bundles.forEach(u=>{const label=userLabel(u);(u.library||[]).forEach(l=>{const lb=legacyBook(l,label,bm,sumForBooks);if(lb)allBooks.push(lb);});(u.ratings||[]).forEach(r=>{const nr=normalizeRating(r,label);if(nr.livro&&nr.media>0)allRatings.push(nr);});});
+    const fixed=dedupeBooks(allBooks,allSessions);
+    d.sessoes=allSessions; d.livros=fixed; d.lendo=fixed.filter(l=>isReading(l.status)); d.pausados=fixed.filter(l=>isPaused(l.status)); d.aguardando=fixed.filter(l=>isWaiting(l.status)); d.notas=allRatings;
+    return d;
+  }
+  function normalizeExistingData(d){
+    if(!d)return d;
+    d.sessoes=(d.sessoes||[]).map(s=>legacySession(s,s.usuario||''));
+    d.notas=(d.notas||[]).map(n=>normalizeRating(n,n.usuario||'')).filter(n=>n.livro&&n.media>0);
+    const fixed=dedupeBooks([...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])],d.sessoes);
+    d.livros=fixed; d.lendo=fixed.filter(l=>isReading(l.status)); d.pausados=fixed.filter(l=>isPaused(l.status)); d.aguardando=fixed.filter(l=>isWaiting(l.status));
+    return d;
+  }
+  window.blNormalizeRealDataV56=function(d){return rebuildDataFromRaw(d||window._dadosD||{});};
+  const prevAdapt=window.blAdaptFirestoreToLegacy;
+  if(typeof prevAdapt==='function'&&!prevAdapt.__blV56){
+    window.blAdaptFirestoreToLegacy=function(){return rebuildDataFromRaw(prevAdapt.apply(this,arguments));};
+    window.blAdaptFirestoreToLegacy.__blV56=true;
+  }
+  const prevRecalc=window.recalcularDados;
+  if(typeof prevRecalc==='function'&&!prevRecalc.__blV56){
+    window.recalcularDados=function(d,sessoes){d=rebuildDataFromRaw(d||window._dadosD||{}); return prevRecalc.call(this,d,sessoes||window._sessoes||[]);};
+    window.recalcularDados.__blV56=true;
+  }
+  function personList(){
+    const map=new Map();
+    (raw().users||[]).forEach(u=>{const key=String(u.uid||userLabel(u));map.set(key,Object.assign({},u,{label:userLabel(u)}));});
+    (raw().friends||[]).forEach(f=>{const key=String(f.uid||userLabel(f));const base=map.get(key)||{};map.set(key,Object.assign({},base,f,{uid:f.uid||base.uid,label:base.label||userLabel(f),displayName:f.displayName||base.displayName||f.name||base.name,email:f.email||base.email,photoURL:f.photoURL||base.photoURL}));});
+    const u=authUser(); if(u){const key=String(u.uid);const base=map.get(key)||(raw().users||[])[0]||{};map.set(key,Object.assign({},base,{uid:u.uid,label:raw().currentLabel||userLabel(base)||u.displayName||u.email,displayName:u.displayName||base.displayName,email:u.email||base.email,photoURL:u.photoURL||base.photoURL}));}
+    return [...map.values()];
+  }
+  function findPerson(input){const n=norm(input);return personList().find(p=>String(p.uid||'')===String(input)||norm(p.uid)===n||norm(p.label)===n||norm(p.displayName)===n||norm(p.name)===n||norm(p.email)===n)||null;}
+  function isMe(p){const u=authUser(); if(p?.uid&&u?.uid&&p.uid===u.uid)return true; const ml=raw().currentLabel||u?.displayName||u?.email||''; return same(p?.label||p?.displayName||p?.email,ml);}
+  function filterByLabel(arr,label){return (arr||[]).filter(x=>same(x.usuario,label));}
+  function closeFriendModal(){['blCommunityModal','blInviteModal','blMigrationModal'].forEach(id=>{$(id)?.remove?.();});document.querySelectorAll('.bl-v332-feed-overlay.open,#blV332CommunityFeed.open').forEach(el=>el.classList.remove('open'));document.body.classList.remove('bl-v332-modal-open','bl-v333-modal-open','bl-v334-modal-open','bl-v335-modal-open','modal-open','pwa-modal-open');document.body.style.overflow='';document.documentElement.style.overflow='';}
+  function showFriendHero(p){
+    let h=$('blFriendHeroV56'); if(!h){h=document.createElement('div');h.id='blFriendHeroV56';h.style.cssText='display:none;margin:14px 28px 0;padding:16px 18px;border:1px solid rgba(78,205,196,.55);border-radius:18px;background:linear-gradient(135deg,rgba(78,205,196,.15),rgba(139,124,248,.17));align-items:center;gap:16px;box-shadow:0 10px 30px rgba(0,0,0,.20);color:#e2e8f0';const app=$('app');if(app&&app.parentNode)app.parentNode.insertBefore(h,app);else document.body.prepend(h);} const photo=p?.photoURL||''; const name=p?.displayName||p?.name||p?.label||p?.email||'Amigo';
+    h.innerHTML=(photo?'<img src="'+esc(photo)+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #4ecdc4;background:#252d40">':'<div style="width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #4ecdc4;background:#252d40;font-size:32px">👤</div>')+'<div style="min-width:0;flex:1"><div style="text-transform:uppercase;letter-spacing:1px;color:#4ecdc4;font-size:12px;font-weight:900">Perfil de amigo</div><div style="font-size:26px;font-weight:900;color:#fff;line-height:1.05">'+esc(name)+'</div>'+(p?.email?'<div style="font-size:13px;color:#9fb1d7;margin-top:4px">'+esc(p.email)+'</div>':'')+'<div style="font-size:13px;color:#b8e8ff;margin-top:8px;font-weight:800">Somente leitura — você pode visualizar, mas não editar dados deste usuário.</div></div><button type="button" onclick="window.blBackToMyProfile&&window.blBackToMyProfile()" style="margin-left:auto;border:0;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 16px;cursor:pointer;white-space:nowrap">↩ Voltar para meus dados</button>';
+    h.style.display='flex'; const h55=$('blFriendHeroV55'); if(h55)h55.style.display='none'; document.body.classList.add('bl-v56-friend'); const fab=$('fabBtn')||document.querySelector('.fab'); if(fab)fab.style.setProperty('display','none','important'); const menu=$('fabMenu'); if(menu)menu.style.setProperty('display','none','important');
+  }
+  function hideFriendHero(){const h=$('blFriendHeroV56');if(h)h.style.display='none';const h55=$('blFriendHeroV55');if(h55)h55.style.display='none';document.body.classList.remove('bl-v56-friend');const fab=$('fabBtn')||document.querySelector('.fab');if(fab)fab.style.removeProperty('display');}
+  function renderPersonView(person){
+    const d=rebuildDataFromRaw(window._dadosD||{}); window._dadosD=d;
+    const label=userLabel(person); window.usuarioAtual=label; window.__BL_VIEW_UID=person?.uid||''; window.__BL_VIEW_LABEL=label;
+    window._sessoes=filterByLabel(d.sessoes,label); window._livros=filterByLabel(d.livros,label);
+    try{window.livrosCache=window._livros.map(l=>({livro:l.livro,autor:l.autor||'',status:l.status,isbn:l.isbn||'',coverUrl:l.coverUrl||'',colecao:l.colecao||'',depende:l.depende||'',ordemColecao:l.ordemColecao||0,totalPag:l.totalPag||0,pagAtual:l.pagAtual||0,metaAno:l.metaAno||'',usuario:label}));}catch(e){}
+    const badge=$('header-badge'); if(badge)badge.textContent=window._livros.length+' livros · '+window._sessoes.length+' sessões';
+    try{prevRecalc&&prevRecalc.call(window,d,window._sessoes);}catch(e){console.warn('[BookLegacy]',PATCH,'renderPersonView/recalc',e);}
+    const dash=$('pageDashboard'), bat=$('pageBatalha'); if(dash)dash.style.display='block'; if(bat)bat.style.display='none';
+    if(isMe(person))hideFriendHero(); else showFriendHero(person);
+  }
+  const prevSet=window.setUsuario;
+  if(typeof prevSet==='function'&&!prevSet.__blV56){
+    window.setUsuario=function(usuario){ if(usuario==='Batalha')return prevSet.apply(this,arguments); const p=findPerson(usuario)||{label:String(usuario||'')}; renderPersonView(p); return false; };
+    window.setUsuario.__blV56=true;
+  }
+  window.blOpenFriendProfile=function(input){const p=findPerson(input)||{label:String(input||'Amigo')}; closeFriendModal(); renderPersonView(p); setTimeout(()=>window.scrollTo(0,0),20);};
+  window.blBackToMyProfile=function(){const u=authUser(); const p=findPerson(u?.uid)||personList().find(isMe)||(raw().users||[])[0]||{label:raw().currentLabel||u?.displayName||u?.email||'Meus dados',uid:u?.uid}; closeFriendModal(); renderPersonView(p); setTimeout(()=>window.scrollTo(0,0),20);};
+  const prevFriendRow=window.blRenderFriendRow;
+  window.blRenderFriendRow=function(f){
+    try{const id=esc(f?.uid||f?.label||f?.displayName||f?.email||''); const label=esc(f?.displayName||f?.name||f?.label||f?.email||'Amigo'); const sub=esc(f?.email||f?.uid||''); const img=f?.photoURL?'<img src="'+esc(f.photoURL)+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;background:#252d40">':'<div style="width:42px;height:42px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center">👤</div>'; return '<div style="display:flex;align-items:center;gap:10px;background:#161b27;border:1px solid #2a3248;border-radius:12px;padding:10px">'+img+'<div style="flex:1;min-width:0"><div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div><div style="font-size:12px;color:#8892a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div></div><button type="button" data-bl-v56-friend="'+id+'" style="border:none;border-radius:9px;background:#4ecdc4;color:#0d1117;font-weight:900;padding:8px 10px;cursor:pointer">Ver perfil</button></div>';}
+    catch(e){return typeof prevFriendRow==='function'?prevFriendRow(f):'';}
+  };
+  document.addEventListener('click',function(ev){const b=ev.target.closest&&ev.target.closest('[data-bl-v56-friend],[data-bl-friend]'); if(!b)return; ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation&&ev.stopImmediatePropagation(); window.blOpenFriendProfile(b.getAttribute('data-bl-v56-friend')||b.getAttribute('data-bl-friend'));},true);
+  async function dismissAllMatching(title){
+    const t=norm(title); const uid=myUid(); const now=new Date().toISOString();
+    try{
+      if(db()&&uid){const snap=await db().collection('users').doc(uid).collection('library').get(); const batch=db().batch(); let count=0; snap.forEach(doc=>{const d=doc.data()||{}; if(!t||norm(titleOf(d))===t){batch.set(doc.ref,{pendingRating:false,dismissCompletedPrompt:true,updatedAt:now},{merge:true}); count++;}}); if(count)await batch.commit();}
+      const local=[raw().users?.[0]?.library,window._livros,window._dadosD?.livros,window._dadosD?.lendo,window._dadosD?.pausados,window._dadosD?.aguardando]; local.forEach(arr=>(arr||[]).forEach(l=>{if(!t||norm(titleOf(l))===t){l.pendingRating=false;l.dismissCompletedPrompt=true;}}));
+      document.querySelectorAll('.bl-v332-complete-card,.bl-v55-complete-card').forEach(card=>{const ttl=card.querySelector('.lendo-book-title')?.textContent||''; if(!t||norm(ttl)===t)card.remove();});
+      rebuildDataFromRaw(window._dadosD||{}); if(window.usuarioAtual){const p=findPerson(window.__BL_VIEW_UID||window.usuarioAtual)||{label:window.usuarioAtual}; renderPersonView(p);}
+    }catch(e){alert('Erro ao marcar para avaliar depois: '+(e.message||e));}
+  }
+  window.blDismissCompletedPrompt=function(libId,title){return dismissAllMatching(title||'');};
+  function pendingAllowed(lib){return !!(lib&&lib.pendingRating===true&&lib.dismissCompletedPrompt!==true&&lib.pendingRatingSource==='session_completion');}
+  function cleanupPendingCards(){
+    const own=(raw().users||[])[0]||{};
+    document.querySelectorAll('.bl-v332-complete-card,.bl-v55-complete-card').forEach(card=>{
+      const title=(card.querySelector('.lendo-book-title')?.textContent||'').trim(); const lib=(own.library||[]).find(l=>norm(titleOf(l))===norm(title));
+      if(!pendingAllowed(lib)){card.remove(); return;}
+      const btn=card.querySelector('button.skip'); if(btn){btn.textContent='Avaliar Depois';btn.onclick=function(ev){ev.preventDefault();ev.stopPropagation();dismissAllMatching(title);};}
+    });
+  }
+  function dedupeVisibleReadingCards(){
+    const seen=new Set(); document.querySelectorAll('#lendo-cards .lendo-card').forEach(card=>{if(card.classList.contains('bl-v332-complete-card')||card.classList.contains('bl-v55-complete-card'))return; const title=norm(card.querySelector('.lendo-book-title')?.textContent||''); if(!title)return; const tag=norm(card.querySelector('.lendo-tag')?.textContent||''); if(!tag.includes('lendo')&&!tag.includes('pausado'))return; if(seen.has(title))card.remove(); else seen.add(title);});
+  }
+  const prevRender=window.renderLendoCards;
+  if(typeof prevRender==='function'&&!prevRender.__blV56){
+    window.renderLendoCards=function(){rebuildDataFromRaw(window._dadosD||{}); const r=prevRender.apply(this,arguments); [0,40,120,300].forEach(ms=>setTimeout(()=>{cleanupPendingCards();dedupeVisibleReadingCards();},ms)); return r;};
+    window.renderLendoCards.__blV56=true;
+  }
+  const prevEnviar=window.enviarSessao;
+  if(typeof prevEnviar==='function'&&!prevEnviar.__blV56){
+    window.enviarSessao=async function(){const res=await prevEnviar.apply(this,arguments); try{const title=$('s-livro')?.value||$('s-livro-busca')?.value||''; const uid=myUid(); if(title&&db()&&uid){const snap=await db().collection('users').doc(uid).collection('library').get(); const batch=db().batch(); let count=0; snap.forEach(doc=>{const d=doc.data()||{}; if(norm(titleOf(d))===norm(title)&&isDone(d.status)){batch.set(doc.ref,{pendingRating:true,pendingRatingSource:'session_completion',ratingPromptCreatedAt:new Date().toISOString(),dismissCompletedPrompt:false,updatedAt:new Date().toISOString()},{merge:true});count++;}}); if(count)await batch.commit();}}catch(e){} return res;};
+    window.enviarSessao.__blV56=true; try{enviarSessao=window.enviarSessao;}catch(e){}
+  }
+
+  async function autoCleanOldPendingPrompts(){
+    const uid=myUid(); if(!db()||!uid)return;
+    try{
+      const snap=await db().collection('users').doc(uid).collection('library').get();
+      const batch=db().batch(); let count=0; const now=new Date().toISOString();
+      snap.forEach(doc=>{
+        const l=doc.data()||{}; const total=pagesOf(l), cur=currentOf(l);
+        const oldPrompt=l.pendingRating===true && l.pendingRatingSource!=='session_completion';
+        const importedOld=(l.legacyUser||l.importedAt||l.source)&&l.pendingRating===true;
+        const completedOld=total&&cur>=total&&isDone(l.status)&&oldPrompt;
+        if(oldPrompt||importedOld||completedOld){batch.set(doc.ref,{pendingRating:false,dismissCompletedPrompt:true,updatedAt:now,oldPromptCleanedV56:true},{merge:true});count++;}
+      });
+      if(count) await batch.commit();
+      if(count) console.log('[BookLegacy]',PATCH,'old pending prompts cleaned:',count);
+    }catch(e){console.warn('[BookLegacy]',PATCH,'autoCleanOldPendingPrompts',e);}
+  }
+
+  function syncButtons(){try{const me=$('btn-user-milton');const u=authUser();if(me){me.style.display='';me.textContent='📖 '+(raw().currentLabel||u?.displayName||u?.email||'Meus dados');me.onclick=e=>{e&&e.preventDefault();window.blBackToMyProfile();};}const friend=$('btn-user-daniel');const others=personList().filter(p=>!isMe(p));if(friend){if(others.length){const f=others[0];friend.style.display='';friend.textContent='📖 '+(f.displayName||f.name||f.label||'Amigo');friend.onclick=e=>{e&&e.preventDefault();window.blOpenFriendProfile(f.uid||f.label);};}else friend.style.display='none';}}catch(e){}}
+  const prevUpdate=window.blUpdateUserButtons;
+  if(typeof prevUpdate==='function'&&!prevUpdate.__blV56){window.blUpdateUserButtons=function(){const r=prevUpdate.apply(this,arguments);setTimeout(syncButtons,0);setTimeout(syncButtons,200);return r;};window.blUpdateUserButtons.__blV56=true;}
+  const prevRefresh=window.blRefreshAndRender;
+  if(typeof prevRefresh==='function'&&!prevRefresh.__blV56){window.blRefreshAndRender=async function(){const r=await prevRefresh.apply(this,arguments);rebuildDataFromRaw(window._dadosD||{});syncButtons();cleanupPendingCards();dedupeVisibleReadingCards();return r;};window.blRefreshAndRender.__blV56=true;}
+  const prevBuildRanking=window.buildRanking;
+  if(typeof prevBuildRanking==='function'&&!prevBuildRanking.__blV56){window.buildRanking=function(){if(Array.isArray(window.NOTES))window.NOTES=window.NOTES.map(n=>normalizeRating(n,n.usuario)).filter(n=>n.media>0);return prevBuildRanking.apply(this,arguments);};window.buildRanking.__blV56=true;}
+  const prevBuildRankingCompleto=window.buildRankingCompleto;
+  if(typeof prevBuildRankingCompleto==='function'&&!prevBuildRankingCompleto.__blV56){window.buildRankingCompleto=function(){if(Array.isArray(window.NOTES))window.NOTES=window.NOTES.map(n=>normalizeRating(n,n.usuario)).filter(n=>n.media>0);return prevBuildRankingCompleto.apply(this,arguments);};window.buildRankingCompleto.__blV56=true;}
+  window.blV56Debug=function(){const d=rebuildDataFromRaw(window._dadosD||{});return {patch:PATCH,usuarioAtual:window.usuarioAtual,viewUid:window.__BL_VIEW_UID,people:personList().map(p=>({uid:p.uid,label:p.label,email:p.email,lib:(p.library||[]).length,sessions:(p.sessions||[]).length,ratings:(p.ratings||[]).length})),ranking:(window.NOTES||[]).slice(0,10).map(n=>({livro:n.livro,media:n.media,criterios:n.criterios})),lendo:(d.lendo||[]).map(l=>({livro:l.livro,usuario:l.usuario,current:l.pagAtual,total:l.totalPag,status:l.status})).slice(0,20)};};
+  function boot(){try{rebuildDataFromRaw(window._dadosD||{});syncButtons();cleanupPendingCards();dedupeVisibleReadingCards();autoCleanOldPendingPrompts();if(window.usuarioAtual){const p=findPerson(window.__BL_VIEW_UID||window.usuarioAtual);if(p)renderPersonView(p);}}catch(e){console.warn('[BookLegacy]',PATCH,e);}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,300),{once:true});else setTimeout(boot,300);
+  setTimeout(boot,1200); setTimeout(boot,2600);
+  console.log('[BookLegacy]',PATCH);
+})();
+
+</script>
+
 </body>
 </html>
