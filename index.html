@@ -5328,19 +5328,9 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // Filtra por usuarioUid quando disponível, senão por label — nunca mistura dois usuários com mesmo nome
-    const list = (typeof users === 'function') ? users() : [];
-    const person = list.find(p => String(p.uid||'') === u) || list.find(p => norm(String(p.label||'')) === norm(u)) || null;
-    const personUid = String(person?.uid || '').trim();
-    const personLabel = String(person?.label || u).trim();
-    const isFirst = list.length > 0 && String(list[0]?.uid||list[0]?.label||'') === u;
-    const filterU = l => {
-      const lUid = String(l.usuarioUid||l.ownerUid||l.userId||'').trim();
-      if(lUid && personUid) return lUid === personUid;  // uid disponível: filtra por uid
-      // fallback por label para dados legados sem uid
-      if(isFirst) return !l.usuario || l.usuario === '' || norm(l.usuario) === norm(personLabel);
-      return norm(l.usuario||'') === norm(personLabel);
-    };
+    const filterU = l => u === 'Milton'
+      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
+      : l.usuario?.toUpperCase() === u.toUpperCase();
     const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
     const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
@@ -8119,7 +8109,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
-  body.bl-v11-battle .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
