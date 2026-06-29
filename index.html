@@ -11430,9 +11430,23 @@ body.bl-v40-loading #app{display:none!important;}
     const groups=new Map();
     // V3.59-fix: group key usa uid (se disponível) em vez de label
     canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[row.uid||norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
-    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:{name:row.label||userName(),photo:row.photo||userPhoto()},title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
+    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:(()=>{
+        // V3.59-fix: busca foto pelo uid do row, não userPhoto() do logado
+        const rowUid=row.uid||'';
+        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rowUid)||{};
+        const me=window.BL?.auth?.currentUser;
+        const isMe=rowUid&&me&&rowUid===me.uid;
+        const photo=row.photo||friend.photoURL||(isMe?me.photoURL:'')||'';
+        return {name:row.label||userName(),photo};
+      })(),title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
     const g=bookMapGlobal();
-    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:r.userPhotoURL||r.photoURL||userPhoto()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
+    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:(()=>{
+        const rUid=String(r?.usuarioUid||r?.ownerUid||r?.userId||'').trim();
+        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rUid)||{};
+        const me=window.BL?.auth?.currentUser;
+        const isMe=rUid&&me&&rUid===me.uid;
+        return r.userPhotoURL||r.photoURL||friend.photoURL||(isMe?me.photoURL:'')||'';
+      })()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
     const seen=new Set();
     return items.sort((a,b)=>(b.sortMs||0)-(a.sortMs||0)).filter(i=>{const k=[i.type,norm(i.profile.name),norm(i.title),i.date,i.pages||i.media,i.current||''].join('|');if(seen.has(k))return false;seen.add(k);return true;}).slice(0,180);
   }
@@ -12534,6 +12548,8 @@ body.bl-v40-loading #app{display:none!important;}
       body.bl-visitor-readonly button[onclick*="excluir"],
       body.bl-visitor-readonly button[onclick*="confirmar"],
       body.bl-visitor-readonly .lendo-meta button,
+      body.bl-visitor-readonly button[onclick*="blV60PauseBook"],
+      body.bl-visitor-readonly button[onclick*="blV60ResumeBook"],
       body.bl-visitor-readonly .bl-v332-complete-card,
       body.bl-visitor-readonly .bl-v55-complete-card,
       body.bl-visitor-readonly .bl-v332-complete-actions{display:none!important;}
@@ -12607,7 +12623,11 @@ body.bl-v40-loading #app{display:none!important;}
     active.forEach(p=>{
       const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
       const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-      const btn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
+      const sessaoBtn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
+      const livroEsc=esc(p.livro).replace(/'/g,'&#39;');
+      const pauseBtn=editable&&lendo?`<button onclick="blV60PauseBook('${livroEsc}')" style="background:rgba(248,140,106,0.15);border:1px solid var(--orange);color:var(--orange);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">⏸️</button>`:'';
+      const resumeBtn=editable&&!lendo?`<button onclick="blV60ResumeBook('${livroEsc}')" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">▶️</button>`:'';
+      const btn=sessaoBtn+pauseBtn+resumeBtn;
       cont.innerHTML+=`
         <div class="lendo-card ${lendo?'lendo':'pausado'}">
           <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
@@ -12630,7 +12650,7 @@ body.bl-v40-loading #app{display:none!important;}
     const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div></div>`;
+      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,"&#39;")}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
     }
     applyPrivacyAndReadonly();
   }
@@ -12721,7 +12741,63 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  // V3.60: Pausar livro — grava status:'Pausado', pauseSource:'app', pausedAt
+  window.blV60PauseBook = async function(livro){
+    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
+    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
+    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
+    const uid=user.uid; const t=norm(livro);
+    try{
+      const snap=await db.collection('users').doc(uid).collection('library').get();
+      const batch=db.batch(); let count=0;
+      snap.docs.forEach(doc=>{
+        const d=doc.data()||{}; const st=String(d?.status||'').toLowerCase();
+        const docTitle=norm(String(d?.title||d?.livro||d?.bookTitle||''));
+        if(docTitle===t && ['lendo','em leitura','reading'].includes(st)){
+          batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
+          count++;
+        }
+      });
+      if(count) await batch.commit();
+      else {
+        const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80);
+        await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),livro,title:livro},{merge:true});
+      }
+      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
+    }catch(e){ console.error('[V3.60] pausar falhou',e); alert('Erro ao pausar: '+e.message); }
+  };
+
+  // V3.60: Voltar a ler — limpa pauseSource, volta status:'Lendo'
+  window.blV60ResumeBook = async function(livro){
+    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
+    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
+    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
+    const uid=user.uid; const t=norm(livro);
+    try{
+      const snap=await db.collection('users').doc(uid).collection('library').get();
+      const batch=db.batch(); let count=0;
+      snap.docs.forEach(doc=>{
+        const d=doc.data()||{};
+        const docTitle=norm(String(d?.title||d?.livro||d?.bookTitle||''));
+        if(docTitle===t && String(d?.status||'').toLowerCase()==='pausado'){
+          batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
+          count++;
+        }
+      });
+      if(count) await batch.commit();
+      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
+    }catch(e){ console.error('[V3.60] retomar falhou',e); alert('Erro ao retomar: '+e.message); }
+  };
+
+  function isBattleMode(){ const bat=$('pageBatalha'); return bat&&bat.style.display!=='none'&&bat.style.display!==''; }
+  function boot(){
+    try{
+      ensureCss();
+      applyPrivacyAndReadonly();
+      // V3.59-fix: não renderizar cards de lendo em modo batalha
+      if($('lendo-cards') && !isBattleMode()) renderLendoCardsV59();
+    }catch(e){console.warn('[BookLegacy]',PATCH,e);}
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
   try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
