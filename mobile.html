@@ -15460,19 +15460,16 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
     const SKIP_IDS = new Set(['fabMenu','blMigrationModal','blFriendsModal','blCommunityModal','blInviteModal','pageBatalha','pageComunidade']);
     document.querySelectorAll('button,a,[role="button"],.fab,.floating-action').forEach(el=>{
       if(SKIP_IDS.has(el.id)) return;
+      if(el.id==='fabMenu'||el.classList.contains('fab-menu')) return; // nunca abrir fabMenu
       if(el.closest?.('#fabMenu')) return;
       if(el.style.display==='none') el.style.removeProperty('display');
     });
   }
   function applyPrivacyAndReadonly(){
     ensureCss();
-    if(isBattleMode()){
-      const lw=document.querySelector('.lendo-wrap');
-      if(lw) lw.style.setProperty('display','none','important');
-      return;
-    }
-    const lw=document.querySelector('.lendo-wrap');
-    if(lw && lw.style.display==='none') lw.style.removeProperty('display');
+    // Em batalha: apenas aplicar classes, não mexer em display de elementos
+    // O setUsuario/applyMode original já controla lendo-wrap e fab
+    if(isBattleMode()) return;
     const visitor=isVisitor();
     document.body.classList.toggle('bl-visitor-readonly',visitor);
     document.body.classList.toggle('bl-readonly-profile',visitor);
@@ -15515,8 +15512,16 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
     const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
     const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
     const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
-    const src=[...(window._dadosD?.lendo||[]),...(window._livros||[])];
-    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Pausado';x.pauseSource='app';x.pausedAt=now;});
+    // Atualiza objeto em memória E move entre arrays lendo↔pausados
+    const d=window._dadosD||{};
+    const allSrc=[...(d.lendo||[]),...(d.pausados||[]),...(window._livros||[])];
+    allSrc.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Pausado';x.pauseSource='app';x.pausedAt=now;});
+    // Move de lendo[] para pausados[]
+    if(d.lendo&&d.pausados){
+      const moving=d.lendo.filter(x=>norm(String(x?.livro||x?.title||''))===t);
+      d.lendo=d.lendo.filter(x=>norm(String(x?.livro||x?.title||''))!==t);
+      d.pausados=[...d.pausados,...moving];
+    }
     try{ window.renderLendoCards?.(); }catch(e){}
     (async()=>{
       try{
@@ -15538,8 +15543,15 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
     const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
     const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
     const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
-    const src=[...(window._dadosD?.pausados||[]),...(window._livros||[])];
-    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Lendo';x.pauseSource=null;x.pausedAt=null;x.resumedAt=now;});
+    const d=window._dadosD||{};
+    const allSrc=[...(d.pausados||[]),...(window._livros||[])];
+    allSrc.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Lendo';x.pauseSource=null;x.pausedAt=null;x.resumedAt=now;});
+    // Move de pausados[] para lendo[]
+    if(d.lendo&&d.pausados){
+      const moving=d.pausados.filter(x=>norm(String(x?.livro||x?.title||''))===t);
+      d.pausados=d.pausados.filter(x=>norm(String(x?.livro||x?.title||''))!==t);
+      d.lendo=[...d.lendo,...moving];
+    }
     try{ window.renderLendoCards?.(); }catch(e){}
     (async()=>{
       try{
