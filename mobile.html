@@ -5385,14 +5385,14 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // V3.60: cada usuário tem seus dados em BL.raw.users[].sessions e .library
-    // Busca direto pelo UID — nunca filtra por nome
-    const rawUsers = window.BL?.raw?.users || [];
-    const person = rawUsers.find(x => String(x.uid||x.id||'').trim() === u) || null;
-    const meUid = String(window.BL?.auth?.currentUser?.uid || '').trim();
+    // V3.60: u é UID. Busca a pessoa via users() que já tem uid limpo.
+    const list = users();
+    const person = list.find(x => String(x.uid||'') === u) || list.find(x => String(x.label||'') === u) || null;
+    const meUid = String(window.firebaseAuth?.currentUser?.uid || window.BL?.auth?.currentUser?.uid || '').trim();
+    const isMe = u === meUid || (person && ownLabels().includes(norm(person.label||'')));
 
-    // Sessões: se é o usuário logado usa d.sessoes, senão usa person.sessions
-    const rawSess = (u === meUid)
+    // Sessões: se é o próprio usuário logado usa d.sessoes, senão usa person.sessions[]
+    const rawSess = isMe
       ? (d.sessoes || [])
       : (person?.sessions || []).map(s => ({
           livro: String(s.title||s.livro||s.bookTitle||''),
@@ -5403,8 +5403,8 @@ function renderBatalha() {
         }));
     const sess = rawSess.filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
 
-    // Livros: se é o usuário logado usa d.livros/lendo/pausados, senão usa person.library
-    const rawLib = (u === meUid)
+    // Livros: se é o próprio usuário logado usa d.livros, senão usa person.library[]
+    const rawLib = isMe
       ? [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])]
       : (person?.library || []).map(l => ({
           livro: String(l.title||l.livro||l.bookTitle||''),
@@ -8270,9 +8270,10 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function fillBattleSelects(){
     const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
+    // V3.60: value=uid para distinguir contas com mesmo nome
+    const opts = list.map(u=>`<option value="${String(u.uid||u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.uid||list[0]?.label||''; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.uid||list[1]?.label||list[0]?.uid||''; }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
