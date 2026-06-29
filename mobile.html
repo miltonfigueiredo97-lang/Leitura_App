@@ -5385,17 +5385,29 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    const filterU = l => u === 'Milton'
-      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
-      : l.usuario?.toUpperCase() === u.toUpperCase();
-    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
-    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
-    const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
-      if (anoFiltro === 'total') return true;
-      // filtra livros concluídos no ano selecionado (verificando sessões)
-      return sess.some(s => s.livro === l.livro);
+    // Busca direto em window.BL.raw.users por UID — nunca por nome
+    const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u) || null;
+
+    const sess = (person?.sessions||[]).map(s=>{
+      const dt=String(s.date||s.data||'').slice(0,10);
+      return {livro:String(s.title||s.livro||''),paginas:Number(s.pages||s.paginas||0),minutos:Number(s.minutes||s.minutos||0),data:dt,ano:dt?new Date(dt+'T12:00:00').getFullYear():0};
+    }).filter(s=>anoFiltro==='total'||String(s.ano)===String(anoFiltro));
+
+    const todos = (person?.library||[]).map(l=>({
+      livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
+      totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
+      colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
+    }));
+
+    const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
+      if(anoFiltro==='total') return true;
+      return sess.some(s=>s.livro===l.livro);
     });
-    const notas = (d.notas||[]).filter(filterU).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+
+    const notas = (person?.ratings||[]).map(r=>{
+      const dt=String(r.date||r.data||'').slice(0,10);
+      return {media:Number(r.rating||r.nota||r.media||0),livro:String(r.title||r.livro||''),ano:dt?new Date(dt+'T12:00:00').getFullYear():Number(r.year||r.ano||0)};
+    }).filter(n=>anoFiltro==='total'||String(n.ano)===String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -8166,6 +8178,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
+  body.bl-v11-battle .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
@@ -8234,11 +8247,13 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return btn;
   }
   function fillBattleSelects(){
-    const list = users();
+    // Usa window.BL.raw.users diretamente — tem uid e dados reais
+    const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
+    if(!list.length) return;
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
+    const opts = list.map(u=>`<option value="${String(u.uid).replaceAll('"','&quot;')}">${String(u.label||u.uid)}</option>`).join('');
+    if(a){ const prev=a.value; a.innerHTML=opts; a.value=[...a.options].some(o=>o.value===prev)?prev:(list[0]?.uid||''); }
+    if(b){ const prev=b.value; b.innerHTML=opts; b.value=[...b.options].some(o=>o.value===prev)?prev:(list[1]?.uid||list[0]?.uid||''); }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
