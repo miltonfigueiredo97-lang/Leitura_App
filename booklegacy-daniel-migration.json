@@ -64556,7 +64556,5 @@
   "createdAtFixedV59": "2026-06-28T05:27:29.019667+00:00",
   "notesFixV59": "Migração sem owner por nome: dados são gravados no UID da conta logada; livro ativo do Daniel marcado como Lendo 307/384; campos de nome legado removidos dos arrays.",
   "createdAtFixedV60": "2026-06-28T05:43:51",
-  "notesFixV60": "V3.60: pausado legado/importado é removido; apenas pause feito pelo app gera status Pausado. Dica de leitura recebe Registrar sessão para o próprio usuário.",
-  "createdAtFixedV61": "2026-06-29T00:00:00-03:00",
-  "notesFixV61": "V3.61: importador seguro sem undefined; pausados legados removidos na importação; renderização Lendo/Pausado/Dica baseada no bundle do UID visualizado."
+  "notesFixV60": "V3.60: pausado legado/importado é removido; apenas pause feito pelo app gera status Pausado. Dica de leitura recebe Registrar sessão para o próprio usuário."
 }

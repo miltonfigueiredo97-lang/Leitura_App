@@ -4500,27 +4500,27 @@ async function blImportMigrationData(data){
 
   (data.books||[]).forEach(b => {
     const id = b.id || b.bookId || ('book_' + blSlug(b.title || b.livro || b.nome));
-    addSet(db.collection('books').doc(id), {...b, updatedAt: now});
+    addSet(db.collection('books').doc(id), {...b, id: undefined, updatedAt: now});
   });
   (data.library||[]).forEach(item => {
     const id = item.id || ('lib_' + blSlug(item.title || item.livro || item.bookId));
-    addSet(db.collection('users').doc(uid).collection('library').doc(id), {...item, updatedAt: now});
+    addSet(db.collection('users').doc(uid).collection('library').doc(id), {...item, id: undefined, updatedAt: now});
   });
   (data.sessions||[]).forEach(s => {
     const id = s.id || ('sess_' + blSlug((s.date||'') + '_' + (s.title||s.livro||'') + '_' + Math.random().toString(36).slice(2,8)));
-    addSet(db.collection('users').doc(uid).collection('sessions').doc(id), {...s, updatedAt: now});
+    addSet(db.collection('users').doc(uid).collection('sessions').doc(id), {...s, id: undefined, updatedAt: now});
   });
   (data.ratings||[]).forEach(r => {
     const id = r.id || ('rat_' + blSlug((r.title||r.livro||'') + '_' + (r.readingYear||r.ano||'')));
-    addSet(db.collection('users').doc(uid).collection('ratings').doc(id), {...r, updatedAt: now});
+    addSet(db.collection('users').doc(uid).collection('ratings').doc(id), {...r, id: undefined, updatedAt: now});
   });
   (data.goals||[]).forEach(g => {
     const id = g.id || String(g.year || g.ano || 'goal_' + Date.now());
-    addSet(db.collection('users').doc(uid).collection('goals').doc(String(id)), {...g, updatedAt: now});
+    addSet(db.collection('users').doc(uid).collection('goals').doc(String(id)), {...g, id: undefined, updatedAt: now});
   });
   (data.collections||[]).forEach(c => {
     const id = c.id || ('col_' + blSlug(c.name || c.nome || c.collection || c.colecao));
-    addSet(db.collection('users').doc(uid).collection('collections').doc(id), {...c, updatedAt: now});
+    addSet(db.collection('users').doc(uid).collection('collections').doc(id), {...c, id: undefined, updatedAt: now});
   });
 
   await blCommitBatchChunks(writes, (done) => blMigrationLog(`Importando... ${done}/${writes.length} registros gravados.`));
@@ -12436,12 +12436,12 @@ body.bl-v40-loading #app{display:none!important;}
     for (const col of ['library','sessions','ratings','goals','collections']) deleted += await deleteCollection('users/' + uid + '/' + col);
     const writes = [];
     const addSet = (ref, payload) => writes.push(batch => batch.set(ref, cleanPayload(Object.assign({}, payload, { importedAt:payload.importedAt || now })), { merge:true }));
-    (data.books || []).forEach(b => { const id = b.id || b.bookId || ('book_' + slug(b.title || b.livro || b.nome)); addSet(db().collection('books').doc(id), Object.assign({}, b, { updatedAt:now })); });
-    (data.library || []).forEach(item => { const id = item.id || ('lib_' + slug(item.title || item.livro || item.bookId)); addSet(db().collection('users').doc(uid).collection('library').doc(id), Object.assign({}, item, {  ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now, pendingRating:false, dismissCompletedPrompt:true })); });
-    (data.sessions || []).forEach(s => { const id = s.id || ('sess_' + slug((s.date || s.data || '') + '_' + (s.title || s.livro || '') + '_' + Math.random().toString(36).slice(2,8))); addSet(db().collection('users').doc(uid).collection('sessions').doc(id), Object.assign({}, s, {  ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
-    (data.ratings || []).forEach(r => { const id = r.id || ('rat_' + slug((r.title || r.livro || '') + '_' + (r.readingYear || r.ano || ''))); addSet(db().collection('users').doc(uid).collection('ratings').doc(id), Object.assign({}, r, {  ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
-    (data.goals || []).forEach(g => { const id = g.id || String(g.year || g.ano || 'goal_' + Date.now()); addSet(db().collection('users').doc(uid).collection('goals').doc(String(id)), Object.assign({}, g, {  ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
-    (data.collections || []).forEach(c => { const id = c.id || ('col_' + slug(c.name || c.nome || c.collection || c.colecao)); addSet(db().collection('users').doc(uid).collection('collections').doc(id), Object.assign({}, c, {  ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
+    (data.books || []).forEach(b => { const id = b.id || b.bookId || ('book_' + slug(b.title || b.livro || b.nome)); addSet(db().collection('books').doc(id), Object.assign({}, b, { id:undefined, updatedAt:now })); });
+    (data.library || []).forEach(item => { const id = item.id || ('lib_' + slug(item.title || item.livro || item.bookId)); addSet(db().collection('users').doc(uid).collection('library').doc(id), Object.assign({}, item, { id:undefined, ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now, pendingRating:false, dismissCompletedPrompt:true })); });
+    (data.sessions || []).forEach(s => { const id = s.id || ('sess_' + slug((s.date || s.data || '') + '_' + (s.title || s.livro || '') + '_' + Math.random().toString(36).slice(2,8))); addSet(db().collection('users').doc(uid).collection('sessions').doc(id), Object.assign({}, s, { id:undefined, ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
+    (data.ratings || []).forEach(r => { const id = r.id || ('rat_' + slug((r.title || r.livro || '') + '_' + (r.readingYear || r.ano || ''))); addSet(db().collection('users').doc(uid).collection('ratings').doc(id), Object.assign({}, r, { id:undefined, ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
+    (data.goals || []).forEach(g => { const id = g.id || String(g.year || g.ano || 'goal_' + Date.now()); addSet(db().collection('users').doc(uid).collection('goals').doc(String(id)), Object.assign({}, g, { id:undefined, ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
+    (data.collections || []).forEach(c => { const id = c.id || ('col_' + slug(c.name || c.nome || c.collection || c.colecao)); addSet(db().collection('users').doc(uid).collection('collections').doc(id), Object.assign({}, c, { id:undefined, ownerUid:uid, usuarioUid:uid, userId:uid, ownerLabel:label, usuario:label, updatedAt:now })); });
     await commitChunks(writes, done => logMigration(`Importando... ${done}/${writes.length} registros gravados. Apagados antes: ${deleted}.`));
     return Object.assign({ totalWrites:writes.length, deletedBeforeImport:deleted }, migrationCounts(data));
   };
@@ -12978,278 +12978,6 @@ body.bl-v40-loading #app{display:none!important;}
   function boot(){ try{ensureCss(); applyBucketsV60(); renderLendoCardsV60(); cleanupLegacyPausedOwnUser();}catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,160),{once:true}); else setTimeout(boot,160);
   [500,1200,2500,5000].forEach(t=>setTimeout(boot,t));
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
-
-<!-- BOOKLEGACY V3.61 — UID real na renderização + pausa real + migração segura sem travar -->
-<script>
-(function(){
-  const PATCH='BOOKLEGACY_V3_61_UID_RENDER_PAUSE_MIGRATION_SAFE';
-  if(window.__BL_V61_UID_RENDER_PAUSE_MIGRATION_SAFE__) return;
-  window.__BL_V61_UID_RENDER_PAUSE_MIGRATION_SAFE__=true;
-
-  const $=id=>document.getElementById(id);
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const raw=()=>window.BL?.raw || {};
-  const db=()=>window.BL?.db || null;
-  const authUser=()=>window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
-  const authUid=()=>authUser()?.uid || '';
-  const viewUid=()=>window.__BL_VIEW_UID || authUid();
-  const canEdit=()=>!!authUid() && authUid()===viewUid();
-  const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
-  const slug=s=>norm(s).replace(/\s+/g,'-').replace(/^-|-$/g,'').slice(0,100)||('item-'+Date.now());
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num=v=>{ if(v===null||v===undefined||v==='') return 0; const n=Number(String(v).replace(',','.')); return Number.isFinite(n)?n:0; };
-  const titleOf=o=>String(o?.title??o?.livro??o?.bookTitle??o?.nome??o?.name??'').trim();
-  const authorOf=o=>String(o?.author??o?.autor??'').trim();
-  const statusOf=o=>String(o?.status??o?.readingStatus??'').trim();
-  const pagesOf=o=>num(o?.totalPages??o?.pages??o?.totalPag??o?.paginasTotal??o?.paginas);
-  const currentOf=o=>num(o?.currentPage??o?.pagAtual??o?.paginaAtual??o?.current??o?.page);
-  const coverOf=o=>String(o?.coverUrl??o?.capa??'').trim();
-  const isbnOf=o=>String(o?.isbn??'').trim();
-  const collectionOf=o=>String(o?.collection??o?.colecao??'').trim();
-  const genreOf=o=>String(o?.genre??o?.genero??'').trim();
-  const statusKey=s=>norm(s).replace(/\s+/g,'');
-  const isDone=s=>['completo','lido','concluido','concluído','finalizado','done','complete'].includes(statusKey(s));
-  const isReading=s=>['lendo','emleitura','reading'].includes(statusKey(s));
-  const isPaused=s=>['pausado','pausada','paused','pause'].includes(statusKey(s));
-  const isWaiting=s=>['aguardando','pendente','planejado','planejada','toread','fila','wishlist'].includes(statusKey(s));
-  const isAppPaused=o=>isPaused(statusOf(o)) && (String(o?.pauseState||'')==='paused' || String(o?.statusSource||'')==='booklegacy_app_pause' || String(o?.pauseSource||'')==='booklegacy_app_pause' || !!o?.pausedAt);
-
-  function ensureCss(){
-    if($('blV61Css')) return;
-    const st=document.createElement('style'); st.id='blV61Css';
-    st.textContent=`
-      body{--bl-v61-on:1}
-      .bl-v61-cover{width:68px;height:96px;border-radius:8px;background:#252d40;object-fit:cover;border:1px solid rgba(255,255,255,.08)}
-      .bl-v61-cover-fallback{width:68px;height:96px;border-radius:8px;background:#252d40;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:30px}
-      .bl-v61-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-      .bl-v61-session-btn{background:var(--purple,#8b7cf8);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-      .bl-v61-pause-btn{border:1px solid rgba(255,255,255,.16);background:#252d40;color:#e2e8f0;width:32px;height:32px;border-radius:999px;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-      .bl-v61-pause-btn:hover,.bl-v61-session-btn:hover{filter:brightness(1.12)}
-      body.bl-v61-visitor .fab, body.bl-v61-visitor .fab-menu, body.bl-v61-visitor #fabBtn, body.bl-v61-visitor #fabMenu,
-      body.bl-v61-visitor [data-bl-v61-pause], body.bl-v61-visitor [data-bl-v61-resume], body.bl-v61-visitor [data-bl-v61-session],
-      body.bl-v61-visitor [onclick*="abrirSessao"], body.bl-v61-visitor [onclick*="abrirModal"], body.bl-v61-visitor [onclick*="salvar"], body.bl-v61-visitor [onclick*="excluir"], body.bl-v61-visitor [onclick*="avaliar"], body.bl-v61-visitor [onclick*="finalizar"], body.bl-v61-visitor [onclick*="import"]{display:none!important;visibility:hidden!important;pointer-events:none!important}
-      #blV61MigrationModal{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:18px;color:#e2e8f0}
-      #blV61MigrationModal .box{width:min(880px,100%);max-height:92vh;overflow:auto;background:#161b27;border:1px solid #2a3248;border-radius:18px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
-      #blV61MigrationModal button{border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:850}
-      #blV61MigrationLog{background:#0d1117;border:1px solid #2a3248;border-radius:14px;padding:14px;color:#8892a8;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap;min-height:84px;line-height:1.45}
-      @media(max-width:800px){#blV61MigrationModal{align-items:flex-start!important;padding:10px!important}#blV61MigrationModal button{width:100%}.bl-v61-actions{justify-content:flex-start}.bl-v61-session-btn{width:auto!important}}
-    `;
-    document.head.appendChild(st);
-  }
-
-  function publicNameFromBundle(b){return b?.displayName || b?.name || b?.label || b?.email?.split('@')[0] || 'Usuário';}
-  function currentBundle(){
-    const users=Array.isArray(raw().users)?raw().users:[];
-    const uid=viewUid();
-    if(uid){
-      const exact=users.find(u=>String(u?.uid||'')===uid);
-      if(exact) return exact;
-    }
-    if(uid && uid===authUid() && users[0]) return users[0];
-    return {uid:uid||'',label:'Perfil',library:[],sessions:[],ratings:[],goals:[],collections:[]};
-  }
-  function bookMap(){ return new Map((raw().books||[]).map(b=>[String(b.id||b.bookId||''),b])); }
-  function enrichLib(l,map=bookMap()){
-    const b=map.get(String(l?.bookId||'')) || {};
-    return {...b,...l,title:titleOf(l)||titleOf(b),author:authorOf(l)||authorOf(b),totalPages:pagesOf(l)||pagesOf(b),coverUrl:coverOf(l)||coverOf(b),isbn:isbnOf(l)||isbnOf(b),collection:collectionOf(l)||collectionOf(b),genre:genreOf(l)||genreOf(b)};
-  }
-  function sessionsForTitle(title,bundle=currentBundle()){
-    const t=norm(title); if(!t) return [];
-    return (bundle.sessions||[]).filter(s=>norm(titleOf(s))===t || (s.bookId && String(s.bookId)===String((bundle.library||[]).find(l=>norm(titleOf(l))===t)?.bookId||'')));
-  }
-  function sessionCurrent(title,bundle=currentBundle()){
-    let max=0,sum=0;
-    sessionsForTitle(title,bundle).forEach(s=>{ const cur=num(s.currentPage??s.paginaAtual??s.pagAtual); const pages=num(s.pages??s.paginas??s.pagesRead); if(cur>max) max=cur; sum+=pages; });
-    return Math.max(max,sum);
-  }
-  function finalStatus(l,bundle=currentBundle()){
-    const st=statusOf(l); const total=pagesOf(l); const cur=Math.max(currentOf(l),sessionCurrent(titleOf(l),bundle));
-    if(isDone(st)||l?.completionDate||l?.completionYear||l?.anoConclusao) return 'Completo';
-    if(total && cur>=total) return 'Completo';
-    if(isAppPaused(l)) return 'Pausado';
-    if(isPaused(st) && !isAppPaused(l)) return cur>0?'Lendo':'Aguardando';
-    if(isReading(st)||cur>0) return 'Lendo';
-    if(isWaiting(st)) return 'Aguardando';
-    return cur>0?'Lendo':'Aguardando';
-  }
-  function collectTop(){
-    const bundle=currentBundle(); const map=bookMap(); const by=new Map();
-    (bundle.library||[]).map(l=>enrichLib(l,map)).forEach(l=>{
-      const t=titleOf(l); if(!t) return;
-      const st=finalStatus(l,bundle); if(st!=='Lendo' && st!=='Pausado') return;
-      const total=pagesOf(l); const cur=Math.max(currentOf(l),sessionCurrent(t,bundle));
-      if(total && cur>=total) return;
-      const score=(st==='Pausado'?100:70)+(cur>0?10:0)+(total>0?5:0)+(isAppPaused(l)?50:0);
-      const key=norm(t); const old=by.get(key);
-      if(!old || score>old.__score) by.set(key,{...l,livro:t,title:t,status:st,pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?cur/total:num(l.progress||l.pct),progress:total?cur/total:num(l.progress||l.pct),autor:authorOf(l),__score:score});
-    });
-    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
-  }
-  function collectWaiting(active){
-    const activeSet=new Set((active||[]).map(a=>norm(a.livro)));
-    const bundle=currentBundle(); const map=bookMap(); const by=new Map();
-    (bundle.library||[]).map(l=>enrichLib(l,map)).forEach(l=>{
-      const t=titleOf(l); if(!t || activeSet.has(norm(t))) return;
-      const st=finalStatus(l,bundle); if(st!=='Aguardando') return;
-      const key=norm(t); if(!by.has(key)) by.set(key,{...l,livro:t,title:t,autor:authorOf(l),totalPag:pagesOf(l),totalPages:pagesOf(l)});
-    });
-    return [...by.values()];
-  }
-  function avgPagesDay(){
-    const bundle=currentBundle(); const by={};
-    (bundle.sessions||[]).forEach(s=>{const d=String(s.date||s.data||'').slice(0,10); const p=num(s.pages??s.paginas??s.pagesRead); if(d&&p)by[d]=(by[d]||0)+p;});
-    const vals=Object.values(by); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:50;
-  }
-  function coverHtml(b,icon){ const url=coverOf(b); return url?`<img class="bl-v61-cover" src="${esc(url)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;bl-v61-cover-fallback&quot;>${icon}</div>'">`:`<div class="bl-v61-cover-fallback">${icon}</div>`; }
-  function sessionBtn(title){ return canEdit()?`<button type="button" class="bl-v61-session-btn" data-bl-v61-session="${esc(title)}">+ Registrar sessão</button>`:''; }
-  function pauseBtn(b){ if(!canEdit()) return ''; const t=esc(b.livro); return b.status==='Pausado'?`<button type="button" class="bl-v61-pause-btn" data-bl-v61-resume="${t}" title="Voltar para lendo">▶️</button>`:`<button type="button" class="bl-v61-pause-btn" data-bl-v61-pause="${t}" title="Pausar livro">⏸️</button>`; }
-  let rendering=false;
-  function renderTop(){
-    ensureCss(); document.body.classList.toggle('bl-v61-visitor',!canEdit());
-    const cont=$('lendo-cards'); if(!cont || rendering) return;
-    rendering=true;
-    try{
-      const active=collectTop(); const avg=avgPagesDay(); cont.innerHTML='';
-      if(!active.length) cont.innerHTML='<div class="lendo-card dica"><div class="lendo-tag">📖 Nenhum livro em andamento</div></div>';
-      active.forEach(p=>{
-        const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal,#4ecdc4)':'var(--orange,#f88c6a)'; const icon=lendo?'📖':'⏸️';
-        const total=pagesOf(p), cur=Math.max(0,currentOf(p)), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-        cont.innerHTML+=`<div class="lendo-card ${lendo?'lendo':'pausado'}"><div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(p,icon)}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(p.livro)}</div><div style="font-size:13px;color:var(--muted,#8892a8);margin-bottom:8px;">${esc(p.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:${cor}">${cur}</span><span class="lendo-stat-lbl">Página atual</span></div><div class="lendo-stat"><span class="lendo-stat-val">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow,#ffd166)">~${dias}</span><span class="lendo-stat-lbl">Dias para acabar</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:${Math.min(pct,100)}%;background:${cor}"></div></div><span class="lendo-pct-label" style="color:${cor}">${pct}%</span></div><div class="lendo-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><span>Faltam: <b>${faltam.toLocaleString('pt-BR')} páginas</b></span><span class="bl-v61-actions">${sessionBtn(p.livro)}${pauseBtn(p)}</span></div></div>`;
-      });
-      const waiting=collectWaiting(active); if(waiting.length){
-        const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-        cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted,#8892a8);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal,#4ecdc4)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow,#ffd166)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal,#4ecdc4)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div><div class="lendo-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><span>Livro ainda não iniciado</span><span class="bl-v61-actions">${sessionBtn(dica.livro)}</span></div></div>`;
-      }
-    } finally { rendering=false; }
-  }
-
-  function updateLocalStatus(title,status,payload={}){
-    const t=norm(title); const b=currentBundle();
-    (b.library||[]).forEach(l=>{ if(norm(titleOf(l))===t){ Object.assign(l,payload,{status}); } });
-  }
-  async function setPause(title,paused){
-    if(!canEdit()) return alert('Modo visitante: você só pode editar os seus próprios dados.');
-    const database=db(); const uid=authUid(); if(!database||!uid) return alert('Faça login para alterar o livro.');
-    const b=currentBundle(); const t=norm(title); const matches=(b.library||[]).filter(l=>norm(titleOf(l))===t);
-    const now=new Date().toISOString(); const status=paused?'Pausado':'Lendo';
-    const payload=paused?{status:'Pausado',pauseState:'paused',statusSource:'booklegacy_app_pause',pauseSource:'booklegacy_app_pause',pausedAt:now,resumedAt:null,updatedAt:now}:{status:'Lendo',pauseState:'reading',statusSource:'booklegacy_app_resume',pauseSource:'booklegacy_app_resume',resumedAt:now,updatedAt:now};
-    const batch=database.batch();
-    (matches.length?matches:[{id:'lib_'+slug(title)}]).forEach(l=>batch.set(database.collection('users').doc(uid).collection('library').doc(String(l.id||('lib_'+slug(title)))),payload,{merge:true}));
-    await batch.commit(); updateLocalStatus(title,status,payload); renderTop();
-  }
-  async function cleanupLegacyPaused(){
-    if(window.__BL_V61_CLEANING__||!canEdit()||!db()) return;
-    const b=currentBundle(); const legacy=(b.library||[]).filter(l=>isPaused(statusOf(l))&&!isAppPaused(l)); if(!legacy.length) return;
-    window.__BL_V61_CLEANING__=true;
-    try{
-      const database=db(), uid=authUid(), now=new Date().toISOString(), batch=database.batch();
-      legacy.forEach(l=>{ const cur=Math.max(currentOf(l),sessionCurrent(titleOf(l),b)); const status=cur>0?'Lendo':'Aguardando'; l.status=status; l.pauseState='legacy_removed'; batch.set(database.collection('users').doc(uid).collection('library').doc(String(l.id||('lib_'+slug(titleOf(l))))),{status,pauseState:'legacy_removed',statusSource:'legacy_pause_removed_v61',legacyPausedClearedAt:now,updatedAt:now},{merge:true}); });
-      await batch.commit(); renderTop();
-    }catch(e){console.warn('[BookLegacy]',PATCH,'limpeza pausado legado falhou',e);} finally{window.__BL_V61_CLEANING__=false;}
-  }
-
-  function cleanForFirestore(v){
-    if(v===undefined) return undefined;
-    if(v===null || typeof v!=='object') return v;
-    if(Array.isArray(v)) return v.map(cleanForFirestore).filter(x=>x!==undefined);
-    const out={};
-    Object.entries(v).forEach(([k,val])=>{
-      if(['ownerUid','usuarioUid','userId','uid','legacyUser','ownerLabel','usuario'].includes(k)) return;
-      const c=cleanForFirestore(val); if(c!==undefined) out[k]=c;
-    });
-    return out;
-  }
-  function normalizeImportedLibrary(l){
-    const x={...l}; const st=statusOf(x); const cur=currentOf(x);
-    if(isPaused(st) && !isAppPaused(x)){
-      x.status=cur>0?'Lendo':'Aguardando'; x.pauseState='legacy_removed'; x.statusSource='legacy_pause_removed_v61_import'; delete x.pausedAt; delete x.pauseSource;
-    }
-    return x;
-  }
-  async function deleteCollection(col,log){
-    let total=0;
-    while(true){
-      const snap=await col.limit(420).get(); if(snap.empty) break;
-      const batch=db().batch(); snap.docs.forEach(d=>batch.delete(d.ref)); await batch.commit(); total+=snap.docs.length; if(log) log(`Limpando dados antigos... ${total}`); await sleep(20);
-    }
-    return total;
-  }
-  async function commitWrites(writeFns,log){
-    let batch=db().batch(), pending=0, done=0;
-    for(const fn of writeFns){ fn(batch); pending++; done++; if(pending>=420){ await batch.commit(); if(log) log(`Importando... ${done}/${writeFns.length}`); await sleep(20); batch=db().batch(); pending=0; } }
-    if(pending){ await batch.commit(); if(log) log(`Importando... ${done}/${writeFns.length}`); }
-  }
-  function counts(d){ const c=k=>Array.isArray(d?.[k])?d[k].length:0; return {books:c('books'),library:c('library'),sessions:c('sessions'),ratings:c('ratings'),goals:c('goals'),collections:c('collections')}; }
-  async function readJsonFile(file){ return JSON.parse(await file.text()); }
-  function validateMigrationData(data){
-    if(!data || typeof data!=='object') throw new Error('JSON inválido.');
-    if(data.format && data.format!=='booklegacy-migration-v1') throw new Error('Formato de migração não reconhecido: '+data.format);
-    ['books','library','sessions','ratings','goals','collections'].forEach(k=>{ if(!Array.isArray(data[k])) data[k]=[]; });
-    return data;
-  }
-  async function importMigrationV61(data,replace,log){
-    const user=authUser(); if(!user) throw new Error('Entre com Google antes de importar.');
-    const database=db(); if(!database) throw new Error('Firebase não carregou.');
-    data=validateMigrationData(data); const uid=user.uid; const userRef=database.collection('users').doc(uid); const now=new Date().toISOString();
-    if(replace){ for(const name of ['library','sessions','ratings','goals','collections']) await deleteCollection(userRef.collection(name),log); }
-    const books=new Map((data.books||[]).map(b=>[String(b.id||b.bookId||''),b])); const writes=[];
-    const add=(col,id,payload)=>writes.push(batch=>batch.set(userRef.collection(col).doc(String(id)),cleanForFirestore({...payload,updatedAt:payload.updatedAt||now,importedAt:payload.importedAt||now}),{merge:true}));
-    (data.library||[]).forEach(l=>{ const meta=books.get(String(l.bookId||''))||{}; const x=normalizeImportedLibrary({...meta,...l}); const id=x.id||('lib_'+slug(titleOf(x)||x.bookId)); add('library',id,x); });
-    (data.sessions||[]).forEach((s,i)=>{ const id=s.id||('sess_'+slug((s.date||s.data||'')+'_'+(titleOf(s)||s.bookId||'')+'_'+i)); add('sessions',id,s); });
-    (data.ratings||[]).forEach((r,i)=>{ const id=r.id||('rat_'+slug((titleOf(r)||r.bookId||'')+'_'+(r.readingYear||r.ano||i))); add('ratings',id,r); });
-    (data.goals||[]).forEach((g,i)=>{ const id=g.id||String(g.year||g.ano||('goal_'+i)); add('goals',id,g); });
-    (data.collections||[]).forEach((c,i)=>{ const id=c.id||('col_'+slug(c.name||c.nome||c.collection||c.colecao||i)); add('collections',id,c); });
-    await commitWrites(writes,log); return {totalWrites:writes.length,...counts(data)};
-  }
-
-  function openMigrationModal(){
-    ensureCss(); if($('blV61MigrationModal')) $('blV61MigrationModal').remove();
-    if(!authUser()) return alert('Entre com Google primeiro.');
-    const modal=document.createElement('div'); modal.id='blV61MigrationModal';
-    modal.innerHTML=`<div class="box"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px"><div><h2 style="margin:0 0 4px">📥 Migração segura</h2><p style="color:#8892a8;margin:0;line-height:1.45">Importa o JSON para a conta Google logada, usando o UID da conta sem mostrar esse ID na tela.</p><p style="margin:8px 0 0;color:#4ecdc4;font-size:12px;font-weight:800">Versão: V3.61 UID real</p></div><button id="blV61MigrationClose" style="border:1px solid #2a3248;background:#1e2535;color:#e2e8f0">Fechar</button></div><div style="background:#0d1117;border:1px solid #2a3248;border-radius:14px;padding:16px;margin-bottom:14px"><div style="font-size:13px;color:#8892a8;margin-bottom:12px">Conta logada: <b style="color:#e2e8f0">${esc(authUser().displayName||authUser().email||'Usuário logado')}</b></div><input id="blV61MigrationFile" type="file" accept="application/json,.json" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2a3248;background:#161b27;color:#e2e8f0;margin-bottom:12px"><label style="display:flex;gap:8px;align-items:center;color:#8892a8;font-size:13px;margin-bottom:12px"><input id="blV61MigrationReplace" type="checkbox" checked style="width:auto"> Substituir os dados atuais desta conta antes de importar</label><div id="blV61MigrationPreview" style="font-size:13px;color:#8892a8;line-height:1.55;margin-bottom:12px">Selecione o JSON de migração.</div><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="blV61MigrationImport" disabled style="border:none;background:#8b7cf8;color:white;opacity:.55">Importar</button><button id="blV61MigrationReload" style="border:1px solid #4ecdc4;background:rgba(78,205,196,.12);color:#4ecdc4">Recarregar dashboard</button></div></div><div id="blV61MigrationLog">Aguardando arquivo...</div></div>`;
-    document.body.appendChild(modal);
-    const close=()=>modal.remove(); $('blV61MigrationClose').onclick=close; modal.addEventListener('click',e=>{if(e.target===modal)close();});
-    const log=m=>{const el=$('blV61MigrationLog'); if(el) el.textContent=m;}; let selected=null;
-    $('blV61MigrationFile').onchange=async()=>{selected=null; const btn=$('blV61MigrationImport'); btn.disabled=true; btn.style.opacity='.55'; const file=$('blV61MigrationFile').files?.[0]; if(!file) return; try{ const data=validateMigrationData(await readJsonFile(file)); selected=data; const c=counts(data); $('blV61MigrationPreview').innerHTML=`<b style="color:#e2e8f0">${esc(file.name)}</b><br>Biblioteca: ${c.library} · Sessões: ${c.sessions} · Notas: ${c.ratings} · Metas: ${c.goals} · Coleções: ${c.collections}`; log('Arquivo validado. Clique em importar.'); btn.disabled=false; btn.style.opacity='1'; }catch(e){$('blV61MigrationPreview').innerHTML=`<span style="color:#f88c6a">Erro no arquivo: ${esc(e.message||e)}</span>`; log('Erro: '+(e.message||e));}};
-    $('blV61MigrationImport').onclick=async()=>{ if(!selected) return; const c=counts(selected); if(!confirm(`Importar para a conta logada agora?\n\nBiblioteca: ${c.library}\nSessões: ${c.sessions}\nNotas: ${c.ratings}\n\nNão será exibido UID na tela.`)) return; const btn=$('blV61MigrationImport'); btn.disabled=true; btn.textContent='Importando...'; try{ const res=await importMigrationV61(selected,$('blV61MigrationReplace').checked,log); log(`✅ Importação concluída.\nGravações: ${res.totalWrites}\nBiblioteca: ${res.library}\nSessões: ${res.sessions}\nNotas: ${res.ratings}\n\nClique em Recarregar dashboard.`); btn.textContent='✅ Importado'; }catch(e){log('❌ Erro na importação: '+(e.message||e)); btn.disabled=false; btn.textContent='Importar';}};
-    $('blV61MigrationReload').onclick=async()=>{ log('Recarregando dados...'); try{ if(typeof window.blRefreshAndRender==='function') await window.blRefreshAndRender(); renderTop(); log('✅ Dashboard recarregado.'); }catch(e){ log('❌ Erro ao recarregar: '+(e.message||e)); } };
-  }
-
-  window.blOpenMigrationModal=openMigrationModal;
-  window.blOpenMigrationModalV61=openMigrationModal;
-  window.blImportMigrationData=async data=>importMigrationV61(data,true,()=>{});
-
-  document.addEventListener('click',ev=>{
-    const mig=ev.target.closest?.('#btn-migration,button[onclick*="blOpenMigrationModal"]');
-    const pause=ev.target.closest?.('[data-bl-v61-pause]');
-    const resume=ev.target.closest?.('[data-bl-v61-resume]');
-    const sess=ev.target.closest?.('[data-bl-v61-session]');
-    if(mig){ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation?.(); return openMigrationModal(); }
-    if(pause||resume||sess){ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation?.(); }
-    if(pause) return setPause(pause.getAttribute('data-bl-v61-pause'),true).catch(e=>alert('Erro ao pausar: '+(e.message||e)));
-    if(resume) return setPause(resume.getAttribute('data-bl-v61-resume'),false).catch(e=>alert('Erro ao voltar para lendo: '+(e.message||e)));
-    if(sess){ if(!canEdit()) return alert('Modo visitante: você só pode editar os seus próprios dados.'); const title=sess.getAttribute('data-bl-v61-session'); if(typeof window.abrirSessaoRapida==='function') return window.abrirSessaoRapida(title); if(typeof window.abrirModal==='function') return window.abrirModal('sessao'); }
-    if(!canEdit()){
-      const ctrl=ev.target.closest?.('button,a,[role="button"]'); if(!ctrl) return;
-      const txt=norm(ctrl.textContent||ctrl.title||ctrl.getAttribute('aria-label')||''); const oc=String(ctrl.getAttribute?.('onclick')||'').toLowerCase();
-      if(/abrirsessao|abrirmodal|salvar|excluir|avaliar|finalizar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|editar|excluir|salvar|finalizar|importar)/.test(txt)){
-        ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation?.(); alert('Modo visitante: você só pode editar os seus próprios dados.'); return false;
-      }
-    }
-  },true);
-
-  const oldRender=window.renderLendoCards; window.renderLendoCards=function(){ try{return renderTop();}catch(e){console.warn('[BookLegacy]',PATCH,'renderTop falhou',e); if(typeof oldRender==='function') return oldRender.apply(this,arguments);} };
-  const oldRefresh=window.blRefreshAndRender; if(typeof oldRefresh==='function' && !oldRefresh.__bl_v61){ window.blRefreshAndRender=async function(){ const r=await oldRefresh.apply(this,arguments); renderTop(); setTimeout(renderTop,120); return r; }; window.blRefreshAndRender.__bl_v61=true; }
-  function hijackButtons(){ ensureCss(); document.body.classList.toggle('bl-v61-visitor',!canEdit()); document.body.setAttribute('data-booklegacy-patch',PATCH); const b=$('btn-migration'); if(b){ b.removeAttribute('onclick'); b.onclick=null; b.textContent='📥 Migração segura'; } }
-  function boot(){ try{hijackButtons(); renderTop(); cleanupLegacyPaused();}catch(e){console.warn('[BookLegacy]',PATCH,e);} }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
-  [300,800,1600,3000,6000,10000].forEach(t=>setTimeout(boot,t));
-  try{ const contObserver=()=>{ const c=$('lendo-cards'); if(c&&!c.__bl_v61_observed){ c.__bl_v61_observed=true; new MutationObserver(()=>{ if(!rendering) setTimeout(renderTop,80); }).observe(c,{childList:true}); } }; setInterval(contObserver,1000); }catch(e){}
-  window.blV61Audit=function(){ const b=currentBundle(); const active=collectTop(); return {patch:PATCH,uidVisible:'oculto',perfil:publicNameFromBundle(b),canEdit:canEdit(),lendo:active.filter(x=>x.status==='Lendo').map(x=>({livro:x.livro,pagina:x.pagAtual,total:x.totalPag})),pausados:active.filter(x=>x.status==='Pausado').map(x=>({livro:x.livro,pagina:x.pagAtual,total:x.totalPag})),dica:collectWaiting(active).slice(0,3).map(x=>x.livro),contagens:{library:(b.library||[]).length,sessions:(b.sessions||[]).length,ratings:(b.ratings||[]).length}}; };
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
