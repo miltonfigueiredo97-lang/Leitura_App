@@ -5385,40 +5385,37 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // u é uid. Busca pessoa via users() e usa seus dados isolados.
+    // SEMPRE por UID — nunca por nome, sem exceção, nem para o próprio logado
     const list = users();
-    const person = list.find(p => String(p.uid||'') === u) || list.find(p => norm(p.label||'') === norm(u)) || null;
-    const meUid = String(window.firebaseAuth?.currentUser?.uid || window.BL?.auth?.currentUser?.uid || '').trim();
-    const isMe = !!meUid && (u === meUid || (person && String(person.uid||'') === meUid));
+    const person = list.find(p => String(p.uid||'') === u) || null;
 
-    // Se é o usuário logado: usa d.sessoes e d.livros normais (já carregados)
-    // Se é outra pessoa: usa person.sessions[] e person.library[] — isolados por UID
-    const rawSess = isMe
-      ? (d.sessoes||[])
-      : (person?.sessions||[]).map(s=>({
-          livro:String(s.title||s.livro||''), paginas:Number(s.pages||s.paginas||0),
-          minutos:Number(s.minutes||s.minutos||0),
-          data:String(s.date||s.data||'').slice(0,10),
-          ano:(s.date||s.data)?new Date(String(s.date||s.data).slice(0,10)+'T12:00:00').getFullYear():0
-        }));
-    const sess = rawSess.filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const mapSess = s => ({
+      livro: String(s.title||s.livro||s.bookTitle||''),
+      paginas: Number(s.pages||s.paginas||0),
+      minutos: Number(s.minutes||s.minutos||0),
+      data: String(s.date||s.data||'').slice(0,10),
+      ano: (s.date||s.data) ? new Date(String(s.date||s.data).slice(0,10)+'T12:00:00').getFullYear() : 0
+    });
+    const mapLib = l => ({
+      livro: String(l.title||l.livro||l.bookTitle||''),
+      autor: String(l.author||l.autor||''),
+      status: String(l.status||''),
+      totalPag: Number(l.totalPages||l.totalPag||l.pages||0),
+      pagAtual: Number(l.currentPage||l.pagAtual||l.current||0),
+      colecao: String(l.collection||l.colecao||''),
+      genero: String(l.genre||l.genero||''),
+      metaAno: String(l.metaYear||l.metaAno||'')
+    });
+    const mapNota = r => ({
+      media: Number(r.rating||r.nota||r.media||0),
+      ano: (r.date||r.data) ? new Date(String(r.date||r.data).slice(0,10)+'T12:00:00').getFullYear() : 0
+    });
 
-    const rawLib = isMe
-      ? [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])]
-      : (person?.library||[]).map(l=>({
-          livro:String(l.title||l.livro||''), autor:String(l.author||l.autor||''),
-          status:String(l.status||''), totalPag:Number(l.totalPages||l.totalPag||0),
-          pagAtual:Number(l.currentPage||l.pagAtual||0),
-          colecao:String(l.collection||l.colecao||''),
-          genero:String(l.genre||l.genero||''), metaAno:String(l.metaYear||l.metaAno||'')
-        }));
-    const todos = rawLib;
-    const notas = isMe
-      ? (d.notas||[]).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro))
-      : (person?.ratings||[]).map(r=>({
-          media:Number(r.rating||r.nota||r.media||0),
-          ano:(r.date||r.data)?new Date(String(r.date||r.data).slice(0,10)+'T12:00:00').getFullYear():0
-        })).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+    const sess = (person?.sessions||[]).map(mapSess)
+      .filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const todos = (person?.library||[]).map(mapLib);
+    const notas = (person?.ratings||[]).map(mapNota)
+      .filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
       if (anoFiltro === 'total') return true;
       // filtra livros concluídos no ano selecionado (verificando sessões)
