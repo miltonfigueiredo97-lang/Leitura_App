@@ -11363,28 +11363,53 @@ body.bl-v40-loading #app{display:none!important;}
     return list[0];
   }
   function sessionSources(){
-    const r=raw(), out=[];
+    // V3.59-fix: usa UID de cada usuário/amigo para separar dados corretamente
+    const r=raw(), out=[], authUid=window.BL?.auth?.currentUser?.uid||'';
+    // Se temos users com sessions (estrutura de amigos/comunidade)
     if(Array.isArray(r.users)&&r.users.some(u=>(u.sessions||[]).length)){
-      r.users.forEach(u=>(u.sessions||[]).forEach((s,i)=>out.push({s,label:u.label||u.displayName||u.name||userName(),idx:i,src:'raw.users'})));
+      r.users.forEach(u=>{
+        const uid=String(u?.uid||'').trim();
+        const label=u.label||u.displayName||u.name||userName();
+        (u.sessions||[]).forEach((s,i)=>out.push({s,label,uid,idx:i,src:'raw.users'}));
+      });
       return out;
     }
-    if(Array.isArray(r.sessoes)&&r.sessoes.length){r.sessoes.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'dados.sessoes'}));return out;}
-    if(Array.isArray(r.sessions)&&r.sessions.length){r.sessions.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'raw.sessions'}));return out;}
-    (window._sessoes||[]).forEach((s,i)=>out.push({s,label:s.usuario||userName(),idx:i,src:'_sessoes'}));
+    // Fallback: sessões do usuário logado apenas (_sessoes já é filtrado por viewUid no V3.58)
+    if(Array.isArray(r.sessoes)&&r.sessoes.length){
+      r.sessoes.forEach((s,i)=>{
+        const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+        const label=s.usuario||r.currentLabel||userName();
+        out.push({s,label,uid,idx:i,src:'dados.sessoes'});
+      });
+      return out;
+    }
+    if(Array.isArray(r.sessions)&&r.sessions.length){
+      r.sessions.forEach((s,i)=>{
+        const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+        const label=s.usuario||r.currentLabel||userName();
+        out.push({s,label,uid,idx:i,src:'raw.sessions'});
+      });
+      return out;
+    }
+    (window._sessoes||[]).forEach((s,i)=>{
+      const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+      out.push({s,label:s.usuario||userName(),uid,idx:i,src:'_sessoes'});
+    });
     return out;
   }
   function canonicalSessionRows(){
     const g=bookMapGlobal(), seen=new Set(), rows=[];
-    sessionSources().forEach(({s,label,idx,src})=>{
+    sessionSources().forEach(({s,label,uid,idx,src})=>{
       const gb=g.get(String(s.bookId||''))||{};
       const title=titleOf(s)||titleOf(gb); if(!title)return;
       const d=dateOf(s); if(!d)return;
       let pages=pagesRead(s); if(!pages||pages<0)return;
       const id=idOf(s)||String(s.bookId||'');
-      const key=String(s.id||s.docId||[src,norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
+      // V3.59-fix: uid no key evita mistura de dados de pessoas com mesmo nome
+      const key=String(s.id||s.docId||[src,uid||norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
       if(seen.has(key))return; seen.add(key);
       const b=bestBook(title,id,label);
-      rows.push({raw:s,label,idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
+      rows.push({raw:s,label,uid:uid||'',idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
     });
     return rows;
   }
@@ -11403,7 +11428,8 @@ body.bl-v40-loading #app{display:none!important;}
   function buildFeed(){
     const items=[], completion=new Map();
     const groups=new Map();
-    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
+    // V3.59-fix: group key usa uid (se disponível) em vez de label
+    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[row.uid||norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
     groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:{name:row.label||userName(),photo:row.photo||userPhoto()},title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
     const g=bookMapGlobal();
     ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:r.userPhotoURL||r.photoURL||userPhoto()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
@@ -12647,8 +12673,12 @@ body.bl-v40-loading #app{display:none!important;}
   }
 
   function restoreOwnButtons(){
-    // Remove inline display:none from buttons that were hidden while visiting friend
-    document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
+    // Remove inline display:none de botões que foram escondidos ao visitar amigo
+    // NÃO restaurar: fabMenu (estado controlado por toggleFabMenu), elementos de modal
+    const SKIP_IDS = new Set(['fabMenu','blMigrationModal','blFriendsModal','blCommunityModal','blInviteModal','pageBatalha','pageComunidade']);
+    document.querySelectorAll('button,a,[role="button"],.fab,.floating-action').forEach(el=>{
+      if(SKIP_IDS.has(el.id)) return;         // não restaurar menus/modais
+      if(el.closest?.('#fabMenu')) return;     // não restaurar itens dentro do FAB menu
       if(el.style.display==='none') el.style.removeProperty('display');
     });
   }
