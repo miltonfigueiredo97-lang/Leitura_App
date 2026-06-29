@@ -13,8 +13,7 @@
     "sessions": 1867,
     "ratings": 122,
     "goals": 6,
-    "collections": 46,
-    "legacyPausedScrubbedV60": 0
+    "collections": 46
   },
   "books": [
     {
@@ -64554,7 +64553,5 @@
   "createdAtFixedV58": "2026-06-28T05:14:52.219406+00:00",
   "notesFixV58": "JSON exclusivo do Daniel. Sem UID fixo: o app V3.58 grava tudo no UID da conta Google logada, limpando a subcoleção do usuário antes de importar para remover sujeira/duplicação anterior.",
   "createdAtFixedV59": "2026-06-28T05:27:29.019667+00:00",
-  "notesFixV59": "Migração sem owner por nome: dados são gravados no UID da conta logada; livro ativo do Daniel marcado como Lendo 307/384; campos de nome legado removidos dos arrays.",
-  "createdAtFixedV60": "2026-06-28T05:43:51",
-  "notesFixV60": "V3.60: pausado legado/importado é removido; apenas pause feito pelo app gera status Pausado. Dica de leitura recebe Registrar sessão para o próprio usuário."
+  "notesFixV59": "Migração sem owner por nome: dados são gravados no UID da conta logada; livro ativo do Daniel marcado como Lendo 307/384; campos de nome legado removidos dos arrays."
 }

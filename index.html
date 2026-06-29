@@ -1,7 +1,7 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-
 <script id="bl-v349-early-console-guard">
 (function(){
   'use strict';
@@ -28,24 +28,22 @@
   window.blConsoleGuardV349=function(){return {patchV49:PATCH,safeInsertBefore:!!window.__blV349SafeInsertBefore};};
 })();
 </script>
-
-<meta charset="UTF-8">
-<meta name="booklegacy-version" content="v3.48">
+<meta charset="utf-8"/>
+<meta content="v3.48" name="booklegacy-version"/>
 <script>
 // Redirect mobile browsers to mobile.html
 if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && window.innerWidth < 768) {
   // BookLegacy V12.1: dashboard original + Firebase + módulo batalha hardfix. Sem redirecionamento manual mobile.
 }
 </script>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0d1117">
-<link rel="manifest" href="/manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Leitura">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#0d1117" name="theme-color"/>
+<link href="/manifest.json" rel="manifest"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Leitura" name="apple-mobile-web-app-title"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
 <title>📚 Dashboard de Leitura</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -566,7 +564,6 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
-
 <!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
@@ -581,693 +578,637 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   body.bl-v42-community-open .lendo-wrap,
   body.bl-v42-community-open #pageBatalha{display:none!important;}
 </style>
-
 </head>
 <body>
-
 <div id="authOverlay">
-  <div class="auth-card">
-    <div class="logo">📚</div>
-    <h2>BookLegacy</h2>
-    <p>Entre com Google. O app carrega somente seus dados privados; dados de amigos aparecem apenas quando houver amizade aceita.</p>
-    <button id="authLoginBtn" class="auth-btn">Entrar com Google</button>
-    <div id="authError" class="auth-err"></div>
-  </div>
+<div class="auth-card">
+<div class="logo">📚</div>
+<h2>BookLegacy</h2>
+<p>Entre com Google. O app carrega somente seus dados privados; dados de amigos aparecem apenas quando houver amizade aceita.</p>
+<button class="auth-btn" id="authLoginBtn">Entrar com Google</button>
+<div class="auth-err" id="authError"></div>
 </div>
-
-
+</div>
 <header>
-  <div class="icon">📚</div>
-  <div>
-    <h1>Dashboard de Leitura</h1>
-    <p id="header-sub">Estatísticas completas · 2023–2026 · mai/2026</p>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <!-- Seletor de usuário -->
-    <div style="display:flex;gap:4px;background:var(--bg3);border-radius:10px;padding:4px;">
-      <button id="btn-user-milton" onclick="setUsuario('Milton')"
-        style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
+<div class="icon">📚</div>
+<div>
+<h1>Dashboard de Leitura</h1>
+<p id="header-sub">Estatísticas completas · 2023–2026 · mai/2026</p>
+</div>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<!-- Seletor de usuário -->
+<div style="display:flex;gap:4px;background:var(--bg3);border-radius:10px;padding:4px;">
+<button id="btn-user-milton" onclick="setUsuario('Milton')" style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
         📖 Milton
       </button>
-      <button id="btn-user-daniel" style="display:none" onclick="setUsuario('Daniel')"
-        style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
+<button id="btn-user-daniel" onclick="setUsuario('Daniel')" style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         📖 Daniel
       </button>
-      <button id="btn-user-batalha" onclick="setUsuario('Batalha')"
-        style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
+<button id="btn-user-batalha" onclick="setUsuario('Batalha')" style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
         ⚔️ Batalha
       </button>
-    </div>
-    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
-    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
-    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
-    <div class="badge" id="header-badge">— livros · — sessões</div>
-    <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
-    <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
-  </div>
+</div>
+<button id="btn-community" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;" type="button">👥 Comunidade</button>
+<button id="btn-migration" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;" type="button">📥 Migração</button>
+<button id="appInstallBtn" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;" type="button">📲 Instalar app</button>
+<div class="badge" id="header-badge">— livros · — sessões</div>
+<button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
+<button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
+</div>
 </header>
-
 <!-- Modal Changelog -->
 <div id="changelogOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:var(--bg2);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;position:relative;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div>
-        <h2 style="font-size:20px;font-weight:700;color:var(--text);margin:0;">📋 Notas de Atualização</h2>
-        <p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Dashboard de Leitura</p>
-      </div>
-      <button onclick="toggleChangelog()" style="background:var(--bg3);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;">✕</button>
-    </div>
-    <div id="changelogList"></div>
-  </div>
+<div style="background:var(--bg2);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;position:relative;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+<div>
+<h2 style="font-size:20px;font-weight:700;color:var(--text);margin:0;">📋 Notas de Atualização</h2>
+<p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Dashboard de Leitura</p>
 </div>
-
+<button onclick="toggleChangelog()" style="background:var(--bg3);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;">✕</button>
+</div>
+<div id="changelogList"></div>
+</div>
+</div>
 <!-- Mobile nav bar -->
 <nav id="mobile-nav">
-  <button class="m-nav-btn active" id="mnav-meta"     onclick="mNavTo('meta')"     >
-    <span class="m-nav-icon">🎯</span>Meta
+<button class="m-nav-btn active" id="mnav-meta" onclick="mNavTo('meta')">
+<span class="m-nav-icon">🎯</span>Meta
   </button>
-  <button class="m-nav-btn" id="mnav-visao"    onclick="mNavTo('visao')"    >
-    <span class="m-nav-icon">📊</span>Geral
+<button class="m-nav-btn" id="mnav-visao" onclick="mNavTo('visao')">
+<span class="m-nav-icon">📊</span>Geral
   </button>
-  <button class="m-nav-btn" id="mnav-graficos" onclick="mNavTo('graficos')" >
-    <span class="m-nav-icon">📈</span>Gráficos
+<button class="m-nav-btn" id="mnav-graficos" onclick="mNavTo('graficos')">
+<span class="m-nav-icon">📈</span>Gráficos
   </button>
-  <button class="m-nav-btn" id="mnav-ranking"  onclick="mNavTo('ranking')"  >
-    <span class="m-nav-icon">🏅</span>Ranking
+<button class="m-nav-btn" id="mnav-ranking" onclick="mNavTo('ranking')">
+<span class="m-nav-icon">🏅</span>Ranking
   </button>
-  <button class="m-nav-btn" id="mnav-livro"    onclick="mNavTo('livro')"    >
-    <span class="m-nav-icon">📖</span>Livro
+<button class="m-nav-btn" id="mnav-livro" onclick="mNavTo('livro')">
+<span class="m-nav-icon">📖</span>Livro
   </button>
-  <button class="m-nav-btn" id="mnav-mais"     onclick="mNavTo('mais')"     >
-    <span class="m-nav-icon">⋯</span>Mais
+<button class="m-nav-btn" id="mnav-mais" onclick="mNavTo('mais')">
+<span class="m-nav-icon">⋯</span>Mais
   </button>
 </nav>
-
 <!-- View toggle button -->
-
-
 <div class="lendo-wrap">
-  <div class="lendo-inner" id="lendo-cards"></div>
+<div class="lendo-inner" id="lendo-cards"></div>
 </div>
-
-
 <div id="loading" style="text-align:center;padding:80px;color:var(--muted);font-size:16px;">
   ⏳ Entrando e carregando seus dados do Firebase...
 </div>
 <div id="app" style="display:none">
 <div class="page" id="pageDashboard">
-
-  <!-- ── 5. Meta + Heatmap ── -->
-  <div class="sec" data-msection="meta">🎯 Meta de Leitura &amp; Heatmap</div>
-  <div class="grid2" style="margin-bottom:16px;">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <div class="card-title" id="metaCardTitle" style="margin-bottom:0">🎯 Meta — 28 Livros</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <select id="selMetaAno" onchange="buildMeta()" style="font-size:13px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-            <option value="2026">2026</option>
-          </select>
-          <button onclick="abrirGerenciarMeta()" title="Gerenciar livros desta meta" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text);padding:0;">⚙️</button>
-        </div>
-      </div>
-      <div class="card-sub">Progresso em páginas e livros concluídos</div>
-      <div class="meta-row">
-        <div class="ring-wrap">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg3)" stroke-width="10"/>
-            <circle id="meta-ring-circle" cx="60" cy="60" r="50" fill="none" stroke="var(--purple)" stroke-width="10"
-              stroke-dasharray="314.16" stroke-dashoffset="227.47" stroke-linecap="round"/>
-          </svg>
-          <div class="ring-center">
-            <div class="ring-pct" id="meta-ring-pct" onclick="abrirPainelMeta()" style="cursor:pointer;" title="Ver livros da meta">—</div>
-            <div class="ring-sub">páginas</div>
-          </div>
-        </div>
-        <div class="meta-stats">
-          <div class="meta-stat">
-            <div class="meta-stat-val" style="color:var(--purple)" id="meta-pag-lidas">—</div>
-            <div class="meta-stat-lbl">Págs lidas</div>
-          </div>
-          <div class="meta-stat">
-            <div class="meta-stat-val" style="color:var(--orange)" id="meta-pag-falt">—</div>
-            <div class="meta-stat-lbl">Págs faltando</div>
-          </div>
-          <div class="meta-stat">
-            <div class="meta-stat-val" style="color:var(--text)" id="meta-pag-total">—</div>
-            <div class="meta-stat-lbl">Págs totais da meta</div>
-          </div>
-          <div class="meta-stat">
-            <div class="meta-stat-val" style="color:var(--teal);cursor:pointer;" id="meta-livros" onclick="abrirPainelMeta()" title="Ver livros da meta">—</div>
-            <div class="meta-stat-lbl">Livros lidos</div>
-          </div>
-          <div class="meta-stat">
-            <div class="meta-stat-val" style="color:var(--yellow)" id="meta-pgdia">—</div>
-            <div class="meta-stat-lbl">Págs/dia p/ bater a meta</div>
-          </div>
-          <div class="meta-stat" style="grid-column:1/-1">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <div class="meta-stat-val" style="color:var(--coral,#f88c6a)" id="meta-ritmo">—</div>
-                <div class="meta-stat-lbl">🔥 Ritmo atual (últimos 30 dias)</div>
-              </div>
-              <div style="text-align:right">
-                <div class="meta-stat-val" style="color:var(--muted);font-size:13px" id="meta-media-ano">—</div>
-                <div class="meta-stat-lbl">Média anual</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="meta-date">
-        <div class="meta-date-icon">📅</div>
-        <div>
-          <div class="meta-date-txt">Previsão pelo ritmo atual: <b style="color:var(--yellow);font-size:15px;" id="meta-data-atual">—</b></div>
-          <div class="meta-date-sub">Previsão inicial: <b style="color:var(--teal)" id="meta-data-ini">—</b> · Meta final: 31/12/<span id="meta-ano-final">2026</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🗓️ Páginas por Mês — Comparativo</div>
-      <div class="card-sub">2024 vs 2025 vs 2026</div>
-      <div style="height:270px;position:relative;"><canvas id="cHeat"></canvas></div>
-    </div>
-  </div>
-
-  <!-- ── KPIs ── -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px;">
-    <div class="sec" style="margin:0" data-msection="visao">📊 Visão Geral</div>
-    <select id="selVGAno" onchange="atualizarVisaoGeral()" style="font-size:13px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-      <option value="total">Todos os anos</option>
-    </select>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:8px;" class="kpi-grid-5">
-    <div class="kpi" style="--accent:#8b7cf8">
-      <span class="kpi-icon">📄</span>
-      <div class="kpi-val" id="kpi-paginas">—</div>
-      <div class="kpi-lbl">Páginas Lidas</div>
-      <div class="kpi-sub">total acumulado</div>
-    </div>
-    <div class="kpi" style="--accent:#4ecdc4">
-      <span class="kpi-icon">🎯</span>
-      <div class="kpi-val" id="kpi-sessoes">—</div>
-      <div class="kpi-lbl">Sessões</div>
-      <div class="kpi-sub">registros individuais</div>
-    </div>
-    <div class="kpi" style="--accent:#ffd166">
-      <span class="kpi-icon">⚡</span>
-      <div class="kpi-val" id="kpi-pgdia">—</div>
-      <div class="kpi-lbl">Págs/Dia média</div>
-      <div class="kpi-sub">dias com leitura</div>
-    </div>
-    <div class="kpi" style="--accent:#e56cff">
-      <span class="kpi-icon">⏱️</span>
-      <div class="kpi-val" id="kpi-horas">—</div>
-      <div class="kpi-lbl">Horas Lidas</div>
-      <div class="kpi-sub">tempo total</div>
-    </div>
-    <div class="kpi" style="--accent:#56cfff">
-      <span class="kpi-icon">🏆</span>
-      <div class="kpi-val" id="kpi-recorde">—</div>
-      <div class="kpi-lbl">Recorde Diário</div>
-      <div class="kpi-sub" id="kpi-recorde-data">páginas em um dia</div>
-      <div id="kpi-recorde-livro" style="font-size:11px;color:var(--text);font-weight:600;margin-top:3px;line-height:1.3"></div>
-      <div id="kpi-recorde-autor" style="font-size:10px;color:var(--muted)"></div>
-    </div>
-    <div style="display:none" id="kpi-recorde-livro-wrap"></div>
-  </div>
-  <!-- Livros por status -->
-  <div class="grid4" style="margin-bottom:8px;grid-template-columns:repeat(5,1fr);">
-    <div class="kpi" style="--accent:#4ecdc4;cursor:pointer;" onclick="toggleListaStatus('Completo')">
-      <span class="kpi-icon">✅</span>
-      <div class="kpi-val" id="kpi-livros">—</div>
-      <div class="kpi-lbl">Concluídos</div>
-      <div class="kpi-sub">clique para ver</div>
-    </div>
-    <div class="kpi" style="--accent:#8b7cf8;cursor:pointer;" onclick="toggleListaStatus('Lendo')">
-      <span class="kpi-icon">📖</span>
-      <div class="kpi-val" id="kpi-lendo">—</div>
-      <div class="kpi-lbl">Lendo</div>
-      <div class="kpi-sub">clique para ver</div>
-    </div>
-    <div class="kpi" style="--accent:#f88c6a;cursor:pointer;" onclick="toggleListaStatus('Pausado')">
-      <span class="kpi-icon">⏸️</span>
-      <div class="kpi-val" id="kpi-pausados">—</div>
-      <div class="kpi-lbl">Pausados</div>
-      <div class="kpi-sub">clique para ver</div>
-    </div>
-    <div class="kpi" style="--accent:#ffd166;cursor:pointer;" onclick="toggleListaStatus('Aguardando')">
-      <span class="kpi-icon">📋</span>
-      <div class="kpi-val" id="kpi-aguardando">—</div>
-      <div class="kpi-lbl">Aguardando</div>
-      <div class="kpi-sub">clique para ver</div>
-    </div>
-    <div class="kpi" style="--accent:#e56cff;cursor:pointer;" onclick="toggleListaStatus('Todos')">
-      <span class="kpi-icon">📚</span>
-      <div class="kpi-val" id="kpi-todos">—</div>
-      <div class="kpi-lbl">Todos</div>
-      <div class="kpi-sub">clique para ver</div>
-    </div>
-  </div>
-  <!-- Painel lista de livros por status -->
-  <div id="painelStatus" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;overflow:visible;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div id="painelStatusTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
-      <button onclick="toggleListaStatus(null)" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <!-- Filtros -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-      <select id="ps-ordem" onchange="renderListaStatus()" style="font-size:13px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        <option value="colecao">Ordem da Coleção</option>
-        <option value="az">A → Z</option>
-        <option value="za">Z → A</option>
-        <option value="mais">Mais páginas</option>
-        <option value="menos">Menos páginas</option>
-      </select>
-      <select id="ps-colecao" onchange="renderListaStatus()" style="font-size:13px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        <option value="">Todas as coleções</option>
-      </select>
-      <span id="ps-count" style="font-size:12px;color:var(--muted);margin-left:auto;"></span>
-    </div>
-    <div style="max-height:450px;overflow-y:auto;padding:4px 0;">
-      <div id="painelStatusLista" style="display:flex;flex-direction:column;gap:8px;padding:0 4px;"></div>
-    </div>
-  </div>
-
-  <!-- Painel de gênero — overlay flutuante -->
-  <div id="painelGenero" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9000;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:min(500px,90vw);max-height:70vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div id="painelGeneroTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
-      <button onclick="fecharPainelGenero()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <div id="painelGeneroLista" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </div>
-  <div id="painelGeneroOverlay" style="display:none;position:fixed;inset:0;z-index:8999;background:rgba(0,0,0,0.5);" onclick="fecharPainelGenero()"></div>
-
-  <!-- Painel Meta -->
-  <div id="painelMeta" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9000;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:min(800px,95vw);max-height:75vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div id="painelMetaTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
-      <button onclick="fecharPainelMeta()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <div id="painelMetaLista" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
-  </div>
-  <div id="painelMetaOverlay" style="display:none;position:fixed;inset:0;z-index:8998;background:rgba(0,0,0,0.5);" onclick="fecharPainelMeta()"></div>
-
-  <!-- Painel Gerenciar Meta (estante de seleção) -->
-  <div id="painelGerenciarMeta" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9100;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:800px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);flex-direction:column;box-sizing:border-box;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div id="gmTitulo" style="font-size:16px;font-weight:700;color:var(--text)">⚙️ Gerenciar Meta</div>
-      <button onclick="fecharGerenciarMeta()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
-    </div>
-    <div style="margin-bottom:10px;">
-      <input id="gmBusca" type="text" oninput="renderGerenciarMeta()" placeholder="🔍 Buscar livro pelo nome..." style="width:100%;font-size:13px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-      <select id="gmFiltroColecao" onchange="renderGerenciarMeta()" style="flex:1;min-width:140px;font-size:13px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        <option value="all">Todas as coleções</option>
-      </select>
-      <select id="gmOrdem" onchange="renderGerenciarMeta()" style="flex:1;min-width:140px;font-size:13px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
-        <option value="az">Ordem A-Z</option>
-        <option value="colecao">Ordem por Coleção</option>
-      </select>
-    </div>
-    <div style="margin-bottom:12px;">
-      <button id="gmToggleOutrasMetas" onclick="gmMostrarOutrasMetas=!gmMostrarOutrasMetas;atualizarBtnOutrasMetas();renderGerenciarMeta()" style="width:100%;text-align:left;font-size:12px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;">☐ Considerar livros que já tenham meta</button>
-    </div>
-    <div id="gmContador" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
-    <div id="gmLista" style="display:flex;flex-wrap:wrap;gap:46px 24px;flex:1;overflow-y:auto;overflow-x:hidden;align-content:flex-start;min-height:120px;padding:20px;"></div>
-    <div id="gmMsg" class="pwa-msg" style="margin-top:10px;"></div>
-    <div style="display:flex;gap:10px;margin-top:14px;">
-      <button class="pwa-btn-cancel" style="flex:1;" onclick="fecharGerenciarMeta()">Cancelar</button>
-      <button class="pwa-btn" id="gmBtnSalvar" style="flex:2;" onclick="salvarGerenciarMeta()">✅ Salvar Meta</button>
-    </div>
-  </div>
-  <div id="painelGerenciarMetaOverlay" style="display:none;position:fixed;inset:0;z-index:9099;background:rgba(0,0,0,0.6);" onclick="fecharGerenciarMeta()"></div>
-
-  <div id="kpi-books-grid" class="grid4" data-desktop-grid="1" style="margin-bottom:16px;grid-template-columns:repeat(4,1fr);">
-    <div class="kpi" style="--accent:#ffd166">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">📖 MAIOR LIVRO</div>
-      <div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-maior-nome').textContent)" style="cursor:pointer;">
-        <div id="capa-maior" style="flex-shrink:0">📖</div>
-        <div style="min-width:0">
-          <div class="kpi-val" style="font-size:28px;line-height:1;" id="kpi-maior-val">—</div>
-          <div class="kpi-lbl" style="margin-bottom:6px;">páginas</div>
-          <div id="kpi-maior-nome" class="kpi-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
-          <div class="kpi-autor" id="kpi-maior-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="kpi" style="--accent:#f88c6a">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">📕 MENOR LIVRO</div>
-      <div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-menor-nome').textContent)" style="cursor:pointer;">
-        <div id="capa-menor" style="flex-shrink:0">📕</div>
-        <div style="min-width:0">
-          <div class="kpi-val" style="font-size:28px;line-height:1;" id="kpi-menor-val">—</div>
-          <div class="kpi-lbl" style="margin-bottom:6px;">páginas</div>
-          <div id="kpi-menor-nome" class="kpi-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
-          <div class="kpi-autor" id="kpi-menor-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="kpi" style="--accent:#4ecdc4">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">⭐ MELHOR AVALIADO</div>
-      <div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-melhor-nome').textContent)" style="cursor:pointer;">
-        <div id="capa-melhor" style="flex-shrink:0">⭐</div>
-        <div style="min-width:0">
-          <div class="kpi-val" style="font-size:28px;line-height:1;" id="kpi-melhor-val">—</div>
-          <div class="kpi-lbl" style="margin-bottom:6px;">nota geral</div>
-          <div id="kpi-melhor-nome" class="kpi-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
-          <div class="kpi-autor" id="kpi-melhor-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="kpi" style="--accent:#e56cff">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">💀 PIOR AVALIADO</div>
-      <div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-pior-nome').textContent)" style="cursor:pointer;">
-        <div id="capa-pior" style="flex-shrink:0">💀</div>
-        <div style="min-width:0">
-          <div class="kpi-val" style="font-size:28px;line-height:1;" id="kpi-pior-val">—</div>
-          <div class="kpi-lbl" style="margin-bottom:6px;">nota geral</div>
-          <div id="kpi-pior-nome" class="kpi-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
-          <div class="kpi-autor" id="kpi-pior-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 1. Comparativo Anual ── -->
-  <div class="sec" data-msection="graficos">📅 Comparativo por Ano</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div class="card-title">📅 Resumo por Ano</div>
-    <div class="card-sub">Páginas totais, média diária, sessões e velocidade de leitura</div>
-    <div id="yearBars" class="yr-list"></div>
-  </div>
-
-  <!-- ── 2. Páginas por Mês ── -->
-  <div class="sec" data-msection="graficos">📈 Tendência Mensal</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div class="card-title">📈 Páginas por Mês</div>
-    <div class="ctrl">
-      <label>De:</label>
-      <select id="selFrom"></select>
-      <label>Até:</label>
-      <select id="selTo"></select>
-    </div>
-    <div style="height:240px;position:relative;"><canvas id="cMonthly"></canvas></div>
-  </div>
-
-  <!-- ── Gráfico Drill-down ── -->
-  <div class="card" style="margin-bottom:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;">📊 Detalhe de Leitura</div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <button id="dd-prev" onclick="ddNavegar(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;cursor:pointer;">‹</button>
-        <span id="dd-label" style="font-size:13px;font-weight:600;color:var(--text);min-width:120px;text-align:center;">—</span>
-        <button id="dd-next" onclick="ddNavegar(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;cursor:pointer;">›</button>
-      </div>
-      <div style="display:flex;gap:4px;">
-        <button onclick="ddSetModo('semana')" id="dd-btn-semana" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;background:var(--bg3);color:var(--text);">Semana</button>
-        <button onclick="ddSetModo('mes')" id="dd-btn-mes" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;background:var(--purple);color:white;">Mês</button>
-      </div>
-    </div>
-    <div style="height:260px;position:relative;"><canvas id="cDrilldown" style="height:260px!important;"></canvas></div>
-    <div id="dd-detalhe" style="display:none;margin-top:12px;padding:10px;background:var(--bg3);border-radius:8px;font-size:13px;"></div>
-    <div id="dd-legenda" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
-  </div>
-
-  <!-- ── 3. Rankings e Distribuição ── -->
-  <div class="sec" data-msection="ranking">🏅 Rankings &amp; Distribuição</div>
-  <!-- Linha 1: Ranking + Dia da Semana + Gêneros -->
-  <div id="grid-rankings" data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-
-    <!-- Ranking notas -->
-    <div class="card">
-      <div class="card-title">🏅 Ranking por Notas</div>
-      <div class="ctrl">
-        <select id="selNotasAno" onchange="buildRanking()">
-          <option value="all">Todos os anos</option>
-        </select>
-        <select id="selNotasColecao" onchange="buildRanking()">
-          <option value="all">Todas as coleções</option>
-        </select>
-        <select id="selNotasTema" onchange="buildRanking()">
-          <option value="all">Todos os critérios</option>
-          <option value="Diálogos">Diálogos</option>
-          <option value="Enredo">Enredo</option>
-          <option value="Estilo Visual">Estilo Visual</option>
-          <option value="Finalização">Finalização</option>
-          <option value="Imersão">Imersão</option>
-          <option value="Impacto Emocional">Impacto Emocional</option>
-          <option value="Originalidade">Originalidade</option>
-          <option value="Personagens">Personagens</option>
-          <option value="Ritmo">Ritmo</option>
-          <option value="Temas">Temas</option>
-        </select>
-      </div>
-      <div class="ctrl" style="margin-top:-6px;">
-        <button class="btn on" id="btnBest" onclick="rankMode='best';updateBtns();buildRanking()">🥇 Melhores</button>
-        <button class="btn" id="btnWorst" onclick="rankMode='worst';updateBtns();buildRanking()">💀 Piores</button>
-      </div>
-      <div id="rankList" class="rank-list"></div>
-      <div style="text-align:center;margin-top:12px;">
-        <button onclick="abrirRankingCompleto()" style="background:rgba(139,124,248,0.12);border:1px solid rgba(139,124,248,0.4);border-radius:20px;padding:8px 20px;font-family:'Exo 2',sans-serif;font-size:12px;color:#8b7cf8;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(139,124,248,0.22)'" onmouseout="this.style.background='rgba(139,124,248,0.12)'">📋 Ver Ranking Completo</button>
-      </div>
-    </div>
-
+<!-- ── 5. Meta + Heatmap ── -->
+<div class="sec" data-msection="meta">🎯 Meta de Leitura &amp; Heatmap</div>
+<div class="grid2" style="margin-bottom:16px;">
+<div class="card">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+<div class="card-title" id="metaCardTitle" style="margin-bottom:0">🎯 Meta — 28 Livros</div>
+<div style="display:flex;align-items:center;gap:6px;">
+<select id="selMetaAno" onchange="buildMeta()" style="font-size:13px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+<option value="2026">2026</option>
+</select>
+<button onclick="abrirGerenciarMeta()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text);padding:0;" title="Gerenciar livros desta meta">⚙️</button>
+</div>
+</div>
+<div class="card-sub">Progresso em páginas e livros concluídos</div>
+<div class="meta-row">
+<div class="ring-wrap">
+<svg height="120" viewbox="0 0 120 120" width="120">
+<circle cx="60" cy="60" fill="none" r="50" stroke="var(--bg3)" stroke-width="10"></circle>
+<circle cx="60" cy="60" fill="none" id="meta-ring-circle" r="50" stroke="var(--purple)" stroke-dasharray="314.16" stroke-dashoffset="227.47" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="ring-center">
+<div class="ring-pct" id="meta-ring-pct" onclick="abrirPainelMeta()" style="cursor:pointer;" title="Ver livros da meta">—</div>
+<div class="ring-sub">páginas</div>
+</div>
+</div>
+<div class="meta-stats">
+<div class="meta-stat">
+<div class="meta-stat-val" id="meta-pag-lidas" style="color:var(--purple)">—</div>
+<div class="meta-stat-lbl">Págs lidas</div>
+</div>
+<div class="meta-stat">
+<div class="meta-stat-val" id="meta-pag-falt" style="color:var(--orange)">—</div>
+<div class="meta-stat-lbl">Págs faltando</div>
+</div>
+<div class="meta-stat">
+<div class="meta-stat-val" id="meta-pag-total" style="color:var(--text)">—</div>
+<div class="meta-stat-lbl">Págs totais da meta</div>
+</div>
+<div class="meta-stat">
+<div class="meta-stat-val" id="meta-livros" onclick="abrirPainelMeta()" style="color:var(--teal);cursor:pointer;" title="Ver livros da meta">—</div>
+<div class="meta-stat-lbl">Livros lidos</div>
+</div>
+<div class="meta-stat">
+<div class="meta-stat-val" id="meta-pgdia" style="color:var(--yellow)">—</div>
+<div class="meta-stat-lbl">Págs/dia p/ bater a meta</div>
+</div>
+<div class="meta-stat" style="grid-column:1/-1">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<div>
+<div class="meta-stat-val" id="meta-ritmo" style="color:var(--coral,#f88c6a)">—</div>
+<div class="meta-stat-lbl">🔥 Ritmo atual (últimos 30 dias)</div>
+</div>
+<div style="text-align:right">
+<div class="meta-stat-val" id="meta-media-ano" style="color:var(--muted);font-size:13px">—</div>
+<div class="meta-stat-lbl">Média anual</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="meta-date">
+<div class="meta-date-icon">📅</div>
+<div>
+<div class="meta-date-txt">Previsão pelo ritmo atual: <b id="meta-data-atual" style="color:var(--yellow);font-size:15px;">—</b></div>
+<div class="meta-date-sub">Previsão inicial: <b id="meta-data-ini" style="color:var(--teal)">—</b> · Meta final: 31/12/<span id="meta-ano-final">2026</span></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🗓️ Páginas por Mês — Comparativo</div>
+<div class="card-sub">2024 vs 2025 vs 2026</div>
+<div style="height:270px;position:relative;"><canvas id="cHeat"></canvas></div>
+</div>
+</div>
+<!-- ── KPIs ── -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px;">
+<div class="sec" data-msection="visao" style="margin:0">📊 Visão Geral</div>
+<select id="selVGAno" onchange="atualizarVisaoGeral()" style="font-size:13px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+<option value="total">Todos os anos</option>
+</select>
+</div>
+<div class="kpi-grid-5" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:8px;">
+<div class="kpi" style="--accent:#8b7cf8">
+<span class="kpi-icon">📄</span>
+<div class="kpi-val" id="kpi-paginas">—</div>
+<div class="kpi-lbl">Páginas Lidas</div>
+<div class="kpi-sub">total acumulado</div>
+</div>
+<div class="kpi" style="--accent:#4ecdc4">
+<span class="kpi-icon">🎯</span>
+<div class="kpi-val" id="kpi-sessoes">—</div>
+<div class="kpi-lbl">Sessões</div>
+<div class="kpi-sub">registros individuais</div>
+</div>
+<div class="kpi" style="--accent:#ffd166">
+<span class="kpi-icon">⚡</span>
+<div class="kpi-val" id="kpi-pgdia">—</div>
+<div class="kpi-lbl">Págs/Dia média</div>
+<div class="kpi-sub">dias com leitura</div>
+</div>
+<div class="kpi" style="--accent:#e56cff">
+<span class="kpi-icon">⏱️</span>
+<div class="kpi-val" id="kpi-horas">—</div>
+<div class="kpi-lbl">Horas Lidas</div>
+<div class="kpi-sub">tempo total</div>
+</div>
+<div class="kpi" style="--accent:#56cfff">
+<span class="kpi-icon">🏆</span>
+<div class="kpi-val" id="kpi-recorde">—</div>
+<div class="kpi-lbl">Recorde Diário</div>
+<div class="kpi-sub" id="kpi-recorde-data">páginas em um dia</div>
+<div id="kpi-recorde-livro" style="font-size:11px;color:var(--text);font-weight:600;margin-top:3px;line-height:1.3"></div>
+<div id="kpi-recorde-autor" style="font-size:10px;color:var(--muted)"></div>
+</div>
+<div id="kpi-recorde-livro-wrap" style="display:none"></div>
+</div>
+<!-- Livros por status -->
+<div class="grid4" style="margin-bottom:8px;grid-template-columns:repeat(5,1fr);">
+<div class="kpi" onclick="toggleListaStatus('Completo')" style="--accent:#4ecdc4;cursor:pointer;">
+<span class="kpi-icon">✅</span>
+<div class="kpi-val" id="kpi-livros">—</div>
+<div class="kpi-lbl">Concluídos</div>
+<div class="kpi-sub">clique para ver</div>
+</div>
+<div class="kpi" onclick="toggleListaStatus('Lendo')" style="--accent:#8b7cf8;cursor:pointer;">
+<span class="kpi-icon">📖</span>
+<div class="kpi-val" id="kpi-lendo">—</div>
+<div class="kpi-lbl">Lendo</div>
+<div class="kpi-sub">clique para ver</div>
+</div>
+<div class="kpi" onclick="toggleListaStatus('Pausado')" style="--accent:#f88c6a;cursor:pointer;">
+<span class="kpi-icon">⏸️</span>
+<div class="kpi-val" id="kpi-pausados">—</div>
+<div class="kpi-lbl">Pausados</div>
+<div class="kpi-sub">clique para ver</div>
+</div>
+<div class="kpi" onclick="toggleListaStatus('Aguardando')" style="--accent:#ffd166;cursor:pointer;">
+<span class="kpi-icon">📋</span>
+<div class="kpi-val" id="kpi-aguardando">—</div>
+<div class="kpi-lbl">Aguardando</div>
+<div class="kpi-sub">clique para ver</div>
+</div>
+<div class="kpi" onclick="toggleListaStatus('Todos')" style="--accent:#e56cff;cursor:pointer;">
+<span class="kpi-icon">📚</span>
+<div class="kpi-val" id="kpi-todos">—</div>
+<div class="kpi-lbl">Todos</div>
+<div class="kpi-sub">clique para ver</div>
+</div>
+</div>
+<!-- Painel lista de livros por status -->
+<div id="painelStatus" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;overflow:visible;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div id="painelStatusTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+<button onclick="toggleListaStatus(null)" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+</div>
+<!-- Filtros -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+<select id="ps-ordem" onchange="renderListaStatus()" style="font-size:13px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+<option value="colecao">Ordem da Coleção</option>
+<option value="az">A → Z</option>
+<option value="za">Z → A</option>
+<option value="mais">Mais páginas</option>
+<option value="menos">Menos páginas</option>
+</select>
+<select id="ps-colecao" onchange="renderListaStatus()" style="font-size:13px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+<option value="">Todas as coleções</option>
+</select>
+<span id="ps-count" style="font-size:12px;color:var(--muted);margin-left:auto;"></span>
+</div>
+<div style="max-height:450px;overflow-y:auto;padding:4px 0;">
+<div id="painelStatusLista" style="display:flex;flex-direction:column;gap:8px;padding:0 4px;"></div>
+</div>
+</div>
+<!-- Painel de gênero — overlay flutuante -->
+<div id="painelGenero" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9000;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:min(500px,90vw);max-height:70vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div id="painelGeneroTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+<button onclick="fecharPainelGenero()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+</div>
+<div id="painelGeneroLista" style="display:flex;flex-direction:column;gap:8px;"></div>
+</div>
+<div id="painelGeneroOverlay" onclick="fecharPainelGenero()" style="display:none;position:fixed;inset:0;z-index:8999;background:rgba(0,0,0,0.5);"></div>
+<!-- Painel Meta -->
+<div id="painelMeta" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9000;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:min(800px,95vw);max-height:75vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+<div id="painelMetaTitulo" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+<button onclick="fecharPainelMeta()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+</div>
+<div id="painelMetaLista" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+</div>
+<div id="painelMetaOverlay" onclick="fecharPainelMeta()" style="display:none;position:fixed;inset:0;z-index:8998;background:rgba(0,0,0,0.5);"></div>
+<!-- Painel Gerenciar Meta (estante de seleção) -->
+<div id="painelGerenciarMeta" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9100;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;width:800px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);flex-direction:column;box-sizing:border-box;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div id="gmTitulo" style="font-size:16px;font-weight:700;color:var(--text)">⚙️ Gerenciar Meta</div>
+<button onclick="fecharGerenciarMeta()" style="background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+</div>
+<div style="margin-bottom:10px;">
+<input id="gmBusca" oninput="renderGerenciarMeta()" placeholder="🔍 Buscar livro pelo nome..." style="width:100%;font-size:13px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);" type="text"/>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+<select id="gmFiltroColecao" onchange="renderGerenciarMeta()" style="flex:1;min-width:140px;font-size:13px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+<option value="all">Todas as coleções</option>
+</select>
+<select id="gmOrdem" onchange="renderGerenciarMeta()" style="flex:1;min-width:140px;font-size:13px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);">
+<option value="az">Ordem A-Z</option>
+<option value="colecao">Ordem por Coleção</option>
+</select>
+</div>
+<div style="margin-bottom:12px;">
+<button id="gmToggleOutrasMetas" onclick="gmMostrarOutrasMetas=!gmMostrarOutrasMetas;atualizarBtnOutrasMetas();renderGerenciarMeta()" style="width:100%;text-align:left;font-size:12px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;">☐ Considerar livros que já tenham meta</button>
+</div>
+<div id="gmContador" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
+<div id="gmLista" style="display:flex;flex-wrap:wrap;gap:46px 24px;flex:1;overflow-y:auto;overflow-x:hidden;align-content:flex-start;min-height:120px;padding:20px;"></div>
+<div class="pwa-msg" id="gmMsg" style="margin-top:10px;"></div>
+<div style="display:flex;gap:10px;margin-top:14px;">
+<button class="pwa-btn-cancel" onclick="fecharGerenciarMeta()" style="flex:1;">Cancelar</button>
+<button class="pwa-btn" id="gmBtnSalvar" onclick="salvarGerenciarMeta()" style="flex:2;">✅ Salvar Meta</button>
+</div>
+</div>
+<div id="painelGerenciarMetaOverlay" onclick="fecharGerenciarMeta()" style="display:none;position:fixed;inset:0;z-index:9099;background:rgba(0,0,0,0.6);"></div>
+<div class="grid4" data-desktop-grid="1" id="kpi-books-grid" style="margin-bottom:16px;grid-template-columns:repeat(4,1fr);">
+<div class="kpi" style="--accent:#ffd166">
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">📖 MAIOR LIVRO</div>
+<div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-maior-nome').textContent)" style="cursor:pointer;">
+<div id="capa-maior" style="flex-shrink:0">📖</div>
+<div style="min-width:0">
+<div class="kpi-val" id="kpi-maior-val" style="font-size:28px;line-height:1;">—</div>
+<div class="kpi-lbl" style="margin-bottom:6px;">páginas</div>
+<div class="kpi-nome" id="kpi-maior-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
+<div class="kpi-autor" id="kpi-maior-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
+</div>
+</div>
+</div>
+<div class="kpi" style="--accent:#f88c6a">
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">📕 MENOR LIVRO</div>
+<div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-menor-nome').textContent)" style="cursor:pointer;">
+<div id="capa-menor" style="flex-shrink:0">📕</div>
+<div style="min-width:0">
+<div class="kpi-val" id="kpi-menor-val" style="font-size:28px;line-height:1;">—</div>
+<div class="kpi-lbl" style="margin-bottom:6px;">páginas</div>
+<div class="kpi-nome" id="kpi-menor-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
+<div class="kpi-autor" id="kpi-menor-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
+</div>
+</div>
+</div>
+<div class="kpi" style="--accent:#4ecdc4">
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">⭐ MELHOR AVALIADO</div>
+<div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-melhor-nome').textContent)" style="cursor:pointer;">
+<div id="capa-melhor" style="flex-shrink:0">⭐</div>
+<div style="min-width:0">
+<div class="kpi-val" id="kpi-melhor-val" style="font-size:28px;line-height:1;">—</div>
+<div class="kpi-lbl" style="margin-bottom:6px;">nota geral</div>
+<div class="kpi-nome" id="kpi-melhor-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
+<div class="kpi-autor" id="kpi-melhor-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
+</div>
+</div>
+</div>
+<div class="kpi" style="--accent:#e56cff">
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">💀 PIOR AVALIADO</div>
+<div class="kpi-book" onclick="abrirLivroDetalhes(document.getElementById('kpi-pior-nome').textContent)" style="cursor:pointer;">
+<div id="capa-pior" style="flex-shrink:0">💀</div>
+<div style="min-width:0">
+<div class="kpi-val" id="kpi-pior-val" style="font-size:28px;line-height:1;">—</div>
+<div class="kpi-lbl" style="margin-bottom:6px;">nota geral</div>
+<div class="kpi-nome" id="kpi-pior-nome" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.3;word-break:break-word">—</div>
+<div class="kpi-autor" id="kpi-pior-autor" style="font-size:16px;color:var(--muted);margin-top:3px">—</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ── 1. Comparativo Anual ── -->
+<div class="sec" data-msection="graficos">📅 Comparativo por Ano</div>
+<div class="card" style="margin-bottom:16px;">
+<div class="card-title">📅 Resumo por Ano</div>
+<div class="card-sub">Páginas totais, média diária, sessões e velocidade de leitura</div>
+<div class="yr-list" id="yearBars"></div>
+</div>
+<!-- ── 2. Páginas por Mês ── -->
+<div class="sec" data-msection="graficos">📈 Tendência Mensal</div>
+<div class="card" style="margin-bottom:16px;">
+<div class="card-title">📈 Páginas por Mês</div>
+<div class="ctrl">
+<label>De:</label>
+<select id="selFrom"></select>
+<label>Até:</label>
+<select id="selTo"></select>
+</div>
+<div style="height:240px;position:relative;"><canvas id="cMonthly"></canvas></div>
+</div>
+<!-- ── Gráfico Drill-down ── -->
+<div class="card" style="margin-bottom:16px;">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+<div class="card-title" style="margin:0;">📊 Detalhe de Leitura</div>
+<div style="display:flex;align-items:center;gap:6px;">
+<button id="dd-prev" onclick="ddNavegar(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;cursor:pointer;">‹</button>
+<span id="dd-label" style="font-size:13px;font-weight:600;color:var(--text);min-width:120px;text-align:center;">—</span>
+<button id="dd-next" onclick="ddNavegar(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;cursor:pointer;">›</button>
+</div>
+<div style="display:flex;gap:4px;">
+<button id="dd-btn-semana" onclick="ddSetModo('semana')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;background:var(--bg3);color:var(--text);">Semana</button>
+<button id="dd-btn-mes" onclick="ddSetModo('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;background:var(--purple);color:white;">Mês</button>
+</div>
+</div>
+<div style="height:260px;position:relative;"><canvas id="cDrilldown" style="height:260px!important;"></canvas></div>
+<div id="dd-detalhe" style="display:none;margin-top:12px;padding:10px;background:var(--bg3);border-radius:8px;font-size:13px;"></div>
+<div id="dd-legenda" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+</div>
+<!-- ── 3. Rankings e Distribuição ── -->
+<div class="sec" data-msection="ranking">🏅 Rankings &amp; Distribuição</div>
+<!-- Linha 1: Ranking + Dia da Semana + Gêneros -->
+<div data-desktop-grid="1" id="grid-rankings" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+<!-- Ranking notas -->
+<div class="card">
+<div class="card-title">🏅 Ranking por Notas</div>
+<div class="ctrl">
+<select id="selNotasAno" onchange="buildRanking()">
+<option value="all">Todos os anos</option>
+</select>
+<select id="selNotasColecao" onchange="buildRanking()">
+<option value="all">Todas as coleções</option>
+</select>
+<select id="selNotasTema" onchange="buildRanking()">
+<option value="all">Todos os critérios</option>
+<option value="Diálogos">Diálogos</option>
+<option value="Enredo">Enredo</option>
+<option value="Estilo Visual">Estilo Visual</option>
+<option value="Finalização">Finalização</option>
+<option value="Imersão">Imersão</option>
+<option value="Impacto Emocional">Impacto Emocional</option>
+<option value="Originalidade">Originalidade</option>
+<option value="Personagens">Personagens</option>
+<option value="Ritmo">Ritmo</option>
+<option value="Temas">Temas</option>
+</select>
+</div>
+<div class="ctrl" style="margin-top:-6px;">
+<button class="btn on" id="btnBest" onclick="rankMode='best';updateBtns();buildRanking()">🥇 Melhores</button>
+<button class="btn" id="btnWorst" onclick="rankMode='worst';updateBtns();buildRanking()">💀 Piores</button>
+</div>
+<div class="rank-list" id="rankList"></div>
+<div style="text-align:center;margin-top:12px;">
+<button onclick="abrirRankingCompleto()" onmouseout="this.style.background='rgba(139,124,248,0.12)'" onmouseover="this.style.background='rgba(139,124,248,0.22)'" style="background:rgba(139,124,248,0.12);border:1px solid rgba(139,124,248,0.4);border-radius:20px;padding:8px 20px;font-family:'Exo 2',sans-serif;font-size:12px;color:#8b7cf8;cursor:pointer;transition:all .2s;">📋 Ver Ranking Completo</button>
+</div>
+</div>
 <!-- MODAL RANKING COMPLETO (desktop) -->
 <div id="modal-ranking-completo" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto;">
-  <div style="background:#0d1424;border:1px solid rgba(139,124,248,0.3);border-radius:18px;padding:24px;max-width:680px;width:100%;margin:auto;position:relative;">
-    <button onclick="document.getElementById('modal-ranking-completo').style.display='none'" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:30px;height:30px;font-size:15px;color:#F8FAFC;cursor:pointer;line-height:30px;text-align:center;">✕</button>
-    <div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:700;color:#8b7cf8;margin-bottom:16px;">🏅 Ranking Completo por Notas</div>
-    <!-- Filtros -->
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-      <select id="rcAno" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;"></select>
-      <select id="rcColecao" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;"></select>
-      <select id="rcTema" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;">
-        <option value="all">Todos os critérios</option>
-        <option value="Diálogos">Diálogos</option>
-        <option value="Enredo">Enredo</option>
-        <option value="Estilo Visual">Estilo Visual</option>
-        <option value="Finalização">Finalização</option>
-        <option value="Imersão">Imersão</option>
-        <option value="Impacto Emocional">Impacto Emocional</option>
-        <option value="Originalidade">Originalidade</option>
-        <option value="Personagens">Personagens</option>
-        <option value="Ritmo">Ritmo</option>
-        <option value="Temas">Temas</option>
-      </select>
-      <button id="rcBtnBest" class="btn on" onclick="rankModeRC='best';updateBtnsRC();buildRankingCompleto()">🥇 Melhores</button>
-      <button id="rcBtnWorst" class="btn" onclick="rankModeRC='worst';updateBtnsRC();buildRankingCompleto()">💀 Piores</button>
-    </div>
-    <div id="rcTotal" style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-bottom:10px;"></div>
-    <div id="rcList" class="rank-list"></div>
-  </div>
+<div style="background:#0d1424;border:1px solid rgba(139,124,248,0.3);border-radius:18px;padding:24px;max-width:680px;width:100%;margin:auto;position:relative;">
+<button onclick="document.getElementById('modal-ranking-completo').style.display='none'" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:30px;height:30px;font-size:15px;color:#F8FAFC;cursor:pointer;line-height:30px;text-align:center;">✕</button>
+<div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:700;color:#8b7cf8;margin-bottom:16px;">🏅 Ranking Completo por Notas</div>
+<!-- Filtros -->
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+<select id="rcAno" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;"></select>
+<select id="rcColecao" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;"></select>
+<select id="rcTema" onchange="buildRankingCompleto()" style="background:#1a2035;border:1px solid rgba(139,124,248,0.3);border-radius:8px;color:#F8FAFC;padding:6px 10px;font-size:12px;">
+<option value="all">Todos os critérios</option>
+<option value="Diálogos">Diálogos</option>
+<option value="Enredo">Enredo</option>
+<option value="Estilo Visual">Estilo Visual</option>
+<option value="Finalização">Finalização</option>
+<option value="Imersão">Imersão</option>
+<option value="Impacto Emocional">Impacto Emocional</option>
+<option value="Originalidade">Originalidade</option>
+<option value="Personagens">Personagens</option>
+<option value="Ritmo">Ritmo</option>
+<option value="Temas">Temas</option>
+</select>
+<button class="btn on" id="rcBtnBest" onclick="rankModeRC='best';updateBtnsRC();buildRankingCompleto()">🥇 Melhores</button>
+<button class="btn" id="rcBtnWorst" onclick="rankModeRC='worst';updateBtnsRC();buildRankingCompleto()">💀 Piores</button>
 </div>
-
-    <!-- Coluna direita: Dia da Semana + Gêneros Lidos empilhados -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-
-      <!-- Dia da semana -->
-      <div class="card" style="flex:0 0 auto;">
-        <div class="card-title">📆 Dia da Semana & Livros por Mês</div>
-        <div class="ctrl" style="margin-bottom:10px;">
-          <label>Ano:</label>
-          <select id="selWd" onchange="buildWd();buildLivrosMes()">
-            <option value="total">Total</option>
-          </select>
-        </div>
-        <div style="margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Média págs/dia</div>
-          <div id="wdAvg" class="wd-bars"></div>
-        </div>
-        <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:8px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Total de páginas</div>
-          <div id="wdSum" class="wd-bars"></div>
-        </div>
-        <div style="border-top:1px solid var(--border);padding-top:8px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Livros concluídos por mês</div>
-          <div id="livrosMes" class="wd-bars"></div>
-        </div>
-      </div>
-
-      <!-- Gêneros lidos -->
-      <div class="card" style="flex:1;">
-        <div class="card-title">🌎 Gêneros Lidos</div>
-        <div style="height:380px;position:relative;"><canvas id="cGeneros"></canvas></div>
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- Linha 2: Coleções + Autores -->
-  <div class="grid2" style="margin-bottom:16px;">
-
-    <!-- Coleções -->
-    <div class="card">
-      <div class="card-title">📦 Coleções Favoritas</div>
-      <div class="ctrl" style="margin-bottom:6px;">
-        <select id="selDonutAno" onchange="buildDonuts()" style="font-size:12px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-          <option value="total">Todos os anos</option>
-        </select>
-        <select id="selDonutModo" onchange="buildDonuts()" style="font-size:12px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-          <option value="lido">Só lidos (págs)</option>
-          <option value="tudo">Todos os livros (págs)</option>
-          <option value="livros_lidos">Só lidos (nº livros)</option>
-          <option value="livros">Todos (nº livros)</option>
-        </select>
-      </div>
-      <div style="height:190px;position:relative;"><canvas id="cDonut"></canvas></div>
-      <div id="donutLeg" class="donut-leg"></div>
-    </div>
-
-    <!-- Autores -->
-    <div class="card">
-      <div class="card-title">✍️ Autores Favoritos</div>
-      <div class="card-sub" style="font-size:11px;color:var(--muted);margin-bottom:6px;">top 10 · filtra com seletor das Coleções</div>
-      <div style="height:190px;position:relative;"><canvas id="cAutores"></canvas></div>
-      <div id="autoresLeg" class="donut-leg"></div>
-    </div>
-
-  </div>
-
-  <!-- ── 4. Leitura por Livro ── -->
-  <div class="sec" data-msection="livro">📖 Progresso por Livro</div>
-  <div class="grid2" style="margin-bottom:16px;">
-
-    <!-- Seletor de livro com detalhes -->
-    <div class="card">
-      <div class="card-title">📚 Detalhes do Livro</div>
-      <div class="ctrl" style="margin-bottom:14px;">
-        <label>Livro:</label>
-        <div style="flex:1;position:relative;">
-          <input id="selBookBusca" type="text" placeholder="Digite para buscar..."
-            oninput="filtrarSelBook(this.value)"
-            onblur="setTimeout(()=>{const l=document.getElementById('selBookLista');if(l)l.style.display='none'},200)"
-            autocomplete="off"
-            style="width:100%;padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
-          <div id="selBookLista" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;"></div>
-          <input id="selBook" type="hidden" value="">
-        </div>
-      </div>
-      <div id="bookInfo" style="display:none;">
-        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
-          <div id="bookInfoCapa" style="flex-shrink:0;font-size:32px;">📖</div>
-          <div>
-            <div id="bookInfoNome" style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:2px;"></div>
-            <div id="bookInfoAutor" style="font-size:16px;color:var(--muted);"></div>
-          </div>
-        </div>
-        <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="bookInfoStats"></div>
-      </div>
-    </div>
-
-    <!-- Gráfico diário -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="card-title" style="margin:0;">📖 Páginas Lidas por Dia</div>
-        <button id="btn-zeros" onclick="toggleZeros()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">📅 Incluir dias sem leitura</button>
-      </div>
-      <div style="height:200px;position:relative;"><canvas id="cBook"></canvas></div>
-    </div>
-
-  </div>
-
-  <!-- ── Sequências ── -->
-  <div class="sec" data-msection="mais">⚡ Sequências de Leitura</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-      <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center;">
-        <div style="font-size:36px;font-weight:700;color:var(--orange)" id="streakAtual">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">🔥 Streak Atual</div>
-        <div style="font-size:11px;color:var(--muted);">dias consecutivos</div>
-      </div>
-      <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center;">
-        <div style="font-size:36px;font-weight:700;color:var(--purple)" id="streakRecorde">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">🏆 Recorde de Streak</div>
-        <div style="font-size:11px;color:var(--muted);" id="streakRecordeData">dias seguidos</div>
-      </div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Últimas sequências</div>
-      <div id="streakList" style="display:flex;flex-direction:column;gap:4px;"></div>
-    </div>
-  </div>
-
-  <!-- ── Calendário Mensal ── -->
-  <div class="sec" data-msection="mais">📆 Calendário de Leitura</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <button onclick="calNav(-1)" style="background:var(--bg3);border:none;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;">‹</button>
-      <div id="calTitle" style="font-size:16px;font-weight:700;color:var(--text);flex:1;text-align:center;"></div>
-      <button onclick="calNav(1)" style="background:var(--bg3);border:none;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;">›</button>
-    </div>
-    <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
-    <div id="calDetail" style="display:none;margin-top:14px;background:var(--bg3);border-radius:10px;padding:14px;">
-      <div id="calDetailTitle" style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;"></div>
-      <div id="calDetailList"></div>
-    </div>
-  </div>
-
-  <!-- ── Mapa de Calor ── -->
-  <div class="sec" data-msection="mais">🔥 Mapa de Calor Anual</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div class="ctrl" style="margin-bottom:10px;">
-      <label>Ano:</label>
-      <select id="selHeatYear" onchange="buildHeatmap()">
-        <option value="2025">2025</option>
-      </select>
-    </div>
-    <div id="heatmapGrid" style="overflow-x:auto;"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);">
-      <span>Sem leitura</span>
-      <div style="width:20px;height:20px;border-radius:4px;background:#1a3a5c;border:1px solid rgba(255,255,255,0.1)"></div>
-      <div style="width:20px;height:20px;border-radius:4px;background:#1e5f8e;border:1px solid rgba(255,255,255,0.1)"></div>
-      <div style="width:20px;height:20px;border-radius:4px;background:#2980b9;border:1px solid rgba(255,255,255,0.1)"></div>
-      <div style="width:20px;height:20px;border-radius:4px;background:#8b7cf8;border:1px solid rgba(255,255,255,0.1)"></div>
-      <span>Muito lido</span>
-    </div>
-  </div>
-
-
-
+<div id="rcTotal" style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-bottom:10px;"></div>
+<div class="rank-list" id="rcList"></div>
+</div>
+</div>
+<!-- Coluna direita: Dia da Semana + Gêneros Lidos empilhados -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+<!-- Dia da semana -->
+<div class="card" style="flex:0 0 auto;">
+<div class="card-title">📆 Dia da Semana &amp; Livros por Mês</div>
+<div class="ctrl" style="margin-bottom:10px;">
+<label>Ano:</label>
+<select id="selWd" onchange="buildWd();buildLivrosMes()">
+<option value="total">Total</option>
+</select>
+</div>
+<div style="margin-bottom:8px;">
+<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Média págs/dia</div>
+<div class="wd-bars" id="wdAvg"></div>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:8px;">
+<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Total de páginas</div>
+<div class="wd-bars" id="wdSum"></div>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:8px;">
+<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Livros concluídos por mês</div>
+<div class="wd-bars" id="livrosMes"></div>
+</div>
+</div>
+<!-- Gêneros lidos -->
+<div class="card" style="flex:1;">
+<div class="card-title">🌎 Gêneros Lidos</div>
+<div style="height:380px;position:relative;"><canvas id="cGeneros"></canvas></div>
+</div>
+</div>
+</div>
+<!-- Linha 2: Coleções + Autores -->
+<div class="grid2" style="margin-bottom:16px;">
+<!-- Coleções -->
+<div class="card">
+<div class="card-title">📦 Coleções Favoritas</div>
+<div class="ctrl" style="margin-bottom:6px;">
+<select id="selDonutAno" onchange="buildDonuts()" style="font-size:12px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+<option value="total">Todos os anos</option>
+</select>
+<select id="selDonutModo" onchange="buildDonuts()" style="font-size:12px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+<option value="lido">Só lidos (págs)</option>
+<option value="tudo">Todos os livros (págs)</option>
+<option value="livros_lidos">Só lidos (nº livros)</option>
+<option value="livros">Todos (nº livros)</option>
+</select>
+</div>
+<div style="height:190px;position:relative;"><canvas id="cDonut"></canvas></div>
+<div class="donut-leg" id="donutLeg"></div>
+</div>
+<!-- Autores -->
+<div class="card">
+<div class="card-title">✍️ Autores Favoritos</div>
+<div class="card-sub" style="font-size:11px;color:var(--muted);margin-bottom:6px;">top 10 · filtra com seletor das Coleções</div>
+<div style="height:190px;position:relative;"><canvas id="cAutores"></canvas></div>
+<div class="donut-leg" id="autoresLeg"></div>
+</div>
+</div>
+<!-- ── 4. Leitura por Livro ── -->
+<div class="sec" data-msection="livro">📖 Progresso por Livro</div>
+<div class="grid2" style="margin-bottom:16px;">
+<!-- Seletor de livro com detalhes -->
+<div class="card">
+<div class="card-title">📚 Detalhes do Livro</div>
+<div class="ctrl" style="margin-bottom:14px;">
+<label>Livro:</label>
+<div style="flex:1;position:relative;">
+<input autocomplete="off" id="selBookBusca" onblur="setTimeout(()=&gt;{const l=document.getElementById('selBookLista');if(l)l.style.display='none'},200)" oninput="filtrarSelBook(this.value)" placeholder="Digite para buscar..." style="width:100%;padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;" type="text"/>
+<div id="selBookLista" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;"></div>
+<input id="selBook" type="hidden" value=""/>
+</div>
+</div>
+<div id="bookInfo" style="display:none;">
+<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
+<div id="bookInfoCapa" style="flex-shrink:0;font-size:32px;">📖</div>
+<div>
+<div id="bookInfoNome" style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:2px;"></div>
+<div id="bookInfoAutor" style="font-size:16px;color:var(--muted);"></div>
+</div>
+</div>
+<div data-desktop-grid="1" id="bookInfoStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+</div>
+</div>
+<!-- Gráfico diário -->
+<div class="card">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+<div class="card-title" style="margin:0;">📖 Páginas Lidas por Dia</div>
+<button id="btn-zeros" onclick="toggleZeros()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">📅 Incluir dias sem leitura</button>
+</div>
+<div style="height:200px;position:relative;"><canvas id="cBook"></canvas></div>
+</div>
+</div>
+<!-- ── Sequências ── -->
+<div class="sec" data-msection="mais">⚡ Sequências de Leitura</div>
+<div class="card" style="margin-bottom:16px;">
+<div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+<div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center;">
+<div id="streakAtual" style="font-size:36px;font-weight:700;color:var(--orange)">—</div>
+<div style="font-size:11px;color:var(--muted);margin-top:4px;">🔥 Streak Atual</div>
+<div style="font-size:11px;color:var(--muted);">dias consecutivos</div>
+</div>
+<div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:center;">
+<div id="streakRecorde" style="font-size:36px;font-weight:700;color:var(--purple)">—</div>
+<div style="font-size:11px;color:var(--muted);margin-top:4px;">🏆 Recorde de Streak</div>
+<div id="streakRecordeData" style="font-size:11px;color:var(--muted);">dias seguidos</div>
+</div>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:12px;">
+<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Últimas sequências</div>
+<div id="streakList" style="display:flex;flex-direction:column;gap:4px;"></div>
+</div>
+</div>
+<!-- ── Calendário Mensal ── -->
+<div class="sec" data-msection="mais">📆 Calendário de Leitura</div>
+<div class="card" style="margin-bottom:16px;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+<button onclick="calNav(-1)" style="background:var(--bg3);border:none;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;">‹</button>
+<div id="calTitle" style="font-size:16px;font-weight:700;color:var(--text);flex:1;text-align:center;"></div>
+<button onclick="calNav(1)" style="background:var(--bg3);border:none;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;">›</button>
+</div>
+<div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
+<div id="calDetail" style="display:none;margin-top:14px;background:var(--bg3);border-radius:10px;padding:14px;">
+<div id="calDetailTitle" style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;"></div>
+<div id="calDetailList"></div>
+</div>
+</div>
+<!-- ── Mapa de Calor ── -->
+<div class="sec" data-msection="mais">🔥 Mapa de Calor Anual</div>
+<div class="card" style="margin-bottom:16px;">
+<div class="ctrl" style="margin-bottom:10px;">
+<label>Ano:</label>
+<select id="selHeatYear" onchange="buildHeatmap()">
+<option value="2025">2025</option>
+</select>
+</div>
+<div id="heatmapGrid" style="overflow-x:auto;"></div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);">
+<span>Sem leitura</span>
+<div style="width:20px;height:20px;border-radius:4px;background:#1a3a5c;border:1px solid rgba(255,255,255,0.1)"></div>
+<div style="width:20px;height:20px;border-radius:4px;background:#1e5f8e;border:1px solid rgba(255,255,255,0.1)"></div>
+<div style="width:20px;height:20px;border-radius:4px;background:#2980b9;border:1px solid rgba(255,255,255,0.1)"></div>
+<div style="width:20px;height:20px;border-radius:4px;background:#8b7cf8;border:1px solid rgba(255,255,255,0.1)"></div>
+<span>Muito lido</span>
+</div>
+</div>
 </div><!-- /page -->
 <!-- ── PÁGINA DE BATALHA ── -->
 <div class="page" id="pageBatalha" style="display:none;">
-
-  <!-- Seletor de jogadores -->
-  <div id="batalha-seletor" style="display:flex;gap:12px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">Jogador A</span>
-      <select id="bat-playerA" onchange="renderBatalha()" style="background:transparent;border:none;color:#8b7cf8;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="Milton">Milton</option>
-        <option value="Daniel">Daniel</option>
-      </select>
-    </div>
-    <div style="font-size:24px;font-weight:900;color:var(--muted);">VS</div>
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">Jogador B</span>
-      <select id="bat-playerB" onchange="renderBatalha()" style="background:transparent;border:none;color:#f88c6a;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="Daniel">Daniel</option>
-        <option value="Milton">Milton</option>
-      </select>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
-      <select id="bat-ano" onchange="renderBatalha()" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">
-        <option value="total" style="color:var(--text);background:#1a1f35;">Todos os anos</option>
-      </select>
-    </div>
-  </div>
-
-  <div id="batalhaContainer"></div>
+<!-- Seletor de jogadores -->
+<div id="batalha-seletor" style="display:flex;gap:12px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
+<div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+<span style="font-size:12px;color:var(--muted);">Jogador A</span>
+<select id="bat-playerA" onchange="renderBatalha()" style="background:transparent;border:none;color:#8b7cf8;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
+<option value="Milton">Milton</option>
+<option value="Daniel">Daniel</option>
+</select>
+</div>
+<div style="font-size:24px;font-weight:900;color:var(--muted);">VS</div>
+<div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+<span style="font-size:12px;color:var(--muted);">Jogador B</span>
+<select id="bat-playerB" onchange="renderBatalha()" style="background:transparent;border:none;color:#f88c6a;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
+<option value="Daniel">Daniel</option>
+<option value="Milton">Milton</option>
+</select>
+</div>
+<div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+<span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
+<select id="bat-ano" onchange="renderBatalha()" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">
+<option style="color:var(--text);background:#1a1f35;" value="total">Todos os anos</option>
+</select>
+</div>
+</div>
+<div id="batalhaContainer"></div>
 </div>
 </div><!-- /app -->
-
 <footer>Dados carregados do Firebase · Atualizado em: <span id="footer-data">—</span></footer>
-
-
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -4696,519 +4637,487 @@ iniciarAppFirebase();
 .pwa-msg.ok { background:rgba(78,205,196,0.15);color:var(--teal);display:block; }
 .pwa-msg.err { background:rgba(248,140,106,0.15);color:var(--orange);display:block; }
 </style>
-
 <!-- FAB principal -->
 <button class="fab" id="fabBtn" onclick="toggleFabMenu()">＋</button>
-
 <!-- Menu do FAB -->
 <div class="fab-menu" id="fabMenu" style="display:none">
-  <div class="fab-item">
-    <span>Adicionar Livro</span>
-    <button style="background:#4ecdc4" onclick="abrirModal('novoLivro')">➕</button>
-  </div>
-  <div class="fab-item">
-    <span>Registrar Sessão</span>
-    <button style="background:var(--purple)" onclick="abrirModal('sessao')">📖</button>
-  </div>
-  <div class="fab-item">
-    <span>Avaliar Livro</span>
-    <button style="background:var(--teal)" onclick="abrirModal('nota')">⭐</button>
-  </div>
-  <div class="fab-item">
-    <span>Atualizar Livro</span>
-    <button style="background:var(--orange)" onclick="abrirModal('livro')">✏️</button>
-  </div>
-  <div class="fab-item">
-    <span>Roleta de Leitura</span>
-    <button style="background:#e56cff" onclick="abrirModal('roleta')">🎲</button>
-  </div>
-  <div class="fab-item">
-    <span>Excluir Livro</span>
-    <button style="background:#e53935" onclick="abrirModal('excluir')">🗑️</button>
-  </div>
-  <div class="fab-item">
-    <span>Excluir Sessão</span>
-    <button style="background:#b71c1c" onclick="abrirModal('excluirSessao')">📅</button>
-  </div>
+<div class="fab-item">
+<span>Adicionar Livro</span>
+<button onclick="abrirModal('novoLivro')" style="background:#4ecdc4">➕</button>
 </div>
-
+<div class="fab-item">
+<span>Registrar Sessão</span>
+<button onclick="abrirModal('sessao')" style="background:var(--purple)">📖</button>
+</div>
+<div class="fab-item">
+<span>Avaliar Livro</span>
+<button onclick="abrirModal('nota')" style="background:var(--teal)">⭐</button>
+</div>
+<div class="fab-item">
+<span>Atualizar Livro</span>
+<button onclick="abrirModal('livro')" style="background:var(--orange)">✏️</button>
+</div>
+<div class="fab-item">
+<span>Roleta de Leitura</span>
+<button onclick="abrirModal('roleta')" style="background:#e56cff">🎲</button>
+</div>
+<div class="fab-item">
+<span>Excluir Livro</span>
+<button onclick="abrirModal('excluir')" style="background:#e53935">🗑️</button>
+</div>
+<div class="fab-item">
+<span>Excluir Sessão</span>
+<button onclick="abrirModal('excluirSessao')" style="background:#b71c1c">📅</button>
+</div>
+</div>
 <!-- Modal: Excluir Sessão -->
 <div class="pwa-overlay" id="modalExcluirSessao">
-  <div class="pwa-modal">
-    <h2>📅 Gerenciar Sessões</h2>
-    <div class="pwa-field">
-      <label>Filtrar por livro (opcional)</label>
-      <input id="es-filtro" type="text" placeholder="Digite para filtrar..."
-        oninput="renderSessoesExcluir()"
-        style="margin-bottom:8px;">
-    </div>
-    <div id="es-lista" style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
-    <div id="es-msg" class="pwa-msg"></div>
-    <button class="pwa-btn-cancel" onclick="fecharModal('excluirSessao')">Fechar</button>
-  </div>
+<div class="pwa-modal">
+<h2>📅 Gerenciar Sessões</h2>
+<div class="pwa-field">
+<label>Filtrar por livro (opcional)</label>
+<input id="es-filtro" oninput="renderSessoesExcluir()" placeholder="Digite para filtrar..." style="margin-bottom:8px;" type="text"/>
 </div>
-
+<div id="es-lista" style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+<div class="pwa-msg" id="es-msg"></div>
+<button class="pwa-btn-cancel" onclick="fecharModal('excluirSessao')">Fechar</button>
+</div>
+</div>
 <!-- Modal: Editar Sessão -->
 <div class="pwa-overlay" id="modalEditarSessao">
-  <div class="pwa-modal">
-    <h2>✏️ Editar Sessão</h2>
-    <input type="hidden" id="ee-livro-original">
-    <input type="hidden" id="ee-data-original">
-    <input type="hidden" id="ee-paginas-original">
-    <div class="pwa-field">
-      <label>Livro</label>
-      <div id="ee-livro-nome" style="padding:8px 12px;background:var(--bg3);border-radius:8px;color:var(--teal);font-size:14px;"></div>
-    </div>
-    <div class="pwa-row">
-      <div class="pwa-field">
-        <label>Data</label>
-        <input id="ee-data" type="date" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;">
-      </div>
-      <div class="pwa-field">
-        <label>Páginas lidas</label>
-        <input id="ee-paginas" type="number" min="1">
-      </div>
-    </div>
-    <div class="pwa-row">
-      <div class="pwa-field">
-        <label>Horas</label>
-        <input id="ee-horas" type="number" min="0" placeholder="0">
-      </div>
-      <div class="pwa-field">
-        <label>Minutos</label>
-        <input id="ee-minutos" type="number" min="0" max="59" placeholder="0">
-      </div>
-    </div>
-    <div id="ee-msg" class="pwa-msg"></div>
-    <button class="pwa-btn" id="ee-btn" onclick="salvarEdicaoSessao()">💾 Salvar alterações</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('editarSessao')">Cancelar</button>
-  </div>
+<div class="pwa-modal">
+<h2>✏️ Editar Sessão</h2>
+<input id="ee-livro-original" type="hidden"/>
+<input id="ee-data-original" type="hidden"/>
+<input id="ee-paginas-original" type="hidden"/>
+<div class="pwa-field">
+<label>Livro</label>
+<div id="ee-livro-nome" style="padding:8px 12px;background:var(--bg3);border-radius:8px;color:var(--teal);font-size:14px;"></div>
 </div>
-
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Data</label>
+<input id="ee-data" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;" type="date"/>
+</div>
+<div class="pwa-field">
+<label>Páginas lidas</label>
+<input id="ee-paginas" min="1" type="number"/>
+</div>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Horas</label>
+<input id="ee-horas" min="0" placeholder="0" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Minutos</label>
+<input id="ee-minutos" max="59" min="0" placeholder="0" type="number"/>
+</div>
+</div>
+<div class="pwa-msg" id="ee-msg"></div>
+<button class="pwa-btn" id="ee-btn" onclick="salvarEdicaoSessao()">💾 Salvar alterações</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('editarSessao')">Cancelar</button>
+</div>
+</div>
 <!-- Modal: Registrar Sessão -->
 <div class="pwa-overlay" id="modalSessao">
-  <div class="pwa-modal">
-    <h2>📖 Registrar Sessão</h2>
-    <div class="pwa-field">
-      <label>Livro</label>
-      <input id="s-livro-busca" type="text" placeholder="Digite para buscar..." 
-        oninput="filtrarLivrosSessao(this.value)" 
-        onblur="setTimeout(()=>document.getElementById('s-livro-lista').style.display='none',200)"
-        autocomplete="off">
-      <div id="s-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-top:4px;max-height:200px;overflow-y:auto;"></div>
-      <input id="s-livro" type="hidden" value="">
-      <div id="s-livro-selecionado" style="display:none;background:var(--bg4);border-radius:8px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--teal);cursor:pointer;" onclick="limparLivroSessao()">
-      </div>
-    </div>
-    <div class="pwa-field">
-      <label>Data</label>
-      <input id="s-data" type="date">
-    </div>
-    <div class="pwa-row">
-      <div class="pwa-field" style="flex:2;">
-        <label>Página atual</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="position:relative;flex:1;">
-            <div id="s-pagina-scroll" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden;height:120px;position:relative;cursor:ns-resize;user-select:none;">
-              <div id="s-pagina-display" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">anterior</div>
-                <div id="s-pagina-prev" style="font-size:14px;color:var(--muted);opacity:0.5;">—</div>
-                <div id="s-pagina-cur" style="font-size:28px;font-weight:900;color:var(--teal);margin:4px 0;line-height:1;">—</div>
-                <div id="s-pagina-pct" style="font-size:11px;color:var(--purple);">0%</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="s-pagina-lidas-label"></div>
-              </div>
-              <div style="position:absolute;top:0;left:0;right:0;height:35px;background:linear-gradient(var(--bg2),transparent);pointer-events:none;"></div>
-              <div style="position:absolute;bottom:0;left:0;right:0;height:35px;background:linear-gradient(transparent,var(--bg2));pointer-events:none;"></div>
-              <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:var(--purple);opacity:0.3;transform:translateY(-50%);pointer-events:none;"></div>
-            </div>
-            <input id="s-paginas" type="hidden" value="0">
-            <input id="s-pagina-atual" type="hidden" value="0">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <button type="button" onclick="stepPagina(10)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:16px;">▲</button>
-            <button type="button" onclick="stepPagina(1)"  style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:14px;">↑</button>
-            <button type="button" onclick="stepPagina(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:14px;">↓</button>
-            <button type="button" onclick="stepPagina(-10)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:16px;">▼</button>
-          </div>
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>Horas</label>
-        <input id="s-horas" type="number" min="0" placeholder="0">
-      </div>
-      <div class="pwa-field">
-        <label>Minutos</label>
-        <input id="s-minutos" type="number" min="0" max="59" placeholder="0">
-      </div>
-    </div>
-    <div class="pwa-field" style="display:none">
-      <label>Segundos</label>
-      <input id="s-segundos" type="number" min="0" max="59" value="0">
-    </div>
-    <div class="pwa-msg" id="s-msg"></div>
-    <button class="pwa-btn" id="s-btn" onclick="enviarSessao()">✅ Salvar Sessão</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('sessao')">Cancelar</button>
-  </div>
+<div class="pwa-modal">
+<h2>📖 Registrar Sessão</h2>
+<div class="pwa-field">
+<label>Livro</label>
+<input autocomplete="off" id="s-livro-busca" onblur="setTimeout(()=&gt;document.getElementById('s-livro-lista').style.display='none',200)" oninput="filtrarLivrosSessao(this.value)" placeholder="Digite para buscar..." type="text"/>
+<div id="s-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-top:4px;max-height:200px;overflow-y:auto;"></div>
+<input id="s-livro" type="hidden" value=""/>
+<div id="s-livro-selecionado" onclick="limparLivroSessao()" style="display:none;background:var(--bg4);border-radius:8px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--teal);cursor:pointer;">
 </div>
-
+</div>
+<div class="pwa-field">
+<label>Data</label>
+<input id="s-data" type="date"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field" style="flex:2;">
+<label>Página atual</label>
+<div style="display:flex;align-items:center;gap:8px;">
+<div style="position:relative;flex:1;">
+<div id="s-pagina-scroll" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden;height:120px;position:relative;cursor:ns-resize;user-select:none;">
+<div id="s-pagina-display" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">anterior</div>
+<div id="s-pagina-prev" style="font-size:14px;color:var(--muted);opacity:0.5;">—</div>
+<div id="s-pagina-cur" style="font-size:28px;font-weight:900;color:var(--teal);margin:4px 0;line-height:1;">—</div>
+<div id="s-pagina-pct" style="font-size:11px;color:var(--purple);">0%</div>
+<div id="s-pagina-lidas-label" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+</div>
+<div style="position:absolute;top:0;left:0;right:0;height:35px;background:linear-gradient(var(--bg2),transparent);pointer-events:none;"></div>
+<div style="position:absolute;bottom:0;left:0;right:0;height:35px;background:linear-gradient(transparent,var(--bg2));pointer-events:none;"></div>
+<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:var(--purple);opacity:0.3;transform:translateY(-50%);pointer-events:none;"></div>
+</div>
+<input id="s-paginas" type="hidden" value="0"/>
+<input id="s-pagina-atual" type="hidden" value="0"/>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;">
+<button onclick="stepPagina(10)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:16px;" type="button">▲</button>
+<button onclick="stepPagina(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:14px;" type="button">↑</button>
+<button onclick="stepPagina(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:14px;" type="button">↓</button>
+<button onclick="stepPagina(-10)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);width:40px;height:36px;cursor:pointer;font-size:16px;" type="button">▼</button>
+</div>
+</div>
+</div>
+<div class="pwa-field">
+<label>Horas</label>
+<input id="s-horas" min="0" placeholder="0" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Minutos</label>
+<input id="s-minutos" max="59" min="0" placeholder="0" type="number"/>
+</div>
+</div>
+<div class="pwa-field" style="display:none">
+<label>Segundos</label>
+<input id="s-segundos" max="59" min="0" type="number" value="0"/>
+</div>
+<div class="pwa-msg" id="s-msg"></div>
+<button class="pwa-btn" id="s-btn" onclick="enviarSessao()">✅ Salvar Sessão</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('sessao')">Cancelar</button>
+</div>
+</div>
 <!-- Modal: Avaliar Livro -->
 <div class="pwa-overlay" id="modalNota">
-  <div class="pwa-modal">
-    <h2>⭐ Avaliar Livro</h2>
-    <div class="pwa-field">
-      <label>Livro</label>
-      <input id="n-livro-busca" type="text" placeholder="Digite para buscar..."
-        oninput="filtrarSelect('n-livro-busca','n-livro','completo')"
-        onblur="setTimeout(()=>document.getElementById('n-livro-lista').style.display='none',200)"
-        autocomplete="off">
-      <div id="n-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
-      <input id="n-livro" type="hidden" value="">
-      <div id="n-livro-sel" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(139,124,248,0.15);border-radius:8px;font-size:13px;color:var(--teal);cursor:pointer;" onclick="limparBuscaSelect('n')"></div>
-    </div>
-    <div class="pwa-field">
-      <label>Ano de leitura</label>
-      <input id="n-ano" type="number" value="2026" min="2020" max="2030">
-    </div>
-    <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div class="pwa-criterio"><label>Diálogos</label><input id="n-0" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Enredo</label><input id="n-1" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Estilo Visual</label><input id="n-2" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Finalização</label><input id="n-3" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Imersão</label><input id="n-4" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Impacto Emocional</label><input id="n-5" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Originalidade</label><input id="n-6" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Personagens</label><input id="n-7" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Ritmo</label><input id="n-8" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-      <div class="pwa-criterio"><label>Temas</label><input id="n-9" type="number" min="0" max="10" step="0.5" placeholder="0-10"></div>
-    </div>
-    <div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;margin-bottom:10px;">
-      Média: <strong id="n-media" style="color:var(--teal);font-size:20px;">—</strong>
-    </div>
-    <div class="pwa-msg" id="n-msg"></div>
-    <button class="pwa-btn" id="n-btn" onclick="enviarNota()">✅ Salvar Avaliação</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('nota')">Cancelar</button>
-  </div>
+<div class="pwa-modal">
+<h2>⭐ Avaliar Livro</h2>
+<div class="pwa-field">
+<label>Livro</label>
+<input autocomplete="off" id="n-livro-busca" onblur="setTimeout(()=&gt;document.getElementById('n-livro-lista').style.display='none',200)" oninput="filtrarSelect('n-livro-busca','n-livro','completo')" placeholder="Digite para buscar..." type="text"/>
+<div id="n-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
+<input id="n-livro" type="hidden" value=""/>
+<div id="n-livro-sel" onclick="limparBuscaSelect('n')" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(139,124,248,0.15);border-radius:8px;font-size:13px;color:var(--teal);cursor:pointer;"></div>
 </div>
-
+<div class="pwa-field">
+<label>Ano de leitura</label>
+<input id="n-ano" max="2030" min="2020" type="number" value="2026"/>
+</div>
+<div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+<div class="pwa-criterio"><label>Diálogos</label><input id="n-0" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Enredo</label><input id="n-1" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Estilo Visual</label><input id="n-2" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Finalização</label><input id="n-3" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Imersão</label><input id="n-4" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Impacto Emocional</label><input id="n-5" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Originalidade</label><input id="n-6" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Personagens</label><input id="n-7" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Ritmo</label><input id="n-8" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+<div class="pwa-criterio"><label>Temas</label><input id="n-9" max="10" min="0" placeholder="0-10" step="0.5" type="number"/></div>
+</div>
+<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;margin-bottom:10px;">
+      Média: <strong id="n-media" style="color:var(--teal);font-size:20px;">—</strong>
+</div>
+<div class="pwa-msg" id="n-msg"></div>
+<button class="pwa-btn" id="n-btn" onclick="enviarNota()">✅ Salvar Avaliação</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('nota')">Cancelar</button>
+</div>
+</div>
 <!-- Modal: Novo Livro -->
 <div class="pwa-overlay" id="modalNovoLivro">
-  <div class="pwa-modal">
-    <h2>➕ Adicionar Livro</h2>
-    <div class="pwa-field">
-      <label>Nome do Livro *</label>
-      <input id="nl-nome" type="text" placeholder="Ex: O Caminho dos Reis" oninput="nlAgendarBuscaApi()" onblur="nlBuscarSeApiSelecionada()">
-    </div>
-    <div class="pwa-field">
-      <label>Modo de cadastro</label>
-      <div class="api-choice-row">
-        <label class="api-choice"><input type="radio" name="nl-api-mode" value="manual" checked onchange="nlModoApiMudou()"> <span>Manual</span></label>
-        <label class="api-choice"><input type="radio" name="nl-api-mode" value="openlibrary" onchange="nlModoApiMudou()"> <span>Usar Open Library API</span></label>
-        <label class="api-choice"><input type="radio" name="nl-api-mode" value="isbndb" onchange="nlModoApiMudou()"> <span>Usar ISBNdb API</span></label>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
-        <button type="button" id="nl-api-buscar" onclick="nlBuscarSeApiSelecionada(true)" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;cursor:pointer;">🔎 Buscar dados</button>
-        <span id="nl-api-status" style="font-size:12px;color:var(--muted);"></span>
-      </div>
-    </div>
-    <div class="pwa-field">
-      <label>Coleção</label>
-      <input id="nl-colecao" type="text" placeholder="Ex: Cosmere, Grishaverso...">
-    </div>
-    <div class="pwa-field">
-      <label>Autor</label>
-      <input id="nl-autor" type="text" placeholder="Ex: Brandon Sanderson">
-    </div>
-    <div class="pwa-row">
-      <div class="pwa-field">
-        <label>Total de Páginas</label>
-        <input id="nl-paginas" type="number" min="1" placeholder="0">
-      </div>
-      <div class="pwa-field">
-        <label>Ano da Meta</label>
-        <input id="nl-metaano" type="number" min="2023" max="2030" placeholder="2026">
-      </div>
-      <div class="pwa-field">
-        <label>Ordem de Leitura</label>
-        <input id="nl-ordem" type="number" min="1" placeholder="1">
-      </div>
-    </div>
-    <div class="pwa-field">
-      <label>Livro anterior (dependência)</label>
-      <input id="nl-depende" type="text" placeholder="Nome do livro que precisa ler antes">
-    </div>
-    <div class="pwa-field">
-      <label>URL da Capa</label>
-      <input id="nl-capa" type="url" placeholder="https://...">
-    </div>
-    <div class="pwa-field">
-      <label>ISBN</label>
-      <input id="nl-isbn" type="text" placeholder="978...">
-    </div>
-    <div class="pwa-field">
-      <label>Gênero</label>
-      <input id="nl-genero" type="text" placeholder="Ex: Fantasia, Sci-Fi, Terror..." list="generos-list">
-      <datalist id="generos-list">
-        <option value="Fantasia"><option value="Sci-Fi"><option value="Terror">
-        <option value="Romance"><option value="Mistério"><option value="Thriller">
-        <option value="Histórico"><option value="Não-Ficção"><option value="Clássico">
-        <option value="Aventura"><option value="Distopia"><option value="Mangá">
-      </datalist>
-    </div>
-    <div class="pwa-msg" id="nl-msg"></div>
-    <button class="pwa-btn" id="nl-btn" onclick="enviarNovoLivro()">✅ Adicionar Livro</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('novoLivro')">Cancelar</button>
-  </div>
+<div class="pwa-modal">
+<h2>➕ Adicionar Livro</h2>
+<div class="pwa-field">
+<label>Nome do Livro *</label>
+<input id="nl-nome" onblur="nlBuscarSeApiSelecionada()" oninput="nlAgendarBuscaApi()" placeholder="Ex: O Caminho dos Reis" type="text"/>
 </div>
-
+<div class="pwa-field">
+<label>Modo de cadastro</label>
+<div class="api-choice-row">
+<label class="api-choice"><input checked="" name="nl-api-mode" onchange="nlModoApiMudou()" type="radio" value="manual"/> <span>Manual</span></label>
+<label class="api-choice"><input name="nl-api-mode" onchange="nlModoApiMudou()" type="radio" value="openlibrary"/> <span>Usar Open Library API</span></label>
+<label class="api-choice"><input name="nl-api-mode" onchange="nlModoApiMudou()" type="radio" value="isbndb"/> <span>Usar ISBNdb API</span></label>
+</div>
+<div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+<button id="nl-api-buscar" onclick="nlBuscarSeApiSelecionada(true)" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;cursor:pointer;" type="button">🔎 Buscar dados</button>
+<span id="nl-api-status" style="font-size:12px;color:var(--muted);"></span>
+</div>
+</div>
+<div class="pwa-field">
+<label>Coleção</label>
+<input id="nl-colecao" placeholder="Ex: Cosmere, Grishaverso..." type="text"/>
+</div>
+<div class="pwa-field">
+<label>Autor</label>
+<input id="nl-autor" placeholder="Ex: Brandon Sanderson" type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Total de Páginas</label>
+<input id="nl-paginas" min="1" placeholder="0" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Ano da Meta</label>
+<input id="nl-metaano" max="2030" min="2023" placeholder="2026" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Ordem de Leitura</label>
+<input id="nl-ordem" min="1" placeholder="1" type="number"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>Livro anterior (dependência)</label>
+<input id="nl-depende" placeholder="Nome do livro que precisa ler antes" type="text"/>
+</div>
+<div class="pwa-field">
+<label>URL da Capa</label>
+<input id="nl-capa" placeholder="https://..." type="url"/>
+</div>
+<div class="pwa-field">
+<label>ISBN</label>
+<input id="nl-isbn" placeholder="978..." type="text"/>
+</div>
+<div class="pwa-field">
+<label>Gênero</label>
+<input id="nl-genero" list="generos-list" placeholder="Ex: Fantasia, Sci-Fi, Terror..." type="text"/>
+<datalist id="generos-list">
+<option value="Fantasia"><option value="Sci-Fi"><option value="Terror">
+<option value="Romance"><option value="Mistério"><option value="Thriller">
+<option value="Histórico"><option value="Não-Ficção"><option value="Clássico">
+<option value="Aventura"><option value="Distopia"><option value="Mangá">
+</option></option></option></option></option></option></option></option></option></option></option></option></datalist>
+</div>
+<div class="pwa-msg" id="nl-msg"></div>
+<button class="pwa-btn" id="nl-btn" onclick="enviarNovoLivro()">✅ Adicionar Livro</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('novoLivro')">Cancelar</button>
+</div>
+</div>
 <!-- Modal: Teste API ISBNdb -->
 <div class="pwa-overlay" id="modalTesteIsbndb">
-  <div class="pwa-modal">
-    <h2>🔍 Teste API ISBNdb</h2>
-    <div class="pwa-field">
-      <label>Nome do livro ou ISBN</label>
-      <input id="isbndb-busca" type="text" placeholder="Ex: O Caminho dos Reis ou 9788580418072" onkeydown="if(event.key==='Enter')buscarIsbndb()">
-    </div>
-    <button class="pwa-btn" id="isbndb-btn" onclick="buscarIsbndb()">🔍 Buscar</button>
-    <div class="pwa-msg" id="isbndb-msg"></div>
-
-    <div id="isbndb-resultado" style="display:none;margin-top:14px;">
-      <div style="display:flex;gap:14px;margin-bottom:14px;">
-        <img id="isbndb-capa" src="" alt="Capa" style="width:90px;height:128px;object-fit:cover;border-radius:6px;box-shadow:2px 4px 12px rgba(0,0,0,0.5);background:var(--bg3);flex-shrink:0;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;" id="isbndb-titulo">—</div>
-          <div style="font-size:12px;color:var(--muted);" id="isbndb-autor">—</div>
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>Nome do Livro</label>
-        <input id="isbndb-out-nome" type="text" readonly>
-      </div>
-      <div class="pwa-field">
-        <label>Coleção <span style="color:var(--muted);font-weight:400;">(da API quando disponível — editável)</span></label>
-        <input id="isbndb-out-colecao" type="text" placeholder="Ex: Cosmere, Grishaverso...">
-      </div>
-      <div class="pwa-row">
-        <div class="pwa-field">
-          <label>Ordem na Coleção <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
-          <input id="isbndb-out-ordem" type="number" min="1" placeholder="1">
-        </div>
-        <div class="pwa-field">
-          <label>Ano da Meta <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
-          <input id="isbndb-out-metaano" type="number" min="2023" max="2030" placeholder="2026">
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>Autor</label>
-        <input id="isbndb-out-autor" type="text" readonly>
-      </div>
-      <div class="pwa-row">
-        <div class="pwa-field">
-          <label>Total de Páginas</label>
-          <input id="isbndb-out-paginas" type="number" readonly>
-        </div>
-        <div class="pwa-field">
-          <label>ISBN</label>
-          <input id="isbndb-out-isbn" type="text" readonly>
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>URL da Capa</label>
-        <input id="isbndb-out-capa" type="url" readonly>
-      </div>
-      <div class="pwa-field">
-        <label>Gênero</label>
-        <input id="isbndb-out-genero" type="text" readonly>
-      </div>
-    </div>
-
-    <button class="pwa-btn-cancel" onclick="fecharModal('testeIsbndb')" style="margin-top:14px;">Fechar</button>
-  </div>
+<div class="pwa-modal">
+<h2>🔍 Teste API ISBNdb</h2>
+<div class="pwa-field">
+<label>Nome do livro ou ISBN</label>
+<input id="isbndb-busca" onkeydown="if(event.key==='Enter')buscarIsbndb()" placeholder="Ex: O Caminho dos Reis ou 9788580418072" type="text"/>
 </div>
-
+<button class="pwa-btn" id="isbndb-btn" onclick="buscarIsbndb()">🔍 Buscar</button>
+<div class="pwa-msg" id="isbndb-msg"></div>
+<div id="isbndb-resultado" style="display:none;margin-top:14px;">
+<div style="display:flex;gap:14px;margin-bottom:14px;">
+<img alt="Capa" id="isbndb-capa" src="" style="width:90px;height:128px;object-fit:cover;border-radius:6px;box-shadow:2px 4px 12px rgba(0,0,0,0.5);background:var(--bg3);flex-shrink:0;"/>
+<div style="flex:1;min-width:0;">
+<div id="isbndb-titulo" style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">—</div>
+<div id="isbndb-autor" style="font-size:12px;color:var(--muted);">—</div>
+</div>
+</div>
+<div class="pwa-field">
+<label>Nome do Livro</label>
+<input id="isbndb-out-nome" readonly="" type="text"/>
+</div>
+<div class="pwa-field">
+<label>Coleção <span style="color:var(--muted);font-weight:400;">(da API quando disponível — editável)</span></label>
+<input id="isbndb-out-colecao" placeholder="Ex: Cosmere, Grishaverso..." type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Ordem na Coleção <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
+<input id="isbndb-out-ordem" min="1" placeholder="1" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Ano da Meta <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
+<input id="isbndb-out-metaano" max="2030" min="2023" placeholder="2026" type="number"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>Autor</label>
+<input id="isbndb-out-autor" readonly="" type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Total de Páginas</label>
+<input id="isbndb-out-paginas" readonly="" type="number"/>
+</div>
+<div class="pwa-field">
+<label>ISBN</label>
+<input id="isbndb-out-isbn" readonly="" type="text"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>URL da Capa</label>
+<input id="isbndb-out-capa" readonly="" type="url"/>
+</div>
+<div class="pwa-field">
+<label>Gênero</label>
+<input id="isbndb-out-genero" readonly="" type="text"/>
+</div>
+</div>
+<button class="pwa-btn-cancel" onclick="fecharModal('testeIsbndb')" style="margin-top:14px;">Fechar</button>
+</div>
+</div>
 <!-- Modal: Teste API Open Library -->
 <div class="pwa-overlay" id="modalTesteOpenLibrary">
-  <div class="pwa-modal">
-    <h2>📚 Teste API Open Library</h2>
-    <div class="pwa-field">
-      <label>Nome do livro ou ISBN</label>
-      <input id="ol-busca" type="text" placeholder="Ex: O Caminho dos Reis ou 9788580418072" onkeydown="if(event.key==='Enter')buscarOpenLibrary()">
-    </div>
-    <button class="pwa-btn" id="ol-btn" onclick="buscarOpenLibrary()">🔍 Buscar</button>
-    <div class="pwa-msg" id="ol-msg"></div>
-
-    <div id="ol-resultado" style="display:none;margin-top:14px;">
-      <div style="display:flex;gap:14px;margin-bottom:14px;">
-        <img id="ol-capa" src="" alt="Capa" style="width:90px;height:128px;object-fit:cover;border-radius:6px;box-shadow:2px 4px 12px rgba(0,0,0,0.5);background:var(--bg3);flex-shrink:0;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;" id="ol-titulo">—</div>
-          <div style="font-size:12px;color:var(--muted);" id="ol-autor">—</div>
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>Nome do Livro</label>
-        <input id="ol-out-nome" type="text" readonly>
-      </div>
-      <div class="pwa-field">
-        <label>Coleção <span style="color:var(--muted);font-weight:400;">(da API quando disponível — editável)</span></label>
-        <input id="ol-out-colecao" type="text" placeholder="Ex: Cosmere, Grishaverso...">
-      </div>
-      <div class="pwa-row">
-        <div class="pwa-field">
-          <label>Ordem na Coleção <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
-          <input id="ol-out-ordem" type="number" min="1" placeholder="1">
-        </div>
-        <div class="pwa-field">
-          <label>Ano da Meta <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
-          <input id="ol-out-metaano" type="number" min="2023" max="2030" placeholder="2026">
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>Autor</label>
-        <input id="ol-out-autor" type="text" readonly>
-      </div>
-      <div class="pwa-row">
-        <div class="pwa-field">
-          <label>Total de Páginas</label>
-          <input id="ol-out-paginas" type="number" readonly>
-        </div>
-        <div class="pwa-field">
-          <label>ISBN</label>
-          <input id="ol-out-isbn" type="text" readonly>
-        </div>
-      </div>
-      <div class="pwa-field">
-        <label>URL da Capa</label>
-        <input id="ol-out-capa" type="url" readonly>
-      </div>
-      <div class="pwa-field">
-        <label>Gênero</label>
-        <input id="ol-out-genero" type="text" readonly>
-      </div>
-    </div>
-
-    <button class="pwa-btn-cancel" onclick="fecharModal('testeOpenLibrary')" style="margin-top:14px;">Fechar</button>
-  </div>
+<div class="pwa-modal">
+<h2>📚 Teste API Open Library</h2>
+<div class="pwa-field">
+<label>Nome do livro ou ISBN</label>
+<input id="ol-busca" onkeydown="if(event.key==='Enter')buscarOpenLibrary()" placeholder="Ex: O Caminho dos Reis ou 9788580418072" type="text"/>
+</div>
+<button class="pwa-btn" id="ol-btn" onclick="buscarOpenLibrary()">🔍 Buscar</button>
+<div class="pwa-msg" id="ol-msg"></div>
+<div id="ol-resultado" style="display:none;margin-top:14px;">
+<div style="display:flex;gap:14px;margin-bottom:14px;">
+<img alt="Capa" id="ol-capa" src="" style="width:90px;height:128px;object-fit:cover;border-radius:6px;box-shadow:2px 4px 12px rgba(0,0,0,0.5);background:var(--bg3);flex-shrink:0;"/>
+<div style="flex:1;min-width:0;">
+<div id="ol-titulo" style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">—</div>
+<div id="ol-autor" style="font-size:12px;color:var(--muted);">—</div>
+</div>
+</div>
+<div class="pwa-field">
+<label>Nome do Livro</label>
+<input id="ol-out-nome" readonly="" type="text"/>
+</div>
+<div class="pwa-field">
+<label>Coleção <span style="color:var(--muted);font-weight:400;">(da API quando disponível — editável)</span></label>
+<input id="ol-out-colecao" placeholder="Ex: Cosmere, Grishaverso..." type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Ordem na Coleção <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
+<input id="ol-out-ordem" min="1" placeholder="1" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Ano da Meta <span style="color:var(--muted);font-weight:400;">(manual)</span></label>
+<input id="ol-out-metaano" max="2030" min="2023" placeholder="2026" type="number"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>Autor</label>
+<input id="ol-out-autor" readonly="" type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Total de Páginas</label>
+<input id="ol-out-paginas" readonly="" type="number"/>
+</div>
+<div class="pwa-field">
+<label>ISBN</label>
+<input id="ol-out-isbn" readonly="" type="text"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>URL da Capa</label>
+<input id="ol-out-capa" readonly="" type="url"/>
+</div>
+<div class="pwa-field">
+<label>Gênero</label>
+<input id="ol-out-genero" readonly="" type="text"/>
+</div>
+</div>
+<button class="pwa-btn-cancel" onclick="fecharModal('testeOpenLibrary')" style="margin-top:14px;">Fechar</button>
+</div>
 </div>
 <div class="pwa-overlay" id="modalLivro">
-  <div class="pwa-modal">
-    <h2>✏️ Atualizar Livro</h2>
-    <div class="pwa-field">
-      <label>Livro</label>
-      <input id="l-livro-busca" type="text" placeholder="Digite para buscar..."
-        oninput="filtrarSelect('l-livro-busca','l-livro','todos')"
-        onblur="setTimeout(()=>document.getElementById('l-livro-lista').style.display='none',200)"
-        autocomplete="off">
-      <div id="l-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
-      <input id="l-livro" type="hidden" value="">
-      <div id="l-livro-sel" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(139,124,248,0.15);border-radius:8px;font-size:13px;color:var(--teal);cursor:pointer;" onclick="limparBuscaSelect('l'); document.getElementById('l-livro').value='';"></div>
-    </div>
-    <div class="pwa-field">
-      <label>Status</label>
-      <select id="l-status" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;">
-        <option value="">Não alterar</option>
-        <option value="Completo">✅ Completo</option>
-        <option value="Lendo">📖 Lendo</option>
-        <option value="Pausado">⏸️ Pausado</option>
-        <option value="Aguardando">📋 Aguardando</option>
-      </select>
-    </div>
-    <div class="pwa-field">
-      <label>Autor</label>
-      <input id="l-autor" type="text" placeholder="Deixe vazio para não alterar">
-    </div>
-    <div class="pwa-row">
-      <div class="pwa-field">
-        <label>Total de Páginas</label>
-        <input id="l-paginas" type="number" min="1" placeholder="—">
-      </div>
-      <div class="pwa-field">
-        <label>Ano da Meta</label>
-        <input id="l-metaano" type="text" pattern="\d{4}" placeholder="Ex: 2026 (deixe vazio para remover da meta)">
-      </div>
-      <div class="pwa-field">
-        <label>Ordem</label>
-        <input id="l-ordem" type="number" min="1" placeholder="—">
-      </div>
-    </div>
-    <div class="pwa-field">
-      <label>Dependência (livro anterior)</label>
-      <input id="l-depende" type="text" placeholder="Deixe vazio para não alterar">
-    </div>
-    <div class="pwa-field">
-      <label>URL da Capa</label>
-      <input id="l-capa" type="url" placeholder="Deixe vazio para não alterar">
-    </div>
-    <div class="pwa-field">
-      <label>ISBN</label>
-      <input id="l-isbn" type="text" placeholder="Deixe vazio para não alterar">
-    </div>
-    <div class="pwa-field">
-      <label>Coleção</label>
-      <input id="l-colecao" type="text" placeholder="Deixe vazio para não alterar">
-    </div>
-    <div class="pwa-field">
-      <label>Gênero</label>
-      <input id="l-genero" type="text" placeholder="Deixe vazio para não alterar" list="generos-list">
-    </div>
-    <div class="pwa-msg" id="l-msg"></div>
-    <button class="pwa-btn" id="l-btn" onclick="enviarLivro()">✅ Atualizar</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('livro')">Cancelar</button>
-  </div>
+<div class="pwa-modal">
+<h2>✏️ Atualizar Livro</h2>
+<div class="pwa-field">
+<label>Livro</label>
+<input autocomplete="off" id="l-livro-busca" onblur="setTimeout(()=&gt;document.getElementById('l-livro-lista').style.display='none',200)" oninput="filtrarSelect('l-livro-busca','l-livro','todos')" placeholder="Digite para buscar..." type="text"/>
+<div id="l-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
+<input id="l-livro" type="hidden" value=""/>
+<div id="l-livro-sel" onclick="limparBuscaSelect('l'); document.getElementById('l-livro').value='';" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(139,124,248,0.15);border-radius:8px;font-size:13px;color:var(--teal);cursor:pointer;"></div>
 </div>
-
+<div class="pwa-field">
+<label>Status</label>
+<select id="l-status" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;">
+<option value="">Não alterar</option>
+<option value="Completo">✅ Completo</option>
+<option value="Lendo">📖 Lendo</option>
+<option value="Pausado">⏸️ Pausado</option>
+<option value="Aguardando">📋 Aguardando</option>
+</select>
+</div>
+<div class="pwa-field">
+<label>Autor</label>
+<input id="l-autor" placeholder="Deixe vazio para não alterar" type="text"/>
+</div>
+<div class="pwa-row">
+<div class="pwa-field">
+<label>Total de Páginas</label>
+<input id="l-paginas" min="1" placeholder="—" type="number"/>
+</div>
+<div class="pwa-field">
+<label>Ano da Meta</label>
+<input id="l-metaano" pattern="\d{4}" placeholder="Ex: 2026 (deixe vazio para remover da meta)" type="text"/>
+</div>
+<div class="pwa-field">
+<label>Ordem</label>
+<input id="l-ordem" min="1" placeholder="—" type="number"/>
+</div>
+</div>
+<div class="pwa-field">
+<label>Dependência (livro anterior)</label>
+<input id="l-depende" placeholder="Deixe vazio para não alterar" type="text"/>
+</div>
+<div class="pwa-field">
+<label>URL da Capa</label>
+<input id="l-capa" placeholder="Deixe vazio para não alterar" type="url"/>
+</div>
+<div class="pwa-field">
+<label>ISBN</label>
+<input id="l-isbn" placeholder="Deixe vazio para não alterar" type="text"/>
+</div>
+<div class="pwa-field">
+<label>Coleção</label>
+<input id="l-colecao" placeholder="Deixe vazio para não alterar" type="text"/>
+</div>
+<div class="pwa-field">
+<label>Gênero</label>
+<input id="l-genero" list="generos-list" placeholder="Deixe vazio para não alterar" type="text"/>
+</div>
+<div class="pwa-msg" id="l-msg"></div>
+<button class="pwa-btn" id="l-btn" onclick="enviarLivro()">✅ Atualizar</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('livro')">Cancelar</button>
+</div>
+</div>
 <!-- Modal: Roleta de Leitura -->
 <div class="pwa-overlay" id="modalRoleta">
-  <div class="pwa-modal" style="text-align:center;overflow:visible;">
-    <h2>🎲 Roleta de Leitura</h2>
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
-      <button id="roleta-btn-meta" onclick="setModoRoleta('meta')"
-        style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--purple);background:var(--purple);color:white;cursor:pointer;font-size:14px;font-weight:600;">
+<div class="pwa-modal" style="text-align:center;overflow:visible;">
+<h2>🎲 Roleta de Leitura</h2>
+<div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+<button id="roleta-btn-meta" onclick="setModoRoleta('meta')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--purple);background:var(--purple);color:white;cursor:pointer;font-size:14px;font-weight:600;">
         🎯 Meta 2026
       </button>
-      <button id="roleta-btn-todos" onclick="setModoRoleta('todos')"
-        style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;font-size:14px;">
+<button id="roleta-btn-todos" onclick="setModoRoleta('todos')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;font-size:14px;">
         📚 Todos
       </button>
-    </div>
-    <div id="roleta-resultado" style="display:none;margin-bottom:16px;">
-      <div id="roleta-capa" style="margin:0 auto 12px;width:100px;height:140px;display:flex;align-items:center;justify-content:center;"></div>
-      <div id="roleta-nome" style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;"></div>
-      <div id="roleta-autor" style="font-size:14px;color:var(--muted);margin-bottom:12px;"></div>
-      <div style="display:flex;justify-content:center;gap:20px;">
-        <div><div id="roleta-pag" style="font-size:24px;font-weight:700;color:var(--teal)"></div><div style="font-size:11px;color:var(--muted)">páginas</div></div>
-        <div><div id="roleta-dias" style="font-size:24px;font-weight:700;color:var(--yellow)"></div><div style="font-size:11px;color:var(--muted)">dias estimados</div></div>
-      </div>
-    </div>
-    <div id="roleta-girando" style="display:none;font-size:48px;animation:spin 0.5s linear infinite;">🎲</div>
-    <button class="pwa-btn" onclick="girarRoleta()" style="background:#e56cff;">🎲 Sortear!</button>
-    <button id="roleta-novamente" style="display:none;" class="pwa-btn" onclick="girarRoleta()" style="background:var(--bg3);">🔄 Outro</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('roleta')">Fechar</button>
-  </div>
 </div>
-
+<div id="roleta-resultado" style="display:none;margin-bottom:16px;">
+<div id="roleta-capa" style="margin:0 auto 12px;width:100px;height:140px;display:flex;align-items:center;justify-content:center;"></div>
+<div id="roleta-nome" style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;"></div>
+<div id="roleta-autor" style="font-size:14px;color:var(--muted);margin-bottom:12px;"></div>
+<div style="display:flex;justify-content:center;gap:20px;">
+<div><div id="roleta-pag" style="font-size:24px;font-weight:700;color:var(--teal)"></div><div style="font-size:11px;color:var(--muted)">páginas</div></div>
+<div><div id="roleta-dias" style="font-size:24px;font-weight:700;color:var(--yellow)"></div><div style="font-size:11px;color:var(--muted)">dias estimados</div></div>
+</div>
+</div>
+<div id="roleta-girando" style="display:none;font-size:48px;animation:spin 0.5s linear infinite;">🎲</div>
+<button class="pwa-btn" onclick="girarRoleta()" style="background:#e56cff;">🎲 Sortear!</button>
+<button class="pwa-btn" id="roleta-novamente" onclick="girarRoleta()" style="background:var(--bg3);">🔄 Outro</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('roleta')">Fechar</button>
+</div>
+</div>
 <!-- Modal: Excluir Livro -->
 <div class="pwa-overlay" id="modalExcluir">
-  <div class="pwa-modal">
-    <h2>🗑️ Excluir Livro</h2>
-    <div class="pwa-field">
-      <label>Livro</label>
-      <input id="ex-livro-busca" type="text" placeholder="Digite para buscar..."
-        oninput="filtrarSelect('ex-livro-busca','ex-livro','todos')"
-        onblur="setTimeout(()=>document.getElementById('ex-livro-lista').style.display='none',200)"
-        autocomplete="off">
-      <div id="ex-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
-      <input id="ex-livro" type="hidden" value="">
-      <div id="ex-livro-sel" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(229,57,53,0.15);border-radius:8px;font-size:13px;color:#ef9a9a;cursor:pointer;" onclick="limparBuscaSelect('ex')"></div>
-    </div>
-    <div style="background:rgba(229,57,53,0.1);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#ef9a9a;">
+<div class="pwa-modal">
+<h2>🗑️ Excluir Livro</h2>
+<div class="pwa-field">
+<label>Livro</label>
+<input autocomplete="off" id="ex-livro-busca" onblur="setTimeout(()=&gt;document.getElementById('ex-livro-lista').style.display='none',200)" oninput="filtrarSelect('ex-livro-busca','ex-livro','todos')" placeholder="Digite para buscar..." type="text"/>
+<div id="ex-livro-lista" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
+<input id="ex-livro" type="hidden" value=""/>
+<div id="ex-livro-sel" onclick="limparBuscaSelect('ex')" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(229,57,53,0.15);border-radius:8px;font-size:13px;color:#ef9a9a;cursor:pointer;"></div>
+</div>
+<div style="background:rgba(229,57,53,0.1);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#ef9a9a;">
       ⚠️ O livro será removido permanentemente da aba Geral. As sessões de leitura serão mantidas.
     </div>
-    <div class="pwa-msg" id="ex-msg"></div>
-    <button class="pwa-btn" id="ex-btn" onclick="confirmarExcluir()" style="background:#e53935;">🗑️ Confirmar Exclusão</button>
-    <button class="pwa-btn-cancel" onclick="fecharModal('excluir')">Cancelar</button>
-  </div>
+<div class="pwa-msg" id="ex-msg"></div>
+<button class="pwa-btn" id="ex-btn" onclick="confirmarExcluir()" style="background:#e53935;">🗑️ Confirmar Exclusão</button>
+<button class="pwa-btn-cancel" onclick="fecharModal('excluir')">Cancelar</button>
 </div>
-
+</div>
 <style>
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 </style>
@@ -7624,8 +7533,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
-
-
 <script>
 // ════════════════════════════════════════════════════════════════
 // BOOKLEGACY V7.8 — HOTFIX ESTÁVEL
@@ -7827,8 +7734,6 @@ if ('serviceWorker' in navigator) {
   setTimeout(applyReadOnlyUI, 1000);
 })();
 </script>
-
-
 <script>
 // BOOKLEGACY V7.9 SECURITY PATCH — sem fallback para data.json / sem dados cruzados.
 (function(){
@@ -7841,9 +7746,6 @@ if ('serviceWorker' in navigator) {
   };
 })();
 </script>
-
-
-
 <script>
 // BOOKLEGACY V8 — correções de isolamento, mobile helper, comunidade e API.
 (function(){
@@ -7999,9 +7901,6 @@ if ('serviceWorker' in navigator) {
   });
 })();
 </script>
-
-
-
 <!-- BOOKLEGACY V10 CLEAN CONTROLLER: profile, FAB, battle, no mobile toggle -->
 <style id="bl-v10-clean-style">
 #btn-view-toggle{display:none!important}
@@ -8097,9 +7996,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   window.blV10Debug=function(){ return {patch:window.__BL_PATCH_VERSION, usuarioAtual:window.usuarioAtual, meUid:meUid(), meLabel:meLabel(), people:people().map(p=>({uid:p.uid,label:p.label,name:p.name,displayName:p.displayName,email:p.email,photo:!!p.photoURL})), friends:raw().friends, battleButton:!!$('btn-user-batalha')}; };
 })();
 </script>
-
-
-
 <!-- BOOKLEGACY V11: HARD BATTLE BUTTON + NO MOBILE TOGGLE. Patch only battle visibility/opening. -->
 <style id="bl-v11-battle-style">
   #btn-mobile-toggle, #btnViewToggle, .mobile-toggle, [data-action="toggle-mobile"], [onclick*="mobile-view"], [onclick*="desktop"] { display:none!important; visibility:hidden!important; pointer-events:none!important; }
@@ -8234,7 +8130,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   setInterval(syncUI, 2000);
 })();
 </script>
-
 <script>
 /* BookLegacy V12 — BATALHA VISÍVEL E INDEPENDENTE
    Patch focado apenas em: botão Modo Batalha e abertura do módulo. */
@@ -8406,9 +8301,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   setInterval(tick,1500);
 })();
 </script>
-
-
-
 <!-- BookLegacy V3.0: seletor único e estável do modo batalha -->
 <script id="booklegacy-v12-23-battle-one-selector-stable">
 (function(){
@@ -8655,9 +8547,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 1200);
 })();
 </script>
-
-
-
 <style id="booklegacy-v12-24-battle-top-clean-css">
 body.bl-v12-battle #pageDashboard,
 body.bl-v12-battle .lendo-wrap {
@@ -8751,9 +8640,6 @@ body.bl-v12-battle #pageBatalha .lendo-wrap {
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(forceBattleOnly, 100));
 })();
 </script>
-
-
-
 <!-- BookLegacy V3.0: Firebase, Comunidade e Modo Batalha 1x1 -->
 <style id="booklegacy-v12-25-battle-back-button-css">
 body.bl-v12-battle #blBattleBackButtonV25{
@@ -8859,14 +8745,11 @@ body.bl-v12-battle #blBattleBackButtonV25{
   setTimeout(ensureBackButton, 1500);
 })();
 </script>
-
-
 <style id="bl-v319-common-fixes-css">
 /* BookLegacy V3.19 — correções comuns desktop/mobile */
 .bl-hidden-fab-menu { display:none !important; }
 .bl-profile img { object-fit:cover; background:#252d40; }
 </style>
-
 <script id="bl-v319-common-fixes-js">
 (function(){
   'use strict';
@@ -9020,8 +8903,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blV319Debug = function(){ return {patch:VERSION, abrirModalWrapped:!!window.abrirModal?.__bl_v319_wrapped, profileLabel:typeof window.blProfileLabel, metaSave:'firebase', fabMenu: $('fabMenu')?.style?.display || null}; };
 })();
 </script>
-
-
 <style id="booklegacy-v332-community-css">
 .bl-v332-field-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
 .bl-v332-reaction-btn{background:rgba(86,207,255,.12);border:1px solid rgba(86,207,255,.45);color:var(--blue,#56cfff);border-radius:10px;padding:9px 11px;font-weight:800;cursor:pointer;font-size:13px;}
@@ -9072,8 +8953,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
 .bl-v332-complete-actions .skip{background:var(--bg3,#1e2535);color:var(--muted,#8892a8);border:1px solid var(--border,#2a3248);}
 @media(max-width:700px){.bl-v332-emoji-grid{grid-template-columns:repeat(3,minmax(0,1fr));}.bl-v332-feed-modal{padding:14px;border-radius:16px}.bl-v332-feed-row{gap:9px}.bl-v332-feed-cover{width:50px;height:72px}.bl-v332-picker{padding:14px}.bl-v332-picker-overlay{align-items:flex-end;padding:10px}.bl-v332-picker{border-radius:18px 18px 0 0;}.bl-v332-feed-overlay{padding:10px 8px}.bl-v332-feed-head h2{font-size:20px}}
 </style>
-
-
 <script id="booklegacy-v332-community-features">
 (function(){
   'use strict';
@@ -9303,9 +9182,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
-
 <!-- BOOKLEGACY V3.33 — feed real, sessão sincronizada e Amigos/Comunidade separados -->
 <style id="booklegacy-v333-community-session-css">
 .bl-v333-feed-meta{font-size:11px;color:var(--muted,#8892a8);margin-top:3px;text-align:right;line-height:1.3}
@@ -9457,8 +9333,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BOOKLEGACY V3.34 — datas reais, página atual e feed estável -->
 <script id="booklegacy-v334-session-rating-community-js">
 (function(){
@@ -9681,8 +9555,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BOOKLEGACY V3.35 — correção cirúrgica: datas, página atual, salvar sem salto e Avaliar Depois -->
 <script id="booklegacy-v335-session-community-current-page-js">
 (function(){
@@ -9900,9 +9772,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
-
 <!-- BOOKLEGACY V3.36 — base visual V3.33 + heatmap only + comunidade página + sessão/data segura -->
 <style id="booklegacy-v336-css">
 @media(max-width:899px), (pointer:coarse){
@@ -10079,8 +9948,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BOOKLEGACY V3.37 — mobile base V3.33 + heatmap isolado + comunidade página real + datas/ordem seguras -->
 <style id="booklegacy-v337-css">
 @media(max-width:899px), (pointer:coarse){
@@ -10263,8 +10130,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BOOKLEGACY V3.38 — correção segura: menu sem duplicar, comunidade página leve, datas/hora e mobile sem atraso -->
 <style id="booklegacy-v338-css">
 @media(max-width:899px), (pointer:coarse){
@@ -10445,8 +10310,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BOOKLEGACY V3.39 — comunidade única, menu organizado e data de avaliação por conclusão real -->
 <style id="booklegacy-v339-css">
   #pageComunidade.bl-v339-community-page{
@@ -10688,7 +10551,6 @@ body.bl-v12-battle #blBattleBackButtonV25{
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
 <!-- BOOKLEGACY V3.40 — navegação limpa, comunidade isolada e datas por última sessão -->
 <style id="booklegacy-v340-css">
 /* Comunidade agora é página real: quando abre, nada do dashboard aparece por baixo. */
@@ -10898,8 +10760,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BookLegacy V3.41 - Community/menu/session picker safe patch -->
 <style id="booklegacy-v341-css">
   /* V3.41: use a clean menu layer so old v3.32-v3.40 menu listeners cannot duplicate buttons */
@@ -11088,8 +10948,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BookLegacy V3.42 — limpeza real de menu/comunidade/meta -->
 <style id="blV42Style">
   #blV42MenuFab{
@@ -11252,7 +11110,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
 <!-- BookLegacy V3.43 — Comunidade canônica, menu estável e metas removíveis -->
 <style id="blV43Style">
   /* Menu mobile/APK: apenas um X pequeno no canto direito, sem barra gigante no topo */
@@ -11441,8 +11298,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <!-- BookLegacy V3.44 — menu APK baixo + metas sincronizadas/removíveis sem reabrir engrenagem -->
 <style id="blV44Style">
   /* APK/Mobile: desce os botões do menu para longe da borda/status bar */
@@ -11480,8 +11335,6 @@ body.bl-v40-loading #app{display:none!important;}
 </style>
 <!-- BookLegacy V3.45 — metas personalizadas sincronizadas por base e exclusão sem falso padrão -->
 <!-- BookLegacy V3.46 — metas remotas reais via goals/customMetasRegistry + popups APK compactos -->
-
-
 <!-- BookLegacy V3.47 — metas por registry em library + revert popups V46 -->
 <style id="blV47Style">
   /* V47: desfaz efeitos do patch de popup V46 que travavam botões do + */
@@ -11685,9 +11538,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
-
 <!-- BookLegacy V3.48 — meta registry safe id + sync final -->
 <style id="blV48MetaStyle">
   #blV43DelMetaBtn,#blV43GmDelMetaBtn{cursor:pointer!important;}
@@ -11781,8 +11631,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
 <script id="bl-v349-buildwd-safe-wrapper">
 (function(){
   'use strict';
@@ -11829,9 +11677,6 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
-
-
-
 <!-- BookLegacy V3.53 — desktop mantido; Firestore settings já usa merge:true -->
 <script id="bl-v53-desktop-debug">
 (function(){
@@ -11842,7 +11687,6 @@ body.bl-v40-loading #app{display:none!important;}
   };
 })();
 </script>
-
 <!-- BOOKLEGACY V3.58 — arquitetura UID real: authUid escreve, viewUid lê, visitante somente leitura -->
 <script>
 (function(){
@@ -12469,37 +12313,55 @@ body.bl-v40-loading #app{display:none!important;}
   console.log('[BookLegacy]', PATCH);
 })();
 </script>
-
 <!-- BOOKLEGACY V3.59 — UID sem vazamento visual + lendo renderizado por UID + visitante 100% leitura -->
 <script>
 (function(){
   'use strict';
-  const PATCH='v3.59-uid-privacy-reading-render-readonly';
+  const PATCH='BOOKLEGACY_V3_60_REFEITA_SOBRE_V59_PAUSE_DICA_SAFE';
+  if(window.__BL_V60_REFEITA_V59__) return;
+  window.__BL_V60_REFEITA_V59__=true;
+
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  const slug=s=>norm(s).replace(/\s+/g,'-').replace(/^-|-$/g,'')||'item';
   const num=v=>{ if(v===null||v===undefined||v==='')return 0; const n=Number(String(v).replace(',','.')); return Number.isFinite(n)?n:0; };
   const authUser=()=>window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
   const authUid=()=>authUser()?.uid || '';
   const viewUid=()=>window.__BL_VIEW_UID || authUid();
+  const canEdit=()=>!!authUid() && !!viewUid() && authUid()===viewUid();
   const isVisitor=()=>!!viewUid() && !!authUid() && viewUid()!==authUid();
   const raw=()=>window.BL?.raw || {};
+  const db=()=>window.BL?.db || null;
   const titleOf=o=>String(o?.livro??o?.title??o?.bookTitle??o?.nome??o?.name??'').trim();
   const authorOf=o=>String(o?.autor??o?.author??'').trim();
-  const statusOf=o=>String(o?.status??'').trim();
+  const statusOf=o=>String(o?.status??o?.readingStatus??'').trim();
   const pagesOf=o=>num(o?.totalPag??o?.totalPages??o?.pages??o?.paginasTotal??o?.paginas);
   const currentOf=o=>num(o?.pagAtual??o?.currentPage??o?.paginaAtual??o?.current??o?.page);
   const coverOf=o=>String(o?.coverUrl??o?.capa??'').trim();
   const isbnOf=o=>String(o?.isbn??'').trim();
+  const collectionOf=o=>String(o?.colecao??o?.collection??'').trim();
   const isReadingStatus=s=>['lendo','em leitura','reading'].includes(norm(s));
-  const isPausedStatus=s=>['pausado','pausada','paused'].includes(norm(s));
-  const isWaitingStatus=s=>['aguardando','pendente','planejado','planejada','fila'].includes(norm(s));
+  const isPausedStatus=s=>['pausado','pausada','paused','pause'].includes(norm(s));
+  const isWaitingStatus=s=>['aguardando','pendente','planejado','planejada','fila','to read','wishlist'].includes(norm(s));
+  const isDoneStatus=s=>['completo','lido','concluido','concluído','finalizado','done','complete'].includes(norm(s));
   const publicLabel=p=>String(p?.displayName||p?.name||p?.label||p?.email||'Amigo').trim();
   const publicSub=p=>String(p?.email||'Perfil público').trim();
 
+  // Pausado antigo da planilha NÃO é mais feature.
+  // Só conta como pausado se o próprio app gravou a marca de pausa abaixo.
+  function isAppPaused(o){
+    return isPausedStatus(statusOf(o)) && (
+      String(o?.pauseState||'')==='paused' ||
+      String(o?.statusSource||'')==='booklegacy_app_pause' ||
+      String(o?.pauseSource||'')==='booklegacy_app_pause' ||
+      !!o?.pausedAt
+    );
+  }
+
   function ensureCss(){
-    if($('blV59Css'))return;
-    const st=document.createElement('style'); st.id='blV59Css';
+    if($('blV60RefeitaCss'))return;
+    const st=document.createElement('style'); st.id='blV60RefeitaCss';
     st.textContent=`
       body.bl-visitor-readonly #fabBtn,
       body.bl-visitor-readonly .fab,
@@ -12514,11 +12376,18 @@ body.bl-v40-loading #app{display:none!important;}
       body.bl-visitor-readonly button[onclick*="excluir"],
       body.bl-visitor-readonly button[onclick*="confirmar"],
       body.bl-visitor-readonly .lendo-meta button,
+      body.bl-visitor-readonly [data-bl-v60-pause],
+      body.bl-visitor-readonly [data-bl-v60-resume],
+      body.bl-visitor-readonly [data-bl-v60-session],
       body.bl-visitor-readonly .bl-v332-complete-card,
       body.bl-visitor-readonly .bl-v55-complete-card,
       body.bl-visitor-readonly .bl-v332-complete-actions{display:none!important;}
-      .bl-v59-card-cover{width:68px;height:96px;border-radius:8px;background:#252d40;object-fit:cover;border:1px solid rgba(255,255,255,.08)}
-      .bl-v59-cover-fallback{width:68px;height:96px;border-radius:8px;background:#252d40;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:30px}
+      .bl-v60-card-cover{width:68px;height:96px;border-radius:8px;background:#252d40;object-fit:cover;border:1px solid rgba(255,255,255,.08)}
+      .bl-v60-cover-fallback{width:68px;height:96px;border-radius:8px;background:#252d40;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:30px}
+      .bl-v60-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+      .bl-v60-session-btn{background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+      .bl-v60-pause-btn{border:1px solid rgba(255,255,255,.16);background:#252d40;color:#e2e8f0;width:32px;height:32px;border-radius:999px;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap}
+      .bl-v60-pause-btn:hover,.bl-v60-session-btn:hover{filter:brightness(1.12)}
     `;
     document.head.appendChild(st);
   }
@@ -12531,36 +12400,63 @@ body.bl-v40-loading #app{display:none!important;}
     return [...map.values()];
   }
   function personByUid(uid){ return people().find(p=>String(p.uid)===String(uid)) || null; }
+  function currentPersonRaw(){ return personByUid(authUid()) || null; }
 
   function ownerOk(o){
     const uid=viewUid(); if(!uid)return true;
     const own=String(o?.usuarioUid||o?.ownerUid||o?.userId||o?.uid||'').trim();
     return !own || own===uid;
   }
-
-  function collectCurrentBooks(){
-    const src=[]; const d=window._dadosD||{};
-    ['lendo','pausados','livros'].forEach(k=>(d[k]||[]).forEach(x=>src.push(x)));
-    (window._livros||[]).forEach(x=>src.push(x));
-    const by=new Map();
-    src.filter(ownerOk).forEach(x=>{
-      const t=titleOf(x); if(!t)return;
-      let st=statusOf(x); let cur=currentOf(x); const total=pagesOf(x);
-      if(total&&cur>=total&&!isReadingStatus(st)&&!isPausedStatus(st))return;
-      if(total&&cur>=total&&(isReadingStatus(st)||isPausedStatus(st)))return;
-      if(!isReadingStatus(st)&&!isPausedStatus(st)) return;
-      const k=norm(t);
-      const score=(isReadingStatus(st)?30:20)+(cur>0?5:0)+(total>0?3:0);
-      const old=by.get(k);
-      if(!old||score>old.__score) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:isReadingStatus(st)?'Lendo':'Pausado',pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),__score:score});
-    });
-    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
+  function sessionSumFor(title, uid=viewUid()){
+    const t=norm(title); if(!t)return 0;
+    return (window._sessoes||[]).filter(s=>norm(titleOf(s))===t && (!uid || !s.usuarioUid || s.usuarioUid===uid || !String(s.usuarioUid).trim())).reduce((a,s)=>a+num(s?.paginas??s?.pages??s?.pagesRead),0);
+  }
+  function activeStatus(o){
+    const total=pagesOf(o); const cur=Math.max(currentOf(o),sessionSumFor(titleOf(o))); const st=statusOf(o);
+    if(isDoneStatus(st)||o?.completionDate||o?.completionYear||o?.anoConclusao) return '';
+    if(total && cur>=total) return '';
+    if(isAppPaused(o)) return 'Pausado';
+    if(isReadingStatus(st)) return 'Lendo';
+    if(isPausedStatus(st) && cur>0) return 'Lendo'; // pausado antigo importado vira lendo, não pausado real
+    if(cur>0) return 'Lendo';
+    return '';
   }
 
-  function collectWaiting(){
-    const src=[...(window._dadosD?.aguardando||[]),...(window._dadosD?.livros||[]),...(window._livros||[])];
+  function allBookSources(){
+    const d=window._dadosD||{}; const src=[];
+    ['lendo','pausados','livros','aguardando'].forEach(k=>(d[k]||[]).forEach(x=>src.push(x)));
+    (window._livros||[]).forEach(x=>src.push(x));
+    return src;
+  }
+  function collectCurrentBooks(){
     const by=new Map();
-    src.filter(ownerOk).forEach(x=>{ const t=titleOf(x); if(!t||!isWaitingStatus(statusOf(x)))return; if(!by.has(norm(t)))by.set(norm(t),{...x,livro:t,title:t,autor:authorOf(x),totalPag:pagesOf(x),totalPages:pagesOf(x),coverUrl:coverOf(x),isbn:isbnOf(x)}); });
+    allBookSources().filter(ownerOk).forEach(x=>{
+      const t=titleOf(x); if(!t)return;
+      const st=activeStatus(x); if(st!=='Lendo'&&st!=='Pausado')return;
+      const total=pagesOf(x); let cur=Math.max(currentOf(x),sessionSumFor(t));
+      if(total&&cur>=total)return;
+      const k=norm(t);
+      const score=(st==='Pausado'?100:70)+(cur>0?10:0)+(total>0?5:0)+(isAppPaused(x)?50:0);
+      const old=by.get(k);
+      if(!old||score>old.__score) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:st,pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),colecao:collectionOf(x),collection:collectionOf(x),__score:score});
+    });
+    return [...by.values()].sort((a,b)=>{
+      if(a.status!==b.status) return a.status==='Lendo'?-1:1;
+      return norm(a.livro).localeCompare(norm(b.livro),'pt-BR');
+    });
+  }
+
+  function collectWaiting(active=[]){
+    const activeSet=new Set(active.map(a=>norm(a.livro)));
+    const by=new Map();
+    allBookSources().filter(ownerOk).forEach(x=>{
+      const t=titleOf(x); if(!t||activeSet.has(norm(t)))return;
+      const st=statusOf(x); const total=pagesOf(x); const cur=Math.max(currentOf(x),sessionSumFor(t));
+      if(isDoneStatus(st)||x?.completionDate||x?.completionYear||x?.anoConclusao||(total&&cur>=total)) return;
+      // aguardando real, ou pausado legado sem leitura, ou livro sem status e sem leitura
+      if(!isWaitingStatus(st) && !(isPausedStatus(st)&&!isAppPaused(x)&&cur<=0) && !(cur<=0&&!isReadingStatus(st)&&!isAppPaused(x)))return;
+      const k=norm(t); if(!by.has(k)) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),totalPag:total,totalPages:total,coverUrl:coverOf(x),isbn:isbnOf(x),colecao:collectionOf(x),collection:collectionOf(x)});
+    });
     return [...by.values()];
   }
 
@@ -12569,272 +12465,27 @@ body.bl-v40-loading #app{display:none!important;}
     sessions.forEach(s=>{ const d=String(s?.data||s?.date||'').slice(0,10); const p=num(s?.paginas??s?.pages??s?.pagesRead); if(d&&p)by[d]=(by[d]||0)+p; });
     const vals=Object.values(by); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:50;
   }
-
   function coverHtml(b, icon){
-    const url=coverOf(b);
-    if(url) return `<img class="bl-v59-card-cover" src="${esc(url)}" onerror="this.outerHTML='<div class=&quot;bl-v59-cover-fallback&quot;>${icon}</div>'">`;
-    return `<div class="bl-v59-cover-fallback">${icon}</div>`;
-  }
-
-  function renderLendoCardsV59(){
-    ensureCss();
-    const cont=$('lendo-cards'); if(!cont)return;
-    const active=collectCurrentBooks();
-    if(window._dadosD){ window._dadosD.lendo=active.filter(b=>b.status==='Lendo'); window._dadosD.pausados=active.filter(b=>b.status==='Pausado'); }
-    const avg=averagePagesPerDay(); const editable=!isVisitor();
-    cont.innerHTML='';
-    if(!active.length){ cont.innerHTML='<div class="lendo-card dica"><div class="lendo-tag">📖 Nenhum livro em andamento</div></div>'; }
-    active.forEach(p=>{
-      const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
-      const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-      const btn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
-      cont.innerHTML+=`
-        <div class="lendo-card ${lendo?'lendo':'pausado'}">
-          <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
-          <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;">
-            <div style="flex-shrink:0">${coverHtml(p,icon)}</div>
-            <div style="flex:1;min-width:0">
-              <div class="lendo-book-title" style="margin-bottom:0">${esc(p.livro)}</div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(p.autor||'')}</div>
-              <div class="lendo-stats">
-                <div class="lendo-stat"><span class="lendo-stat-val" style="color:${cor}">${cur}</span><span class="lendo-stat-lbl">Página atual</span></div>
-                <div class="lendo-stat"><span class="lendo-stat-val">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div>
-                <div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para acabar</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:${Math.min(pct,100)}%;background:${cor}"></div></div><span class="lendo-pct-label" style="color:${cor}">${pct}%</span></div>
-          <div class="lendo-meta" style="display:flex;align-items:center;justify-content:space-between;"><span>Faltam: <b>${faltam.toLocaleString('pt-BR')} páginas</b></span>${btn}</div>
-        </div>`;
-    });
-    const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
-    if(waiting.length){
-      const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div></div>`;
-    }
-    applyPrivacyAndReadonly();
-  }
-
-  function looksLikeUidText(s){
-    const t=String(s||'').trim();
-    return /\bUID\b\s*[:\-]/i.test(t) || /^[A-Za-z0-9_-]{20,}$/.test(t);
-  }
-
-  function sanitizeVisibleIds(root=document.body){
-    const hero=$('blFriendHeroV58');
-    if(hero){
-      hero.querySelectorAll('div,span,p').forEach(el=>{
-        if(/UID/i.test(el.textContent||'')) el.textContent='Somente leitura — você não pode editar dados deste perfil.';
-      });
-    }
-    const mig=$('blMigrationUser');
-    if(mig){ const u=authUser(); mig.innerHTML=`Conta logada: <b style="color:#e2e8f0">${esc(u?.displayName||u?.email||'Usuário logado')}</b>`; }
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
-      if(!node.nodeValue||!looksLikeUidText(node.nodeValue))return NodeFilter.FILTER_REJECT;
-      const p=node.parentElement; if(!p||p.closest('script,style,textarea,input,select,option'))return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    }});
-    const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);
-    nodes.forEach(n=>{ if(/UID/i.test(n.nodeValue)) n.nodeValue=''; else n.nodeValue='Perfil público'; });
-  }
-
-  function hideEditButtons(){
-    if(!isVisitor())return;
-    document.body.classList.add('bl-visitor-readonly','bl-readonly-profile');
-    document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
-      if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
-      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
-      if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
-    });
-  }
-
-  function applyPrivacyAndReadonly(){ ensureCss(); document.body.classList.toggle('bl-visitor-readonly',isVisitor()); document.body.classList.toggle('bl-readonly-profile',isVisitor()); sanitizeVisibleIds(); hideEditButtons(); }
-
-  const oldRender=window.renderLendoCards;
-  window.renderLendoCards=function(){ try{return renderLendoCardsV59();}catch(e){console.warn('[BookLegacy]',PATCH,'render lendo falhou',e); if(typeof oldRender==='function')return oldRender.apply(this,arguments);} };
-
-  const oldFriendRow=window.blRenderFriendRow;
-  window.blRenderFriendRow=function(f){
-    try{
-      const uid=String(f?.uid||f?.id||'').trim(); const name=esc(publicLabel(f)); const sub=esc(publicSub(f));
-      const img=f?.photoURL?`<img src="${esc(f.photoURL)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;background:#252d40">`:`<div style="width:42px;height:42px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center">👤</div>`;
-      return `<div style="display:flex;align-items:center;gap:10px;background:#161b27;border:1px solid #2a3248;border-radius:12px;padding:10px">${img}<div style="flex:1;min-width:0"><div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div><div style="font-size:12px;color:#8892a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div></div><button type="button" data-bl-v59-friend="${esc(uid)}" style="border:none;border-radius:9px;background:#4ecdc4;color:#0d1117;font-weight:900;padding:8px 10px;cursor:pointer">Ver perfil</button></div>`;
-    }catch(e){return typeof oldFriendRow==='function'?oldFriendRow(f):'';}
-  };
-
-  document.addEventListener('click',ev=>{
-    const f=ev.target.closest?.('[data-bl-v59-friend]');
-    if(f){ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.();return window.blOpenFriendProfile&&window.blOpenFriendProfile(f.getAttribute('data-bl-v59-friend'));}
-    if(isVisitor()){
-      const ctrl=ev.target.closest?.('button,a,[role="button"],.fab,.fab-menu,.floating-action');
-      if(!ctrl||ctrl.id==='blBackMeV58'||ctrl.closest?.('#blFriendHeroV58')||ctrl.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
-      const t=norm(ctrl.textContent||ctrl.getAttribute('aria-label')||ctrl.title||''); const oc=String(ctrl.getAttribute?.('onclick')||'').toLowerCase();
-      if(/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)){
-        ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.(); alert('Modo visitante: você só pode editar os seus próprios dados.'); return false;
-      }
-    }
-  },true);
-
-  window.blV59Audit=function(){
-    const active=collectCurrentBooks(); const p=personByUid(viewUid());
-    return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
-  };
-
-  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
-  [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
-  try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
-  console.log('[BookLegacy]',PATCH);
-})();
-</script>
-
-
-
-<!-- BOOKLEGACY V3.60 — pausa real do app + dica com registrar sessão + limpeza de pausado legado -->
-<script>
-(function(){
-  const PATCH='BOOKLEGACY_V3_60_PAUSE_DICA_UID_SAFE';
-  if(window.__BL_V60_PAUSE_DICA__) return;
-  window.__BL_V60_PAUSE_DICA__=true;
-
-  const $=id=>document.getElementById(id);
-  const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
-  const slug=s=>norm(s).replace(/\s+/g,'-').replace(/^-|-$/g,'')||'item';
-  const num=v=>{ if(v===null||v===undefined||v==='') return 0; const n=Number(String(v).replace(',','.')); return Number.isFinite(n)?n:0; };
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const authUser=()=>window.BL?.auth?.currentUser || window.firebaseAuth?.currentUser || window.auth?.currentUser || null;
-  const authUid=()=>authUser()?.uid || '';
-  const viewUid=()=>window.__BL_VIEW_UID || authUid();
-  const canEdit=()=>!!authUid() && viewUid()===authUid();
-  const raw=()=>window.BL?.raw || {};
-  const db=()=>window.BL?.db || null;
-  const titleOf=o=>String(o?.title??o?.bookTitle??o?.livro??o?.nome??o?.name??'').trim();
-  const authorOf=o=>String(o?.author??o?.autor??'').trim();
-  const statusOf=o=>String(o?.status??'').trim();
-  const pagesOf=o=>num(o?.totalPages??o?.pages??o?.totalPag??o?.paginasTotal??o?.paginas);
-  const currentOf=o=>num(o?.currentPage??o?.pagAtual??o?.paginaAtual??o?.current??o?.page);
-  const coverOf=o=>String(o?.coverUrl??o?.capa??'').trim();
-  const isbnOf=o=>String(o?.isbn??'').trim();
-  const collectionOf=o=>String(o?.collection??o?.colecao??'').trim();
-  const statusKey=s=>norm(s).replace(/\s+/g,'');
-  const isDone=s=>['completo','lido','concluido','concluído','finalizado','done','complete'].includes(statusKey(s));
-  const isReading=s=>['lendo','emleitura','reading'].includes(statusKey(s));
-  const isPaused=s=>['pausado','pausada','paused','pause'].includes(statusKey(s));
-  const isWaiting=s=>['aguardando','pendente','planejado','planejada','toread','fila','wishlist'].includes(statusKey(s));
-
-  // Pausado antigo da planilha NÃO é mais considerado feature.
-  // Só é pausado real se o próprio app V3.60 gravou a marca abaixo.
-  function isAppPaused(o){
-    return isPaused(statusOf(o)) && (
-      String(o?.pauseState||'')==='paused' ||
-      String(o?.statusSource||'')==='booklegacy_app_pause' ||
-      String(o?.pauseSource||'')==='booklegacy_app_pause' ||
-      !!o?.pausedAt
-    );
-  }
-  function activeStatus(o){
-    const total=pagesOf(o), cur=currentOf(o), st=statusOf(o);
-    if(isDone(st)||o?.completionDate||o?.completionYear||o?.anoConclusao) return 'Completo';
-    if(total && cur>=total) return 'Completo';
-    if(isAppPaused(o)) return 'Pausado';
-    if(isReading(st)) return 'Lendo';
-    if(isPaused(st) && cur>0) return 'Lendo'; // legado: vira lendo até o usuário pausar pelo app
-    if(cur>0) return 'Lendo';
-    return '';
-  }
-  function ownerOk(o){
-    const uid=viewUid(); if(!uid) return true;
-    const own=String(o?.usuarioUid||o?.ownerUid||o?.userId||o?.uid||'').trim();
-    return !own || own===uid;
-  }
-  function sessionSumFor(title, uid=viewUid()){
-    const t=norm(title); if(!t) return 0;
-    return (window._sessoes||[]).filter(s=>norm(titleOf(s))===t && (!uid || !s.usuarioUid || s.usuarioUid===uid)).reduce((a,s)=>a+num(s.pages??s.paginas??s.pagesRead),0);
-  }
-  function allCurrentSources(){
-    const d=window._dadosD||{};
-    const arr=[];
-    ['lendo','pausados','livros'].forEach(k=>(d[k]||[]).forEach(x=>arr.push(x)));
-    (window._livros||[]).forEach(x=>arr.push(x));
-    return arr;
-  }
-  function collectCurrentBooksV60(){
-    const by=new Map();
-    allCurrentSources().filter(ownerOk).forEach(x=>{
-      const t=titleOf(x); if(!t) return;
-      const st=activeStatus(x); if(st!=='Lendo' && st!=='Pausado') return;
-      let cur=currentOf(x), total=pagesOf(x);
-      const sum=sessionSumFor(t);
-      if(sum>0 && st!=='Pausado') cur=sum;
-      if(total && cur>=total) return;
-      const k=norm(t);
-      const score=(st==='Pausado'?100:70)+(cur>0?10:0)+(total>0?5:0)+(isAppPaused(x)?50:0);
-      const old=by.get(k);
-      if(!old || score>old.__score){
-        by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:st,pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),colecao:collectionOf(x),collection:collectionOf(x),__score:score});
-      }
-    });
-    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
-  }
-  function collectWaitingV60(active){
-    const activeSet=new Set((active||[]).map(a=>norm(a.livro)));
-    const src=[...(window._dadosD?.aguardando||[]),...(window._dadosD?.livros||[]),...(window._livros||[])];
-    const by=new Map();
-    src.filter(ownerOk).forEach(x=>{
-      const t=titleOf(x); if(!t || activeSet.has(norm(t))) return;
-      const st=statusOf(x);
-      if(!isWaiting(st) && !(currentOf(x)<=0 && !isDone(st) && !isReading(st) && !isPaused(st))) return;
-      const k=norm(t); if(by.has(k)) return;
-      by.set(k,{...x,livro:t,title:t,autor:authorOf(x),totalPag:pagesOf(x),totalPages:pagesOf(x),coverUrl:coverOf(x),isbn:isbnOf(x),colecao:collectionOf(x),collection:collectionOf(x)});
-    });
-    return [...by.values()];
-  }
-  function applyBucketsV60(){
-    const active=collectCurrentBooksV60();
-    if(window._dadosD){
-      window._dadosD.lendo=active.filter(b=>b.status==='Lendo');
-      window._dadosD.pausados=active.filter(b=>b.status==='Pausado');
-    }
-    return active;
-  }
-  function avgPagesDay(){
-    const by={};
-    (window._sessoes||[]).filter(ownerOk).forEach(s=>{const d=String(s?.data||s?.date||'').slice(0,10);const p=num(s?.paginas??s?.pages??s?.pagesRead);if(d&&p)by[d]=(by[d]||0)+p;});
-    const vals=Object.values(by); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:50;
-  }
-  function coverHtml(b,icon){
     const url=coverOf(b);
     if(url) return `<img class="bl-v60-card-cover" src="${esc(url)}" onerror="this.outerHTML='<div class=&quot;bl-v60-cover-fallback&quot;>${icon}</div>'">`;
     return `<div class="bl-v60-cover-fallback">${icon}</div>`;
   }
-  function ensureCss(){
-    if($('blV60Css')) return;
-    const st=document.createElement('style'); st.id='blV60Css';
-    st.textContent=`
-      .bl-v60-card-cover{width:68px;height:96px;border-radius:8px;background:#252d40;object-fit:cover;border:1px solid rgba(255,255,255,.08)}
-      .bl-v60-cover-fallback{width:68px;height:96px;border-radius:8px;background:#252d40;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:30px}
-      .bl-v60-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-      .bl-v60-session-btn{background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-      .bl-v60-pause-btn{border:1px solid rgba(255,255,255,.16);background:#252d40;color:#e2e8f0;width:32px;height:32px;border-radius:999px;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-      .bl-v60-pause-btn:hover{filter:brightness(1.12)}
-      body.bl-visitor-readonly [data-bl-v60-pause], body.bl-visitor-readonly [data-bl-v60-resume], body.bl-visitor-readonly [data-bl-v60-session]{display:none!important}
-    `;
-    document.head.appendChild(st);
-  }
-  function sessionBtn(title){ return `<button type="button" class="bl-v60-session-btn" data-bl-v60-session="${esc(title)}">+ Registrar sessão</button>`; }
+  function sessionBtn(title){ return canEdit()?`<button type="button" class="bl-v60-session-btn" data-bl-v60-session="${esc(title)}">+ Registrar sessão</button>`:''; }
   function pauseBtn(b){
-    const t=esc(b.livro);
-    if(!canEdit()) return '';
-    if(b.status==='Pausado') return `<button type="button" class="bl-v60-pause-btn" data-bl-v60-resume="${t}" title="Voltar para lendo">▶️</button>`;
-    return `<button type="button" class="bl-v60-pause-btn" data-bl-v60-pause="${t}" title="Pausar livro">⏸️</button>`;
+    if(!canEdit())return '';
+    const t=esc(b.livro); const id=esc(b.id||b.docId||b.bookId||'');
+    if(b.status==='Pausado') return `<button type="button" class="bl-v60-pause-btn" data-bl-v60-resume="${t}" data-bl-v60-bookid="${id}" title="Voltar para lendo">▶️</button>`;
+    return `<button type="button" class="bl-v60-pause-btn" data-bl-v60-pause="${t}" data-bl-v60-bookid="${id}" title="Pausar livro">⏸️</button>`;
   }
+
   function renderLendoCardsV60(){
     ensureCss();
-    const cont=$('lendo-cards'); if(!cont) return;
-    const active=applyBucketsV60();
-    const avg=avgPagesDay(); const editable=canEdit();
+    const cont=$('lendo-cards'); if(!cont)return;
+    const active=collectCurrentBooks();
+    if(window._dadosD){ window._dadosD.lendo=active.filter(b=>b.status==='Lendo'); window._dadosD.pausados=active.filter(b=>b.status==='Pausado'); }
+    const avg=averagePagesPerDay(); const editable=canEdit();
     cont.innerHTML='';
-    if(!active.length) cont.innerHTML='<div class="lendo-card dica"><div class="lendo-tag">📖 Nenhum livro em andamento</div></div>';
+    if(!active.length){ cont.innerHTML='<div class="lendo-card dica"><div class="lendo-tag">📖 Nenhum livro em andamento</div></div>'; }
     active.forEach(p=>{
       const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
       const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
@@ -12857,7 +12508,7 @@ body.bl-v40-loading #app{display:none!important;}
           <div class="lendo-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><span>Faltam: <b>${faltam.toLocaleString('pt-BR')} páginas</b></span><span class="bl-v60-actions">${editable?sessionBtn(p.livro):''}${pauseBtn(p)}</span></div>
         </div>`;
     });
-    const waiting=collectWaitingV60(active);
+    const waiting=collectWaiting(active);
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
       cont.innerHTML+=`
@@ -12875,112 +12526,148 @@ body.bl-v40-loading #app{display:none!important;}
           <div class="lendo-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><span>Livro ainda não iniciado</span><span class="bl-v60-actions">${editable?sessionBtn(dica.livro):''}</span></div>
         </div>`;
     }
-    try{ if(typeof window.applyPrivacyAndReadonly==='function') window.applyPrivacyAndReadonly(); }catch(e){}
+    applyPrivacyAndReadonly();
   }
 
-  function currentPersonRaw(){
-    const uid=authUid();
-    return (raw().users||[]).find(u=>String(u?.uid||'')===uid) || null;
+  function rawLibraryMatches(title, forcedId){
+    const t=norm(title); const ids=new Set(); const out=[];
+    if(forcedId) ids.add(String(forcedId));
+    const p=currentPersonRaw();
+    const libs=[...(p?.library||[]),...(raw().library||[]),...(window._livros||[]),...(window._dadosD?.livros||[]),...(window._dadosD?.lendo||[]),...(window._dadosD?.pausados||[])];
+    libs.forEach(l=>{
+      const id=String(l?.id||l?.docId||'').trim();
+      if(!id || ids.has(id)) return;
+      if(norm(titleOf(l))===t && ownerOk(l)){ ids.add(id); out.push(l); }
+    });
+    if(forcedId && !out.some(x=>String(x.id||x.docId)===String(forcedId))) out.push({id:String(forcedId),livro:title});
+    return out;
   }
-  function rawLibraryMatches(title){
-    const t=norm(title); const p=currentPersonRaw();
-    const libs=[...(p?.library||[]),...(raw().library||[])];
-    const seen=new Set();
-    return libs.filter(l=>norm(titleOf(l))===t && l?.id).filter(l=>{const id=String(l.id); if(seen.has(id)) return false; seen.add(id); return true;});
-  }
-  function localUpdateStatus(title, status, extra={}){
+  function localUpdateStatus(title,status,extra={}){
     const t=norm(title);
-    const apply=l=>{ if(l && norm(titleOf(l))===t){ l.status=status; if(status==='Pausado') l.pauseState='paused'; else l.pauseState='reading'; Object.assign(l,extra); } };
-    [window._livros||[], window._dadosD?.livros||[], window._dadosD?.lendo||[], window._dadosD?.pausados||[], window._dadosD?.aguardando||[], currentPersonRaw()?.library||[]].forEach(arr=>(arr||[]).forEach(apply));
+    const apply=l=>{ if(l&&norm(titleOf(l))===t){ l.status=status; l.readingStatus=status; Object.assign(l,extra); } };
+    [window._livros||[],window._dadosD?.livros||[],window._dadosD?.lendo||[],window._dadosD?.pausados||[],window._dadosD?.aguardando||[],currentPersonRaw()?.library||[]].forEach(arr=>(arr||[]).forEach(apply));
   }
-  async function setPaused(title, paused){
+  async function setPaused(title,paused,bookId){
     if(!canEdit()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
     const database=db(), uid=authUid(); if(!database||!uid){ alert('Faça login para alterar o status.'); return; }
     const now=new Date().toISOString();
-    const next=paused?'Pausado':'Lendo';
-    const payload=paused?{status:'Pausado',pauseState:'paused',statusSource:'booklegacy_app_pause',pauseSource:'booklegacy_app_pause',pausedAt:now,resumedAt:null,updatedAt:now}:{status:'Lendo',pauseState:'reading',statusSource:'booklegacy_app_resume',pauseSource:'booklegacy_app_resume',resumedAt:now,updatedAt:now};
-    let matches=rawLibraryMatches(title);
-    if(!matches.length) matches=[{id:'lib_'+slug(title)}];
+    const status=paused?'Pausado':'Lendo';
+    const payload=paused?{status:'Pausado',readingStatus:'Pausado',pauseState:'paused',statusSource:'booklegacy_app_pause',pauseSource:'booklegacy_app_pause',pausedAt:now,resumedAt:null,updatedAt:now}:{status:'Lendo',readingStatus:'Lendo',pauseState:'reading',statusSource:'booklegacy_app_resume',pauseSource:'booklegacy_app_resume',resumedAt:now,updatedAt:now};
+    let matches=rawLibraryMatches(title,bookId);
+    if(!matches.length) matches=[{id:'lib_'+slug(title),livro:title}];
     const batch=database.batch();
-    matches.forEach(l=>batch.set(database.collection('users').doc(uid).collection('library').doc(String(l.id)),payload,{merge:true}));
+    matches.forEach(l=>batch.set(database.collection('users').doc(uid).collection('library').doc(String(l.id||l.docId)),payload,{merge:true}));
     await batch.commit();
-    localUpdateStatus(title,next,payload);
+    localUpdateStatus(title,status,payload);
     renderLendoCardsV60();
-    if(typeof window.blRefreshAndRender==='function') setTimeout(()=>window.blRefreshAndRender().catch(console.warn),80);
+    if(typeof window.blRefreshAndRender==='function') setTimeout(()=>{try{window.blRefreshAndRender().catch(console.warn);}catch(e){}},100);
   }
   async function cleanupLegacyPausedOwnUser(){
-    if(window.__BL_V60_CLEANING_LEGACY_PAUSE__) return;
-    if(!canEdit()||!db()||!authUid()) return;
-    const p=currentPersonRaw(); if(!p) return;
+    if(window.__BL_V60_LEGACY_PAUSE_CLEANING__)return;
+    if(!canEdit()||!db()||!authUid())return;
+    const p=currentPersonRaw(); if(!p)return;
+    const legacy=(p.library||[]).filter(l=>isPausedStatus(statusOf(l))&&!isAppPaused(l)&&String(l?.id||'').trim());
+    if(!legacy.length)return;
+    window.__BL_V60_LEGACY_PAUSE_CLEANING__=true;
     const now=new Date().toISOString();
-    const legacy=(p.library||[]).filter(l=>isPaused(statusOf(l)) && !isAppPaused(l) && l?.id);
-    if(!legacy.length) return;
-    window.__BL_V60_CLEANING_LEGACY_PAUSE__=true;
     try{
       const batch=db().batch();
       legacy.forEach(l=>{
-        const title=titleOf(l); const cur=Math.max(currentOf(l), sessionSumFor(title,authUid()));
+        const cur=Math.max(currentOf(l),sessionSumFor(titleOf(l),authUid()));
         const next=cur>0?'Lendo':'Aguardando';
-        batch.set(db().collection('users').doc(authUid()).collection('library').doc(String(l.id)),{status:next,pauseState:'legacy_removed',statusSource:'legacy_pause_removed_v60',legacyPausedClearedAt:now,updatedAt:now},{merge:true});
-        l.status=next; l.pauseState='legacy_removed'; l.statusSource='legacy_pause_removed_v60';
+        batch.set(db().collection('users').doc(authUid()).collection('library').doc(String(l.id)),{status:next,readingStatus:next,pauseState:'legacy_removed',statusSource:'legacy_pause_removed_v60',legacyPausedClearedAt:now,updatedAt:now},{merge:true});
+        l.status=next; l.readingStatus=next; l.pauseState='legacy_removed'; l.statusSource='legacy_pause_removed_v60';
       });
       await batch.commit();
-      if(typeof window.blRefreshAndRender==='function') setTimeout(()=>window.blRefreshAndRender().catch(console.warn),120);
-    }catch(e){ console.warn('[BookLegacy]',PATCH,'falha limpando pausados legados',e); }
-    finally{ window.__BL_V60_CLEANING_LEGACY_PAUSE__=false; }
+      renderLendoCardsV60();
+    }catch(e){ console.warn('[BookLegacy]',PATCH,'falha ao limpar pausados legados',e); }
+    finally{ window.__BL_V60_LEGACY_PAUSE_CLEANING__=false; }
   }
 
-  const oldImport=window.blImportMigrationData;
-  if(typeof oldImport==='function' && !oldImport.__bl_v60){
-    window.blImportMigrationData=async function(data){
-      let cloned;
-      try{ cloned=JSON.parse(JSON.stringify(data||{})); }
-      catch(e){ cloned=data; }
-      try{
-        (cloned.library||[]).forEach(l=>{
-          if(isPaused(statusOf(l)) && !isAppPaused(l)){
-            const cur=currentOf(l);
-            l.status=cur>0?'Lendo':'Aguardando';
-            l.pauseState='legacy_removed';
-            l.statusSource='legacy_pause_removed_v60_import';
-            delete l.pausedAt; delete l.pauseSource;
-          }
-        });
-      }catch(e){ console.warn('[BookLegacy]',PATCH,'falha saneando pausados legados do JSON',e); }
-      return await oldImport.call(this,cloned);
-    };
-    window.blImportMigrationData.__bl_v60=true;
+  function looksLikeUidText(s){
+    const t=String(s||'').trim();
+    return /\bUID\b\s*[:\-]/i.test(t) || /^[A-Za-z0-9_-]{20,}$/.test(t);
   }
+  function sanitizeVisibleIds(root=document.body){
+    const hero=$('blFriendHeroV58');
+    if(hero){ hero.querySelectorAll('div,span,p').forEach(el=>{ if(/UID/i.test(el.textContent||'')) el.textContent='Somente leitura — você não pode editar dados deste perfil.'; }); }
+    const mig=$('blMigrationUser');
+    if(mig){ const u=authUser(); mig.innerHTML=`Conta logada: <b style="color:#e2e8f0">${esc(u?.displayName||u?.email||'Usuário logado')}</b>`; }
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
+      if(!node.nodeValue||!looksLikeUidText(node.nodeValue))return NodeFilter.FILTER_REJECT;
+      const p=node.parentElement; if(!p||p.closest('script,style,textarea,input,select,option'))return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }});
+    const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(n=>{ if(/UID/i.test(n.nodeValue)) n.nodeValue=''; else n.nodeValue='Perfil público'; });
+  }
+  function hideEditButtons(){
+    if(!isVisitor())return;
+    document.body.classList.add('bl-visitor-readonly','bl-readonly-profile');
+    document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
+      if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v60-friend],[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
+      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
+      if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
+    });
+  }
+  function applyPrivacyAndReadonly(){ ensureCss(); document.body.classList.toggle('bl-visitor-readonly',isVisitor()); document.body.classList.toggle('bl-readonly-profile',isVisitor()); sanitizeVisibleIds(); hideEditButtons(); }
+
+  const oldRender=window.renderLendoCards;
+  window.renderLendoCards=function(){ try{return renderLendoCardsV60();}catch(e){console.warn('[BookLegacy]',PATCH,'render lendo falhou',e); if(typeof oldRender==='function')return oldRender.apply(this,arguments);} };
+
+  const oldFriendRow=window.blRenderFriendRow;
+  window.blRenderFriendRow=function(f){
+    try{
+      const uid=String(f?.uid||f?.id||'').trim(); const name=esc(publicLabel(f)); const sub=esc(publicSub(f));
+      const img=f?.photoURL?`<img src="${esc(f.photoURL)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;background:#252d40">`:`<div style="width:42px;height:42px;border-radius:50%;background:#252d40;display:flex;align-items:center;justify-content:center">👤</div>`;
+      return `<div style="display:flex;align-items:center;gap:10px;background:#161b27;border:1px solid #2a3248;border-radius:12px;padding:10px">${img}<div style="flex:1;min-width:0"><div style="font-weight:800;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div><div style="font-size:12px;color:#8892a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div></div><button type="button" data-bl-v60-friend="${esc(uid)}" style="border:none;border-radius:9px;background:#4ecdc4;color:#0d1117;font-weight:900;padding:8px 10px;cursor:pointer">Ver perfil</button></div>`;
+    }catch(e){return typeof oldFriendRow==='function'?oldFriendRow(f):'';}
+  };
 
   document.addEventListener('click',ev=>{
     const pause=ev.target.closest?.('[data-bl-v60-pause]');
     const resume=ev.target.closest?.('[data-bl-v60-resume]');
     const sess=ev.target.closest?.('[data-bl-v60-session]');
-    if(pause||resume||sess){ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation?.(); }
-    if(pause) return setPaused(pause.getAttribute('data-bl-v60-pause'),true).catch(e=>alert('Erro ao pausar: '+(e.message||e)));
-    if(resume) return setPaused(resume.getAttribute('data-bl-v60-resume'),false).catch(e=>alert('Erro ao voltar para lendo: '+(e.message||e)));
-    if(sess){ if(!canEdit()) return alert('Modo visitante: você só pode editar os seus próprios dados.'); return window.abrirSessaoRapida && window.abrirSessaoRapida(sess.getAttribute('data-bl-v60-session')); }
+    const f=ev.target.closest?.('[data-bl-v60-friend],[data-bl-v59-friend]');
+    if(pause||resume||sess||f){ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.();}
+    if(f) return window.blOpenFriendProfile&&window.blOpenFriendProfile(f.getAttribute('data-bl-v60-friend')||f.getAttribute('data-bl-v59-friend'));
+    if(pause) return setPaused(pause.getAttribute('data-bl-v60-pause'),true,pause.getAttribute('data-bl-v60-bookid')).catch(e=>alert('Erro ao pausar: '+(e.message||e)));
+    if(resume) return setPaused(resume.getAttribute('data-bl-v60-resume'),false,resume.getAttribute('data-bl-v60-bookid')).catch(e=>alert('Erro ao voltar para lendo: '+(e.message||e)));
+    if(sess){ if(!canEdit())return alert('Modo visitante: você só pode editar os seus próprios dados.'); return window.abrirSessaoRapida&&window.abrirSessaoRapida(sess.getAttribute('data-bl-v60-session')); }
+    if(isVisitor()){
+      const ctrl=ev.target.closest?.('button,a,[role="button"],.fab,.fab-menu,.floating-action');
+      if(!ctrl||ctrl.id==='blBackMeV58'||ctrl.closest?.('#blFriendHeroV58')||ctrl.matches?.('[data-bl-v60-friend],[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
+      const t=norm(ctrl.textContent||ctrl.getAttribute('aria-label')||ctrl.title||''); const oc=String(ctrl.getAttribute?.('onclick')||'').toLowerCase();
+      if(/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)){
+        ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.(); alert('Modo visitante: você só pode editar os seus próprios dados.'); return false;
+      }
+    }
   },true);
 
-  const oldRender=window.renderLendoCards;
-  window.renderLendoCards=function(){ try{return renderLendoCardsV60();}catch(e){console.warn('[BookLegacy]',PATCH,'render falhou',e); if(typeof oldRender==='function') return oldRender.apply(this,arguments);} };
-  const oldVisao=window.atualizarVisaoGeral;
-  if(typeof oldVisao==='function' && !oldVisao.__bl_v60){
-    window.atualizarVisaoGeral=function(){ try{applyBucketsV60();}catch(e){} return oldVisao.apply(this,arguments); };
-    window.atualizarVisaoGeral.__bl_v60=true;
+  // Mantém migração da V3.59. Só protege abertura contra queda total de tela.
+  const prevMigrationModal=window.blOpenMigrationModal;
+  if(typeof prevMigrationModal==='function' && !prevMigrationModal.__bl_v60_open_guard){
+    window.blOpenMigrationModal=function(){
+      try{ if(!canEdit()){ alert('Modo visitante: você só pode importar dados na sua própria conta.'); return false; } return prevMigrationModal.apply(this,arguments); }
+      catch(e){ console.error('[BookLegacy]',PATCH,'erro ao abrir migração',e); alert('Erro ao abrir Migração: '+(e.message||e)); return false; }
+    };
+    window.blOpenMigrationModal.__bl_v60_open_guard=true;
   }
+
   window.blPausarLivroAtualV60=(title)=>setPaused(title,true);
   window.blVoltarLivroParaLendoV60=(title)=>setPaused(title,false);
   window.blV60Audit=function(){
-    const active=collectCurrentBooksV60();
-    return {patch:PATCH,ids:'ocultos por privacidade',canEdit:canEdit(),viewMode:canEdit()?'proprio':'visitante',lendo:active.filter(b=>b.status==='Lendo').map(b=>({livro:b.livro,pagina:b.pagAtual,total:b.totalPag})),pausados:active.filter(b=>b.status==='Pausado').map(b=>({livro:b.livro,pagina:b.pagAtual,total:b.totalPag,origem:'pause_do_app'})),dica:collectWaitingV60(active).slice(0,3).map(b=>b.livro)};
+    const active=collectCurrentBooks(); const p=personByUid(viewUid());
+    return {patch:PATCH,ids:'ocultos por privacidade',viewName:publicLabel(p||{}),visitor:isVisitor(),canEdit:canEdit(),lendo:active.filter(b=>b.status==='Lendo').map(b=>({livro:b.livro,pagina:b.pagAtual,total:b.totalPag})),pausados:active.filter(b=>b.status==='Pausado').map(b=>({livro:b.livro,pagina:b.pagAtual,total:b.totalPag})),dica:collectWaiting(active).slice(0,3).map(b=>b.livro),counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
-  function boot(){ try{ensureCss(); applyBucketsV60(); renderLendoCardsV60(); cleanupLegacyPausedOwnUser();}catch(e){console.warn('[BookLegacy]',PATCH,e);} }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,160),{once:true}); else setTimeout(boot,160);
-  [500,1200,2500,5000].forEach(t=>setTimeout(boot,t));
+
+  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV60(); cleanupLegacyPausedOwnUser(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
+  [300,800,1600,3000,6000,8500].forEach(t=>setTimeout(boot,t));
+  try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
   console.log('[BookLegacy]',PATCH);
 })();
-</script>
 
+</script>
 </body>
 </html>
