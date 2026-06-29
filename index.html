@@ -12474,7 +12474,7 @@ body.bl-v40-loading #app{display:none!important;}
 <script>
 (function(){
   'use strict';
-  const PATCH='v3.60-pause-dica-migration-safe';
+  const PATCH='v3.59-uid-privacy-reading-render-readonly';
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
@@ -12493,9 +12493,6 @@ body.bl-v40-loading #app{display:none!important;}
   const isbnOf=o=>String(o?.isbn??'').trim();
   const isReadingStatus=s=>['lendo','em leitura','reading'].includes(norm(s));
   const isPausedStatus=s=>['pausado','pausada','paused'].includes(norm(s));
-  // V3.60: Pausado real = tem pauseSource:'app'. Legado = tratado como Aguardando.
-  const isRealPaused=o=>isPausedStatus(statusOf(o)) && String(o?.pauseSource||'').trim()==='app';
-  const isLegacyPaused=o=>isPausedStatus(statusOf(o)) && String(o?.pauseSource||'').trim()!=='app';
   const isWaitingStatus=s=>['aguardando','pendente','planejado','planejada','fila'].includes(norm(s));
   const publicLabel=p=>String(p?.displayName||p?.name||p?.label||p?.email||'Amigo').trim();
   const publicSub=p=>String(p?.email||'Perfil público').trim();
@@ -12517,8 +12514,6 @@ body.bl-v40-loading #app{display:none!important;}
       body.bl-visitor-readonly button[onclick*="excluir"],
       body.bl-visitor-readonly button[onclick*="confirmar"],
       body.bl-visitor-readonly .lendo-meta button,
-      body.bl-visitor-readonly button[onclick*="blV60PauseBook"],
-      body.bl-visitor-readonly button[onclick*="blV60ResumeBook"],
       body.bl-visitor-readonly .bl-v332-complete-card,
       body.bl-visitor-readonly .bl-v55-complete-card,
       body.bl-visitor-readonly .bl-v332-complete-actions{display:none!important;}
@@ -12553,8 +12548,6 @@ body.bl-v40-loading #app{display:none!important;}
       let st=statusOf(x); let cur=currentOf(x); const total=pagesOf(x);
       if(total&&cur>=total&&!isReadingStatus(st)&&!isPausedStatus(st))return;
       if(total&&cur>=total&&(isReadingStatus(st)||isPausedStatus(st)))return;
-      // V3.60: pausado legado (sem pauseSource:'app') vira Aguardando (ignorado aqui)
-      if(isPausedStatus(st) && !isRealPaused(x)) return;
       if(!isReadingStatus(st)&&!isPausedStatus(st)) return;
       const k=norm(t);
       const score=(isReadingStatus(st)?30:20)+(cur>0?5:0)+(total>0?3:0);
@@ -12594,12 +12587,7 @@ body.bl-v40-loading #app{display:none!important;}
     active.forEach(p=>{
       const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
       const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-      // V3.60: sessao + pause/resume buttons
-      const sessaoBtn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
-      const bookId=esc(p.id||p.bookId||('lib_'+norm(p.livro).replace(/\s+/g,'-').slice(0,60)));
-      const pauseBtn=editable&&lendo?`<button onclick="blV60PauseBook('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:rgba(248,140,106,0.15);border:1px solid var(--orange);color:var(--orange);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;" title="Pausar leitura">⏸️</button>`:'';
-      const resumeBtn=editable&&!lendo?`<button onclick="blV60ResumeBook('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;" title="Voltar a ler">▶️</button>`:'';
-      const btn=sessaoBtn+pauseBtn+resumeBtn;
+      const btn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
       cont.innerHTML+=`
         <div class="lendo-card ${lendo?'lendo':'pausado'}">
           <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
@@ -12622,7 +12610,7 @@ body.bl-v40-loading #app{display:none!important;}
     const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
+      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div></div>`;
     }
     applyPrivacyAndReadonly();
   }
@@ -12656,7 +12644,7 @@ body.bl-v40-loading #app{display:none!important;}
     document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
       if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
       const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
-      if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import|blv60/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro|⏸️|▶️)/.test(t)) el.style.setProperty('display','none','important');
+      if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
     });
   }
 
@@ -12681,7 +12669,7 @@ body.bl-v40-loading #app{display:none!important;}
       const ctrl=ev.target.closest?.('button,a,[role="button"],.fab,.fab-menu,.floating-action');
       if(!ctrl||ctrl.id==='blBackMeV58'||ctrl.closest?.('#blFriendHeroV58')||ctrl.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
       const t=norm(ctrl.textContent||ctrl.getAttribute('aria-label')||ctrl.title||''); const oc=String(ctrl.getAttribute?.('onclick')||'').toLowerCase();
-      if(/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import|blv60/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro|⏸️|▶️)/.test(t)){
+      if(/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)){
         ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation?.(); alert('Modo visitante: você só pode editar os seus próprios dados.'); return false;
       }
     }
@@ -12690,56 +12678,6 @@ body.bl-v40-loading #app{display:none!important;}
   window.blV59Audit=function(){
     const active=collectCurrentBooks(); const p=personByUid(viewUid());
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
-  };
-
-
-  // V3.60: Pausar livro — grava status:'Pausado', pauseSource:'app', pausedAt
-  window.blV60PauseBook = async function(livro){
-    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
-    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
-    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro);
-    try{
-      const snap=await db.collection('users').doc(uid).collection('library').get();
-      const batch=db.batch(); let count=0;
-      snap.docs.forEach(doc=>{
-        const d=doc.data()||{}; const st=String(d?.status||'');
-        if(norm(d?.title||d?.livro||d?.bookTitle||'')===t && ['lendo','em leitura','reading'].includes(norm(st))){
-          batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
-          count++;
-        }
-      });
-      if(count){ await batch.commit(); }
-      else{
-        // tenta sessions como fallback de status
-        const ssnap=await db.collection('users').doc(uid).collection('sessions').where('livro','==',livro).limit(1).get();
-        // grava na library diretamente pelo título
-        const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80);
-        await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),livro,title:livro},{merge:true});
-      }
-      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
-    }catch(e){ console.error('[V3.60] pausar falhou',e); alert('Erro ao pausar: '+e.message); }
-  };
-
-  // V3.60: Voltar a ler — remove pauseSource, volta status:'Lendo'
-  window.blV60ResumeBook = async function(livro){
-    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
-    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
-    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro);
-    try{
-      const snap=await db.collection('users').doc(uid).collection('library').get();
-      const batch=db.batch(); let count=0;
-      snap.docs.forEach(doc=>{
-        const d=doc.data()||{};
-        if(norm(d?.title||d?.livro||d?.bookTitle||'')===t && String(d?.status||'').toLowerCase()==='pausado'){
-          batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
-          count++;
-        }
-      });
-      if(count) await batch.commit();
-      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
-    }catch(e){ console.error('[V3.60] retomar falhou',e); alert('Erro ao retomar: '+e.message); }
   };
 
   function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
