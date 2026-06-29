@@ -5328,9 +5328,22 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    const filterU = l => u === 'Milton'
-      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
-      : l.usuario?.toUpperCase() === u.toUpperCase();
+    // V3.60-fix: filtra por uid (value do select) — evita mistura entre contas com mesmo nome
+    const users=window.BL?.raw?.users||[];
+    const userObj=users.find(x=>String(x.uid||x.id||x.label||'')===u)||null;
+    const filterU = l => {
+      // Se temos uid real, filtra por uid
+      if(userObj?.uid){
+        const lUid=String(l.usuarioUid||l.ownerUid||l.userId||'').trim();
+        if(lUid) return lUid===userObj.uid;
+      }
+      // Fallback por label/nome (compatibilidade com dados antigos)
+      const uLabel=userObj?.label||u;
+      const isFirst=users[0]&&String(users[0].uid||users[0].id||users[0].label||'')===u;
+      return isFirst
+        ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === uLabel.toUpperCase())
+        : l.usuario?.toUpperCase() === uLabel.toUpperCase();
+    };
     const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
     const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
@@ -7691,11 +7704,17 @@ if ('serviceWorker' in navigator) {
     fillBattleSelects();
   };
   function fillBattleSelects(){
+    // V3.60-fix: usa uid como value para evitar mistura entre contas com mesmo nome
     const users=window.BL?.raw?.users||[]; if(users.length<2) return;
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
-      sel.innerHTML = users.map((u,i)=>`<option value="${String(u.label||('Usuário '+(i+1))).replace(/"/g,'&quot;')}">${u.label||('Usuário '+(i+1))}</option>`).join('');
-      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
+      sel.innerHTML = users.map((u,i)=>{
+        const uid=String(u.uid||u.id||u.label||('user'+i));
+        const label=u.label||u.displayName||u.name||('Usuário '+(i+1));
+        return `<option value="${uid.replace(/"/g,'&quot;')}">${label.replace(/</g,'&lt;')}</option>`;
+      }).join('');
+      const fallback=users[idx]?.uid||users[idx]?.id||users[0]?.uid||users[0]?.id||'';
+      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : fallback;
     });
   }
   const oldRenderBatalha=window.renderBatalha;
@@ -11260,7 +11279,18 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
   function openMenu(){buildMenu();document.body.classList.add('bl-v42-menu-open');document.documentElement.classList.add('bl-v42-menu-open');const p=$('blV42MenuPanel');if(p)p.scrollTop=0;}
   function scrollTarget(sel){const el=document.querySelector(sel);if(el){setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);} }
   function showDashboard(){if(document.body.classList.contains('bl-v42-community-open'))window.blCloseCommunityPage();const dash=$('pageDashboard'),lw=document.querySelector('.lendo-wrap');if(dash)dash.style.display='block';if(lw)lw.style.display='';}
-  function menuAction(a){if(a==='close'){closeMenu();return;}closeMenu();if(a==='meus-dados'){showDashboard();try{window.blBackToMyProfile?.();}catch(e){}return;}if(a==='migracao'){setTimeout(()=>{(window.blOpenMigrationModal||window.abrirMigracao)?.();},30);return;}if(a==='refresh'){setTimeout(()=>{(window.manualRefresh||window.blRefreshAndRender||window.loadData)?.();},30);return;}if(a==='friends'){setTimeout(()=>{(window.blOpenFriendsModal||window.blOpenCommunityModal)?.();},30);return;}if(a==='communityFeed'){setTimeout(()=>window.blOpenCommunityPage(),30);return;}if(a==='battle'){showDashboard();setTimeout(()=>{try{window.setUsuario&&window.setUsuario('Batalha');}catch(e){const p=$('pageBatalha');if(p)p.style.display='block';}},30);return;}const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graficos:'#cMonthly,#cHeat,#cDrilldown',ranking:'#rankList,#grid-rankings',livros:'#painelStatus,#kpi-books-grid',mais:'#calGrid,#heatmapGrid',notas:'#selNotasAno,#rankList'};if(map[a])scrollTarget(map[a]);}
+  function menuAction(a){if(a==='close'){closeMenu();return;}closeMenu();if(a==='meus-dados'){showDashboard();try{window.blBackToMyProfile?.();}catch(e){}return;}if(a==='migracao'){setTimeout(()=>{(window.blOpenMigrationModal||window.abrirMigracao)?.();},30);return;}if(a==='refresh'){setTimeout(()=>{(window.manualRefresh||window.blRefreshAndRender||window.loadData)?.();},30);return;}if(a==='friends'){setTimeout(()=>{(window.blOpenFriendsModal||window.blOpenCommunityModal)?.();},30);return;}if(a==='communityFeed'){setTimeout(()=>window.blOpenCommunityPage(),30);return;}if(a==='battle'){showDashboard();setTimeout(()=>{try{window.setUsuario&&window.setUsuario('Batalha');}catch(e){const p=$('pageBatalha');if(p)p.style.display='block';}},30);return;}
+if(a==='logout'){const ok=confirm('Tem certeza que deseja sair da conta?');if(!ok)return;try{(window.BL?.auth||window.firebaseAuth||window.auth)?.signOut();}catch(e){console.error('signOut',e);}return;}
+if(a==='excluir-dados'){
+  const user=(window.BL?.auth||window.firebaseAuth||window.auth)?.currentUser;
+  if(!user){alert('Você precisa estar logado.');return;}
+  if(!confirm('⚠️ Tem certeza que deseja excluir TODOS os seus dados?\n\nEssa ação não pode ser desfeita.'))return;
+  const palavra=prompt('Para confirmar, digite a palavra EXCLUIR:');
+  if((palavra||'').trim().toUpperCase()!=='EXCLUIR'){alert('Confirmação incorreta. Nenhum dado foi excluído.');return;}
+  (async()=>{try{const db=window.BL?.db;if(!db){alert('Firebase não disponível.');return;}const uid=user.uid;const cols=['library','sessions','ratings','goals','collections','notes'];for(const col of cols){const snap=await db.collection('users').doc(uid).collection(col).get();const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));if(snap.docs.length)await batch.commit();}await db.collection('users').doc(uid).delete().catch(()=>{});alert('✅ Todos os seus dados foram excluídos.\n\nVocê será deslogado agora.');try{(window.BL?.auth||window.firebaseAuth||window.auth)?.signOut();}catch(e){}}catch(e){alert('Erro ao excluir dados: '+e.message);}})();
+  return;
+}
+const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graficos:'#cMonthly,#cHeat,#cDrilldown',ranking:'#rankList,#grid-rankings',livros:'#painelStatus,#kpi-books-grid',mais:'#calGrid,#heatmapGrid',notas:'#selNotasAno,#rankList'};if(map[a])scrollTarget(map[a]);}
   document.addEventListener('click',function(ev){const b=ev.target.closest&&ev.target.closest('#blV42MenuPanel button[data-a],#blV42MenuFab,#blV42SocialBtn');if(!b)return;ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation&&ev.stopImmediatePropagation();if(b.id==='blV42MenuFab')openMenu();else if(b.id==='blV42SocialBtn')window.blOpenCommunityPage();else menuAction(b.dataset.a);},true);
   function cleanupHeader(){document.querySelectorAll('#btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41').forEach(el=>el.remove());const friends=$('btn-community')||$('blInviteBtn');if(friends){friends.innerHTML=friends.id==='blInviteBtn'?'Amigos':'👥 Amigos';friends.title='Amigos';friends.onclick=(ev)=>{ev&&ev.preventDefault&&ev.preventDefault();(window.blOpenFriendsModal||window.blOpenCommunityModal)?.();};}
     document.querySelectorAll('header button').forEach(b=>{if(/comunidade/i.test(b.textContent||'')&&b.id!=='blV42SocialBtn')b.remove();});
