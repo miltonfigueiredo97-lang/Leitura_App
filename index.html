@@ -5328,32 +5328,33 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // u = uid. Busca dados isolados por UID via people() — nunca filtra por nome.
-    const allPeople = (typeof people === 'function') ? people() : [];
-    const person = allPeople.find(p => String(p.uid||'') === u) || null;
+    // Busca pessoa por UID via users() — que já tem sessions/library/ratings do Firestore
+    const person = users().find(p => String(p.uid||'') === u) || null;
 
-    // Normaliza sessões do person para o formato que os cálculos esperam
-    const allSess = (person?.sessions||[]).map(s => ({
-      livro:   String(s.title||s.livro||s.bookTitle||''),
-      paginas: Number(s.pages||s.paginas||0),
-      minutos: Number(s.minutes||s.minutos||0),
-      data:    String(s.date||s.data||'').slice(0,10),
-      ano:     (s.date||s.data) ? new Date(String(s.date||s.data).slice(0,10)+'T12:00:00').getFullYear() : 0,
-      usuario: person?.label||u
-    }));
+    // Normaliza sessões: blReadUserBundle usa pages/date/minutes, calcDados espera paginas/data/minutos
+    const allSess = (person?.sessions||[]).map(s => {
+      const dataStr = String(s.date||s.data||'').slice(0,10);
+      const ano = dataStr ? new Date(dataStr+'T12:00:00').getFullYear() : 0;
+      return {
+        livro:   String(s.title||s.livro||s.bookTitle||''),
+        paginas: Number(s.pages||s.paginas||0),
+        minutos: Number(s.minutes||s.minutos||0),
+        data:    dataStr,
+        ano:     ano
+      };
+    });
     const sess = allSess.filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
 
-    // Normaliza library
+    // Normaliza library: blReadUserBundle usa totalPages/currentPage/author
     const todos = (person?.library||[]).map(l => ({
-      livro:      String(l.title||l.livro||l.bookTitle||''),
-      autor:      String(l.author||l.autor||''),
-      status:     String(l.status||''),
-      totalPag:   Number(l.totalPages||l.totalPag||l.pages||0),
-      pagAtual:   Number(l.currentPage||l.pagAtual||l.current||0),
-      colecao:    String(l.collection||l.colecao||''),
-      genero:     String(l.genre||l.genero||''),
-      metaAno:    String(l.metaYear||l.metaAno||''),
-      usuario:    person?.label||u
+      livro:    String(l.title||l.livro||l.bookTitle||''),
+      autor:    String(l.author||l.autor||''),
+      status:   String(l.status||''),
+      totalPag: Number(l.totalPages||l.totalPag||l.pages||0),
+      pagAtual: Number(l.currentPage||l.pagAtual||l.current||0),
+      colecao:  String(l.collection||l.colecao||''),
+      genero:   String(l.genre||l.genero||''),
+      metaAno:  String(l.metaYear||l.metaAno||'')
     }));
 
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
@@ -5362,12 +5363,14 @@ function renderBatalha() {
     });
 
     // Normaliza ratings
-    const notas = (person?.ratings||[]).map(r => ({
-      media: Number(r.rating||r.nota||r.media||0),
-      ano:   (r.date||r.data) ? new Date(String(r.date||r.data).slice(0,10)+'T12:00:00').getFullYear() : 0,
-      livro: String(r.title||r.livro||''),
-      usuario: person?.label||u
-    })).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+    const notas = (person?.ratings||[]).map(r => {
+      const dataStr = String(r.date||r.data||'').slice(0,10);
+      return {
+        media: Number(r.rating||r.nota||r.media||0),
+        livro: String(r.title||r.livro||''),
+        ano:   dataStr ? new Date(dataStr+'T12:00:00').getFullYear() : Number(r.year||r.ano||0)
+      };
+    }).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -8209,7 +8212,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function fillBattleSelects(){
     const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    // value = uid para distinguir contas com mesmo nome
     const opts = list.map(u=>`<option value="${String(u.uid||u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
     if(a){ a.innerHTML = opts; a.value = list[0]?.uid||list[0]?.label||''; }
     if(b){ b.innerHTML = opts; b.value = list[1]?.uid||list[1]?.label||list[0]?.uid||''; }
