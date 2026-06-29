@@ -5328,36 +5328,24 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // V3.60: busca dados DIRETAMENTE da pessoa pelo UID via people()
-    // Nunca filtra array global por nome — usa coleção isolada por UID
-    const personList = typeof people === 'function' ? people() : (window.BL?.raw?.users||[]);
-    const person = personList.find(p=>String(p.uid||p.id||'')===u) || null;
-
-    // Sessões: usa sessions[] da própria pessoa (por UID), nunca o d.sessoes global
-    const rawSessions = (person?.sessions||[]).map(s=>({
-      livro: String(s.title||s.livro||s.bookTitle||''),
-      paginas: Number(s.pages||s.paginas||0),
-      minutos: Number(s.minutes||s.minutos||0),
-      data: String(s.date||s.data||'').slice(0,10),
-      ano: s.date||s.data ? new Date(String(s.date||s.data).slice(0,10)+'T12:00:00').getFullYear() : 0,
-      usuario: person?.label||u,
-      usuarioUid: u
-    }));
-    const sess = rawSessions.filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
-
-    // Livros: usa library[] da própria pessoa
-    const rawLib = (person?.library||[]).map(l=>({
-      livro: String(l.title||l.livro||l.bookTitle||''),
-      autor: String(l.author||l.autor||''),
-      status: String(l.status||''),
-      totalPag: Number(l.totalPages||l.totalPag||l.pages||0),
-      pagAtual: Number(l.currentPage||l.pagAtual||l.current||0),
-      colecao: String(l.collection||l.colecao||''),
-      genero: String(l.genre||l.genero||''),
-      metaAno: String(l.metaYear||l.metaAno||''),
-      usuarioUid: u
-    }));
-    const todos = rawLib;
+    // V3.60-fix: filtra por uid (value do select) — evita mistura entre contas com mesmo nome
+    const users=window.BL?.raw?.users||[];
+    const userObj=users.find(x=>String(x.uid||x.id||x.label||'')===u)||null;
+    const filterU = l => {
+      // Se temos uid real, filtra por uid
+      if(userObj?.uid){
+        const lUid=String(l.usuarioUid||l.ownerUid||l.userId||'').trim();
+        if(lUid) return lUid===userObj.uid;
+      }
+      // Fallback por label/nome (compatibilidade com dados antigos)
+      const uLabel=userObj?.label||u;
+      const isFirst=users[0]&&String(users[0].uid||users[0].id||users[0].label||'')===u;
+      return isFirst
+        ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === uLabel.toUpperCase())
+        : l.usuario?.toUpperCase() === uLabel.toUpperCase();
+    };
+    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
       if (anoFiltro === 'total') return true;
       // filtra livros concluídos no ano selecionado (verificando sessões)
@@ -7716,19 +7704,16 @@ if ('serviceWorker' in navigator) {
     fillBattleSelects();
   };
   function fillBattleSelects(){
-    // V3.60: usa people() que já tem uid limpo para todos os usuários/amigos
-    const personList = typeof people === 'function' ? people() : (window.BL?.raw?.users||[]);
-    const valid = personList.filter(p=>String(p.uid||'').trim());
-    if(valid.length < 2) return;
+    // V3.60-fix: usa uid como value para evitar mistura entre contas com mesmo nome
+    const users=window.BL?.raw?.users||[]; if(users.length<2) return;
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
-      const sel=document.getElementById(id); if(!sel) return;
-      const old=sel.value;
-      sel.innerHTML = valid.map(p=>{
-        const uid=String(p.uid).trim();
-        const label=String(p.label||p.displayName||p.name||p.email||uid).trim();
+      const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
+      sel.innerHTML = users.map((u,i)=>{
+        const uid=String(u.uid||u.id||u.label||('user'+i));
+        const label=u.label||u.displayName||u.name||('Usuário '+(i+1));
         return `<option value="${uid.replace(/"/g,'&quot;')}">${label.replace(/</g,'&lt;')}</option>`;
       }).join('');
-      const fallback = valid[idx]?.uid || valid[0]?.uid || '';
+      const fallback=users[idx]?.uid||users[idx]?.id||users[0]?.uid||users[0]?.id||'';
       sel.value = old && [...sel.options].some(o=>o.value===old) ? old : fallback;
     });
   }
@@ -8046,7 +8031,6 @@ if ('serviceWorker' in navigator) {
 #blFriendHeroV10 .ro{font-size:13px;color:#b8e8ff;margin-top:8px;font-weight:800}
 #blFriendHeroV10 .back{margin-left:auto;border:0;border-radius:12px;background:#8b7cf8;color:white;font-weight:900;padding:11px 16px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 18px rgba(139,124,248,.25)}
 body.bl-v10-friend #fabBtn, body.bl-v10-friend .fab, body.bl-v10-friend #fabMenu, body.bl-v10-battle #fabBtn, body.bl-v10-battle .fab, body.bl-v10-battle #fabMenu{display:none!important}
-body.bl-v10-battle .lendo-wrap{display:none!important}
 body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 #btn-user-batalha{display:inline-flex!important;align-items:center!important;gap:6px!important;visibility:visible!important}
 @media(max-width:700px){#blFriendHeroV10{margin:10px 8px 0;padding:12px;align-items:flex-start;flex-wrap:wrap}#blFriendHeroV10 .avatar{width:56px;height:56px;font-size:26px}#blFriendHeroV10 .name{font-size:20px}#blFriendHeroV10 .back{width:100%;margin-left:0;margin-top:8px}}
