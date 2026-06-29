@@ -12590,7 +12590,8 @@ body.bl-v40-loading #app{display:none!important;}
       const old=by.get(k);
       if(!old||score>old.__score) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:isReadingStatus(st)?'Lendo':'Pausado',pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),__score:score});
     });
-    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
+    // Lendo primeiro, Pausado depois, alfabético dentro de cada grupo
+    return [...by.values()].sort((a,b)=>{ const sa=a.status==='Lendo'?0:1, sb=b.status==='Lendo'?0:1; return sa!==sb?sa-sb:norm(a.livro).localeCompare(norm(b.livro),'pt-BR'); });
   }
 
   function collectWaiting(){
@@ -12746,25 +12747,26 @@ body.bl-v40-loading #app{display:none!important;}
     if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
     const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
     const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro);
-    try{
-      const snap=await db.collection('users').doc(uid).collection('library').get();
-      const batch=db.batch(); let count=0;
-      snap.docs.forEach(doc=>{
-        const d=doc.data()||{}; const st=String(d?.status||'').toLowerCase();
-        const docTitle=norm(String(d?.title||d?.livro||d?.bookTitle||''));
-        if(docTitle===t && ['lendo','em leitura','reading'].includes(st)){
-          batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
-          count++;
-        }
-      });
-      if(count) await batch.commit();
-      else {
-        const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80);
-        await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),livro,title:livro},{merge:true});
-      }
-      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
-    }catch(e){ console.error('[V3.60] pausar falhou',e); alert('Erro ao pausar: '+e.message); }
+    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
+    // Atualiza UI imediatamente sem esperar Firebase
+    const src=[...(window._dadosD?.lendo||[]),...(window._livros||[])];
+    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Pausado';x.pauseSource='app';x.pausedAt=now;});
+    try{ window.renderLendoCards?.(); }catch(e){}
+    // Grava no Firebase em paralelo (sem await na UI)
+    (async()=>{
+      try{
+        const snap=await db.collection('users').doc(uid).collection('library').get();
+        const batch=db.batch(); let count=0;
+        snap.docs.forEach(doc=>{
+          const d=doc.data()||{}; const st=String(d?.status||'').toLowerCase();
+          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&['lendo','em leitura','reading'].includes(st)){
+            batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now},{merge:true}); count++;
+          }
+        });
+        if(count) await batch.commit();
+        else{ const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80); await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now,livro,title:livro},{merge:true}); }
+      }catch(e){ console.error('[V3.60] pausar Firebase falhou',e); }
+    })();
   };
 
   // V3.60: Voltar a ler — limpa pauseSource, volta status:'Lendo'
@@ -12772,21 +12774,25 @@ body.bl-v40-loading #app{display:none!important;}
     if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
     const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
     const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro);
-    try{
-      const snap=await db.collection('users').doc(uid).collection('library').get();
-      const batch=db.batch(); let count=0;
-      snap.docs.forEach(doc=>{
-        const d=doc.data()||{};
-        const docTitle=norm(String(d?.title||d?.livro||d?.bookTitle||''));
-        if(docTitle===t && String(d?.status||'').toLowerCase()==='pausado'){
-          batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:new Date().toISOString(),updatedAt:new Date().toISOString()},{merge:true});
-          count++;
-        }
-      });
-      if(count) await batch.commit();
-      setTimeout(()=>{ try{window.renderLendoCards?.();window.blRefreshAndRender?.();}catch(e){} },400);
-    }catch(e){ console.error('[V3.60] retomar falhou',e); alert('Erro ao retomar: '+e.message); }
+    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
+    // Atualiza UI imediatamente
+    const src=[...(window._dadosD?.pausados||[]),...(window._livros||[])];
+    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Lendo';x.pauseSource=null;x.pausedAt=null;x.resumedAt=now;});
+    try{ window.renderLendoCards?.(); }catch(e){}
+    // Grava no Firebase em paralelo
+    (async()=>{
+      try{
+        const snap=await db.collection('users').doc(uid).collection('library').get();
+        const batch=db.batch(); let count=0;
+        snap.docs.forEach(doc=>{
+          const d=doc.data()||{};
+          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&String(d?.status||'').toLowerCase()==='pausado'){
+            batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:now,updatedAt:now},{merge:true}); count++;
+          }
+        });
+        if(count) await batch.commit();
+      }catch(e){ console.error('[V3.60] retomar Firebase falhou',e); }
+    })();
   };
 
   function isBattleMode(){ const bat=$('pageBatalha'); return bat&&bat.style.display!=='none'&&bat.style.display!==''; }
