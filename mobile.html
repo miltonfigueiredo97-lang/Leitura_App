@@ -15405,5 +15405,89 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+<script>
+/* BookLegacy V3.59-fix1-mobile — corrige migração bloqueada e canEdit no próprio perfil */
+(function(){
+  'use strict';
+  function applyFix(){
+    const authUser = () =>
+      window.BL?.auth?.currentUser ||
+      window.firebaseAuth?.currentUser ||
+      window.auth?.currentUser || null;
+    const authUid = () => authUser()?.uid || '';
+
+    window.canEdit = function(){
+      const uid = authUid();
+      if (!uid) return false;
+      const view = String(window.__BL_VIEW_UID || '').trim();
+      if (!view) return true;
+      return view === String(uid).trim();
+    };
+
+    if (!window.__BL_MIGRATION_ORIGINAL_FN) {
+      window.__BL_MIGRATION_ORIGINAL_FN = async function(){
+        const user = authUser();
+        if (!user) return alert('Entre com Google primeiro.');
+        if (typeof window.blMigrationShell === 'function') {
+          window.blMigrationShell();
+        } else {
+          alert('Função de migração não encontrada. Recarregue a página.');
+          return;
+        }
+        const userEl = document.getElementById('blMigrationUser');
+        if (userEl) userEl.innerHTML = `Conta logada: <b style="color:#e2e8f0">${user.displayName || user.email || 'Usuário logado'}</b>`;
+        const fileInput = document.getElementById('blMigrationFile');
+        const importBtn = document.getElementById('blMigrationImportBtn');
+        const preview   = document.getElementById('blMigrationPreview');
+        const logEl     = document.getElementById('blMigrationLog');
+        const log = msg => { if (logEl) logEl.textContent = msg; };
+        if (!fileInput || !importBtn) { log('Erro: modal não montado.'); return; }
+        let selectedData = null;
+        fileInput.onchange = async () => {
+          selectedData = null; importBtn.disabled = true; importBtn.style.opacity = '.6';
+          const file = fileInput.files && fileInput.files[0]; if (!file) return;
+          try {
+            const data = JSON.parse(await file.text());
+            if (data.format && data.format !== 'booklegacy-migration-v1') throw new Error('Formato não reconhecido: ' + data.format);
+            ['books','library','sessions','ratings','goals','collections'].forEach(k => { if (!Array.isArray(data[k])) data[k] = []; });
+            if (data.expectedUid && data.expectedUid !== user.uid) throw new Error('JSON para outra conta.');
+            const c = { books:(data.books||[]).length, library:(data.library||[]).length, sessions:(data.sessions||[]).length, ratings:(data.ratings||[]).length, goals:(data.goals||[]).length, collections:(data.collections||[]).length };
+            if (preview) preview.innerHTML = `<b style="color:#e2e8f0">${file.name}</b><br>Livros: ${c.books} · Biblioteca: ${c.library} · Sessões: ${c.sessions} · Avaliações: ${c.ratings} · Metas: ${c.goals} · Coleções: ${c.collections}`;
+            selectedData = data; log('Arquivo validado. Clique em importar.'); importBtn.disabled = false; importBtn.style.opacity = '1';
+          } catch(e) { if (preview) preview.innerHTML = `<span style="color:#f88c6a">Erro: ${e.message}</span>`; log('Erro: ' + e.message); }
+        };
+        importBtn.onclick = async () => {
+          if (!selectedData) return;
+          const c = { library:(selectedData.library||[]).length, sessions:(selectedData.sessions||[]).length, ratings:(selectedData.ratings||[]).length };
+          if (!confirm(`Importar para a conta logada?\n\nBiblioteca: ${c.library}\nSessões: ${c.sessions}\nAvaliações: ${c.ratings}`)) return;
+          importBtn.disabled = true; importBtn.textContent = 'Importando...';
+          try {
+            if (typeof window.blImportMigrationData === 'function') {
+              const res = await window.blImportMigrationData(selectedData);
+              log(`✅ Concluído.\nGravações: ${res.totalWrites}\nBiblioteca: ${res.library}\nSessões: ${res.sessions}\nAvaliações: ${res.ratings}\n\nRecarregando...`);
+            } else { log('❌ Função de importação não encontrada.'); importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta'; return; }
+            try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); } catch(e){}
+            importBtn.textContent = '✅ Importado';
+          } catch(e) { log('❌ Erro: ' + e.message); importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta'; }
+        };
+        const reloadBtn = document.getElementById('blMigrationReloadBtn');
+        if (reloadBtn) reloadBtn.onclick = async () => {
+          log('Recarregando...');
+          try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); log('✅ Recarregado.'); } catch(e){ log('❌ Erro: ' + e.message); }
+        };
+      };
+    }
+
+    window.blOpenMigrationModal = window.__BL_MIGRATION_ORIGINAL_FN;
+    const btn = document.getElementById('btn-migration');
+    if (btn) btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); window.blOpenMigrationModal(); };
+    console.log('[BookLegacy] fix1-mobile aplicado');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(applyFix, 200), { once: true });
+  else setTimeout(applyFix, 200);
+  [800, 2000, 4000].forEach(t => setTimeout(applyFix, t));
+})();
+</script>
 </body>
 </html>
