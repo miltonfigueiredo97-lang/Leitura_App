@@ -5328,8 +5328,19 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // u = uid from fillBattleSelects. Filter by usuarioUid — never by name.
-    const filterU = l => String(l.usuarioUid||l.ownerUid||l.userId||'').trim() === u;
+    // Filtra por usuarioUid quando disponível, senão por label — nunca mistura dois usuários com mesmo nome
+    const list = (typeof users === 'function') ? users() : [];
+    const person = list.find(p => String(p.uid||'') === u) || list.find(p => norm(String(p.label||'')) === norm(u)) || null;
+    const personUid = String(person?.uid || '').trim();
+    const personLabel = String(person?.label || u).trim();
+    const isFirst = list.length > 0 && String(list[0]?.uid||list[0]?.label||'') === u;
+    const filterU = l => {
+      const lUid = String(l.usuarioUid||l.ownerUid||l.userId||'').trim();
+      if(lUid && personUid) return lUid === personUid;  // uid disponível: filtra por uid
+      // fallback por label para dados legados sem uid
+      if(isFirst) return !l.usuario || l.usuario === '' || norm(l.usuario) === norm(personLabel);
+      return norm(l.usuario||'') === norm(personLabel);
+    };
     const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
     const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
@@ -8179,9 +8190,9 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function fillBattleSelects(){
     const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.uid||u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.uid||list[0]?.label||''; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.uid||list[1]?.label||list[0]?.uid||''; }
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
