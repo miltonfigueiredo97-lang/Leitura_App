@@ -5385,49 +5385,17 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // Busca pessoa por UID via users() — que já tem sessions/library/ratings do Firestore
-    const person = users().find(p => String(p.uid||'') === u) || null;
-
-    // Normaliza sessões: blReadUserBundle usa pages/date/minutes, calcDados espera paginas/data/minutos
-    const allSess = (person?.sessions||[]).map(s => {
-      const dataStr = String(s.date||s.data||'').slice(0,10);
-      const ano = dataStr ? new Date(dataStr+'T12:00:00').getFullYear() : 0;
-      return {
-        livro:   String(s.title||s.livro||s.bookTitle||''),
-        paginas: Number(s.pages||s.paginas||0),
-        minutos: Number(s.minutes||s.minutos||0),
-        data:    dataStr,
-        ano:     ano
-      };
-    });
-    const sess = allSess.filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
-
-    // Normaliza library: blReadUserBundle usa totalPages/currentPage/author
-    const todos = (person?.library||[]).map(l => ({
-      livro:    String(l.title||l.livro||l.bookTitle||''),
-      autor:    String(l.author||l.autor||''),
-      status:   String(l.status||''),
-      totalPag: Number(l.totalPages||l.totalPag||l.pages||0),
-      pagAtual: Number(l.currentPage||l.pagAtual||l.current||0),
-      colecao:  String(l.collection||l.colecao||''),
-      genero:   String(l.genre||l.genero||''),
-      metaAno:  String(l.metaYear||l.metaAno||'')
-    }));
-
+    const filterU = l => u === 'Milton'
+      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
+      : l.usuario?.toUpperCase() === u.toUpperCase();
+    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
       if (anoFiltro === 'total') return true;
+      // filtra livros concluídos no ano selecionado (verificando sessões)
       return sess.some(s => s.livro === l.livro);
     });
-
-    // Normaliza ratings
-    const notas = (person?.ratings||[]).map(r => {
-      const dataStr = String(r.date||r.data||'').slice(0,10);
-      return {
-        media: Number(r.rating||r.nota||r.media||0),
-        livro: String(r.title||r.livro||''),
-        ano:   dataStr ? new Date(dataStr+'T12:00:00').getFullYear() : Number(r.year||r.ano||0)
-      };
-    }).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+    const notas = (d.notas||[]).filter(filterU).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -8198,7 +8166,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
-  body.bl-v11-battle .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
@@ -8269,9 +8236,9 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function fillBattleSelects(){
     const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.uid||u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.uid||list[0]?.label||''; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.uid||list[1]?.label||list[0]?.uid||''; }
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
