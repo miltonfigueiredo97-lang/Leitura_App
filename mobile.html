@@ -15456,6 +15456,7 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
   }
 
   function restoreOwnButtons(){
+    if(isBattleMode()) return;
     const SKIP_IDS = new Set(['fabMenu','blMigrationModal','blFriendsModal','blCommunityModal','blInviteModal','pageBatalha','pageComunidade']);
     document.querySelectorAll('button,a,[role="button"],.fab,.floating-action').forEach(el=>{
       if(SKIP_IDS.has(el.id)) return;
@@ -15465,6 +15466,13 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
   }
   function applyPrivacyAndReadonly(){
     ensureCss();
+    if(isBattleMode()){
+      const lw=document.querySelector('.lendo-wrap');
+      if(lw) lw.style.setProperty('display','none','important');
+      return;
+    }
+    const lw=document.querySelector('.lendo-wrap');
+    if(lw && lw.style.display==='none') lw.style.removeProperty('display');
     const visitor=isVisitor();
     document.body.classList.toggle('bl-visitor-readonly',visitor);
     document.body.classList.toggle('bl-readonly-profile',visitor);
@@ -15557,7 +15565,7 @@ const map={meta:'#selMetaAno,#metaCardTitle',visao:'#selVGAno,#kpi-paginas',graf
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
-  try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
+  try{new MutationObserver(()=>{ if(!isBattleMode()) applyPrivacyAndReadonly(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
