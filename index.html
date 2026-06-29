@@ -12688,5 +12688,154 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+
+<script>
+/* BookLegacy V3.59-fix1 — corrige migração bloqueada e canEdit no próprio perfil */
+(function(){
+  'use strict';
+
+  // Aguarda Firebase estar pronto antes de aplicar
+  function applyFix(){
+    const authUser = () =>
+      window.BL?.auth?.currentUser ||
+      window.firebaseAuth?.currentUser ||
+      window.auth?.currentUser || null;
+    const authUid = () => authUser()?.uid || '';
+
+    // FIX 1: canEdit estava retornando false quando __BL_VIEW_UID era o próprio UID
+    // Causa: comparação falhava por tipo ou timing. Substituímos por versão segura.
+    const origCanEdit = window.canEdit;
+    window.canEdit = function(){
+      const uid = authUid();
+      if (!uid) return false;
+      const view = String(window.__BL_VIEW_UID || '').trim();
+      if (!view) return true;          // sem view = próprio perfil
+      return view === String(uid).trim(); // view = próprio UID = pode editar
+    };
+
+    // FIX 2: blOpenMigrationModal — ignorar o wrapper canEdit que bloqueia
+    // O modal de migração deve abrir SEMPRE que o usuário estiver logado,
+    // independente de __BL_VIEW_UID (a própria função verifica user internamente)
+    const _originalMigration = window.__BL_MIGRATION_ORIGINAL_FN || null;
+
+    // Encontrar a função original real (antes dos wrappers)
+    // Gravamos ela num slot seguro na primeira vez
+    if (!window.__BL_MIGRATION_ORIGINAL_FN) {
+      // Percorre a cadeia de wrappers até achar a que cria o blMigrationShell
+      // Na prática: a definição em linha (linha ~4530) já foi atribuída a window.blOpenMigrationModal
+      // e depois sobrescrita pelos patches. Reconstruímos direto:
+      window.__BL_MIGRATION_ORIGINAL_FN = async function(){
+        const user = authUser();
+        if (!user) return alert('Entre com Google primeiro.');
+
+        // Chama blMigrationShell se existir (cria o modal HTML)
+        if (typeof window.blMigrationShell === 'function') {
+          window.blMigrationShell();
+        } else {
+          alert('Função de migração não encontrada. Recarregue a página.');
+          return;
+        }
+
+        // Preenche usuário logado
+        const userEl = document.getElementById('blMigrationUser');
+        if (userEl) userEl.innerHTML = `Conta logada: <b style="color:#e2e8f0">${user.displayName || user.email || 'Usuário logado'}</b>`;
+
+        const fileInput  = document.getElementById('blMigrationFile');
+        const importBtn  = document.getElementById('blMigrationImportBtn');
+        const preview    = document.getElementById('blMigrationPreview');
+        const logEl      = document.getElementById('blMigrationLog');
+
+        const log = msg => { if (logEl) logEl.textContent = msg; };
+
+        if (!fileInput || !importBtn) { log('Erro: modal não montado corretamente.'); return; }
+
+        let selectedData = null;
+
+        fileInput.onchange = async () => {
+          selectedData = null;
+          importBtn.disabled = true;
+          importBtn.style.opacity = '.6';
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            // Validação básica
+            if (data.format && data.format !== 'booklegacy-migration-v1')
+              throw new Error('Formato não reconhecido: ' + data.format);
+            ['books','library','sessions','ratings','goals','collections']
+              .forEach(k => { if (!Array.isArray(data[k])) data[k] = []; });
+            if (data.expectedUid && data.expectedUid !== user.uid)
+              throw new Error('JSON preparado para outra conta. Entre na conta correta.');
+            const c = { books:(data.books||[]).length, library:(data.library||[]).length,
+              sessions:(data.sessions||[]).length, ratings:(data.ratings||[]).length,
+              goals:(data.goals||[]).length, collections:(data.collections||[]).length };
+            if (preview) preview.innerHTML = `<b style="color:#e2e8f0">${file.name}</b><br>Livros: ${c.books} · Biblioteca: ${c.library} · Sessões: ${c.sessions} · Avaliações: ${c.ratings} · Metas: ${c.goals} · Coleções: ${c.collections}`;
+            selectedData = data;
+            log('Arquivo validado. Clique em "Importar para esta conta".');
+            importBtn.disabled = false;
+            importBtn.style.opacity = '1';
+          } catch(e) {
+            if (preview) preview.innerHTML = `<span style="color:#f88c6a">Erro: ${e.message}</span>`;
+            log('Erro ao ler arquivo: ' + e.message);
+          }
+        };
+
+        importBtn.onclick = async () => {
+          if (!selectedData) return;
+          const c = { library:(selectedData.library||[]).length, sessions:(selectedData.sessions||[]).length, ratings:(selectedData.ratings||[]).length };
+          const ok = confirm(`Importar para a conta logada agora?\n\nBiblioteca: ${c.library}\nSessões: ${c.sessions}\nAvaliações: ${c.ratings}\n\nUse isso somente na conta correta.`);
+          if (!ok) return;
+          importBtn.disabled = true;
+          importBtn.textContent = 'Importando...';
+          try {
+            // Usa blImportMigrationData se disponível (tem cleanPayload)
+            if (typeof window.blImportMigrationData === 'function') {
+              const res = await window.blImportMigrationData(selectedData);
+              log(`✅ Concluído.\nGravações: ${res.totalWrites}\nBiblioteca: ${res.library}\nSessões: ${res.sessions}\nAvaliações: ${res.ratings}\n\nRecarregando...`);
+            } else {
+              log('❌ Função de importação não encontrada. Recarregue a página.');
+              importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta';
+              return;
+            }
+            try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); } catch(e){}
+            importBtn.textContent = '✅ Importado';
+          } catch(e) {
+            log('❌ Erro na importação: ' + e.message);
+            importBtn.disabled = false;
+            importBtn.textContent = 'Importar para esta conta';
+          }
+        };
+
+        const reloadBtn = document.getElementById('blMigrationReloadBtn');
+        if (reloadBtn) reloadBtn.onclick = async () => {
+          log('Recarregando...');
+          try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); log('✅ Recarregado.'); }
+          catch(e){ log('❌ Erro: ' + e.message); }
+        };
+      };
+    }
+
+    // Substitui TODOS os wrappers — a função agora é direta
+    window.blOpenMigrationModal = window.__BL_MIGRATION_ORIGINAL_FN;
+    // Também corrige o botão direto no HTML (onclick="blOpenMigrationModal()")
+    const btn = document.getElementById('btn-migration');
+    if (btn) {
+      btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); window.blOpenMigrationModal(); };
+    }
+
+    console.log('[BookLegacy] fix1 aplicado: migração desbloqueada, canEdit corrigido');
+  }
+
+  // Aplica assim que possível, e reaplica após carregamentos
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(applyFix, 200), { once: true });
+  } else {
+    setTimeout(applyFix, 200);
+  }
+  // Reaplicar após Firebase provavelmente carregar
+  [800, 2000, 4000].forEach(t => setTimeout(applyFix, t));
+})();
+</script>
 </body>
 </html>
