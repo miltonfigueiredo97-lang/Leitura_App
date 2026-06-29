@@ -15103,7 +15103,7 @@ body.bl-v40-loading #app{display:none!important;}
   if (typeof prevAbrirModal === 'function') window.abrirModal = function(tipo){ if (!canEdit() && EDIT_MODAL_TYPES.has(String(tipo))) return blockEdit(); return prevAbrirModal.apply(this, arguments); };
   const prevToggleFab = window.toggleFabMenu;
   if (typeof prevToggleFab === 'function') window.toggleFabMenu = function(){ if (!canEdit()) return blockEdit(); return prevToggleFab.apply(this, arguments); };
-  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blOpenMigrationModal'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
+  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
 
   async function deleteCollection(path, chunkSize=350){
     if (!db()) return 0;
@@ -15163,13 +15163,7 @@ body.bl-v40-loading #app{display:none!important;}
     return Object.assign({ totalWrites:writes.length, deletedBeforeImport:deleted }, migrationCounts(data));
   };
 
-  const prevMigrationModal = window.blOpenMigrationModal;
-  if (typeof prevMigrationModal === 'function') {
-    window.blOpenMigrationModal = function(){
-      if (!canEdit()) return blockEdit();
-      return prevMigrationModal.apply(this, arguments);
-    };
-  }
+  // V3.59-fix: migração não entra no wrapper canEdit — ela verifica user internamente
 
   window.blV58Audit = function(){
     const all = buildAllData();
@@ -15360,12 +15354,27 @@ body.bl-v40-loading #app{display:none!important;}
     document.body.classList.add('bl-visitor-readonly','bl-readonly-profile');
     document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
       if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
-      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
+      const id=norm(el.id||''); const cls=norm(el.className||'');
+      const isMenuBtn = id.includes('menu')||cls.includes('menu')||el.getAttribute?.('aria-label')?.toLowerCase().includes('menu')||['☰','⋮','•••','...'].some(s=>el.textContent?.trim()===s);
+      if(isMenuBtn) return;
+      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase();
       if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
     });
   }
 
-  function applyPrivacyAndReadonly(){ ensureCss(); document.body.classList.toggle('bl-visitor-readonly',isVisitor()); document.body.classList.toggle('bl-readonly-profile',isVisitor()); sanitizeVisibleIds(); hideEditButtons(); }
+  function restoreOwnButtons(){
+    document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
+      if(el.style.display==='none') el.style.removeProperty('display');
+    });
+  }
+  function applyPrivacyAndReadonly(){
+    ensureCss();
+    const visitor=isVisitor();
+    document.body.classList.toggle('bl-visitor-readonly',visitor);
+    document.body.classList.toggle('bl-readonly-profile',visitor);
+    if(visitor){ sanitizeVisibleIds(); hideEditButtons(); }
+    else { restoreOwnButtons(); }
+  }
 
   const oldRender=window.renderLendoCards;
   window.renderLendoCards=function(){ try{return renderLendoCardsV59();}catch(e){console.warn('[BookLegacy]',PATCH,'render lendo falhou',e); if(typeof oldRender==='function')return oldRender.apply(this,arguments);} };
@@ -15405,89 +15414,5 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
-
-<script>
-/* BookLegacy V3.59-fix1-mobile — corrige migração bloqueada e canEdit no próprio perfil */
-(function(){
-  'use strict';
-  function applyFix(){
-    const authUser = () =>
-      window.BL?.auth?.currentUser ||
-      window.firebaseAuth?.currentUser ||
-      window.auth?.currentUser || null;
-    const authUid = () => authUser()?.uid || '';
-
-    window.canEdit = function(){
-      const uid = authUid();
-      if (!uid) return false;
-      const view = String(window.__BL_VIEW_UID || '').trim();
-      if (!view) return true;
-      return view === String(uid).trim();
-    };
-
-    if (!window.__BL_MIGRATION_ORIGINAL_FN) {
-      window.__BL_MIGRATION_ORIGINAL_FN = async function(){
-        const user = authUser();
-        if (!user) return alert('Entre com Google primeiro.');
-        if (typeof window.blMigrationShell === 'function') {
-          window.blMigrationShell();
-        } else {
-          alert('Função de migração não encontrada. Recarregue a página.');
-          return;
-        }
-        const userEl = document.getElementById('blMigrationUser');
-        if (userEl) userEl.innerHTML = `Conta logada: <b style="color:#e2e8f0">${user.displayName || user.email || 'Usuário logado'}</b>`;
-        const fileInput = document.getElementById('blMigrationFile');
-        const importBtn = document.getElementById('blMigrationImportBtn');
-        const preview   = document.getElementById('blMigrationPreview');
-        const logEl     = document.getElementById('blMigrationLog');
-        const log = msg => { if (logEl) logEl.textContent = msg; };
-        if (!fileInput || !importBtn) { log('Erro: modal não montado.'); return; }
-        let selectedData = null;
-        fileInput.onchange = async () => {
-          selectedData = null; importBtn.disabled = true; importBtn.style.opacity = '.6';
-          const file = fileInput.files && fileInput.files[0]; if (!file) return;
-          try {
-            const data = JSON.parse(await file.text());
-            if (data.format && data.format !== 'booklegacy-migration-v1') throw new Error('Formato não reconhecido: ' + data.format);
-            ['books','library','sessions','ratings','goals','collections'].forEach(k => { if (!Array.isArray(data[k])) data[k] = []; });
-            if (data.expectedUid && data.expectedUid !== user.uid) throw new Error('JSON para outra conta.');
-            const c = { books:(data.books||[]).length, library:(data.library||[]).length, sessions:(data.sessions||[]).length, ratings:(data.ratings||[]).length, goals:(data.goals||[]).length, collections:(data.collections||[]).length };
-            if (preview) preview.innerHTML = `<b style="color:#e2e8f0">${file.name}</b><br>Livros: ${c.books} · Biblioteca: ${c.library} · Sessões: ${c.sessions} · Avaliações: ${c.ratings} · Metas: ${c.goals} · Coleções: ${c.collections}`;
-            selectedData = data; log('Arquivo validado. Clique em importar.'); importBtn.disabled = false; importBtn.style.opacity = '1';
-          } catch(e) { if (preview) preview.innerHTML = `<span style="color:#f88c6a">Erro: ${e.message}</span>`; log('Erro: ' + e.message); }
-        };
-        importBtn.onclick = async () => {
-          if (!selectedData) return;
-          const c = { library:(selectedData.library||[]).length, sessions:(selectedData.sessions||[]).length, ratings:(selectedData.ratings||[]).length };
-          if (!confirm(`Importar para a conta logada?\n\nBiblioteca: ${c.library}\nSessões: ${c.sessions}\nAvaliações: ${c.ratings}`)) return;
-          importBtn.disabled = true; importBtn.textContent = 'Importando...';
-          try {
-            if (typeof window.blImportMigrationData === 'function') {
-              const res = await window.blImportMigrationData(selectedData);
-              log(`✅ Concluído.\nGravações: ${res.totalWrites}\nBiblioteca: ${res.library}\nSessões: ${res.sessions}\nAvaliações: ${res.ratings}\n\nRecarregando...`);
-            } else { log('❌ Função de importação não encontrada.'); importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta'; return; }
-            try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); } catch(e){}
-            importBtn.textContent = '✅ Importado';
-          } catch(e) { log('❌ Erro: ' + e.message); importBtn.disabled = false; importBtn.textContent = 'Importar para esta conta'; }
-        };
-        const reloadBtn = document.getElementById('blMigrationReloadBtn');
-        if (reloadBtn) reloadBtn.onclick = async () => {
-          log('Recarregando...');
-          try { await (window.blRefreshAndRender || window.manualRefresh || (() => {}))(); log('✅ Recarregado.'); } catch(e){ log('❌ Erro: ' + e.message); }
-        };
-      };
-    }
-
-    window.blOpenMigrationModal = window.__BL_MIGRATION_ORIGINAL_FN;
-    const btn = document.getElementById('btn-migration');
-    if (btn) btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); window.blOpenMigrationModal(); };
-    console.log('[BookLegacy] fix1-mobile aplicado');
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(applyFix, 200), { once: true });
-  else setTimeout(applyFix, 200);
-  [800, 2000, 4000].forEach(t => setTimeout(applyFix, t));
-})();
-</script>
 </body>
 </html>
