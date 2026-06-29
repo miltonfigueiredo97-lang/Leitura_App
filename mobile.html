@@ -5385,43 +5385,17 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // SEMPRE por UID — nunca por nome, sem exceção, nem para o próprio logado
-    const list = users();
-    const person = list.find(p => String(p.uid||'') === u) || null;
-
-    const mapSess = s => ({
-      livro: String(s.title||s.livro||s.bookTitle||''),
-      paginas: Number(s.pages||s.paginas||0),
-      minutos: Number(s.minutes||s.minutos||0),
-      data: String(s.date||s.data||'').slice(0,10),
-      ano: (s.date||s.data) ? new Date(String(s.date||s.data).slice(0,10)+'T12:00:00').getFullYear() : 0
-    });
-    const mapLib = l => ({
-      livro: String(l.title||l.livro||l.bookTitle||''),
-      autor: String(l.author||l.autor||''),
-      status: String(l.status||''),
-      totalPag: Number(l.totalPages||l.totalPag||l.pages||0),
-      pagAtual: Number(l.currentPage||l.pagAtual||l.current||0),
-      colecao: String(l.collection||l.colecao||''),
-      genero: String(l.genre||l.genero||''),
-      metaAno: String(l.metaYear||l.metaAno||'')
-    });
-    const mapNota = r => ({
-      media: Number(r.rating||r.nota||r.media||0),
-      ano: (r.date||r.data) ? new Date(String(r.date||r.data).slice(0,10)+'T12:00:00').getFullYear() : 0
-    });
-
-    const sess = (person?.sessions||[]).map(mapSess)
-      .filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
-    const todos = (person?.library||[]).map(mapLib);
-    const notas = (person?.ratings||[]).map(mapNota)
-      .filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+    const filterU = l => u === 'Milton'
+      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
+      : l.usuario?.toUpperCase() === u.toUpperCase();
+    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
     const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
       if (anoFiltro === 'total') return true;
       // filtra livros concluídos no ano selecionado (verificando sessões)
       return sess.some(s => s.livro === l.livro);
     });
-    // notas já definido acima por uid
+    const notas = (d.notas||[]).filter(filterU).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -8192,7 +8166,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
-  body.bl-v11-battle .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
@@ -8263,10 +8236,9 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   function fillBattleSelects(){
     const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    // value=uid para distinguir contas com mesmo nome
-    const opts = list.map(u=>`<option value="${String(u.uid||u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.uid||list[0]?.label||''; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.uid||list[1]?.label||list[0]?.uid||''; }
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
@@ -13745,39 +13717,28 @@ body.bl-v40-loading #app{display:none!important;}
     return list[0];
   }
   function sessionSources(){
-    const r=raw(), out=[], authUid=window.BL?.auth?.currentUser?.uid||'';
+    const r=raw(), out=[];
     if(Array.isArray(r.users)&&r.users.some(u=>(u.sessions||[]).length)){
-      r.users.forEach(u=>{
-        const uid=String(u?.uid||'').trim();
-        const label=u.label||u.displayName||u.name||userName();
-        (u.sessions||[]).forEach((s,i)=>out.push({s,label,uid,idx:i,src:'raw.users'}));
-      });
+      r.users.forEach(u=>(u.sessions||[]).forEach((s,i)=>out.push({s,label:u.label||u.displayName||u.name||userName(),idx:i,src:'raw.users'})));
       return out;
     }
-    if(Array.isArray(r.sessoes)&&r.sessoes.length){
-      r.sessoes.forEach((s,i)=>{const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();out.push({s,label:s.usuario||r.currentLabel||userName(),uid,idx:i,src:'dados.sessoes'});});
-      return out;
-    }
-    if(Array.isArray(r.sessions)&&r.sessions.length){
-      r.sessions.forEach((s,i)=>{const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();out.push({s,label:s.usuario||r.currentLabel||userName(),uid,idx:i,src:'raw.sessions'});});
-      return out;
-    }
-    (window._sessoes||[]).forEach((s,i)=>{const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();out.push({s,label:s.usuario||userName(),uid,idx:i,src:'_sessoes'});});
+    if(Array.isArray(r.sessoes)&&r.sessoes.length){r.sessoes.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'dados.sessoes'}));return out;}
+    if(Array.isArray(r.sessions)&&r.sessions.length){r.sessions.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'raw.sessions'}));return out;}
+    (window._sessoes||[]).forEach((s,i)=>out.push({s,label:s.usuario||userName(),idx:i,src:'_sessoes'}));
     return out;
   }
   function canonicalSessionRows(){
     const g=bookMapGlobal(), seen=new Set(), rows=[];
-    sessionSources().forEach(({s,label,uid,idx,src})=>{
+    sessionSources().forEach(({s,label,idx,src})=>{
       const gb=g.get(String(s.bookId||''))||{};
       const title=titleOf(s)||titleOf(gb); if(!title)return;
       const d=dateOf(s); if(!d)return;
       let pages=pagesRead(s); if(!pages||pages<0)return;
       const id=idOf(s)||String(s.bookId||'');
-      // V3.59-fix: uid no key
-      const key=String(s.id||s.docId||[src,uid||norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
+      const key=String(s.id||s.docId||[src,norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
       if(seen.has(key))return; seen.add(key);
       const b=bestBook(title,id,label);
-      rows.push({raw:s,label,uid:uid||'',idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
+      rows.push({raw:s,label,idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
     });
     return rows;
   }
@@ -13796,23 +13757,10 @@ body.bl-v40-loading #app{display:none!important;}
   function buildFeed(){
     const items=[], completion=new Map();
     const groups=new Map();
-    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[row.uid||norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
-    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:(()=>{
-        const rowUid=row.uid||'';
-        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rowUid)||{};
-        const me=window.BL?.auth?.currentUser;
-        const isMe=rowUid&&me&&rowUid===me.uid;
-        const photo=row.photo||friend.photoURL||(isMe?me.photoURL:'')||'';
-        return {name:row.label||userName(),photo};
-      })(),title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
+    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
+    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:{name:row.label||userName(),photo:row.photo||userPhoto()},title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
     const g=bookMapGlobal();
-    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:(()=>{
-        const rUid=String(r?.usuarioUid||r?.ownerUid||r?.userId||'').trim();
-        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rUid)||{};
-        const me=window.BL?.auth?.currentUser;
-        const isMe=rUid&&me&&rUid===me.uid;
-        return r.userPhotoURL||r.photoURL||friend.photoURL||(isMe?me.photoURL:'')||'';
-      })()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
+    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:r.userPhotoURL||r.photoURL||userPhoto()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
     const seen=new Set();
     return items.sort((a,b)=>(b.sortMs||0)-(a.sortMs||0)).filter(i=>{const k=[i.type,norm(i.profile.name),norm(i.title),i.date,i.pages||i.media,i.current||''].join('|');if(seen.has(k))return false;seen.add(k);return true;}).slice(0,180);
   }
@@ -15155,7 +15103,7 @@ body.bl-v40-loading #app{display:none!important;}
   if (typeof prevAbrirModal === 'function') window.abrirModal = function(tipo){ if (!canEdit() && EDIT_MODAL_TYPES.has(String(tipo))) return blockEdit(); return prevAbrirModal.apply(this, arguments); };
   const prevToggleFab = window.toggleFabMenu;
   if (typeof prevToggleFab === 'function') window.toggleFabMenu = function(){ if (!canEdit()) return blockEdit(); return prevToggleFab.apply(this, arguments); };
-  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
+  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blOpenMigrationModal'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
 
   async function deleteCollection(path, chunkSize=350){
     if (!db()) return 0;
@@ -15215,7 +15163,13 @@ body.bl-v40-loading #app{display:none!important;}
     return Object.assign({ totalWrites:writes.length, deletedBeforeImport:deleted }, migrationCounts(data));
   };
 
-  // V3.59-fix: migração não entra no wrapper canEdit — ela verifica user internamente
+  const prevMigrationModal = window.blOpenMigrationModal;
+  if (typeof prevMigrationModal === 'function') {
+    window.blOpenMigrationModal = function(){
+      if (!canEdit()) return blockEdit();
+      return prevMigrationModal.apply(this, arguments);
+    };
+  }
 
   window.blV58Audit = function(){
     const all = buildAllData();
@@ -15277,8 +15231,6 @@ body.bl-v40-loading #app{display:none!important;}
       body.bl-visitor-readonly button[onclick*="excluir"],
       body.bl-visitor-readonly button[onclick*="confirmar"],
       body.bl-visitor-readonly .lendo-meta button,
-      body.bl-visitor-readonly button[onclick*="blV60PauseBook"],
-      body.bl-visitor-readonly button[onclick*="blV60ResumeBook"],
       body.bl-visitor-readonly .bl-v332-complete-card,
       body.bl-visitor-readonly .bl-v55-complete-card,
       body.bl-visitor-readonly .bl-v332-complete-actions{display:none!important;}
@@ -15319,8 +15271,7 @@ body.bl-v40-loading #app{display:none!important;}
       const old=by.get(k);
       if(!old||score>old.__score) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:isReadingStatus(st)?'Lendo':'Pausado',pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),__score:score});
     });
-    // Lendo primeiro, Pausado depois, alfabético dentro de cada grupo
-    return [...by.values()].sort((a,b)=>{ const sa=a.status==='Lendo'?0:1, sb=b.status==='Lendo'?0:1; return sa!==sb?sa-sb:norm(a.livro).localeCompare(norm(b.livro),'pt-BR'); });
+    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
   }
 
   function collectWaiting(){
@@ -15353,11 +15304,7 @@ body.bl-v40-loading #app{display:none!important;}
     active.forEach(p=>{
       const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
       const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-      const sessaoBtn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
-      const livroEsc=esc(p.livro).replace(/'/g,'&#39;');
-      const pauseBtn=editable&&lendo?`<button onclick="blV60PauseBook('${livroEsc}')" style="background:rgba(248,140,106,0.15);border:1px solid var(--orange);color:var(--orange);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">⏸️</button>`:'';
-      const resumeBtn=editable&&!lendo?`<button onclick="blV60ResumeBook('${livroEsc}')" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">▶️</button>`:'';
-      const btn=sessaoBtn+pauseBtn+resumeBtn;
+      const btn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
       cont.innerHTML+=`
         <div class="lendo-card ${lendo?'lendo':'pausado'}">
           <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
@@ -15380,7 +15327,7 @@ body.bl-v40-loading #app{display:none!important;}
     const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,"&#39;")}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
+      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div></div>`;
     }
     applyPrivacyAndReadonly();
   }
@@ -15413,30 +15360,12 @@ body.bl-v40-loading #app{display:none!important;}
     document.body.classList.add('bl-visitor-readonly','bl-readonly-profile');
     document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
       if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
-      const id=norm(el.id||''); const cls=norm(el.className||'');
-      const isMenuBtn = id.includes('menu')||cls.includes('menu')||el.getAttribute?.('aria-label')?.toLowerCase().includes('menu')||['☰','⋮','•••','...'].some(s=>el.textContent?.trim()===s);
-      if(isMenuBtn) return;
-      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase();
+      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
       if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
     });
   }
 
-  function restoreOwnButtons(){
-    const SKIP_IDS = new Set(['fabMenu','blMigrationModal','blFriendsModal','blCommunityModal','blInviteModal','pageBatalha','pageComunidade']);
-    document.querySelectorAll('button,a,[role="button"],.fab,.floating-action').forEach(el=>{
-      if(SKIP_IDS.has(el.id)) return;
-      if(el.closest?.('#fabMenu')) return;
-      if(el.style.display==='none') el.style.removeProperty('display');
-    });
-  }
-  function applyPrivacyAndReadonly(){
-    ensureCss();
-    const visitor=isVisitor();
-    document.body.classList.toggle('bl-visitor-readonly',visitor);
-    document.body.classList.toggle('bl-readonly-profile',visitor);
-    if(visitor){ sanitizeVisibleIds(); hideEditButtons(); }
-    else { restoreOwnButtons(); }
-  }
+  function applyPrivacyAndReadonly(){ ensureCss(); document.body.classList.toggle('bl-visitor-readonly',isVisitor()); document.body.classList.toggle('bl-readonly-profile',isVisitor()); sanitizeVisibleIds(); hideEditButtons(); }
 
   const oldRender=window.renderLendoCards;
   window.renderLendoCards=function(){ try{return renderLendoCardsV59();}catch(e){console.warn('[BookLegacy]',PATCH,'render lendo falhou',e); if(typeof oldRender==='function')return oldRender.apply(this,arguments);} };
@@ -15468,59 +15397,7 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  window.blV60PauseBook = async function(livro){
-    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
-    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
-    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
-    const src=[...(window._dadosD?.lendo||[]),...(window._livros||[])];
-    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Pausado';x.pauseSource='app';x.pausedAt=now;});
-    try{ window.renderLendoCards?.(); }catch(e){}
-    (async()=>{
-      try{
-        const snap=await db.collection('users').doc(uid).collection('library').get();
-        const batch=db.batch(); let count=0;
-        snap.docs.forEach(doc=>{
-          const d=doc.data()||{}; const st=String(d?.status||'').toLowerCase();
-          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&['lendo','em leitura','reading'].includes(st)){
-            batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now},{merge:true}); count++;
-          }
-        });
-        if(count) await batch.commit();
-        else{ const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80); await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now,livro,title:livro},{merge:true}); }
-      }catch(e){ console.error('[V3.60] pausar Firebase falhou',e); }
-    })();
-  };
-  window.blV60ResumeBook = async function(livro){
-    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
-    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
-    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
-    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
-    const src=[...(window._dadosD?.pausados||[]),...(window._livros||[])];
-    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Lendo';x.pauseSource=null;x.pausedAt=null;x.resumedAt=now;});
-    try{ window.renderLendoCards?.(); }catch(e){}
-    (async()=>{
-      try{
-        const snap=await db.collection('users').doc(uid).collection('library').get();
-        const batch=db.batch(); let count=0;
-        snap.docs.forEach(doc=>{
-          const d=doc.data()||{};
-          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&String(d?.status||'').toLowerCase()==='pausado'){
-            batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:now,updatedAt:now},{merge:true}); count++;
-          }
-        });
-        if(count) await batch.commit();
-      }catch(e){ console.error('[V3.60] retomar Firebase falhou',e); }
-    })();
-  };
-  function isBattleMode(){ const bat=$('pageBatalha'); return bat&&bat.style.display!=='none'&&bat.style.display!==''; }
-  function boot(){
-    try{
-      ensureCss();
-      applyPrivacyAndReadonly();
-      if($('lendo-cards') && !isBattleMode()) renderLendoCardsV59();
-    }catch(e){console.warn('[BookLegacy]',PATCH,e);}
-  }
+  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
   try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
