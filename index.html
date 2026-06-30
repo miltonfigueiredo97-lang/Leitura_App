@@ -12704,7 +12704,7 @@ body.bl-v40-loading #app{display:none!important;}
   function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
-  try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
+  try{new MutationObserver(()=>{ if(!window.__BL_BATTLE_OPEN&&!document.body.classList.contains('bl-v11-battle')&&!document.body.classList.contains('bl-v12-battle')) applyPrivacyAndReadonly(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
