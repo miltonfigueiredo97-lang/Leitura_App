@@ -5999,7 +5999,7 @@ function renderBatalha() {
           const dono=valA===0&&valB===0?'nenhum':valA>valB?pA:valB>valA?pB:'empate';
           const donoNome=dono===pA?nA:dono===pB?nB:dono;
           const cor=dono===pA?'#A855F7':dono===pB?'#FB923C':dono==='empate'?'rgba(248,250,252,0.4)':'rgba(248,250,252,0.15)';
-          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+dono;
+          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+donoNome;
           const bg=dono==='nenhum'?'rgba(250,204,21,0.02)':'rgba(250,204,21,0.04)';
           const opacity=dono==='nenhum'?'opacity:0.4;':'';
           return `<div style="display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:7px 10px;background:${bg};border:1px solid rgba(250,204,21,0.08);border-radius:8px;">
