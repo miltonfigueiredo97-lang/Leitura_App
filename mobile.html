@@ -5286,6 +5286,8 @@ function setUsuario(usuario) {
 
   document.getElementById('pageDashboard').style.display = usuario === 'Batalha' ? 'none' : 'block';
   document.getElementById('pageBatalha').style.display   = usuario === 'Batalha' ? 'block' : 'none';
+  if(usuario === 'Batalha') document.body.classList.add('bl-battle-active');
+  else document.body.classList.remove('bl-battle-active');
   const lendoWrap = document.querySelector('.lendo-wrap');
   if (lendoWrap) lendoWrap.style.display = usuario === 'Batalha' ? 'none' : '';
   document.querySelector('.lendo-wrap').style.display    = usuario === 'Batalha' ? 'none' : 'block';
@@ -8185,6 +8187,8 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
   body.bl-v11-battle .lendo-wrap { display:none!important; }
+  body.bl-v12-battle .lendo-wrap { display:none!important; }
+  body.bl-battle-active .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
@@ -15418,7 +15422,7 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function isBattleActive(){ return window.__BL_BATTLE_OPEN||document.body.classList.contains('bl-v11-battle')||document.body.classList.contains('bl-v12-battle')||window.usuarioAtual==='Batalha'||document.getElementById('pageBatalha')?.style.display==='block'; }
+  function isBattleActive(){ return window.__BL_BATTLE_OPEN||document.body.classList.contains('bl-v11-battle')||document.body.classList.contains('bl-v12-battle')||document.body.classList.contains('bl-battle-active')||window.usuarioAtual==='Batalha'||document.getElementById('pageBatalha')?.style.display==='block'; }
   function boot(){ try{ if(isBattleActive()) return; ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
