@@ -14976,6 +14976,7 @@ body.bl-v40-loading #app{display:none!important;}
   }
 
   function renderUid(uid, opts={}){
+    const _lw=document.querySelector('.lendo-wrap'); if(_lw) _lw.style.removeProperty('display');
     const p = findPerson(uid) || emptyPerson(uid, 'Amigo');
     if (!p.uid) return;
     const data = dataForUid(p.uid);
@@ -15006,6 +15007,7 @@ body.bl-v40-loading #app{display:none!important;}
     window._dadosD = buildAllData();
     setGlobalLabel('Batalha');
     const dash = $('pageDashboard'), bat = $('pageBatalha'); if (dash) dash.style.display='none'; if (bat) bat.style.display='block';
+    const _lw=document.querySelector('.lendo-wrap'); if(_lw) _lw.style.setProperty('display','none','important');
     try { if (typeof renderBatalha === 'function') renderBatalha(); } catch(e) { console.warn('[BookLegacy]', PATCH, 'renderBatalha', e); }
   }
 
