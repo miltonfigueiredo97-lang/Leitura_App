@@ -14987,6 +14987,9 @@ body.bl-v40-loading #app{display:none!important;}
   }
 
   function renderUid(uid, opts={}){
+    // V3.60: remove style tag que escondia lendo-wrap em batalha
+    const _bls = document.getElementById('bl-battle-lendo-hide');
+    if(_bls) _bls.remove();
     const p = findPerson(uid) || emptyPerson(uid, 'Amigo');
     if (!p.uid) return;
     const data = dataForUid(p.uid);
