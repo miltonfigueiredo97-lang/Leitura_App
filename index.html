@@ -7731,9 +7731,12 @@ async function blFetchIsbndbBook(termo){ const key=window.ISBNDB_API_KEY||window
 const _oldEnviarNovoLivro=window.enviarNovoLivro; window.enviarNovoLivro=async function(){ const source=nlModoSelecionado(); const btn=document.getElementById('nl-btn'); const nome=document.getElementById('nl-nome')?.value.trim(); if(source!=='manual' && nome && !document.getElementById('nl-autor')?.value.trim() && !document.getElementById('nl-paginas')?.value.trim()){ await nlBuscarSeApiSelecionada(true); } return _oldEnviarNovoLivro(); };
 
 
-// Service Worker para PWA
+// V3.60: Service Worker desativado temporariamente — causava cache obsoleto persistindo
+// Desregistra qualquer SW antigo já instalado no navegador do usuário
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  }).catch(() => {});
 }
 </script>
 
