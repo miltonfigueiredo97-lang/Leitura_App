@@ -5392,11 +5392,13 @@ function renderBatalha() {
       return {livro:String(s.title||s.livro||''),paginas:Number(s.pages||s.paginas||0),minutos:Number(s.minutes||s.minutos||0),data:dt,ano:dt?new Date(dt+'T12:00:00').getFullYear():0};
     }).filter(s=>anoFiltro==='total'||String(s.ano)===String(anoFiltro));
 
-    const todos = (person?.library||[]).map(l=>({
-      livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
-      totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
-      colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
-    }));
+    const todos = (person?.library||[])
+      .filter(l=>!l.system&&!l.customMetaRegistry&&String(l.title||l.livro||'').trim())
+      .map(l=>({
+        livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
+        totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
+        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
+      }));
 
     const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
       if(anoFiltro==='total') return true;
