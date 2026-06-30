@@ -1241,19 +1241,19 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <div id="batalha-seletor" style="display:flex;gap:10px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
     <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);transition:transform .15s;">
       <span style="font-size:16px;">⚔️</span>
-      <span id="bat-playerB-label">Selecionar adversário</span>
+      <span id="bat-playerB-label">Selecionar adversários</span>
     </button>
     <select id="bat-playerB" style="display:none;"></select>
     <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
       <span style="font-size:13px;color:var(--muted);">📅</span>
       <select id="bat-ano" onchange="renderBatalha()" style="background:transparent;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="total" style="color:var(--text);background:#1a1f35;">Todos os anos</option>
+        <option value="total" style="color:var(--text);background:#1a1f35;">Selecionar season</option>
       </select>
     </div>
   </div>
   <div id="bat-opponent-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
     <div style="background:#13182a;border:1px solid var(--border);border-radius:16px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow-y:auto;">
-      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar adversário</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar adversários</div>
       <div id="bat-opponent-list" style="display:flex;flex-direction:column;gap:8px;"></div>
       <button onclick="document.getElementById('bat-opponent-modal').style.display='none'" style="margin-top:14px;width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:10px;font-weight:700;cursor:pointer;">Cancelar</button>
     </div>
@@ -5317,7 +5317,7 @@ function renderBatalha() {
   const anoGuardado = selAno?.value || 'total';
   if (selAno) {
     const anosDisp = [...new Set((d.sessoes||[]).map(s=>s.ano).filter(a=>a>2000))].sort();
-    selAno.innerHTML = '<option value="total">Todos os anos</option>';
+    selAno.innerHTML = '<option value="total">Todas as seasons</option>';
     anosDisp.forEach(a => {
       const opt = document.createElement('option');
       opt.value = String(a); opt.textContent = '⚔️ Season ' + a;
