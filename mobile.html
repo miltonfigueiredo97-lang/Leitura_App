@@ -1289,15 +1289,21 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <select id="bat-playerA" style="display:none;"></select>
   <select id="bat-playerB" style="display:none;"></select>
   <select id="bat-ano" style="display:none;"></select>
-  <div id="batalha-seletor" style="display:flex;gap:10px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
-    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-      <span style="font-size:16px;">⚔️</span>
-      <span id="bat-playerB-label">Selecionar adversário</span>
-    </button>
-    <button id="bat-season-btn" onclick="blOpenSeasonPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 18px;color:#e2e8f0;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-      <span style="font-size:16px;">📅</span>
-      <span id="bat-season-label">Selecionar season</span>
-    </button>
+  <div id="batalha-seletor" style="display:flex;gap:18px;align-items:flex-start;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Adversário</span>
+      <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+        <span style="font-size:16px;">⚔️</span>
+        <span id="bat-playerB-label">Selecionar</span>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Season</span>
+      <button id="bat-season-btn" onclick="blOpenSeasonPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 18px;color:#e2e8f0;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+        <span style="font-size:16px;">📅</span>
+        <span id="bat-season-label">Selecionar</span>
+      </button>
+    </div>
   </div>
   <div id="bat-opponent-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
     <div style="background:#13182a;border:1px solid var(--border);border-radius:16px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow-y:auto;">
@@ -5396,7 +5402,7 @@ function renderBatalha() {
     const labelEl = document.getElementById('bat-season-label');
     if(labelEl && selAno){
       const opt = [...selAno.options].find(o=>o.value===selAno.value);
-      labelEl.textContent = opt?.textContent || 'Selecionar season';
+      labelEl.textContent = opt?.textContent || 'Selecionar';
     }
   })();
 
@@ -8323,7 +8329,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       sel.value = value;
       const opt = [...sel.options].find(o=>o.value===value);
       const labelEl = $('bat-season-label');
-      if(labelEl) labelEl.textContent = opt?.textContent || 'Selecionar season';
+      if(labelEl) labelEl.textContent = opt?.textContent || 'Selecionar';
     }
     const modal = $('bat-season-modal');
     if(modal) modal.style.display = 'none';
