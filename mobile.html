@@ -15418,7 +15418,7 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  function boot(){ if(window.usuarioAtual==='Batalha'||document.getElementById('pageBatalha')?.style.display==='block') return; try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
   try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
