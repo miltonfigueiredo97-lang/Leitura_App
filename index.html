@@ -12300,6 +12300,13 @@ body.bl-v40-loading #app{display:none!important;}
     window._dadosD = buildAllData();
     setGlobalLabel('Batalha');
     const dash = $('pageDashboard'), bat = $('pageBatalha'); if (dash) dash.style.display='none'; if (bat) bat.style.display='block';
+    // V3.60: esconde lendo-wrap via style tag permanente
+    (function(){
+      const STYLE_ID = 'bl-battle-lendo-hide';
+      let s = document.getElementById(STYLE_ID);
+      if(!s){ s=document.createElement('style'); s.id=STYLE_ID; document.head.appendChild(s); }
+      s.textContent = '.lendo-wrap{display:none!important;visibility:hidden!important;}';
+    })();
     try { if (typeof renderBatalha === 'function') renderBatalha(); } catch(e) { console.warn('[BookLegacy]', PATCH, 'renderBatalha', e); }
   }
 
