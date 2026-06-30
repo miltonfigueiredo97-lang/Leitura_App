@@ -5385,8 +5385,7 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    // Busca direto em window.BL.raw.users por UID — nunca por nome
-    const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u) || null;
+    const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u)||null;
 
     const sess = (person?.sessions||[]).map(s=>{
       const dt=String(s.date||s.data||'').slice(0,10);
@@ -7760,11 +7759,11 @@ if ('serviceWorker' in navigator) {
     fillBattleSelects();
   };
   function fillBattleSelects(){
-    const users=window.BL?.raw?.users||[]; if(users.length<2) return;
+    const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); if(users.length<2) return;
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
-      sel.innerHTML = users.map((u,i)=>`<option value="${String(u.label||('Usuário '+(i+1))).replace(/"/g,'&quot;')}">${u.label||('Usuário '+(i+1))}</option>`).join('');
-      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
+      sel.innerHTML = users.map(u=>`<option value="${String(u.uid).replace(/"/g,'&quot;')}">${String(u.label||u.uid)}</option>`).join('');
+      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.uid||users[0]?.uid||'');
     });
   }
   const oldRenderBatalha=window.renderBatalha;
@@ -8135,7 +8134,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function setFab(mode){ const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu'); if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu) menu.style.setProperty('display','none','important'); fabOpen=false; return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu) menu.style.display=fabOpen?'flex':'none'; }
   window.toggleFabMenu=function(){ if(document.body.classList.contains('bl-v10-friend')||document.body.classList.contains('bl-v10-battle')){ setFab('hide'); return; } fabOpen=!fabOpen; setFab('show'); };
-  function fillBattleSelects(){ const users=people(); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map((u,i)=>{ const l=u.label||u.displayName||u.name||u.email||('Usuário '+(i+1)); return `<option value="${esc(l)}">${esc(l)}</option>`; }).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.label||users[idx]?.displayName||users[idx]?.name||users[0]?.label||''); }); }
+  function fillBattleSelects(){ const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map(u=>`<option value="${esc(String(u.uid))}">${esc(String(u.label||u.uid))}</option>`).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.uid||users[0]?.uid||''); }); }
   function forceBattleButton(){ let btn=$('btn-user-batalha'); if(!btn){ const wrap=$('btn-user-milton')?.parentElement; if(wrap){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;'; wrap.appendChild(btn); } }
     if(btn){ btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=(ev)=>{ ev&&ev.preventDefault&&ev.preventDefault(); window.setUsuario('Batalha'); }; }
   }
@@ -8247,9 +8246,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return btn;
   }
   function fillBattleSelects(){
-    // Usa window.BL.raw.users diretamente — tem uid e dados reais
     const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
-    if(!list.length) return;
     const a = $('bat-playerA'), b = $('bat-playerB');
     const opts = list.map(u=>`<option value="${String(u.uid).replaceAll('"','&quot;')}">${String(u.label||u.uid)}</option>`).join('');
     if(a){ const prev=a.value; a.innerHTML=opts; a.value=[...a.options].some(o=>o.value===prev)?prev:(list[0]?.uid||''); }
