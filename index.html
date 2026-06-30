@@ -564,6 +564,15 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 .api-choice{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--text);font-size:13px;cursor:pointer;}
 .api-choice input{width:auto!important;accent-color:var(--purple);}
 .api-choice:has(input:checked){border-color:var(--purple);background:rgba(139,124,248,.18);}
+  /* V3.60: garante que botões soltos do header (agora dentro do MENU agrupado) nunca reapareçam */
+  body:has(#blDesktopMenuBtn) #btn-community,
+  body:has(#blDesktopMenuBtn) #btn-migration,
+  body:has(#blDesktopMenuBtn) #btn-delete-account,
+  body:has(#blDesktopMenuBtn) #blInviteBtn,
+  body:has(#blDesktopMenuBtn) #blLogout,
+  body:has(#blDesktopMenuBtn) #blV42SocialBtn {
+    display: none !important;
+  }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
