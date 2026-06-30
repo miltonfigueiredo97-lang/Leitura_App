@@ -1285,20 +1285,16 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 <div class="page" id="pageBatalha" style="display:none;">
 
   <!-- Seletor de jogadores -->
-  <div id="batalha-seletor" style="display:flex;gap:12px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">Você</span>
-      <span id="bat-playerA-label" style="color:#8b7cf8;font-weight:700;font-size:14px;">—</span>
-      <select id="bat-playerA" style="display:none;"></select>
-    </div>
-    <div style="font-size:24px;font-weight:900;color:var(--muted);">VS</div>
-    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;color:#f88c6a;font-weight:700;font-size:14px;cursor:pointer;">
+  <select id="bat-playerA" style="display:none;"></select>
+  <div id="batalha-seletor" style="display:flex;gap:10px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
+    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);transition:transform .15s;">
+      <span style="font-size:16px;">⚔️</span>
       <span id="bat-playerB-label">Selecionar adversário</span>
     </button>
     <select id="bat-playerB" style="display:none;"></select>
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
-      <select id="bat-ano" onchange="renderBatalha()" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">
+    <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+      <span style="font-size:13px;color:var(--muted);">📅</span>
+      <select id="bat-ano" onchange="renderBatalha()" style="background:transparent;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
         <option value="total" style="color:var(--text);background:#1a1f35;">Todos os anos</option>
       </select>
     </div>
@@ -7766,16 +7762,9 @@ if ('serviceWorker' in navigator) {
     if(btnBatalha){ btnBatalha.style.display = users.length>=2 ? '' : 'none'; btnBatalha.onclick=()=>setUsuario('Batalha'); }
     fillBattleSelects();
   };
-  function fillBattleSelects(){
-    const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); if(users.length<2) return;
-    ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
-      const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
-      sel.innerHTML = users.map(u=>`<option value="${String(u.uid).replace(/"/g,'&quot;')}">${String(u.label||u.uid)}</option>`).join('');
-      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.uid||users[0]?.uid||'');
-    });
-  }
+  function fillBattleSelects(){ /* V3.60: jogador A travado, jogador B via picker — ver função canônica abaixo */ }
   const oldRenderBatalha=window.renderBatalha;
-  window.renderBatalha=function(){ fillBattleSelects(); if(typeof oldRenderBatalha==='function') oldRenderBatalha(); };
+  window.renderBatalha=function(){ if(typeof oldRenderBatalha==='function') oldRenderBatalha(); };
 
   // Sessões: usa SEMPRE a subcoleção do usuário logado, independente da tela visualizada.
   window.renderSessoesExcluir = function(){
@@ -8142,7 +8131,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function setFab(mode){ const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu'); if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu) menu.style.setProperty('display','none','important'); fabOpen=false; return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu) menu.style.display=fabOpen?'flex':'none'; }
   window.toggleFabMenu=function(){ if(document.body.classList.contains('bl-v10-friend')||document.body.classList.contains('bl-v10-battle')){ setFab('hide'); return; } fabOpen=!fabOpen; setFab('show'); };
-  function fillBattleSelects(){ const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map(u=>`<option value="${esc(String(u.uid))}">${esc(String(u.label||u.uid))}</option>`).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.uid||users[0]?.uid||''); }); }
+  function fillBattleSelects(){ /* V3.60: neutralizado — ver função canônica abaixo */ }
   function forceBattleButton(){ let btn=$('btn-user-batalha'); if(!btn){ const wrap=$('btn-user-milton')?.parentElement; if(wrap){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;'; wrap.appendChild(btn); } }
     if(btn){ btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=(ev)=>{ ev&&ev.preventDefault&&ev.preventDefault(); window.setUsuario('Batalha'); }; }
   }
