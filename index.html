@@ -5229,6 +5229,17 @@ function setUsuario(usuario) {
 
   document.getElementById('pageDashboard').style.display = usuario === 'Batalha' ? 'none' : 'block';
   document.getElementById('pageBatalha').style.display   = usuario === 'Batalha' ? 'block' : 'none';
+  // V3.60: injeta/remove style tag para garantir lendo-wrap oculto durante batalha
+  (function(){
+    const STYLE_ID = 'bl-battle-lendo-hide';
+    let s = document.getElementById(STYLE_ID);
+    if(usuario === 'Batalha'){
+      if(!s){ s=document.createElement('style'); s.id=STYLE_ID; document.head.appendChild(s); }
+      s.textContent = '.lendo-wrap{display:none!important;visibility:hidden!important;}';
+    } else {
+      if(s) s.remove();
+    }
+  })();
   const lendoWrap = document.querySelector('.lendo-wrap');
   if (lendoWrap) lendoWrap.style.display = usuario === 'Batalha' ? 'none' : '';
   document.querySelector('.lendo-wrap').style.display    = usuario === 'Batalha' ? 'none' : 'block';
