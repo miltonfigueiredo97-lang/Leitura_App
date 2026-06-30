@@ -5412,7 +5412,7 @@ function renderBatalha() {
     // Gêneros diferentes
     const generosSet = new Set(todos.filter(l => l.genero && l.status === 'Completo').map(l => l.genero));
 
-    return {u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
+    return {u,nome:person?.label||u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
       streakAtual,streakRecord,bosses,autorTop,mesPags,wdMap,eficiencia,
       maiorSessao,colSet,sessoes:sess.length,metaPct,metaLidos,metaTotal,
       autMap,seriesConcluidas,generosSet};
@@ -6052,7 +6052,7 @@ function renderBatalha() {
         <div id="${uid}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(160deg,var(--bg3),#0d1020);">${estrela}</div>
       </div>
       <div class="bat-art-overlay">
-        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.u.toUpperCase()}</div>
+        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.nome.toUpperCase()}</div>
         <div style="font-size:15px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0;">${nota.livro}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.75);">${estrela} ${nota.media.toFixed(1)} · ${nota.ano||'—'}</div>
       </div>
@@ -6110,7 +6110,7 @@ function renderBatalha() {
   function slimeCard(dd,cor){
     const allLivros=[...(window._dadosD?.livros||[]),...(window._dadosD?.lendo||[]),...(window._dadosD?.pausados||[]),...(window._dadosD?.aguardando||[])];
     const slimes=dd.lidos.filter(l=>l.totalPag>0&&l.totalPag<=200).sort((a,b)=>a.totalPag-b.totalPag);
-    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.u.toUpperCase()} · ${slimes.length} slimes</div>`;
+    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.nome.toUpperCase()} · ${slimes.length} slimes</div>`;
     if(!slimes.length)return header+`<div style="font-family:'Exo 2',sans-serif;color:rgba(248,250,252,0.3);font-size:12px;padding:8px 0;">Nenhum slime vencido</div>`;
     return header+slimes.slice(0,3).map(b=>{
       const l=allLivros.find(x=>x.livro===b.livro);
