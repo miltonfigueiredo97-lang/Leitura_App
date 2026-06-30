@@ -620,7 +620,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     </div>
     <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
     <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
-    <button id="appInstallBtn" type="button" style="display:none;background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📲 Instalar app</button>
+    <button id="btn-delete-account" type="button" onclick="blDeleteMyAccount()" style="background:rgba(239,68,68,0.10);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">🗑️ Excluir conta</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
     <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
@@ -4665,18 +4665,33 @@ function blDecorateHeader(user){
 }
 
 
-function blSetupInstallButton(){
-  let deferredPrompt = null;
-  const btn = document.getElementById('appInstallBtn');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-flex';
-  });
-  if (btn) btn.onclick = async () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; btn.style.display = 'none'; }
-    else alert('No celular: abra no Chrome/Edge e use “Adicionar à tela inicial” ou “Instalar app”. No iPhone: Compartilhar → Adicionar à Tela de Início.');
-  };
-}
-blSetupInstallButton();
+// V3.60: Excluir conta — dupla confirmação (confirm + digitar EXCLUIR)
+window.blDeleteMyAccount = function(){
+  const user = (window.BL?.auth || window.firebaseAuth || window.auth)?.currentUser;
+  if(!user){ alert('Você precisa estar logado.'); return; }
+  if(!confirm('⚠️ Tem certeza que deseja excluir TODOS os seus dados?\n\nEssa ação não pode ser desfeita.')) return;
+  const palavra = prompt('Para confirmar, digite a palavra EXCLUIR:');
+  if((palavra||'').trim().toUpperCase() !== 'EXCLUIR'){ alert('Confirmação incorreta. Nenhum dado foi excluído.'); return; }
+  (async () => {
+    try {
+      const db = window.BL?.db;
+      if(!db){ alert('Firebase não disponível.'); return; }
+      const uid = user.uid;
+      const cols = ['library','sessions','ratings','goals','collections','notes'];
+      for(const col of cols){
+        const snap = await db.collection('users').doc(uid).collection(col).get();
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.delete(d.ref));
+        if(snap.docs.length) await batch.commit();
+      }
+      await db.collection('users').doc(uid).delete().catch(()=>{});
+      alert('✅ Todos os seus dados foram excluídos.\n\nVocê será deslogado agora.');
+      try { (window.BL?.auth || window.firebaseAuth || window.auth)?.signOut(); } catch(e){}
+    } catch(e) {
+      alert('Erro ao excluir dados: ' + e.message);
+    }
+  })();
+};
 
 iniciarAppFirebase();
 </script>
