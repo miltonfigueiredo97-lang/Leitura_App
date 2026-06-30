@@ -607,11 +607,10 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     <div style="display:flex;gap:4px;background:var(--bg3);border-radius:10px;padding:4px;">
       <button id="btn-user-milton" onclick="setUsuario('Milton')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--purple);color:white;transition:all .2s;">
-        📖 Milton
+        📖 Carregando...
       </button>
       <button id="btn-user-daniel" style="display:none" onclick="setUsuario('Daniel')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
-        📖 Daniel
       </button>
       <button id="btn-user-batalha" onclick="setUsuario('Batalha')"
         style="padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;">
@@ -4669,7 +4668,7 @@ function blEnsureDesktopMenu(){
   if (document.getElementById('blDesktopMenuPanel')) return;
   const panel = document.createElement('div');
   panel.id = 'blDesktopMenuPanel';
-  panel.style.cssText = 'display:none;position:absolute;top:54px;right:16px;z-index:9999;background:#13182a;border:1px solid var(--border);border-radius:14px;padding:10px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.4);flex-direction:column;gap:4px;';
+  panel.style.cssText = 'display:none;position:fixed;z-index:9999;background:#13182a;border:1px solid var(--border);border-radius:14px;padding:10px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.4);flex-direction:column;gap:4px;';
   panel.innerHTML = `
     <button type="button" data-bl-menu="friends" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#56cfff;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">👥 Amigos</button>
     <button type="button" data-bl-menu="community" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#56cfff;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🌐 Comunidade</button>
@@ -4702,8 +4701,15 @@ function blEnsureDesktopMenu(){
 }
 function blToggleDesktopMenu(force){
   const panel = document.getElementById('blDesktopMenuPanel');
+  const btn = document.getElementById('blDesktopMenuBtn');
   if (!panel) return;
   const show = force !== undefined ? force : panel.style.display !== 'flex';
+  if (show && btn) {
+    const r = btn.getBoundingClientRect();
+    panel.style.top = (r.bottom + window.scrollY + 6) + 'px';
+    panel.style.left = (r.left + window.scrollX) + 'px';
+    panel.style.right = 'auto';
+  }
   panel.style.display = show ? 'flex' : 'none';
 }
 
@@ -11369,6 +11375,8 @@ body.bl-v40-loading #app{display:none!important;}
   window.blCloseCommunityPage=function(){hideOldCommunity();document.body.classList.remove('bl-v43-community-open');document.documentElement.classList.remove('bl-v43-community-open');const page=$('pageComunidade');if(page)page.style.display='none';const dash=$('pageDashboard');if(dash)dash.style.display='block';const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='';const app=$('app');if(app)app.style.display='block';window.scrollTo(0,0);};
   window.blOpenCommunityFeed=window.blOpenCommunityPage;window.blCloseCommunityFeed=window.blCloseCommunityPage;
   function stabilizeHeader(){
+    // V3.60: no desktop, botões soltos do header agora vivem dentro do MENU agrupado — não reexibir
+    if(document.getElementById('blDesktopMenuBtn')) return;
     const friends=$('btn-community')||$('blInviteBtn');
     if(friends){friends.textContent=friends.id==='blInviteBtn'?'Amigos':'👥 Amigos';friends.title='Amigos';friends.onclick=e=>{e&&e.preventDefault&&e.preventDefault();(window.blOpenFriendsModal||window.blOpenCommunityModal)?.();};friends.style.display='inline-flex';}
     document.querySelectorAll('#btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,#blV40SocialBtn,#blV41SocialBtn').forEach(el=>el.remove());
