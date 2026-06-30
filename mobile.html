@@ -8650,7 +8650,9 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     }
   }
   // captura o render atual antes de sobrescrever nesta versão, mas depois o código fonte foi ajustado para respeitar __BL_BATTLE_PLAYER_A/B.
-  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.renderBatalha;
+  // V3.60: limpa o cache do original para forçar uso da versão com calcDados por UID
+  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = null;
+  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = window.renderBatalha;
   window.renderBatalha = function(){
     if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-v10-battle') || document.body.classList.contains('bl-v12-battle')){
       syncHiddenSelects();
