@@ -1535,7 +1535,8 @@ function inicializar(d) {
   };
   const sessoesF = (d.sessoes||[]).filter(isCurrentUser);
   const livroMap = new Map();
-  [...(d.livros||[]), ...(d.lendo||[]), ...(d.pausados||[]), ...(d.aguardando||[])]
+  // V3.60: lendo/pausados têm prioridade — status mais recente vence sobre livros/aguardando desatualizados
+  [...(d.lendo||[]), ...(d.pausados||[]), ...(d.livros||[]), ...(d.aguardando||[])]
     .filter(l => l.livro && l.livro.length > 1)
     .filter(isCurrentUser)
     .forEach(l => { if (!livroMap.has(l.livro)) livroMap.set(l.livro, l); });
@@ -5352,7 +5353,8 @@ function setUsuario(usuario) {
       : s.usuario?.toUpperCase() === usuario.toUpperCase()
   );
 
-  const todoLivros = [...(d.livros||[]), ...(d.lendo||[]), ...(d.pausados||[]), ...(d.aguardando||[])];
+  // V3.60: lendo/pausados têm prioridade — status mais recente vence sobre livros/aguardando desatualizados
+  const todoLivros = [...(d.lendo||[]), ...(d.pausados||[]), ...(d.livros||[]), ...(d.aguardando||[])];
   const livroMap = new Map();
   todoLivros
     .filter(l =>
