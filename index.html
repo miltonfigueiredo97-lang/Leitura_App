@@ -5309,10 +5309,6 @@ function renderBatalha() {
 
   const pA = window.__BL_BATTLE_PLAYER_A || document.getElementById('bat-playerA')?.value || 'Milton';
   const pB = window.__BL_BATTLE_PLAYER_B || document.getElementById('bat-playerB')?.value || 'Daniel';
-  // V3.60: nomes para exibição — busca label pelo UID em BL.raw.users
-  const _findLabel = uid => (window.BL?.raw?.users||[]).find(u=>String(u.uid||'')===uid)?.label || uid;
-  const nA = _findLabel(pA);
-  const nB = _findLabel(pB);
   const CA = '#A855F7', CB = '#FB923C';
 
   // Popula seletor de anos — guarda valor ANTES de limpar
@@ -5332,30 +5328,17 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u)||null;
-
-    const sess = (person?.sessions||[]).map(s=>{
-      const dt=String(s.date||s.data||'').slice(0,10);
-      return {livro:String(s.title||s.livro||''),paginas:Number(s.pages||s.paginas||0),minutos:Number(s.minutes||s.minutos||0),data:dt,ano:dt?new Date(dt+'T12:00:00').getFullYear():0};
-    }).filter(s=>anoFiltro==='total'||String(s.ano)===String(anoFiltro));
-
-    const todos = (person?.library||[])
-      .filter(l=>!l.system&&!l.customMetaRegistry&&String(l.title||l.livro||'').trim())
-      .map(l=>({
-        livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
-        totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
-        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
-      }));
-
-    const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
-      if(anoFiltro==='total') return true;
-      return sess.some(s=>s.livro===l.livro);
+    const filterU = l => u === 'Milton'
+      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
+      : l.usuario?.toUpperCase() === u.toUpperCase();
+    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
+    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
+    const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
+      if (anoFiltro === 'total') return true;
+      // filtra livros concluídos no ano selecionado (verificando sessões)
+      return sess.some(s => s.livro === l.livro);
     });
-
-    const notas = (person?.ratings||[]).map(r=>{
-      const dt=String(r.date||r.data||'').slice(0,10);
-      return {media:Number(r.rating||r.nota||r.media||0),livro:String(r.title||r.livro||''),ano:dt?new Date(dt+'T12:00:00').getFullYear():Number(r.year||r.ano||0)};
-    }).filter(n=>anoFiltro==='total'||String(n.ano)===String(anoFiltro));
+    const notas = (d.notas||[]).filter(filterU).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -5412,7 +5395,7 @@ function renderBatalha() {
     // Gêneros diferentes
     const generosSet = new Set(todos.filter(l => l.genero && l.status === 'Completo').map(l => l.genero));
 
-    return {u,nome:person?.label||u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
+    return {u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
       streakAtual,streakRecord,bosses,autorTop,mesPags,wdMap,eficiencia,
       maiorSessao,colSet,sessoes:sess.length,metaPct,metaLidos,metaTotal,
       autMap,seriesConcluidas,generosSet};
@@ -5659,7 +5642,7 @@ function renderBatalha() {
 <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px;">
   <div style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(15,23,42,0.8));border:1px solid rgba(168,85,247,0.35);border-radius:16px;padding:20px;text-align:center;box-shadow:0 0 30px rgba(168,85,247,0.15);">
     ${avatar('#A855F7','⚔️')}
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#A855F7;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(168,85,247,0.5);">${nA.toUpperCase()}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#A855F7;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(168,85,247,0.5);">${pA.toUpperCase()}</div>
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(248,250,252,0.55);letter-spacing:2px;">${rankTitle(dA)}</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:#F8FAFC;margin:12px 0 2px;text-shadow:0 0 15px rgba(168,85,247,0.4);">${Math.round(poderA).toLocaleString('pt-BR')}</div>
     <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:3px;text-transform:uppercase;">Poder de Leitura</div>
@@ -5669,7 +5652,7 @@ function renderBatalha() {
   </div>
   <div style="background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(15,23,42,0.8));border:1px solid rgba(249,115,22,0.35);border-radius:16px;padding:20px;text-align:center;box-shadow:0 0 30px rgba(249,115,22,0.15);">
     ${avatar('#FB923C','🛡️')}
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#FB923C;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(249,115,22,0.5);">${nB.toUpperCase()}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#FB923C;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(249,115,22,0.5);">${pB.toUpperCase()}</div>
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(248,250,252,0.55);letter-spacing:2px;">${rankTitle(dB)}</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:#F8FAFC;margin:12px 0 2px;text-shadow:0 0 15px rgba(249,115,22,0.4);">${Math.round(poderB).toLocaleString('pt-BR')}</div>
     <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:3px;text-transform:uppercase;">Poder de Leitura</div>
@@ -5683,9 +5666,9 @@ function renderBatalha() {
     <div style="flex:1;background:linear-gradient(90deg,#FB923C,#EA580C);display:flex;align-items:center;justify-content:flex-end;padding:0 14px;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:white;letter-spacing:1px;">${pctB}%</div>
   </div>
   <div style="display:flex;justify-content:space-between;margin-top:6px;">
-    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#A855F7;font-weight:700;">${nA}</span>
+    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#A855F7;font-weight:700;">${pA}</span>
     <span style="font-family:'Exo 2',sans-serif;font-size:10px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">⚡ Poder de Leitura Total</span>
-    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#FB923C;font-weight:700;">${nB}</span>
+    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#FB923C;font-weight:700;">${pB}</span>
   </div>
 </div>
 
@@ -5693,7 +5676,7 @@ function renderBatalha() {
 <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;">
   <div style="padding:12px 24px;border-radius:14px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);text-align:center;box-shadow:0 0 16px rgba(168,85,247,0.1);">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#A855F7;text-shadow:0 0 16px rgba(168,85,247,0.5);">${vitA}</div>
-    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${nA}</div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${pA}</div>
   </div>
   <div style="padding:12px 24px;border-radius:14px;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.07);text-align:center;">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:rgba(248,250,252,0.3);">${emp}</div>
@@ -5701,7 +5684,7 @@ function renderBatalha() {
   </div>
   <div style="padding:12px 24px;border-radius:14px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);text-align:center;box-shadow:0 0 16px rgba(249,115,22,0.1);">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#FB923C;text-shadow:0 0 16px rgba(249,115,22,0.5);">${vitB}</div>
-    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${nB}</div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${pB}</div>
   </div>
 </div>
 
@@ -5729,7 +5712,7 @@ function renderBatalha() {
         <div style="display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:#A855F7;">${vitA}</div>
-            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${nA} venceu</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${pA} venceu</div>
           </div>
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:rgba(248,250,252,0.3);">${emp}</div>
@@ -5737,7 +5720,7 @@ function renderBatalha() {
           </div>
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:#FB923C;">${vitB}</div>
-            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${nB} venceu</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${pB} venceu</div>
           </div>
         </div>
       </div>
@@ -5748,11 +5731,11 @@ function renderBatalha() {
         <div style="height:130px;"><canvas id="bat-wd"></canvas></div>
         <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
           <div style="text-align:center;">
-            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#A855F7;font-weight:700;">${nA.toUpperCase()}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#A855F7;font-weight:700;">${pA.toUpperCase()}</div>
             <div id="bat-wd-dia-a" style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#F8FAFC;"></div>
           </div>
           <div style="text-align:center;">
-            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#FB923C;font-weight:700;">${nB.toUpperCase()}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#FB923C;font-weight:700;">${pB.toUpperCase()}</div>
             <div id="bat-wd-dia-b" style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#F8FAFC;"></div>
           </div>
         </div>
@@ -5768,12 +5751,12 @@ function renderBatalha() {
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;">
       <div style="text-align:center;">
         <div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:#A855F7;text-shadow:0 0 20px rgba(168,85,247,0.5);line-height:1;">${dA.diasSet.size}</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#A855F7;letter-spacing:2px;margin-top:4px;">${nA.toUpperCase()}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#A855F7;letter-spacing:2px;margin-top:4px;">${pA.toUpperCase()}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-top:2px;">dias com leitura</div>
       </div>
       <div style="text-align:center;">
         <div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:#FB923C;text-shadow:0 0 20px rgba(249,115,22,0.5);line-height:1;">${dB.diasSet.size}</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#FB923C;letter-spacing:2px;margin-top:4px;">${nB.toUpperCase()}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#FB923C;letter-spacing:2px;margin-top:4px;">${pB.toUpperCase()}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-top:2px;">dias com leitura</div>
       </div>
     </div>
@@ -5809,11 +5792,11 @@ function renderBatalha() {
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;">
       <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:1px;">${nA.toUpperCase()} · ${dA.bosses.length}</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:1px;">${pA.toUpperCase()} · ${dA.bosses.length}</div>
           <div id="bat-boss-a"></div>
         </div>
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:1px;">${nB.toUpperCase()} · ${dB.bosses.length}</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:1px;">${pB.toUpperCase()} · ${dB.bosses.length}</div>
           <div id="bat-boss-b"></div>
         </div>
       </div>
@@ -5832,15 +5815,15 @@ function renderBatalha() {
   <div>
     <div class="bat-section-hdr">⭐ ARTEFATOS LENDÁRIOS — MELHORES AVALIADOS</div>
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:visible;" id="bat-artefatos">
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${nA.toUpperCase()}</div></div>
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${nB.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${pA.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${pB.toUpperCase()}</div></div>
     </div>
   </div>
   <div>
     <div class="bat-section-hdr">💀 MALDIÇÕES — PIORES AVALIADOS</div>
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:visible;" id="bat-maldicoes">
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${nA.toUpperCase()}</div></div>
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${nB.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${pA.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${pB.toUpperCase()}</div></div>
     </div>
   </div>
 </div>
@@ -5849,11 +5832,11 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">📚 AUTOR DOMINADO</div>
   <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7'},{p:pB,n:nB,dd:dB,cor:'#FB923C'}].map(({p,n,dd,cor})=>`
+    ${[{p:pA,dd:dA,cor:'#A855F7'},{p:pB,dd:dB,cor:'#FB923C'}].map(({p,dd,cor})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;">
       <div style="width:44px;height:44px;border-radius:50%;background:${cor}22;border:2px solid ${cor};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 12px ${cor}44;">📖</div>
       <div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${n.toUpperCase()}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${p.toUpperCase()}</div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#F8FAFC;">${dd.autorTop?.[0]||'—'}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);">${(dd.autorTop?.[1]||0).toLocaleString('pt-BR')} págs lidas</div>
       </div>
@@ -5865,9 +5848,9 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">🏅 CONQUISTAS & FEITOS</div>
   <div style="display:flex;flex-direction:column;gap:12px;">
-    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,n:nB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,n,dd,cor,ts})=>`
+    ${[{p:pA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,dd,cor,ts})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid ${cor}44;border-left:4px solid ${cor};border-radius:14px;padding:16px;box-shadow:0 0 24px ${cor}11;">
-      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${n.toUpperCase()}</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${p.toUpperCase()}</div>
       ${medalhas(dd, ts)}
     </div>`).join('')}
   </div>
@@ -5914,8 +5897,8 @@ function renderBatalha() {
           return `<div style="display:grid;grid-template-columns:24px 1fr 72px 72px;align-items:center;gap:8px;padding:7px 10px;background:${bg};border-radius:8px;${nenhum?'border:1px solid rgba(255,255,255,0.04);':''}">
             <span style="font-size:16px;${iconOpacity}">${icon}</span>
             <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:${nenhum?'rgba(248,250,252,0.3)':'#F8FAFC'};">${nome}</div>
-            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corA};">${labelA}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${nA}</div></div>
-            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corB};">${labelB}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${nB}</div></div>
+            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corA};">${labelA}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${pA}</div></div>
+            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corB};">${labelB}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${pB}</div></div>
           </div>`;
         }).join('');
       })()}
@@ -5940,9 +5923,8 @@ function renderBatalha() {
         ];
         return todosT.map(({icon,nome,valA,valB})=>{
           const dono=valA===0&&valB===0?'nenhum':valA>valB?pA:valB>valA?pB:'empate';
-          const donoNome=dono===pA?nA:dono===pB?nB:dono;
           const cor=dono===pA?'#A855F7':dono===pB?'#FB923C':dono==='empate'?'rgba(248,250,252,0.4)':'rgba(248,250,252,0.15)';
-          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+donoNome;
+          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+dono;
           const bg=dono==='nenhum'?'rgba(250,204,21,0.02)':'rgba(250,204,21,0.04)';
           const opacity=dono==='nenhum'?'opacity:0.4;':'';
           return `<div style="display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:7px 10px;background:${bg};border:1px solid rgba(250,204,21,0.08);border-radius:8px;">
@@ -5967,12 +5949,12 @@ function renderBatalha() {
       <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:#A855F7;text-shadow:0 0 20px rgba(168,85,247,0.5);">${vitA}</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#A855F7;letter-spacing:1px;">${nA.toUpperCase()}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#A855F7;letter-spacing:1px;">${pA.toUpperCase()}</div>
         </div>
         <div style="font-size:16px;color:rgba(255,255,255,0.1);">⚔️</div>
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:#FB923C;text-shadow:0 0 20px rgba(249,115,22,0.5);">${vitB}</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#FB923C;letter-spacing:1px;">${nB.toUpperCase()}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#FB923C;letter-spacing:1px;">${pB.toUpperCase()}</div>
         </div>
       </div>
     </div>
@@ -5984,7 +5966,7 @@ function renderBatalha() {
     <div style="text-align:center;">
       <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">LIDERANÇA</div>
       <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:${vitA>vitB?'#A855F7':vitB>vitA?'#FB923C':'rgba(248,250,252,0.4)'};">
-        ${vitA>vitB?'🏆 '+nA.toUpperCase():vitB>vitA?'🏆 '+nB.toUpperCase():'🤝 EMPATE'}
+        ${vitA>vitB?'🏆 '+pA.toUpperCase():vitB>vitA?'🏆 '+pB.toUpperCase():'🤝 EMPATE'}
       </div>
       <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.3);margin-top:4px;">diferença: ${Math.abs(vitA-vitB)} meses</div>
     </div>
@@ -6023,12 +6005,12 @@ function renderBatalha() {
       ${winA?`<div style="position:absolute;top:8px;right:8px;font-size:14px;filter:drop-shadow(0 0 6px #FACC15);">🏆</div>`:winB?`<div style="position:absolute;top:8px;right:8px;font-size:14px;filter:drop-shadow(0 0 6px #FACC15);">🏆</div>`:empate?`<div style="position:absolute;top:8px;right:8px;font-size:14px;">🤝</div>`:''}
       <div style="font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(248,250,252,0.4);margin-bottom:10px;text-transform:uppercase;">${a.icon} ${a.title}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#A855F7;">${nA}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#A855F7;">${pA}</span>
         <span style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:${winA?'#A855F7':'rgba(248,250,252,0.4)'};">${fmtA}</span>
       </div>
       <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:8px;"><div style="width:${pA2}%;height:100%;background:#A855F7;border-radius:2px;box-shadow:0 0 8px rgba(168,85,247,0.5);"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#FB923C;">${nB}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#FB923C;">${pB}</span>
         <span style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:${winB?'#FB923C':'rgba(248,250,252,0.4)'};">${fmtB}</span>
       </div>
       <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:8px;"><div style="width:${pB2}%;height:100%;background:#FB923C;border-radius:2px;box-shadow:0 0 8px rgba(249,115,22,0.5);"></div></div>
@@ -6052,7 +6034,7 @@ function renderBatalha() {
         <div id="${uid}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(160deg,var(--bg3),#0d1020);">${estrela}</div>
       </div>
       <div class="bat-art-overlay">
-        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.nome.toUpperCase()}</div>
+        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.u.toUpperCase()}</div>
         <div style="font-size:15px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0;">${nota.livro}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.75);">${estrela} ${nota.media.toFixed(1)} · ${nota.ano||'—'}</div>
       </div>
@@ -6110,7 +6092,7 @@ function renderBatalha() {
   function slimeCard(dd,cor){
     const allLivros=[...(window._dadosD?.livros||[]),...(window._dadosD?.lendo||[]),...(window._dadosD?.pausados||[]),...(window._dadosD?.aguardando||[])];
     const slimes=dd.lidos.filter(l=>l.totalPag>0&&l.totalPag<=200).sort((a,b)=>a.totalPag-b.totalPag);
-    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.nome.toUpperCase()} · ${slimes.length} slimes</div>`;
+    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.u.toUpperCase()} · ${slimes.length} slimes</div>`;
     if(!slimes.length)return header+`<div style="font-family:'Exo 2',sans-serif;color:rgba(248,250,252,0.3);font-size:12px;padding:8px 0;">Nenhum slime vencido</div>`;
     return header+slimes.slice(0,3).map(b=>{
       const l=allLivros.find(x=>x.livro===b.livro);
@@ -6145,10 +6127,10 @@ function renderBatalha() {
       data:{
         labels:['Volume','Consistência','Velocidade','Qualidade','Resistência','Variedade'],
         datasets:[
-          {label:nA,data:radarA,borderColor:CA,backgroundColor:CA+'22',
+          {label:pA,data:radarA,borderColor:CA,backgroundColor:CA+'22',
            pointBackgroundColor:CA,pointBorderColor:CA,pointHoverBackgroundColor:'#fff',
            pointRadius:4,pointHoverRadius:6,borderWidth:2.5},
-          {label:nB,data:radarB,borderColor:CB,backgroundColor:CB+'22',
+          {label:pB,data:radarB,borderColor:CB,backgroundColor:CB+'22',
            pointBackgroundColor:CB,pointBorderColor:CB,pointHoverBackgroundColor:'#fff',
            pointRadius:4,pointHoverRadius:6,borderWidth:2.5}
         ]
@@ -6168,7 +6150,7 @@ function renderBatalha() {
             ...(window.TT||{}),
             callbacks:{
               label:c=>{
-                const ddX = c.dataset.label===nA ? dA : dB;
+                const ddX = c.dataset.label===pA ? dA : dB;
                 const anosX = anoFiltro==='total' ? anosAtivos(ddX) : 1;
                 const explica=[
                   `págs/${(TETOS_BASE.paginas*anosX).toLocaleString('pt-BR')} meta`,
@@ -6204,9 +6186,9 @@ function renderBatalha() {
     if(lEl){const ex=Chart.getChart(lEl);if(ex)ex.destroy();
     const mA=meses12.map(m=>dA.mesPags[m]||0), mB=meses12.map(m=>dB.mesPags[m]||0);
     new Chart(lEl,{type:'bar',data:{labels:mesesLbl,datasets:[
-      {label:nA,data:mA,backgroundColor:CA+'bb',borderColor:CA,borderWidth:1,borderRadius:4},
-      {label:nB,data:mB,backgroundColor:CB+'bb',borderColor:CB,borderWidth:1,borderRadius:4}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{}),callbacks:{afterBody:items=>{const i=items[0].dataIndex;const a=mA[i],b=mB[i];if(!a&&!b)return'';return a>b?'🏆 '+nA+' venceu':b>a?'🏆 '+nB+' venceu':'🤝 Empate';}}}},
+      {label:pA,data:mA,backgroundColor:CA+'bb',borderColor:CA,borderWidth:1,borderRadius:4},
+      {label:pB,data:mB,backgroundColor:CB+'bb',borderColor:CB,borderWidth:1,borderRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{}),callbacks:{afterBody:items=>{const i=items[0].dataIndex;const a=mA[i],b=mB[i];if(!a&&!b)return'';return a>b?'🏆 '+pA+' venceu':b>a?'🏆 '+pB+' venceu':'🤝 Empate';}}}},
     scales:{x:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'}},y:{ticks:{color:'#8892a8',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v},grid:{color:'rgba(42,50,72,0.4)'},beginAtZero:true}}}});}
 
     // Gêneros comparativo — estilo barras horizontais com %
@@ -6244,8 +6226,8 @@ function renderBatalha() {
 
         divEl.innerHTML = `
           <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#A855F7;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${nA}</span></div>
-            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#FB923C;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${nB}</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#A855F7;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${pA}</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#FB923C;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${pB}</span></div>
           </div>
           ${allGen.map(g => {
             const pctA = Math.round((genA[g]||0)/totA*100);
@@ -6272,8 +6254,8 @@ function renderBatalha() {
     const wEl=document.getElementById('bat-wd');
     if(wEl){const ex=Chart.getChart(wEl);if(ex)ex.destroy();
     new Chart(wEl,{type:'bar',data:{labels:['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],datasets:[
-      {label:nA,data:dA.wdMap,backgroundColor:CA+'aa',borderColor:CA,borderWidth:1,borderRadius:4},
-      {label:nB,data:dB.wdMap,backgroundColor:CB+'aa',borderColor:CB,borderWidth:1,borderRadius:4}
+      {label:pA,data:dA.wdMap,backgroundColor:CA+'aa',borderColor:CA,borderWidth:1,borderRadius:4},
+      {label:pB,data:dB.wdMap,backgroundColor:CB+'aa',borderColor:CB,borderWidth:1,borderRadius:4}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{})}},
     scales:{x:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'},beginAtZero:true}}}});}
   });
@@ -7709,11 +7691,11 @@ if ('serviceWorker' in navigator) {
     fillBattleSelects();
   };
   function fillBattleSelects(){
-    const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); if(users.length<2) return;
+    const users=window.BL?.raw?.users||[]; if(users.length<2) return;
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
-      sel.innerHTML = users.map(u=>`<option value="${String(u.uid).replace(/"/g,'&quot;')}">${String(u.label||u.uid)}</option>`).join('');
-      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.uid||users[0]?.uid||'');
+      sel.innerHTML = users.map((u,i)=>`<option value="${String(u.label||('Usuário '+(i+1))).replace(/"/g,'&quot;')}">${u.label||('Usuário '+(i+1))}</option>`).join('');
+      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
     });
   }
   const oldRenderBatalha=window.renderBatalha;
@@ -8084,7 +8066,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function setFab(mode){ const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu'); if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu) menu.style.setProperty('display','none','important'); fabOpen=false; return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu) menu.style.display=fabOpen?'flex':'none'; }
   window.toggleFabMenu=function(){ if(document.body.classList.contains('bl-v10-friend')||document.body.classList.contains('bl-v10-battle')){ setFab('hide'); return; } fabOpen=!fabOpen; setFab('show'); };
-  function fillBattleSelects(){ const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map(u=>`<option value="${esc(String(u.uid))}">${esc(String(u.label||u.uid))}</option>`).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.uid||users[0]?.uid||''); }); }
+  function fillBattleSelects(){ const users=people(); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map((u,i)=>{ const l=u.label||u.displayName||u.name||u.email||('Usuário '+(i+1)); return `<option value="${esc(l)}">${esc(l)}</option>`; }).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.label||users[idx]?.displayName||users[idx]?.name||users[0]?.label||''); }); }
   function forceBattleButton(){ let btn=$('btn-user-batalha'); if(!btn){ const wrap=$('btn-user-milton')?.parentElement; if(wrap){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;'; wrap.appendChild(btn); } }
     if(btn){ btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=(ev)=>{ ev&&ev.preventDefault&&ev.preventDefault(); window.setUsuario('Batalha'); }; }
   }
@@ -8127,7 +8109,6 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   body.bl-v11-friend #btn-user-batalha, body.bl-v11-friend #blBattleHardButton { display:none!important; }
   body.bl-v11-battle .fab, body.bl-v11-friend .fab { display:none!important; }
-  body.bl-v11-battle .lendo-wrap { display:none!important; }
 </style>
 <script>
 (function(){
@@ -8196,11 +8177,11 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return btn;
   }
   function fillBattleSelects(){
-    const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
+    const list = users();
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.uid).replaceAll('"','&quot;')}">${String(u.label||u.uid)}</option>`).join('');
-    if(a){ const prev=a.value; a.innerHTML=opts; a.value=[...a.options].some(o=>o.value===prev)?prev:(list[0]?.uid||''); }
-    if(b){ const prev=b.value; b.innerHTML=opts; b.value=[...b.options].some(o=>o.value===prev)?prev:(list[1]?.uid||list[0]?.uid||''); }
+    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
+    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
+    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
@@ -8488,9 +8469,8 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     const a = $('bat-playerA'), b = $('bat-playerB');
     const m = me(), op = selectedOpponent();
     if(!op) return;
-    // V3.60: usa UID como value — calcDados filtra por UID
-    const keyA = m.uid || legacyKeyOf(m);
-    const keyB = op.uid || legacyKeyOf(op);
+    const keyA = legacyKeyOf(m);
+    const keyB = legacyKeyOf(op);
     window.__BL_BATTLE_PLAYER_A = keyA;
     window.__BL_BATTLE_PLAYER_B = keyB;
     if(a){ a.innerHTML = `<option value="${esc(keyA)}">${esc(labelOf(m))}</option>`; a.value = keyA; }
@@ -8591,25 +8571,24 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function callOriginalRender(){
     syncHiddenSelects();
-    // Chama renderBatalha direto — sem cache de versão antiga
-    if(typeof window.__BL_CORE_RENDER_BATALHA === 'function'){
-      try { return window.__BL_CORE_RENDER_BATALHA(); } catch(e){ console.error('Batalha falhou:', e); }
+    const render = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.__BL_ORIGINAL_RENDER_BATALHA || window.renderBatalha;
+    if(typeof render === 'function'){
+      try { return render(); } catch(e){ console.error('Batalha original falhou:', e); }
     }
   }
   // captura o render atual antes de sobrescrever nesta versão, mas depois o código fonte foi ajustado para respeitar __BL_BATTLE_PLAYER_A/B.
-  // V3.60: salva o renderBatalha com calcDados por UID como referência core
-  window.__BL_CORE_RENDER_BATALHA = window.renderBatalha;
+  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.renderBatalha;
   window.renderBatalha = function(){
     if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-v10-battle') || document.body.classList.contains('bl-v12-battle')){
       syncHiddenSelects();
       const oldOpen = pickerOpen;
-      const r = window.__BL_CORE_RENDER_BATALHA ? window.__BL_CORE_RENDER_BATALHA() : undefined;
+      const r = window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
       pickerOpen = oldOpen;
       buildController();
       if(oldOpen) openPicker();
       return r;
     }
-    return window.__BL_CORE_RENDER_BATALHA ? window.__BL_CORE_RENDER_BATALHA() : undefined;
+    return window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
   };
   function ensureBattleButton(){
     let btn = $('btn-user-batalha') || $('bl-battle-main-btn');
@@ -11384,28 +11363,53 @@ body.bl-v40-loading #app{display:none!important;}
     return list[0];
   }
   function sessionSources(){
-    const r=raw(), out=[];
+    // V3.59-fix: usa UID de cada usuário/amigo para separar dados corretamente
+    const r=raw(), out=[], authUid=window.BL?.auth?.currentUser?.uid||'';
+    // Se temos users com sessions (estrutura de amigos/comunidade)
     if(Array.isArray(r.users)&&r.users.some(u=>(u.sessions||[]).length)){
-      r.users.forEach(u=>(u.sessions||[]).forEach((s,i)=>out.push({s,label:u.label||u.displayName||u.name||userName(),idx:i,src:'raw.users'})));
+      r.users.forEach(u=>{
+        const uid=String(u?.uid||'').trim();
+        const label=u.label||u.displayName||u.name||userName();
+        (u.sessions||[]).forEach((s,i)=>out.push({s,label,uid,idx:i,src:'raw.users'}));
+      });
       return out;
     }
-    if(Array.isArray(r.sessoes)&&r.sessoes.length){r.sessoes.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'dados.sessoes'}));return out;}
-    if(Array.isArray(r.sessions)&&r.sessions.length){r.sessions.forEach((s,i)=>out.push({s,label:s.usuario||r.currentLabel||userName(),idx:i,src:'raw.sessions'}));return out;}
-    (window._sessoes||[]).forEach((s,i)=>out.push({s,label:s.usuario||userName(),idx:i,src:'_sessoes'}));
+    // Fallback: sessões do usuário logado apenas (_sessoes já é filtrado por viewUid no V3.58)
+    if(Array.isArray(r.sessoes)&&r.sessoes.length){
+      r.sessoes.forEach((s,i)=>{
+        const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+        const label=s.usuario||r.currentLabel||userName();
+        out.push({s,label,uid,idx:i,src:'dados.sessoes'});
+      });
+      return out;
+    }
+    if(Array.isArray(r.sessions)&&r.sessions.length){
+      r.sessions.forEach((s,i)=>{
+        const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+        const label=s.usuario||r.currentLabel||userName();
+        out.push({s,label,uid,idx:i,src:'raw.sessions'});
+      });
+      return out;
+    }
+    (window._sessoes||[]).forEach((s,i)=>{
+      const uid=String(s?.usuarioUid||s?.ownerUid||s?.userId||authUid).trim();
+      out.push({s,label:s.usuario||userName(),uid,idx:i,src:'_sessoes'});
+    });
     return out;
   }
   function canonicalSessionRows(){
     const g=bookMapGlobal(), seen=new Set(), rows=[];
-    sessionSources().forEach(({s,label,idx,src})=>{
+    sessionSources().forEach(({s,label,uid,idx,src})=>{
       const gb=g.get(String(s.bookId||''))||{};
       const title=titleOf(s)||titleOf(gb); if(!title)return;
       const d=dateOf(s); if(!d)return;
       let pages=pagesRead(s); if(!pages||pages<0)return;
       const id=idOf(s)||String(s.bookId||'');
-      const key=String(s.id||s.docId||[src,norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
+      // V3.59-fix: uid no key evita mistura de dados de pessoas com mesmo nome
+      const key=String(s.id||s.docId||[src,uid||norm(label),id||norm(title),d.iso,pages,minutesOf(s),secondsOf(s),idx].join('|'));
       if(seen.has(key))return; seen.add(key);
       const b=bestBook(title,id,label);
-      rows.push({raw:s,label,idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
+      rows.push({raw:s,label,uid:uid||'',idx,src,id,title,total:b.total||bookTotal(gb)||0,currentCap:b.current||0,done:isDone(b),cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),date:d,sortMs:d.ms+timeMs(s)+(idx/1000),pages,minutes:minutesOf(s),seconds:secondsOf(s),review:txt(s.review,s.resenha),reactions:s.reactions||s.thermometer||s.termometro||[],photo:s.userPhotoURL||s.photoURL||s.userPhoto||''});
     });
     return rows;
   }
@@ -11424,10 +11428,25 @@ body.bl-v40-loading #app{display:none!important;}
   function buildFeed(){
     const items=[], completion=new Map();
     const groups=new Map();
-    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
-    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:{name:row.label||userName(),photo:row.photo||userPhoto()},title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
+    // V3.59-fix: group key usa uid (se disponível) em vez de label
+    canonicalSessionRows().sort((a,b)=>(a.sortMs-b.sortMs)).forEach(row=>{const key=[row.uid||norm(row.label),row.id||norm(row.title)].join('|');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);});
+    groups.forEach((arr,key)=>{let cur=0;arr.forEach(row=>{let read=row.pages;const cap=row.done?(row.total||0):(row.currentCap||0);if(cap>0&&cur+read>cap)read=Math.max(0,cap-cur);if(read<=0)return;cur+=read;if(row.total>0)cur=Math.min(cur,row.total);if(cap>0)cur=Math.min(cur,cap);const total=row.total||Math.max(cur,cap,0);if(total&&cur>=total)completion.set(key,row.date);items.push({type:'session',profile:(()=>{
+        // V3.59-fix: busca foto pelo uid do row, não userPhoto() do logado
+        const rowUid=row.uid||'';
+        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rowUid)||{};
+        const me=window.BL?.auth?.currentUser;
+        const isMe=rowUid&&me&&rowUid===me.uid;
+        const photo=row.photo||friend.photoURL||(isMe?me.photoURL:'')||'';
+        return {name:row.label||userName(),photo};
+      })(),title:row.title,date:row.date.iso,sortMs:row.sortMs,current:cur,total,pages:read,minutes:row.minutes,seconds:row.seconds,review:row.review,reactions:row.reactions,cover:row.cover,source:row.src});});});
     const g=bookMapGlobal();
-    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:r.userPhotoURL||r.photoURL||userPhoto()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
+    ratingSources().forEach(({r,label,idx,src})=>{const gb=g.get(String(r.bookId||''))||{};const title=titleOf(r)||titleOf(gb);if(!title)return;const media=ratingMedia(r);if(!media)return;const id=idOf(r)||String(r.bookId||'');const key=[norm(label),id||norm(title)].join('|');const b=bestBook(title,id,label);let d=realRatingDate(r)||completion.get(key);if(!d)return;if(completion.get(key)&&d.ms<completion.get(key).ms)d=completion.get(key);items.push({type:'rating',profile:{name:label||r.usuario||userName(),photo:(()=>{
+        const rUid=String(r?.usuarioUid||r?.ownerUid||r?.userId||'').trim();
+        const friend=(raw().friends||[]).find(f=>String(f?.uid||f?.id||'')===rUid)||{};
+        const me=window.BL?.auth?.currentUser;
+        const isMe=rUid&&me&&rUid===me.uid;
+        return r.userPhotoURL||r.photoURL||friend.photoURL||(isMe?me.photoURL:'')||'';
+      })()},title,date:d.iso,sortMs:d.ms+(realRatingDate(r)?timeMs(r):86399000)+(idx/1000),media,reviewTitle:txt(r.reviewTitle,r.tituloResenha),review:txt(r.review,r.resenha),reactions:r.reactions||r.thermometer||r.termometro||[],cover:b.cover||txt(gb.capa,gb.coverUrl,gb.cover),completionDate:completion.get(key)?.iso||'',source:src});});
     const seen=new Set();
     return items.sort((a,b)=>(b.sortMs||0)-(a.sortMs||0)).filter(i=>{const k=[i.type,norm(i.profile.name),norm(i.title),i.date,i.pages||i.media,i.current||''].join('|');if(seen.has(k))return false;seen.add(k);return true;}).slice(0,180);
   }
@@ -12409,7 +12428,7 @@ body.bl-v40-loading #app{display:none!important;}
   if (typeof prevAbrirModal === 'function') window.abrirModal = function(tipo){ if (!canEdit() && EDIT_MODAL_TYPES.has(String(tipo))) return blockEdit(); return prevAbrirModal.apply(this, arguments); };
   const prevToggleFab = window.toggleFabMenu;
   if (typeof prevToggleFab === 'function') window.toggleFabMenu = function(){ if (!canEdit()) return blockEdit(); return prevToggleFab.apply(this, arguments); };
-  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blOpenMigrationModal'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
+  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
 
   async function deleteCollection(path, chunkSize=350){
     if (!db()) return 0;
@@ -12469,13 +12488,7 @@ body.bl-v40-loading #app{display:none!important;}
     return Object.assign({ totalWrites:writes.length, deletedBeforeImport:deleted }, migrationCounts(data));
   };
 
-  const prevMigrationModal = window.blOpenMigrationModal;
-  if (typeof prevMigrationModal === 'function') {
-    window.blOpenMigrationModal = function(){
-      if (!canEdit()) return blockEdit();
-      return prevMigrationModal.apply(this, arguments);
-    };
-  }
+  // V3.59-fix: migração não entra no wrapper canEdit — ela verifica user internamente
 
   window.blV58Audit = function(){
     const all = buildAllData();
@@ -12537,6 +12550,8 @@ body.bl-v40-loading #app{display:none!important;}
       body.bl-visitor-readonly button[onclick*="excluir"],
       body.bl-visitor-readonly button[onclick*="confirmar"],
       body.bl-visitor-readonly .lendo-meta button,
+      body.bl-visitor-readonly button[onclick*="blV60PauseBook"],
+      body.bl-visitor-readonly button[onclick*="blV60ResumeBook"],
       body.bl-visitor-readonly .bl-v332-complete-card,
       body.bl-visitor-readonly .bl-v55-complete-card,
       body.bl-visitor-readonly .bl-v332-complete-actions{display:none!important;}
@@ -12577,7 +12592,8 @@ body.bl-v40-loading #app{display:none!important;}
       const old=by.get(k);
       if(!old||score>old.__score) by.set(k,{...x,livro:t,title:t,autor:authorOf(x),status:isReadingStatus(st)?'Lendo':'Pausado',pagAtual:cur,currentPage:cur,totalPag:total,totalPages:total,pct:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),progress:total?Math.max(0,Math.min(1,cur/total)):num(x?.pct||x?.progress),coverUrl:coverOf(x),isbn:isbnOf(x),__score:score});
     });
-    return [...by.values()].sort((a,b)=>norm(a.livro).localeCompare(norm(b.livro),'pt-BR'));
+    // Lendo primeiro, Pausado depois, alfabético dentro de cada grupo
+    return [...by.values()].sort((a,b)=>{ const sa=a.status==='Lendo'?0:1, sb=b.status==='Lendo'?0:1; return sa!==sb?sa-sb:norm(a.livro).localeCompare(norm(b.livro),'pt-BR'); });
   }
 
   function collectWaiting(){
@@ -12610,7 +12626,11 @@ body.bl-v40-loading #app{display:none!important;}
     active.forEach(p=>{
       const lendo=p.status==='Lendo'; const cor=lendo?'var(--teal)':'var(--orange)'; const icon=lendo?'📖':'⏸️';
       const total=pagesOf(p), cur=currentOf(p), faltam=Math.max(0,total-cur), pct=total?Math.round((cur/total)*1000)/10:0, dias=Math.ceil(faltam/(avg||50));
-      const btn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
+      const sessaoBtn=editable?`<button onclick="abrirSessaoRapida('${esc(p.livro).replace(/'/g,'&#39;')}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button>`:'';
+      const livroEsc=esc(p.livro).replace(/'/g,'&#39;');
+      const pauseBtn=editable&&lendo?`<button onclick="blV60PauseBook('${livroEsc}')" style="background:rgba(248,140,106,0.15);border:1px solid var(--orange);color:var(--orange);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">⏸️</button>`:'';
+      const resumeBtn=editable&&!lendo?`<button onclick="blV60ResumeBook('${livroEsc}')" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:6px;">▶️</button>`:'';
+      const btn=sessaoBtn+pauseBtn+resumeBtn;
       cont.innerHTML+=`
         <div class="lendo-card ${lendo?'lendo':'pausado'}">
           <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
@@ -12633,7 +12653,7 @@ body.bl-v40-loading #app{display:none!important;}
     const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div></div>`;
+      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,"&#39;")}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
     }
     applyPrivacyAndReadonly();
   }
@@ -12666,12 +12686,33 @@ body.bl-v40-loading #app{display:none!important;}
     document.body.classList.add('bl-visitor-readonly','bl-readonly-profile');
     document.querySelectorAll('button,a,[role="button"],.fab,.fab-menu,.floating-action').forEach(el=>{
       if(el.id==='blBackMeV58'||el.closest?.('#blFriendHeroV58')||el.matches?.('[data-bl-v59-friend],[data-bl-v58-friend],[data-bl-v57-friend],[data-bl-v56-friend],[data-bl-friend]'))return;
-      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase(); const id=norm(el.id||''); const cls=norm(el.className||'');
+      // V3.59-fix: não esconder botão ⋮ (menu/três pontinhos) — só esconder FAB (+) e botões de edição
+      const id=norm(el.id||''); const cls=norm(el.className||'');
+      const isMenuBtn = id.includes('menu')||cls.includes('menu')||el.getAttribute?.('aria-label')?.toLowerCase().includes('menu')||['☰','⋮','•••','...'].some(s=>el.textContent?.trim()===s);
+      if(isMenuBtn) return; // não esconder menu
+      const t=norm(el.textContent||el.getAttribute('aria-label')||el.title||''); const oc=String(el.getAttribute?.('onclick')||'').toLowerCase();
       if(id.includes('fab')||cls.includes('fab')||/abrirsessao|abrirmodal|enviar|salvar|excluir|confirmar|import/.test(oc)||/^(\+|adicionar|registrar sessao|registrar sessão|avaliar|avaliar depois|editar|excluir|salvar|finalizar|atualizar|importar|novo livro)/.test(t)) el.style.setProperty('display','none','important');
     });
   }
 
-  function applyPrivacyAndReadonly(){ ensureCss(); document.body.classList.toggle('bl-visitor-readonly',isVisitor()); document.body.classList.toggle('bl-readonly-profile',isVisitor()); sanitizeVisibleIds(); hideEditButtons(); }
+  function restoreOwnButtons(){
+    // Remove inline display:none de botões que foram escondidos ao visitar amigo
+    // NÃO restaurar: fabMenu (estado controlado por toggleFabMenu), elementos de modal
+    const SKIP_IDS = new Set(['fabMenu','blMigrationModal','blFriendsModal','blCommunityModal','blInviteModal','pageBatalha','pageComunidade']);
+    document.querySelectorAll('button,a,[role="button"],.fab,.floating-action').forEach(el=>{
+      if(SKIP_IDS.has(el.id)) return;         // não restaurar menus/modais
+      if(el.closest?.('#fabMenu')) return;     // não restaurar itens dentro do FAB menu
+      if(el.style.display==='none') el.style.removeProperty('display');
+    });
+  }
+  function applyPrivacyAndReadonly(){
+    ensureCss();
+    const visitor=isVisitor();
+    document.body.classList.toggle('bl-visitor-readonly',visitor);
+    document.body.classList.toggle('bl-readonly-profile',visitor);
+    if(visitor){ sanitizeVisibleIds(); hideEditButtons(); }
+    else { restoreOwnButtons(); } // V3.59-fix: restaura botões ao voltar pro próprio perfil
+  }
 
   const oldRender=window.renderLendoCards;
   window.renderLendoCards=function(){ try{return renderLendoCardsV59();}catch(e){console.warn('[BookLegacy]',PATCH,'render lendo falhou',e); if(typeof oldRender==='function')return oldRender.apply(this,arguments);} };
@@ -12703,7 +12744,68 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  // V3.60: Pausar livro — grava status:'Pausado', pauseSource:'app', pausedAt
+  window.blV60PauseBook = async function(livro){
+    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
+    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
+    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
+    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
+    // Atualiza UI imediatamente sem esperar Firebase
+    const src=[...(window._dadosD?.lendo||[]),...(window._livros||[])];
+    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Pausado';x.pauseSource='app';x.pausedAt=now;});
+    try{ window.renderLendoCards?.(); }catch(e){}
+    // Grava no Firebase em paralelo (sem await na UI)
+    (async()=>{
+      try{
+        const snap=await db.collection('users').doc(uid).collection('library').get();
+        const batch=db.batch(); let count=0;
+        snap.docs.forEach(doc=>{
+          const d=doc.data()||{}; const st=String(d?.status||'').toLowerCase();
+          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&['lendo','em leitura','reading'].includes(st)){
+            batch.set(doc.ref,{status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now},{merge:true}); count++;
+          }
+        });
+        if(count) await batch.commit();
+        else{ const id='lib_'+livro.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,80); await db.collection('users').doc(uid).collection('library').doc(id).set({status:'Pausado',pauseSource:'app',pausedAt:now,updatedAt:now,livro,title:livro},{merge:true}); }
+      }catch(e){ console.error('[V3.60] pausar Firebase falhou',e); }
+    })();
+  };
+
+  // V3.60: Voltar a ler — limpa pauseSource, volta status:'Lendo'
+  window.blV60ResumeBook = async function(livro){
+    if(isVisitor()){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return; }
+    const user=authUser(); if(!user){ alert('Entre com Google primeiro.'); return; }
+    const db=window.BL?.db; if(!db){ alert('Firebase não disponível.'); return; }
+    const uid=user.uid; const t=norm(livro); const now=new Date().toISOString();
+    // Atualiza UI imediatamente
+    const src=[...(window._dadosD?.pausados||[]),...(window._livros||[])];
+    src.filter(x=>norm(String(x?.livro||x?.title||''))===t).forEach(x=>{x.status='Lendo';x.pauseSource=null;x.pausedAt=null;x.resumedAt=now;});
+    try{ window.renderLendoCards?.(); }catch(e){}
+    // Grava no Firebase em paralelo
+    (async()=>{
+      try{
+        const snap=await db.collection('users').doc(uid).collection('library').get();
+        const batch=db.batch(); let count=0;
+        snap.docs.forEach(doc=>{
+          const d=doc.data()||{};
+          if(norm(String(d?.title||d?.livro||d?.bookTitle||''))===t&&String(d?.status||'').toLowerCase()==='pausado'){
+            batch.set(doc.ref,{status:'Lendo',pauseSource:null,pausedAt:null,resumedAt:now,updatedAt:now},{merge:true}); count++;
+          }
+        });
+        if(count) await batch.commit();
+      }catch(e){ console.error('[V3.60] retomar Firebase falhou',e); }
+    })();
+  };
+
+  function isBattleMode(){ const bat=$('pageBatalha'); return bat&&bat.style.display!=='none'&&bat.style.display!==''; }
+  function boot(){
+    try{
+      ensureCss();
+      applyPrivacyAndReadonly();
+      // V3.59-fix: não renderizar cards de lendo em modo batalha
+      if($('lendo-cards') && !isBattleMode()) renderLendoCardsV59();
+    }catch(e){console.warn('[BookLegacy]',PATCH,e);}
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
   try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
