@@ -7781,7 +7781,11 @@ if ('serviceWorker' in navigator) {
       else btnDaniel.style.display='none';
     }
     if(btnBatalha){ btnBatalha.style.display = users.length>=2 ? '' : 'none'; btnBatalha.onclick=()=>setUsuario('Batalha'); }
+    fillBattleSelects();
   };
+  function fillBattleSelects(){ /* V3.60: jogador A travado, jogador B via picker — ver função canônica abaixo */ }
+  const oldRenderBatalha=window.renderBatalha;
+  window.renderBatalha=function(){ if(typeof oldRenderBatalha==='function') oldRenderBatalha(); };
 
   // Sessões: usa SEMPRE a subcoleção do usuário logado, independente da tela visualizada.
   window.renderSessoesExcluir = function(){
@@ -8148,6 +8152,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function setFab(mode){ const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu'); if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu) menu.style.setProperty('display','none','important'); fabOpen=false; return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu) menu.style.display=fabOpen?'flex':'none'; }
   window.toggleFabMenu=function(){ if(document.body.classList.contains('bl-v10-friend')||document.body.classList.contains('bl-v10-battle')){ setFab('hide'); return; } fabOpen=!fabOpen; setFab('show'); };
+  function fillBattleSelects(){ /* V3.60: neutralizado — ver função canônica abaixo */ }
   function forceBattleButton(){ let btn=$('btn-user-batalha'); if(!btn){ const wrap=$('btn-user-milton')?.parentElement; if(wrap){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;'; wrap.appendChild(btn); } }
     if(btn){ btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=(ev)=>{ ev&&ev.preventDefault&&ev.preventDefault(); window.setUsuario('Batalha'); }; }
   }
