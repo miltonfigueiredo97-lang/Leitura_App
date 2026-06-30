@@ -5229,17 +5229,6 @@ function setUsuario(usuario) {
 
   document.getElementById('pageDashboard').style.display = usuario === 'Batalha' ? 'none' : 'block';
   document.getElementById('pageBatalha').style.display   = usuario === 'Batalha' ? 'block' : 'none';
-  // V3.60: injeta/remove style tag para garantir lendo-wrap oculto durante batalha
-  (function(){
-    const STYLE_ID = 'bl-battle-lendo-hide';
-    let s = document.getElementById(STYLE_ID);
-    if(usuario === 'Batalha'){
-      if(!s){ s=document.createElement('style'); s.id=STYLE_ID; document.head.appendChild(s); }
-      s.textContent = '.lendo-wrap{display:none!important;visibility:hidden!important;}';
-    } else {
-      if(s) s.remove();
-    }
-  })();
   const lendoWrap = document.querySelector('.lendo-wrap');
   if (lendoWrap) lendoWrap.style.display = usuario === 'Batalha' ? 'none' : '';
   document.querySelector('.lendo-wrap').style.display    = usuario === 'Batalha' ? 'none' : 'block';
@@ -12270,9 +12259,6 @@ body.bl-v40-loading #app{display:none!important;}
   }
 
   function renderUid(uid, opts={}){
-    // V3.60: remove style tag que escondia lendo-wrap em batalha
-    const _bls = document.getElementById('bl-battle-lendo-hide');
-    if(_bls) _bls.remove();
     const p = findPerson(uid) || emptyPerson(uid, 'Amigo');
     if (!p.uid) return;
     const data = dataForUid(p.uid);
@@ -12303,13 +12289,6 @@ body.bl-v40-loading #app{display:none!important;}
     window._dadosD = buildAllData();
     setGlobalLabel('Batalha');
     const dash = $('pageDashboard'), bat = $('pageBatalha'); if (dash) dash.style.display='none'; if (bat) bat.style.display='block';
-    // V3.60: esconde lendo-wrap via style tag permanente
-    (function(){
-      const STYLE_ID = 'bl-battle-lendo-hide';
-      let s = document.getElementById(STYLE_ID);
-      if(!s){ s=document.createElement('style'); s.id=STYLE_ID; document.head.appendChild(s); }
-      s.textContent = '.lendo-wrap{display:none!important;visibility:hidden!important;}';
-    })();
     try { if (typeof renderBatalha === 'function') renderBatalha(); } catch(e) { console.warn('[BookLegacy]', PATCH, 'renderBatalha', e); }
   }
 
@@ -12722,7 +12701,7 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function boot(){ if(window.usuarioAtual==='Batalha'||document.getElementById('pageBatalha')?.style.display==='block') return; try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
   try{new MutationObserver(()=>{applyPrivacyAndReadonly();}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
