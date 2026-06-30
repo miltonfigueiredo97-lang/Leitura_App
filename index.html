@@ -5309,6 +5309,9 @@ function renderBatalha() {
 
   const pA = window.__BL_BATTLE_PLAYER_A || document.getElementById('bat-playerA')?.value || 'Milton';
   const pB = window.__BL_BATTLE_PLAYER_B || document.getElementById('bat-playerB')?.value || 'Daniel';
+  const _findLabel = uid => (window.BL?.raw?.users||[]).find(u=>String(u.uid||'')===uid)?.label || uid;
+  const nA = _findLabel(pA);
+  const nB = _findLabel(pB);
   const CA = '#A855F7', CB = '#FB923C';
 
   // Popula seletor de anos — guarda valor ANTES de limpar
@@ -5328,17 +5331,30 @@ function renderBatalha() {
   const anoFiltro = selAno?.value || 'total';
 
   function calcDados(u) {
-    const filterU = l => u === 'Milton'
-      ? (!l.usuario || l.usuario === '' || l.usuario.toUpperCase() === 'MILTON')
-      : l.usuario?.toUpperCase() === u.toUpperCase();
-    const sess  = (d.sessoes||[]).filter(filterU).filter(s => anoFiltro === 'total' || String(s.ano) === String(anoFiltro));
-    const todos = [...(d.livros||[]),...(d.lendo||[]),...(d.pausados||[]),...(d.aguardando||[])].filter(filterU);
-    const lidos = todos.filter(l=>l.status==='Completo').filter(l => {
-      if (anoFiltro === 'total') return true;
-      // filtra livros concluídos no ano selecionado (verificando sessões)
-      return sess.some(s => s.livro === l.livro);
+    const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u)||null;
+
+    const sess = (person?.sessions||[]).map(s=>{
+      const dt=String(s.date||s.data||'').slice(0,10);
+      return {livro:String(s.title||s.livro||''),paginas:Number(s.pages||s.paginas||0),minutos:Number(s.minutes||s.minutos||0),data:dt,ano:dt?new Date(dt+'T12:00:00').getFullYear():0};
+    }).filter(s=>anoFiltro==='total'||String(s.ano)===String(anoFiltro));
+
+    const todos = (person?.library||[])
+      .filter(l=>!l.system&&!l.customMetaRegistry&&String(l.title||l.livro||'').trim())
+      .map(l=>({
+        livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
+        totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
+        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
+      }));
+
+    const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
+      if(anoFiltro==='total') return true;
+      return sess.some(s=>s.livro===l.livro);
     });
-    const notas = (d.notas||[]).filter(filterU).filter(n => anoFiltro === 'total' || String(n.ano) === String(anoFiltro));
+
+    const notas = (person?.ratings||[]).map(r=>{
+      const dt=String(r.date||r.data||'').slice(0,10);
+      return {media:Number(r.rating||r.nota||r.media||0),livro:String(r.title||r.livro||''),ano:dt?new Date(dt+'T12:00:00').getFullYear():Number(r.year||r.ano||0)};
+    }).filter(n=>anoFiltro==='total'||String(n.ano)===String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
     const horas = Math.round(sess.reduce((a,s)=>a+(s.minutos||0),0)/60);
@@ -5395,7 +5411,7 @@ function renderBatalha() {
     // Gêneros diferentes
     const generosSet = new Set(todos.filter(l => l.genero && l.status === 'Completo').map(l => l.genero));
 
-    return {u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
+    return {u,nome:person?.label||u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
       streakAtual,streakRecord,bosses,autorTop,mesPags,wdMap,eficiencia,
       maiorSessao,colSet,sessoes:sess.length,metaPct,metaLidos,metaTotal,
       autMap,seriesConcluidas,generosSet};
@@ -5642,7 +5658,7 @@ function renderBatalha() {
 <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px;">
   <div style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(15,23,42,0.8));border:1px solid rgba(168,85,247,0.35);border-radius:16px;padding:20px;text-align:center;box-shadow:0 0 30px rgba(168,85,247,0.15);">
     ${avatar('#A855F7','⚔️')}
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#A855F7;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(168,85,247,0.5);">${pA.toUpperCase()}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#A855F7;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(168,85,247,0.5);">${nA.toUpperCase()}</div>
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(248,250,252,0.55);letter-spacing:2px;">${rankTitle(dA)}</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:#F8FAFC;margin:12px 0 2px;text-shadow:0 0 15px rgba(168,85,247,0.4);">${Math.round(poderA).toLocaleString('pt-BR')}</div>
     <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:3px;text-transform:uppercase;">Poder de Leitura</div>
@@ -5652,7 +5668,7 @@ function renderBatalha() {
   </div>
   <div style="background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(15,23,42,0.8));border:1px solid rgba(249,115,22,0.35);border-radius:16px;padding:20px;text-align:center;box-shadow:0 0 30px rgba(249,115,22,0.15);">
     ${avatar('#FB923C','🛡️')}
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#FB923C;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(249,115,22,0.5);">${pB.toUpperCase()}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#FB923C;margin:10px 0 3px;letter-spacing:3px;text-shadow:0 0 20px rgba(249,115,22,0.5);">${nB.toUpperCase()}</div>
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(248,250,252,0.55);letter-spacing:2px;">${rankTitle(dB)}</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:#F8FAFC;margin:12px 0 2px;text-shadow:0 0 15px rgba(249,115,22,0.4);">${Math.round(poderB).toLocaleString('pt-BR')}</div>
     <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:3px;text-transform:uppercase;">Poder de Leitura</div>
@@ -5666,9 +5682,9 @@ function renderBatalha() {
     <div style="flex:1;background:linear-gradient(90deg,#FB923C,#EA580C);display:flex;align-items:center;justify-content:flex-end;padding:0 14px;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:white;letter-spacing:1px;">${pctB}%</div>
   </div>
   <div style="display:flex;justify-content:space-between;margin-top:6px;">
-    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#A855F7;font-weight:700;">${pA}</span>
+    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#A855F7;font-weight:700;">${nA}</span>
     <span style="font-family:'Exo 2',sans-serif;font-size:10px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">⚡ Poder de Leitura Total</span>
-    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#FB923C;font-weight:700;">${pB}</span>
+    <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:#FB923C;font-weight:700;">${nB}</span>
   </div>
 </div>
 
@@ -5676,7 +5692,7 @@ function renderBatalha() {
 <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;">
   <div style="padding:12px 24px;border-radius:14px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);text-align:center;box-shadow:0 0 16px rgba(168,85,247,0.1);">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#A855F7;text-shadow:0 0 16px rgba(168,85,247,0.5);">${vitA}</div>
-    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${pA}</div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${nA}</div>
   </div>
   <div style="padding:12px 24px;border-radius:14px;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.07);text-align:center;">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:rgba(248,250,252,0.3);">${emp}</div>
@@ -5684,7 +5700,7 @@ function renderBatalha() {
   </div>
   <div style="padding:12px 24px;border-radius:14px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);text-align:center;box-shadow:0 0 16px rgba(249,115,22,0.1);">
     <div style="font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:#FB923C;text-shadow:0 0 16px rgba(249,115,22,0.5);">${vitB}</div>
-    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${pB}</div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;">Vitórias ${nB}</div>
   </div>
 </div>
 
@@ -5712,7 +5728,7 @@ function renderBatalha() {
         <div style="display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:#A855F7;">${vitA}</div>
-            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${pA} venceu</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${nA} venceu</div>
           </div>
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:rgba(248,250,252,0.3);">${emp}</div>
@@ -5720,7 +5736,7 @@ function renderBatalha() {
           </div>
           <div style="text-align:center;">
             <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:#FB923C;">${vitB}</div>
-            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${pB} venceu</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);">${nB} venceu</div>
           </div>
         </div>
       </div>
@@ -5731,11 +5747,11 @@ function renderBatalha() {
         <div style="height:130px;"><canvas id="bat-wd"></canvas></div>
         <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
           <div style="text-align:center;">
-            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#A855F7;font-weight:700;">${pA.toUpperCase()}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#A855F7;font-weight:700;">${nA.toUpperCase()}</div>
             <div id="bat-wd-dia-a" style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#F8FAFC;"></div>
           </div>
           <div style="text-align:center;">
-            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#FB923C;font-weight:700;">${pB.toUpperCase()}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:#FB923C;font-weight:700;">${nB.toUpperCase()}</div>
             <div id="bat-wd-dia-b" style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#F8FAFC;"></div>
           </div>
         </div>
@@ -5751,12 +5767,12 @@ function renderBatalha() {
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;">
       <div style="text-align:center;">
         <div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:#A855F7;text-shadow:0 0 20px rgba(168,85,247,0.5);line-height:1;">${dA.diasSet.size}</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#A855F7;letter-spacing:2px;margin-top:4px;">${pA.toUpperCase()}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#A855F7;letter-spacing:2px;margin-top:4px;">${nA.toUpperCase()}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-top:2px;">dias com leitura</div>
       </div>
       <div style="text-align:center;">
         <div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:#FB923C;text-shadow:0 0 20px rgba(249,115,22,0.5);line-height:1;">${dB.diasSet.size}</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#FB923C;letter-spacing:2px;margin-top:4px;">${pB.toUpperCase()}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#FB923C;letter-spacing:2px;margin-top:4px;">${nB.toUpperCase()}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);margin-top:2px;">dias com leitura</div>
       </div>
     </div>
@@ -5792,11 +5808,11 @@ function renderBatalha() {
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;">
       <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:1px;">${pA.toUpperCase()} · ${dA.bosses.length}</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:1px;">${nA.toUpperCase()} · ${dA.bosses.length}</div>
           <div id="bat-boss-a"></div>
         </div>
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:1px;">${pB.toUpperCase()} · ${dB.bosses.length}</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:1px;">${nB.toUpperCase()} · ${dB.bosses.length}</div>
           <div id="bat-boss-b"></div>
         </div>
       </div>
@@ -5815,15 +5831,15 @@ function renderBatalha() {
   <div>
     <div class="bat-section-hdr">⭐ ARTEFATOS LENDÁRIOS — MELHORES AVALIADOS</div>
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:visible;" id="bat-artefatos">
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${pA.toUpperCase()}</div></div>
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${pB.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${nA.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${nB.toUpperCase()}</div></div>
     </div>
   </div>
   <div>
     <div class="bat-section-hdr">💀 MALDIÇÕES — PIORES AVALIADOS</div>
     <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:visible;" id="bat-maldicoes">
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${pA.toUpperCase()}</div></div>
-      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${pB.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#A855F7;margin-bottom:8px;letter-spacing:2px;">${nA.toUpperCase()}</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#FB923C;margin-bottom:8px;letter-spacing:2px;">${nB.toUpperCase()}</div></div>
     </div>
   </div>
 </div>
@@ -5832,11 +5848,11 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">📚 AUTOR DOMINADO</div>
   <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    ${[{p:pA,dd:dA,cor:'#A855F7'},{p:pB,dd:dB,cor:'#FB923C'}].map(({p,dd,cor})=>`
+    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7'},{p:pB,n:nB,dd:dB,cor:'#FB923C'}].map(({p,n,dd,cor})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;">
       <div style="width:44px;height:44px;border-radius:50%;background:${cor}22;border:2px solid ${cor};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 12px ${cor}44;">📖</div>
       <div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${p.toUpperCase()}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${n.toUpperCase()}</div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#F8FAFC;">${dd.autorTop?.[0]||'—'}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);">${(dd.autorTop?.[1]||0).toLocaleString('pt-BR')} págs lidas</div>
       </div>
@@ -5848,9 +5864,9 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">🏅 CONQUISTAS & FEITOS</div>
   <div style="display:flex;flex-direction:column;gap:12px;">
-    ${[{p:pA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,dd,cor,ts})=>`
+    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,n:nB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,n,dd,cor,ts})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid ${cor}44;border-left:4px solid ${cor};border-radius:14px;padding:16px;box-shadow:0 0 24px ${cor}11;">
-      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${p.toUpperCase()}</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${n.toUpperCase()}</div>
       ${medalhas(dd, ts)}
     </div>`).join('')}
   </div>
@@ -5897,8 +5913,8 @@ function renderBatalha() {
           return `<div style="display:grid;grid-template-columns:24px 1fr 72px 72px;align-items:center;gap:8px;padding:7px 10px;background:${bg};border-radius:8px;${nenhum?'border:1px solid rgba(255,255,255,0.04);':''}">
             <span style="font-size:16px;${iconOpacity}">${icon}</span>
             <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:${nenhum?'rgba(248,250,252,0.3)':'#F8FAFC'};">${nome}</div>
-            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corA};">${labelA}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${pA}</div></div>
-            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corB};">${labelB}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${pB}</div></div>
+            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corA};">${labelA}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${nA}</div></div>
+            <div style="text-align:center;"><span style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${corB};">${labelB}</span><div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.25);">${nB}</div></div>
           </div>`;
         }).join('');
       })()}
@@ -5923,8 +5939,9 @@ function renderBatalha() {
         ];
         return todosT.map(({icon,nome,valA,valB})=>{
           const dono=valA===0&&valB===0?'nenhum':valA>valB?pA:valB>valA?pB:'empate';
+          const donoNome=dono===pA?nA:dono===pB?nB:dono;
           const cor=dono===pA?'#A855F7':dono===pB?'#FB923C':dono==='empate'?'rgba(248,250,252,0.4)':'rgba(248,250,252,0.15)';
-          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+dono;
+          const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+donoNome;
           const bg=dono==='nenhum'?'rgba(250,204,21,0.02)':'rgba(250,204,21,0.04)';
           const opacity=dono==='nenhum'?'opacity:0.4;':'';
           return `<div style="display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:7px 10px;background:${bg};border:1px solid rgba(250,204,21,0.08);border-radius:8px;">
@@ -5949,12 +5966,12 @@ function renderBatalha() {
       <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:#A855F7;text-shadow:0 0 20px rgba(168,85,247,0.5);">${vitA}</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#A855F7;letter-spacing:1px;">${pA.toUpperCase()}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#A855F7;letter-spacing:1px;">${nA.toUpperCase()}</div>
         </div>
         <div style="font-size:16px;color:rgba(255,255,255,0.1);">⚔️</div>
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:#FB923C;text-shadow:0 0 20px rgba(249,115,22,0.5);">${vitB}</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#FB923C;letter-spacing:1px;">${pB.toUpperCase()}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:#FB923C;letter-spacing:1px;">${nB.toUpperCase()}</div>
         </div>
       </div>
     </div>
@@ -5966,7 +5983,7 @@ function renderBatalha() {
     <div style="text-align:center;">
       <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">LIDERANÇA</div>
       <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:${vitA>vitB?'#A855F7':vitB>vitA?'#FB923C':'rgba(248,250,252,0.4)'};">
-        ${vitA>vitB?'🏆 '+pA.toUpperCase():vitB>vitA?'🏆 '+pB.toUpperCase():'🤝 EMPATE'}
+        ${vitA>vitB?'🏆 '+nA.toUpperCase():vitB>vitA?'🏆 '+nB.toUpperCase():'🤝 EMPATE'}
       </div>
       <div style="font-family:'Exo 2',sans-serif;font-size:9px;color:rgba(248,250,252,0.3);margin-top:4px;">diferença: ${Math.abs(vitA-vitB)} meses</div>
     </div>
@@ -6005,12 +6022,12 @@ function renderBatalha() {
       ${winA?`<div style="position:absolute;top:8px;right:8px;font-size:14px;filter:drop-shadow(0 0 6px #FACC15);">🏆</div>`:winB?`<div style="position:absolute;top:8px;right:8px;font-size:14px;filter:drop-shadow(0 0 6px #FACC15);">🏆</div>`:empate?`<div style="position:absolute;top:8px;right:8px;font-size:14px;">🤝</div>`:''}
       <div style="font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(248,250,252,0.4);margin-bottom:10px;text-transform:uppercase;">${a.icon} ${a.title}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#A855F7;">${pA}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#A855F7;">${nA}</span>
         <span style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:${winA?'#A855F7':'rgba(248,250,252,0.4)'};">${fmtA}</span>
       </div>
       <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:8px;"><div style="width:${pA2}%;height:100%;background:#A855F7;border-radius:2px;box-shadow:0 0 8px rgba(168,85,247,0.5);"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#FB923C;">${pB}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#FB923C;">${nB}</span>
         <span style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:${winB?'#FB923C':'rgba(248,250,252,0.4)'};">${fmtB}</span>
       </div>
       <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:8px;"><div style="width:${pB2}%;height:100%;background:#FB923C;border-radius:2px;box-shadow:0 0 8px rgba(249,115,22,0.5);"></div></div>
@@ -6034,7 +6051,7 @@ function renderBatalha() {
         <div id="${uid}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(160deg,var(--bg3),#0d1020);">${estrela}</div>
       </div>
       <div class="bat-art-overlay">
-        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.u.toUpperCase()}</div>
+        <div style="font-size:11px;color:${cor};font-weight:700;letter-spacing:1px;">${dd.nome.toUpperCase()}</div>
         <div style="font-size:15px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0;">${nota.livro}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.75);">${estrela} ${nota.media.toFixed(1)} · ${nota.ano||'—'}</div>
       </div>
@@ -6092,7 +6109,7 @@ function renderBatalha() {
   function slimeCard(dd,cor){
     const allLivros=[...(window._dadosD?.livros||[]),...(window._dadosD?.lendo||[]),...(window._dadosD?.pausados||[]),...(window._dadosD?.aguardando||[])];
     const slimes=dd.lidos.filter(l=>l.totalPag>0&&l.totalPag<=200).sort((a,b)=>a.totalPag-b.totalPag);
-    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.u.toUpperCase()} · ${slimes.length} slimes</div>`;
+    const header=`<div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:${cor};margin-bottom:8px;letter-spacing:1px;">${dd.nome.toUpperCase()} · ${slimes.length} slimes</div>`;
     if(!slimes.length)return header+`<div style="font-family:'Exo 2',sans-serif;color:rgba(248,250,252,0.3);font-size:12px;padding:8px 0;">Nenhum slime vencido</div>`;
     return header+slimes.slice(0,3).map(b=>{
       const l=allLivros.find(x=>x.livro===b.livro);
@@ -6127,10 +6144,10 @@ function renderBatalha() {
       data:{
         labels:['Volume','Consistência','Velocidade','Qualidade','Resistência','Variedade'],
         datasets:[
-          {label:pA,data:radarA,borderColor:CA,backgroundColor:CA+'22',
+          {label:nA,data:radarA,borderColor:CA,backgroundColor:CA+'22',
            pointBackgroundColor:CA,pointBorderColor:CA,pointHoverBackgroundColor:'#fff',
            pointRadius:4,pointHoverRadius:6,borderWidth:2.5},
-          {label:pB,data:radarB,borderColor:CB,backgroundColor:CB+'22',
+          {label:nB,data:radarB,borderColor:CB,backgroundColor:CB+'22',
            pointBackgroundColor:CB,pointBorderColor:CB,pointHoverBackgroundColor:'#fff',
            pointRadius:4,pointHoverRadius:6,borderWidth:2.5}
         ]
@@ -6150,7 +6167,7 @@ function renderBatalha() {
             ...(window.TT||{}),
             callbacks:{
               label:c=>{
-                const ddX = c.dataset.label===pA ? dA : dB;
+                const ddX = c.dataset.label===nA ? dA : dB;
                 const anosX = anoFiltro==='total' ? anosAtivos(ddX) : 1;
                 const explica=[
                   `págs/${(TETOS_BASE.paginas*anosX).toLocaleString('pt-BR')} meta`,
@@ -6186,9 +6203,9 @@ function renderBatalha() {
     if(lEl){const ex=Chart.getChart(lEl);if(ex)ex.destroy();
     const mA=meses12.map(m=>dA.mesPags[m]||0), mB=meses12.map(m=>dB.mesPags[m]||0);
     new Chart(lEl,{type:'bar',data:{labels:mesesLbl,datasets:[
-      {label:pA,data:mA,backgroundColor:CA+'bb',borderColor:CA,borderWidth:1,borderRadius:4},
-      {label:pB,data:mB,backgroundColor:CB+'bb',borderColor:CB,borderWidth:1,borderRadius:4}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{}),callbacks:{afterBody:items=>{const i=items[0].dataIndex;const a=mA[i],b=mB[i];if(!a&&!b)return'';return a>b?'🏆 '+pA+' venceu':b>a?'🏆 '+pB+' venceu':'🤝 Empate';}}}},
+      {label:nA,data:mA,backgroundColor:CA+'bb',borderColor:CA,borderWidth:1,borderRadius:4},
+      {label:nB,data:mB,backgroundColor:CB+'bb',borderColor:CB,borderWidth:1,borderRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{}),callbacks:{afterBody:items=>{const i=items[0].dataIndex;const a=mA[i],b=mB[i];if(!a&&!b)return'';return a>b?'🏆 '+nA+' venceu':b>a?'🏆 '+nB+' venceu':'🤝 Empate';}}}},
     scales:{x:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'}},y:{ticks:{color:'#8892a8',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v},grid:{color:'rgba(42,50,72,0.4)'},beginAtZero:true}}}});}
 
     // Gêneros comparativo — estilo barras horizontais com %
@@ -6226,8 +6243,8 @@ function renderBatalha() {
 
         divEl.innerHTML = `
           <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#A855F7;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${pA}</span></div>
-            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#FB923C;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${pB}</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#A855F7;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${nA}</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;background:#FB923C;border-radius:2px;"></div><span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0c8d8;">${nB}</span></div>
           </div>
           ${allGen.map(g => {
             const pctA = Math.round((genA[g]||0)/totA*100);
@@ -6254,8 +6271,8 @@ function renderBatalha() {
     const wEl=document.getElementById('bat-wd');
     if(wEl){const ex=Chart.getChart(wEl);if(ex)ex.destroy();
     new Chart(wEl,{type:'bar',data:{labels:['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],datasets:[
-      {label:pA,data:dA.wdMap,backgroundColor:CA+'aa',borderColor:CA,borderWidth:1,borderRadius:4},
-      {label:pB,data:dB.wdMap,backgroundColor:CB+'aa',borderColor:CB,borderWidth:1,borderRadius:4}
+      {label:nA,data:dA.wdMap,backgroundColor:CA+'aa',borderColor:CA,borderWidth:1,borderRadius:4},
+      {label:nB,data:dB.wdMap,backgroundColor:CB+'aa',borderColor:CB,borderWidth:1,borderRadius:4}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a8',font:{size:11}}},tooltip:{...(window.TT||{})}},
     scales:{x:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(42,50,72,0.4)'},beginAtZero:true}}}});}
   });
@@ -7691,11 +7708,11 @@ if ('serviceWorker' in navigator) {
     fillBattleSelects();
   };
   function fillBattleSelects(){
-    const users=window.BL?.raw?.users||[]; if(users.length<2) return;
+    const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); if(users.length<2) return;
     ['bat-playerA','bat-playerB'].forEach((id,idx)=>{
       const sel=document.getElementById(id); if(!sel) return; const old=sel.value;
-      sel.innerHTML = users.map((u,i)=>`<option value="${String(u.label||('Usuário '+(i+1))).replace(/"/g,'&quot;')}">${u.label||('Usuário '+(i+1))}</option>`).join('');
-      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.label || users[0]?.label || 'Milton');
+      sel.innerHTML = users.map(u=>`<option value="${String(u.uid).replace(/"/g,'&quot;')}">${String(u.label||u.uid)}</option>`).join('');
+      sel.value = old && [...sel.options].some(o=>o.value===old) ? old : (users[idx]?.uid||users[0]?.uid||'');
     });
   }
   const oldRenderBatalha=window.renderBatalha;
@@ -8066,7 +8083,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
   }
   function setFab(mode){ const btn=$('fabBtn')||document.querySelector('.fab'); const menu=$('fabMenu'); if(mode==='hide'){ if(btn) btn.style.setProperty('display','none','important'); if(menu) menu.style.setProperty('display','none','important'); fabOpen=false; return; } if(btn){ btn.style.setProperty('display','flex','important'); btn.textContent=fabOpen?'✕':'＋'; } if(menu) menu.style.display=fabOpen?'flex':'none'; }
   window.toggleFabMenu=function(){ if(document.body.classList.contains('bl-v10-friend')||document.body.classList.contains('bl-v10-battle')){ setFab('hide'); return; } fabOpen=!fabOpen; setFab('show'); };
-  function fillBattleSelects(){ const users=people(); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map((u,i)=>{ const l=u.label||u.displayName||u.name||u.email||('Usuário '+(i+1)); return `<option value="${esc(l)}">${esc(l)}</option>`; }).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.label||users[idx]?.displayName||users[idx]?.name||users[0]?.label||''); }); }
+  function fillBattleSelects(){ const users=(window.BL?.raw?.users||[]).filter(u=>u.uid); ['bat-playerA','bat-playerB'].forEach((id,idx)=>{ const sel=$(id); if(!sel||!users.length) return; const prev=sel.value; sel.innerHTML=users.map(u=>`<option value="${esc(String(u.uid))}">${esc(String(u.label||u.uid))}</option>`).join(''); sel.value=[...sel.options].some(o=>o.value===prev)?prev:(users[idx]?.uid||users[0]?.uid||''); }); }
   function forceBattleButton(){ let btn=$('btn-user-batalha'); if(!btn){ const wrap=$('btn-user-milton')?.parentElement; if(wrap){ btn=document.createElement('button'); btn.id='btn-user-batalha'; btn.type='button'; btn.style.cssText='padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:transparent;color:var(--muted);transition:all .2s;'; wrap.appendChild(btn); } }
     if(btn){ btn.style.setProperty('display','inline-flex','important'); btn.hidden=false; btn.textContent='⚔️ Batalha'; btn.onclick=(ev)=>{ ev&&ev.preventDefault&&ev.preventDefault(); window.setUsuario('Batalha'); }; }
   }
@@ -8177,11 +8194,11 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return btn;
   }
   function fillBattleSelects(){
-    const list = users();
+    const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.label).replaceAll('"','&quot;')}">${String(u.label)}</option>`).join('');
-    if(a){ a.innerHTML = opts; a.value = list[0]?.label || 'Milton'; }
-    if(b){ b.innerHTML = opts; b.value = list[1]?.label || list[0]?.label || 'Daniel'; }
+    const opts = list.map(u=>`<option value="${String(u.uid).replaceAll('"','&quot;')}">${String(u.label||u.uid)}</option>`).join('');
+    if(a){ const prev=a.value; a.innerHTML=opts; a.value=[...a.options].some(o=>o.value===prev)?prev:(list[0]?.uid||''); }
+    if(b){ const prev=b.value; b.innerHTML=opts; b.value=[...b.options].some(o=>o.value===prev)?prev:(list[1]?.uid||list[0]?.uid||''); }
   }
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
@@ -8409,252 +8426,7 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
 
 
 
-<!-- BookLegacy V3.0: seletor único e estável do modo batalha -->
-<script id="booklegacy-v12-23-battle-one-selector-stable">
-(function(){
-  'use strict';
-  window.__BL_PATCH_VERSION = 'v3.0';
-  window.__BL_V12_23_MARKER = true;
 
-  const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const norm = v => String(v ?? '').trim().toLowerCase();
-  let selectedOpponentUid = localStorage.getItem('blBattleOpponentUid') || '';
-  let pickerOpen = false;
-
-  function raw(){ return window.BL?.raw || {}; }
-  function authUser(){ return window.BL?.auth?.currentUser || null; }
-  function myUid(){ return raw().uid || window.BL?.__activeUid || authUser()?.uid || ''; }
-  function labelOf(p){ return p?.label || p?.displayName || p?.name || (p?.email ? p.email.split('@')[0] : '') || 'Usuário'; }
-  function legacyKeyOf(p){
-    const label = labelOf(p).trim();
-    const first = label.split(/\s+/)[0] || label;
-    return first || 'Daniel';
-  }
-  function mergePeople(){
-    const users = Array.isArray(raw().users) ? raw().users.slice() : [];
-    const friends = Array.isArray(raw().friends) ? raw().friends.slice() : [];
-    const map = new Map();
-    users.forEach(u => { if(u){ map.set(u.uid || labelOf(u), u); } });
-    friends.forEach(f => {
-      if(!f) return;
-      const key = f.uid || labelOf(f);
-      const old = map.get(key) || {};
-      map.set(key, Object.assign({}, old, f, {
-        uid: old.uid || f.uid || key,
-        label: old.label || f.label || f.displayName || f.name || (f.email ? f.email.split('@')[0] : 'Amigo')
-      }));
-    });
-    return [...map.values()].filter(Boolean);
-  }
-  function me(){
-    const uid = myUid();
-    const people = mergePeople();
-    return people.find(p => p.uid && p.uid === uid) || people[0] || {uid:uid,label:raw().currentLabel || authUser()?.displayName || 'Milton Figueiredo'};
-  }
-  function opponents(){
-    const uid = myUid();
-    return mergePeople().filter(p => (p.uid || '') !== uid);
-  }
-  function selectedOpponent(){
-    const list = opponents();
-    if(!list.length) return null;
-    let op = selectedOpponentUid ? list.find(p => p.uid === selectedOpponentUid) : null;
-    if(!op) op = list[0];
-    selectedOpponentUid = op.uid || selectedOpponentUid;
-    localStorage.setItem('blBattleOpponentUid', selectedOpponentUid);
-    return op;
-  }
-  function syncHiddenSelects(){
-    const a = $('bat-playerA'), b = $('bat-playerB');
-    const m = me(), op = selectedOpponent();
-    if(!op) return;
-    const keyA = legacyKeyOf(m);
-    const keyB = legacyKeyOf(op);
-    window.__BL_BATTLE_PLAYER_A = keyA;
-    window.__BL_BATTLE_PLAYER_B = keyB;
-    if(a){ a.innerHTML = `<option value="${esc(keyA)}">${esc(labelOf(m))}</option>`; a.value = keyA; }
-    if(b){ b.innerHTML = `<option value="${esc(keyB)}">${esc(labelOf(op))}</option>`; b.value = keyB; }
-  }
-  function hideOldBattleSelector(){
-    const old = $('batalha-seletor');
-    if(old) old.style.setProperty('display','none','important');
-  }
-  function removeOldPatchControllers(){
-    [
-      'blBattleSelectorBoxV15','blBattleSelectorBoxV16','blBattleSelectorBoxV17','blBattleSelectorBoxV20','blBattleSelectorBoxV21',
-      'blBattleDropdownV15','blBattleDropdownV16','blBattleDropdownV17','blBattleDropdownV20','blBattleDropdownV21','blBattleSingleSelectorV22'
-    ].forEach(id => { const el = $(id); if(el) el.remove(); });
-    document.querySelectorAll('[id^="blBattleSelectorBoxV"],[id^="blBattleDropdownV"],[id^="blBattleSingleSelector"]').forEach(el=>el.remove());
-  }
-  function renderPickerList(filter=''){
-    const body = $('blBattlePickerBodyV23'); if(!body) return;
-    const q = norm(filter);
-    const ops = opponents().filter(p => !q || norm(labelOf(p)).includes(q) || norm(p.email).includes(q) || norm(p.uid).includes(q));
-    if(!ops.length){ body.innerHTML = '<div style="color:#94a3b8;padding:10px">Nenhum amigo encontrado.</div>'; return; }
-    body.innerHTML = ops.map(p => {
-      const uid = p.uid || labelOf(p);
-      const active = uid === selectedOpponentUid;
-      return `<button type="button" class="blBattleOpponentItemV23" data-uid="${esc(uid)}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin:8px 0;border-radius:10px;border:1px solid ${active?'#8b7cf8':'rgba(255,255,255,.08)'};background:${active?'rgba(139,124,248,.18)':'rgba(255,255,255,.06)'};color:#f8fafc;cursor:pointer;text-align:left;font-weight:900;">
-        <span>${active?'●':'○'} ${esc(labelOf(p))}</span>
-        <small style="color:#94a3b8;font-size:10px">${esc(String(uid).slice(0,6))}</small>
-      </button>`;
-    }).join('');
-    body.querySelectorAll('.blBattleOpponentItemV23').forEach(btn => {
-      btn.addEventListener('click', ev => {
-        ev.preventDefault(); ev.stopPropagation();
-        selectedOpponentUid = btn.dataset.uid || selectedOpponentUid;
-        localStorage.setItem('blBattleOpponentUid', selectedOpponentUid);
-        renderPickerList($('blBattleSearchV23')?.value || '');
-      });
-    });
-  }
-  function openPicker(){
-    pickerOpen = true;
-    buildController();
-    const dd = $('blBattleDropdownV23');
-    if(dd){ dd.style.display = 'block'; dd.style.visibility = 'visible'; }
-    setTimeout(()=> $('blBattleSearchV23')?.focus(), 30);
-  }
-  function closePicker(){
-    pickerOpen = false;
-    const dd = $('blBattleDropdownV23');
-    if(dd) dd.style.display = 'none';
-  }
-  function applyOpponent(){
-    syncHiddenSelects();
-    updateSummary();
-    closePicker();
-    callOriginalRender();
-  }
-  function updateSummary(){
-    const m = me(), op = selectedOpponent();
-    const label = $('blBattleSelectedNamesV23');
-    if(label && op) label.textContent = `${labelOf(m)} vs ${labelOf(op)}`;
-  }
-  function buildController(){
-    const page = $('pageBatalha'), container = $('batalhaContainer');
-    if(!page || !container) return;
-    hideOldBattleSelector();
-    removeOldPatchControllers();
-    let box = $('blBattleSelectorBoxV23');
-    if(!box){
-      box = document.createElement('div');
-      box.id = 'blBattleSelectorBoxV23';
-      box.style.cssText = 'max-width:1200px;margin:22px auto 16px;padding:14px 16px;border-radius:14px;background:#111827;border:1px solid rgba(148,163,184,.22);position:relative;z-index:50;';
-      container.parentNode.insertBefore(box, container);
-    }
-    box.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:900;color:#fff;font-size:16px">Duelo selecionado <span style="font-size:12px;color:#94a3b8">1x1</span></div>
-          <div id="blBattleSelectedNamesV23" style="font-size:12px;color:#94a3b8;margin-top:4px"></div>
-        </div>
-        <button id="blBattleOpenPickerV23" type="button" style="background:#e56cff;color:white;border:0;border-radius:10px;padding:11px 16px;font-weight:900;cursor:pointer;">Selecionar adversário</button>
-      </div>
-      <div id="blBattleDropdownV23" style="display:${pickerOpen?'block':'none'};position:absolute;right:12px;top:calc(100% + 8px);width:min(430px,calc(100vw - 32px));background:#111827;border:1px solid rgba(148,163,184,.28);border-radius:14px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);z-index:999999;">
-        <input id="blBattleSearchV23" type="text" placeholder="Pesquisar amigo/player..." style="width:100%;box-sizing:border-box;background:#0b1220;border:1px solid rgba(148,163,184,.25);border-radius:10px;color:#fff;padding:12px;margin-bottom:10px;outline:none;">
-        <div style="color:#94a3b8;font-size:11px;margin:4px 0 8px;">Escolha 1 adversário</div>
-        <div id="blBattlePickerBodyV23"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
-          <button id="blBattleClosePickerV23" type="button" style="background:#1f2937;color:#fff;border:0;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer">Fechar</button>
-          <button id="blBattleApplyPickerV23" type="button" style="background:#8b7cf8;color:#fff;border:0;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer">Aplicar</button>
-        </div>
-      </div>`;
-    updateSummary();
-    renderPickerList();
-    $('blBattleOpenPickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); pickerOpen ? closePicker() : openPicker(); });
-    $('blBattleClosePickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); closePicker(); });
-    $('blBattleApplyPickerV23')?.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); applyOpponent(); });
-    $('blBattleSearchV23')?.addEventListener('input', ev => { renderPickerList(ev.target.value || ''); });
-    $('blBattleDropdownV23')?.addEventListener('click', ev => ev.stopPropagation());
-  }
-  function callOriginalRender(){
-    syncHiddenSelects();
-    const render = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.__BL_ORIGINAL_RENDER_BATALHA || window.renderBatalha;
-    if(typeof render === 'function'){
-      try { return render(); } catch(e){ console.error('Batalha original falhou:', e); }
-    }
-  }
-  // captura o render atual antes de sobrescrever nesta versão, mas depois o código fonte foi ajustado para respeitar __BL_BATTLE_PLAYER_A/B.
-  window.__BL_ORIGINAL_RENDER_BATALHA_V23 = window.__BL_ORIGINAL_RENDER_BATALHA_V23 || window.renderBatalha;
-  window.renderBatalha = function(){
-    if(window.usuarioAtual === 'Batalha' || document.body.classList.contains('bl-v10-battle') || document.body.classList.contains('bl-v12-battle')){
-      syncHiddenSelects();
-      const oldOpen = pickerOpen;
-      const r = window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
-      pickerOpen = oldOpen;
-      buildController();
-      if(oldOpen) openPicker();
-      return r;
-    }
-    return window.__BL_ORIGINAL_RENDER_BATALHA_V23 ? window.__BL_ORIGINAL_RENDER_BATALHA_V23() : undefined;
-  };
-  function ensureBattleButton(){
-    let btn = $('btn-user-batalha') || $('bl-battle-main-btn');
-    if(!btn){
-      const anchor = $('btn-user-milton')?.parentElement || document.querySelector('header .top-actions') || document.querySelector('header');
-      if(anchor){ btn = document.createElement('button'); btn.id='btn-user-batalha'; anchor.appendChild(btn); }
-    }
-    if(btn){
-      btn.id = 'btn-user-batalha';
-      btn.type = 'button';
-      btn.textContent = '⚔️ Modo Batalha';
-      btn.hidden = false;
-      btn.style.setProperty('display','inline-flex','important');
-      btn.style.alignItems='center'; btn.style.gap='6px';
-      btn.style.background='#e56cff'; btn.style.color='#fff';
-      btn.style.border='0'; btn.style.borderRadius='10px'; btn.style.padding='8px 14px'; btn.style.fontWeight='900'; btn.style.cursor='pointer';
-      btn.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); window.setUsuario('Batalha'); setTimeout(()=>{ buildController(); syncHiddenSelects(); callOriginalRender(); },80); };
-    }
-  }
-  const oldSetUsuario = window.setUsuario;
-  window.setUsuario = function(usuario){
-    if(typeof oldSetUsuario === 'function') oldSetUsuario(usuario); else window.usuarioAtual = usuario;
-    if(usuario === 'Batalha'){
-      document.body.classList.add('bl-v12-battle');
-      const lw = document.querySelector('.lendo-wrap'); if(lw) lw.style.setProperty('display','none','important');
-      const fab = document.querySelector('.fab'); if(fab) fab.style.setProperty('display','none','important');
-      setTimeout(()=>{ hideOldBattleSelector(); buildController(); syncHiddenSelects(); callOriginalRender(); window.scrollTo(0,0); },60);
-    } else {
-      document.body.classList.remove('bl-v12-battle');
-      closePicker();
-    }
-    setTimeout(ensureBattleButton, 80);
-  };
-  document.addEventListener('click', ev => {
-    const dd = $('blBattleDropdownV23'), bt = $('blBattleOpenPickerV23');
-    if(!pickerOpen || !dd) return;
-    if(dd.contains(ev.target) || bt?.contains(ev.target)) return;
-    closePicker();
-  }, true);
-  window.blBackToMyProfile = function(){
-    const label = raw().currentLabel || authUser()?.displayName || 'Milton';
-    window.setUsuario(label);
-    window.scrollTo(0,0);
-  };
-  window.blBattleDebug = window.blV12Debug = function(){
-    const op = selectedOpponent();
-    return {
-      patch:'v3.0',
-      marker:true,
-      selectorCount:document.querySelectorAll('#blBattleSelectorBoxV23').length,
-      dropdownDisplay:$('blBattleDropdownV23') ? getComputedStyle($('blBattleDropdownV23')).display : null,
-      pickerOpen,
-      usuarioAtual:window.usuarioAtual,
-      meUid:myUid(),
-      meKey:window.__BL_BATTLE_PLAYER_A,
-      opponentUid:op?.uid || null,
-      opponent:op ? labelOf(op) : null,
-      opponentKey:window.__BL_BATTLE_PLAYER_B,
-      people:mergePeople().map(p=>({uid:p.uid,label:labelOf(p)})),
-      oldSelectorHidden:$('batalha-seletor') ? getComputedStyle($('batalha-seletor')).display : null
-    };
-  };
-  setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 250);
-  setTimeout(()=>{ ensureBattleButton(); if(window.usuarioAtual === 'Batalha'){ buildController(); syncHiddenSelects(); } }, 1200);
-})();
-</script>
 
 
 
