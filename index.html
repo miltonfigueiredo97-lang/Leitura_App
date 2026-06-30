@@ -5849,11 +5849,11 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">📚 AUTOR DOMINADO</div>
   <div data-desktop-grid="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    ${[{p:pA,dd:dA,cor:'#A855F7'},{p:pB,dd:dB,cor:'#FB923C'}].map(({p,dd,cor})=>`
+    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7'},{p:pB,n:nB,dd:dB,cor:'#FB923C'}].map(({p,n,dd,cor})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;">
       <div style="width:44px;height:44px;border-radius:50%;background:${cor}22;border:2px solid ${cor};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 12px ${cor}44;">📖</div>
       <div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${p.toUpperCase()}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:${cor};font-weight:700;letter-spacing:2px;">${n.toUpperCase()}</div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#F8FAFC;">${dd.autorTop?.[0]||'—'}</div>
         <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);">${(dd.autorTop?.[1]||0).toLocaleString('pt-BR')} págs lidas</div>
       </div>
@@ -5865,9 +5865,9 @@ function renderBatalha() {
 <div style="margin-bottom:20px;">
   <div class="bat-section-hdr">🏅 CONQUISTAS & FEITOS</div>
   <div style="display:flex;flex-direction:column;gap:12px;">
-    ${[{p:pA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,dd,cor,ts})=>`
+    ${[{p:pA,n:nA,dd:dA,cor:'#A855F7',ts:titulosA},{p:pB,n:nB,dd:dB,cor:'#FB923C',ts:titulosB}].map(({p,n,dd,cor,ts})=>`
     <div style="background:rgba(15,23,42,0.72);backdrop-filter:blur(12px);border:1px solid ${cor}44;border-left:4px solid ${cor};border-radius:14px;padding:16px;box-shadow:0 0 24px ${cor}11;">
-      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${p.toUpperCase()}</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${cor};font-weight:900;margin-bottom:16px;letter-spacing:3px;text-shadow:0 0 10px ${cor}66;">⚔️ ${n.toUpperCase()}</div>
       ${medalhas(dd, ts)}
     </div>`).join('')}
   </div>
@@ -5940,6 +5940,7 @@ function renderBatalha() {
         ];
         return todosT.map(({icon,nome,valA,valB})=>{
           const dono=valA===0&&valB===0?'nenhum':valA>valB?pA:valB>valA?pB:'empate';
+          const donoNome=dono===pA?nA:dono===pB?nB:dono;
           const cor=dono===pA?'#A855F7':dono===pB?'#FB923C':dono==='empate'?'rgba(248,250,252,0.4)':'rgba(248,250,252,0.15)';
           const label=dono==='nenhum'?'⬜ Nenhum ainda':dono==='empate'?'🤝 Empate':'🏆 '+dono;
           const bg=dono==='nenhum'?'rgba(250,204,21,0.02)':'rgba(250,204,21,0.04)';
