@@ -1286,24 +1286,31 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 
   <!-- Seletor de jogadores -->
   <select id="bat-playerA" style="display:none;"></select>
+  <select id="bat-playerA" style="display:none;"></select>
+  <select id="bat-playerB" style="display:none;"></select>
+  <select id="bat-ano" style="display:none;"></select>
   <div id="batalha-seletor" style="display:flex;gap:10px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
-    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);transition:transform .15s;">
+    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 18px;color:#fb923c;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
       <span style="font-size:16px;">⚔️</span>
-      <span id="bat-playerB-label">Selecionar adversários</span>
+      <span id="bat-playerB-label">Selecionar adversário</span>
     </button>
-    <select id="bat-playerB" style="display:none;"></select>
-    <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-      <span style="font-size:13px;color:var(--muted);">📅</span>
-      <select id="bat-ano" onchange="renderBatalha()" style="background:transparent;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="total" style="color:var(--text);background:#1a1f35;">Selecionar season</option>
-      </select>
-    </div>
+    <button id="bat-season-btn" onclick="blOpenSeasonPicker()" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1f35,#181c30);border:1px solid var(--border);border-radius:14px;padding:10px 18px;color:#e2e8f0;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+      <span style="font-size:16px;">📅</span>
+      <span id="bat-season-label">Selecionar season</span>
+    </button>
   </div>
   <div id="bat-opponent-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
     <div style="background:#13182a;border:1px solid var(--border);border-radius:16px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow-y:auto;">
-      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar adversários</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar adversário</div>
       <div id="bat-opponent-list" style="display:flex;flex-direction:column;gap:8px;"></div>
       <button onclick="document.getElementById('bat-opponent-modal').style.display='none'" style="margin-top:14px;width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:10px;font-weight:700;cursor:pointer;">Cancelar</button>
+    </div>
+  </div>
+  <div id="bat-season-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#13182a;border:1px solid var(--border);border-radius:16px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow-y:auto;">
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar season</div>
+      <div id="bat-season-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button onclick="document.getElementById('bat-season-modal').style.display='none'" style="margin-top:14px;width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:10px;font-weight:700;cursor:pointer;">Cancelar</button>
     </div>
   </div>
 
@@ -5384,6 +5391,14 @@ function renderBatalha() {
     if (selAno.querySelector(`option[value="${anoGuardado}"]`)) selAno.value = anoGuardado;
   }
   const anoFiltro = selAno?.value || 'total';
+  // Sincroniza label do botão de season
+  (function(){
+    const labelEl = document.getElementById('bat-season-label');
+    if(labelEl && selAno){
+      const opt = [...selAno.options].find(o=>o.value===selAno.value);
+      labelEl.textContent = opt?.textContent || 'Selecionar season';
+    }
+  })();
 
   function calcDados(u) {
     const person = (window.BL?.raw?.users||[]).find(p=>String(p.uid||'')===u)||null;
@@ -8290,6 +8305,27 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
       if(labelB) labelB.textContent = opp?.label||uid;
     }
     const modal = $('bat-opponent-modal');
+    if(modal) modal.style.display = 'none';
+    if(typeof window.renderBatalha === 'function') window.renderBatalha();
+  };
+  window.blOpenSeasonPicker = function(){
+    const sel = $('bat-ano');
+    const listEl = $('bat-season-list');
+    if(!sel || !listEl) return;
+    const opts = [...sel.options];
+    listEl.innerHTML = opts.map(o=>`<button onclick="blSelectSeason('${String(o.value).replace(/'/g,"&#39;")}')" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;text-align:left;">${String(o.textContent).replace(/</g,'&lt;')}</button>`).join('');
+    const modal = $('bat-season-modal');
+    if(modal) modal.style.display = 'flex';
+  };
+  window.blSelectSeason = function(value){
+    const sel = $('bat-ano');
+    if(sel){
+      sel.value = value;
+      const opt = [...sel.options].find(o=>o.value===value);
+      const labelEl = $('bat-season-label');
+      if(labelEl) labelEl.textContent = opt?.textContent || 'Selecionar season';
+    }
+    const modal = $('bat-season-modal');
     if(modal) modal.style.display = 'none';
     if(typeof window.renderBatalha === 'function') window.renderBatalha();
   };
@@ -14818,6 +14854,17 @@ body.bl-v40-loading #app{display:none!important;}
     setGlobalLabel('Batalha');
     const dash = $('pageDashboard'), bat = $('pageBatalha'); if (dash) dash.style.display='none'; if (bat) bat.style.display='block';
     const _lw=document.querySelector('.lendo-wrap'); if(_lw) _lw.style.display='none';
+    // V3.60: observa o lendo-wrap e reesconde se outro código tentar reexibi-lo durante a batalha
+    if(_lw && !window.__BL_LW_OBSERVER){
+      window.__BL_LW_OBSERVER = new MutationObserver(()=>{
+        const lw=document.querySelector('.lendo-wrap');
+        const bat2=$('pageBatalha');
+        if(lw && bat2 && bat2.style.display==='block' && lw.style.display!=='none'){
+          lw.style.display='none';
+        }
+      });
+      window.__BL_LW_OBSERVER.observe(_lw, {attributes:true, attributeFilter:['style']});
+    }
     try { if (typeof renderBatalha === 'function') renderBatalha(); } catch(e) { console.warn('[BookLegacy]', PATCH, 'renderBatalha', e); }
   }
 
