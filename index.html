@@ -618,9 +618,9 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
         ⚔️ Batalha
       </button>
     </div>
-    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
-    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
-    <button id="btn-delete-account" type="button" onclick="blDeleteMyAccount()" style="background:rgba(239,68,68,0.10);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">🗑️ Excluir conta</button>
+    <button id="btn-community" type="button" onclick="blOpenCommunityModal()" style="display:none;background:rgba(86,207,255,0.12);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">👥 Comunidade</button>
+    <button id="btn-migration" type="button" onclick="blOpenMigrationModal()" style="display:none;background:rgba(255,209,102,0.12);border:1px solid var(--yellow);color:var(--yellow);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">📥 Migração</button>
+    <button id="btn-delete-account" type="button" onclick="blDeleteMyAccount()" style="display:none;background:rgba(239,68,68,0.10);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;">🗑️ Excluir conta</button>
     <div class="badge" id="header-badge">— livros · — sessões</div>
     <button onclick="toggleChangelog()" style="background:rgba(139,124,248,0.2);border:1px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">📋 v3.0</button>
     <button id="btn-refresh" onclick="manualRefresh()" style="background:rgba(78,205,196,0.15);border:1px solid var(--teal);color:var(--teal);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;" title="Atualizar dados">🔄</button>
@@ -4658,10 +4658,53 @@ function blDecorateHeader(user){
   const el = document.createElement('div');
   el.id = 'blProfile';
   el.className = 'bl-profile';
-  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blInviteBtn">Comunidade</button><button type="button" id="blLogout">Sair</button>`;
+  el.innerHTML = `${user.photoURL ? `<img src="${user.photoURL}" alt="">` : ''}<span>Google: ${user.displayName || user.email || 'Usuário'}</span><button type="button" id="blDesktopMenuBtn">☰ Menu</button>`;
   headerRight.prepend(el);
-  document.getElementById('blInviteBtn').onclick = () => blOpenCommunityModal();
-  document.getElementById('blLogout').onclick = () => window.BL.auth.signOut();
+  document.getElementById('blDesktopMenuBtn').onclick = (e) => { e.stopPropagation(); blToggleDesktopMenu(); };
+  blEnsureDesktopMenu();
+}
+
+// V3.60: Menu agrupado do desktop — Amigos, Comunidade, Migração, Excluir conta, Sair
+function blEnsureDesktopMenu(){
+  if (document.getElementById('blDesktopMenuPanel')) return;
+  const panel = document.createElement('div');
+  panel.id = 'blDesktopMenuPanel';
+  panel.style.cssText = 'display:none;position:absolute;top:54px;right:16px;z-index:9999;background:#13182a;border:1px solid var(--border);border-radius:14px;padding:10px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.4);flex-direction:column;gap:4px;';
+  panel.innerHTML = `
+    <button type="button" data-bl-menu="friends" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#56cfff;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">👥 Amigos</button>
+    <button type="button" data-bl-menu="community" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#56cfff;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🌐 Comunidade</button>
+    <button type="button" data-bl-menu="migration" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#ffd166;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">📥 Migração</button>
+    <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+    <button type="button" data-bl-menu="delete" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#ef4444;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🗑️ Excluir conta</button>
+    <button type="button" data-bl-menu="logout" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#f87171;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🚪 Sair da conta</button>
+  `;
+  document.body.appendChild(panel);
+  panel.querySelectorAll('button[data-bl-menu]').forEach(btn => {
+    btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(255,255,255,0.06)');
+    btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+    btn.addEventListener('click', () => {
+      blToggleDesktopMenu(false);
+      const action = btn.getAttribute('data-bl-menu');
+      if (action === 'friends') (window.blOpenFriendsModal || window.blOpenCommunityModal)?.();
+      else if (action === 'community') window.blOpenCommunityModal?.();
+      else if (action === 'migration') window.blOpenMigrationModal?.();
+      else if (action === 'delete') window.blDeleteMyAccount?.();
+      else if (action === 'logout') { if(confirm('Tem certeza que deseja sair da conta?')) window.BL.auth.signOut(); }
+    });
+  });
+  document.addEventListener('click', (e) => {
+    const panel2 = document.getElementById('blDesktopMenuPanel');
+    const btn2 = document.getElementById('blDesktopMenuBtn');
+    if (panel2 && panel2.style.display === 'flex' && !panel2.contains(e.target) && e.target !== btn2) {
+      blToggleDesktopMenu(false);
+    }
+  });
+}
+function blToggleDesktopMenu(force){
+  const panel = document.getElementById('blDesktopMenuPanel');
+  if (!panel) return;
+  const show = force !== undefined ? force : panel.style.display !== 'flex';
+  panel.style.display = show ? 'flex' : 'none';
 }
 
 
