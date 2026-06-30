@@ -1239,25 +1239,27 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <!-- Seletor de jogadores -->
   <div id="batalha-seletor" style="display:flex;gap:12px;align-items:center;justify-content:center;padding:20px 16px 0;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">Jogador A</span>
-      <select id="bat-playerA" onchange="renderBatalha()" style="background:transparent;border:none;color:#8b7cf8;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="Milton">Milton</option>
-        <option value="Daniel">Daniel</option>
-      </select>
+      <span style="font-size:12px;color:var(--muted);">Você</span>
+      <span id="bat-playerA-label" style="color:#8b7cf8;font-weight:700;font-size:14px;">—</span>
+      <select id="bat-playerA" style="display:none;"></select>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--muted);">VS</div>
-    <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
-      <span style="font-size:12px;color:var(--muted);">Jogador B</span>
-      <select id="bat-playerB" onchange="renderBatalha()" style="background:transparent;border:none;color:#f88c6a;font-weight:700;font-size:14px;cursor:pointer;outline:none;">
-        <option value="Daniel">Daniel</option>
-        <option value="Milton">Milton</option>
-      </select>
-    </div>
+    <button id="bat-opponent-btn" onclick="blOpenOpponentPicker()" style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;color:#f88c6a;font-weight:700;font-size:14px;cursor:pointer;">
+      <span id="bat-playerB-label">Selecionar adversário</span>
+    </button>
+    <select id="bat-playerB" style="display:none;"></select>
     <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
       <span style="font-size:12px;color:var(--muted);">⚔️ Season</span>
       <select id="bat-ano" onchange="renderBatalha()" style="background:#1a1f35;border:none;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;outline:none;border-radius:4px;">
         <option value="total" style="color:var(--text);background:#1a1f35;">Todos os anos</option>
       </select>
+    </div>
+  </div>
+  <div id="bat-opponent-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#13182a;border:1px solid var(--border);border-radius:16px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow-y:auto;">
+      <div style="font-weight:800;font-size:16px;margin-bottom:14px;color:#e2e8f0;">Selecionar adversário</div>
+      <div id="bat-opponent-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button onclick="document.getElementById('bat-opponent-modal').style.display='none'" style="margin-top:14px;width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:10px;font-weight:700;cursor:pointer;">Cancelar</button>
     </div>
   </div>
 
@@ -8194,12 +8196,57 @@ body.bl-v10-own #fabBtn, body.bl-v10-own .fab{display:flex!important}
     return btn;
   }
   function fillBattleSelects(){
+    // Jogador A é sempre a conta logada (fixo). Jogador B é escolhido via picker de amigos.
+    const meUid = String(window.firebaseAuth?.currentUser?.uid||window.BL?.auth?.currentUser?.uid||'').trim();
     const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
+    const me = list.find(u=>String(u.uid||'')===meUid) || list[0] || null;
     const a = $('bat-playerA'), b = $('bat-playerB');
-    const opts = list.map(u=>`<option value="${String(u.uid).replaceAll('"','&quot;')}">${String(u.label||u.uid)}</option>`).join('');
-    if(a){ const prev=a.value; a.innerHTML=opts; a.value=[...a.options].some(o=>o.value===prev)?prev:(list[0]?.uid||''); }
-    if(b){ const prev=b.value; b.innerHTML=opts; b.value=[...b.options].some(o=>o.value===prev)?prev:(list[1]?.uid||list[0]?.uid||''); }
+    const labelA = $('bat-playerA-label'), labelB = $('bat-playerB-label');
+    if(me && a){
+      a.innerHTML = `<option value="${String(me.uid)}">${String(me.label||me.uid)}</option>`;
+      a.value = me.uid;
+      if(labelA) labelA.textContent = me.label||me.uid;
+    }
+    if(b && !b.value){
+      const opponents = list.filter(u=>String(u.uid||'')!==String(me?.uid||''));
+      const first = opponents[0];
+      if(first){
+        b.innerHTML = `<option value="${String(first.uid)}">${String(first.label||first.uid)}</option>`;
+        b.value = first.uid;
+        if(labelB) labelB.textContent = first.label||first.uid;
+      }
+    } else if(b && b.value && labelB){
+      const cur = list.find(u=>String(u.uid||'')===b.value);
+      if(cur) labelB.textContent = cur.label||cur.uid;
+    }
   }
+  window.blOpenOpponentPicker = function(){
+    const meUid = String(window.firebaseAuth?.currentUser?.uid||window.BL?.auth?.currentUser?.uid||'').trim();
+    const list = (window.BL?.raw?.users||[]).filter(u=>u.uid && String(u.uid)!==meUid);
+    const listEl = $('bat-opponent-list');
+    if(!listEl) return;
+    if(!list.length){
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">Nenhum amigo disponível ainda.</div>';
+    } else {
+      listEl.innerHTML = list.map(u=>`<button onclick="blSelectOpponent('${String(u.uid).replace(/'/g,"&#39;")}')" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:#e2e8f0;font-weight:700;font-size:14px;cursor:pointer;text-align:left;">${String(u.label||u.uid).replace(/</g,'&lt;')}</button>`).join('');
+    }
+    const modal = $('bat-opponent-modal');
+    if(modal) modal.style.display = 'flex';
+  };
+  window.blSelectOpponent = function(uid){
+    const b = $('bat-playerB');
+    if(b){
+      const list = (window.BL?.raw?.users||[]).filter(u=>u.uid);
+      const opp = list.find(u=>String(u.uid||'')===uid);
+      b.innerHTML = `<option value="${uid}">${String(opp?.label||uid)}</option>`;
+      b.value = uid;
+      const labelB = $('bat-playerB-label');
+      if(labelB) labelB.textContent = opp?.label||uid;
+    }
+    const modal = $('bat-opponent-modal');
+    if(modal) modal.style.display = 'none';
+    if(typeof window.renderBatalha === 'function') window.renderBatalha();
+  };
   function hideDashboardForBattle(){
     const dash=$('pageDashboard'), bat=$('pageBatalha');
     if(dash) dash.style.display='none';
