@@ -12701,10 +12701,11 @@ body.bl-v40-loading #app{display:none!important;}
     return {patch:PATCH,authUid:authUid(),viewUid:viewUid(),viewName:publicLabel(p||{}),visitor:isVisitor(),visibleUidLeak:[...document.body.querySelectorAll('body *')].some(el=>/UID\s*[:\-]/i.test(el.textContent||'')), lendo:active.map(b=>({livro:b.livro,status:b.status,pagina:b.pagAtual,total:b.totalPag})), counts:{lendo:active.filter(b=>b.status==='Lendo').length,pausado:active.filter(b=>b.status==='Pausado').length,livros:(window._livros||[]).length,sessoes:(window._sessoes||[]).length,notas:(window.NOTES||[]).length}};
   };
 
-  function boot(){ try{ ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
+  function isBattleActive(){ return window.__BL_BATTLE_OPEN||document.body.classList.contains('bl-v11-battle')||document.body.classList.contains('bl-v12-battle')||window.usuarioAtual==='Batalha'||document.getElementById('pageBatalha')?.style.display==='block'; }
+  function boot(){ try{ if(isBattleActive()) return; ensureCss(); applyPrivacyAndReadonly(); if($('lendo-cards')) renderLendoCardsV59(); }catch(e){console.warn('[BookLegacy]',PATCH,e);} }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true}); else setTimeout(boot,120);
   [300,800,1600,3000,6000].forEach(t=>setTimeout(boot,t));
-  try{new MutationObserver(()=>{ if(!window.__BL_BATTLE_OPEN&&!document.body.classList.contains('bl-v11-battle')&&!document.body.classList.contains('bl-v12-battle')) applyPrivacyAndReadonly(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
+  try{new MutationObserver(()=>{ if(!isBattleActive()) applyPrivacyAndReadonly(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}catch(e){}
   console.log('[BookLegacy]',PATCH);
 })();
 </script>
