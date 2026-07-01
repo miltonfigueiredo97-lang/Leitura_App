@@ -14648,7 +14648,8 @@ body.bl-v40-loading #app{display:none!important;}
     const total = Math.max(pagesOf(l), pagesOf(b));
     let current = currentOf(l);
     let status = String(l?.status || '').trim() || 'Aguardando';
-    const explicitlyDone = isDone(status) || !!(l?.completionDate || l?.completionYear || l?.anoConclusao);
+    // V3.60: só considera explicitlyDone se o status real também indica conclusão — ignora completionYear de migração quando status é Lendo/Pausado
+    const explicitlyDone = isDone(status);
     const active = isReading(status) || isPaused(status);
 
     if (explicitlyDone) {
