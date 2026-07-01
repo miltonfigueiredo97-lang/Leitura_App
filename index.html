@@ -12053,7 +12053,8 @@ body.bl-v40-loading #app{display:none!important;}
       const base = Object.assign({}, ...arr);
       const total = Math.max(...arr.map(pagesOf), 0);
       const sessionSum = sums.get(key) || 0;
-      const hasDone = arr.some(l => isDone(l.status) || l.completionDate || l.completionYear || l.anoConclusao);
+      // V3.60: só considera hasDone pelo status real — ignora completionDate/Year de migração antigos
+      const hasDone = arr.some(l => isDone(l.status));
       const hasReading = arr.some(l => isReading(l.status));
       const hasPaused = arr.some(l => isPaused(l.status));
       let current = Math.max(...arr.map(currentOf), 0);
