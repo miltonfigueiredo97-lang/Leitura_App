@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782868925 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782869905>
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9524,7 +9524,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
     return found;
   }
   function syncLocalBook(title,next,total,statusExtra){
-    const apply=l=>{if(!l||norm(bookTitle(l))!==norm(title))return; l.pagAtual=next; l.currentPage=next; if(total){l.totalPag=l.totalPag||total; l.totalPages=l.totalPages||total; l.pct=Math.min(1,next/total); l.progress=Math.min(1,next/total);} if(total&&next>=total&&!isReadingStatus(l.status)&&!isPausedStatus(l.status)){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;l.anoConclusao=l.anoConclusao||today().slice(0,4);l.completionYear=l.completionYear||today().slice(0,4);l.completionDate=l.completionDate||today();} else if(next>0 && !isDoneStatus(l.status)){l.status='Lendo';} Object.assign(l,statusExtra||{});};
+    const apply=l=>{if(!l||norm(bookTitle(l))!==norm(title))return; l.pagAtual=next; l.currentPage=next; if(total){l.totalPag=l.totalPag||total; l.totalPages=l.totalPages||total; l.pct=Math.min(1,next/total); l.progress=Math.min(1,next/total);} if(total&&next>=total&&!isReading(l.status)&&!isPaused(l.status)){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;l.anoConclusao=l.anoConclusao||today().slice(0,4);l.completionYear=l.completionYear||today().slice(0,4);l.completionDate=l.completionDate||today();} else if(next>0 && !isDoneStatus(l.status)){l.status='Lendo';} Object.assign(l,statusExtra||{});};
     ['livros','lendo','pausados','aguardando'].forEach(k=>(window._dadosD?.[k]||[]).forEach(apply));
     (window._livros||[]).forEach(apply);
     (currentBundle().library||[]).forEach(apply);
