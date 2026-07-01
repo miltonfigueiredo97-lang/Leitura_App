@@ -9292,8 +9292,12 @@ body.bl-v12-battle #blBattleBackButtonV25{
     (raw().users||[]).forEach((b,i)=>{const key=b.uid||b.label||('raw'+i); map.set(key,Object.assign({library:[],sessions:[],ratings:[],label:b.label||'Usuário'},b));});
     const currentKey=(raw().users?.[0]?.uid)||uidSafe()||raw().currentLabel||'me';
     if(!map.size) map.set(currentKey,{uid:uidSafe(),label:raw().currentLabel||authUser()?.displayName||'Usuário',library:[],sessions:[],ratings:[]});
-    // Injeta biblioteca legada, se ela existir só no adapter renderizado.
-    (window._livros||[]).forEach(l=>{const label=normUser(l.usuario); let b=[...map.values()].find(x=>normUser(x.label)===label)||map.get(currentKey); if(!b.library.some(x=>norm(bookTitle(x))===norm(bookTitle(l)))) b.library.push(l);});
+    // V3.60: não injeta _livros em bundles que já têm library real do Firestore
+    // _livros pode ter status desatualizado (Completo) que corrompe dados Lendo reais
+    (window._livros||[]).forEach(l=>{
+      const b = map.get(currentKey);
+      if(b && b.library.length === 0 && !b.library.some(x=>norm(bookTitle(x))===norm(bookTitle(l)))) b.library.push(l);
+    });
     (window._sessoes||[]).forEach(s=>{const label=normUser(s.usuario); let b=[...map.values()].find(x=>normUser(x.label)===label); if(!b){b={uid:'legacy_'+label,label,library:[],sessions:[],ratings:[]}; map.set(b.uid,b);} const key=[bookTitle(s),s.data||s.date,s.paginas||s.pages,s.minutos||s.minutes].join('|'); if(!b.sessions.some(x=>[bookTitle(x),x.data||x.date,x.paginas||x.pages,x.minutos||x.minutes].join('|')===key)) b.sessions.push(s);});
     const notes=[...(window.NOTES||[]),...(window._dadosD?.notas||[])];
     notes.forEach(r=>{const label=normUser(r.usuario); let b=[...map.values()].find(x=>normUser(x.label)===label)||map.get(currentKey); const key=[bookTitle(r),r.ano||r.readingYear,r.media||r.notaFinal].join('|'); if(!b.ratings.some(x=>[bookTitle(x),x.ano||x.readingYear,x.media||x.notaFinal].join('|')===key)) b.ratings.push(r);});
