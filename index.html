@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782952498 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782952807 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4618,9 +4618,12 @@ async function iniciarAppFirebase(){
   const btn = document.getElementById('authLoginBtn');
   const err = document.getElementById('authError');
   if (btn) btn.onclick = async () => {
+    if(btn.disabled) return;
+    btn.disabled = true;
     err.textContent = '';
     try { await window.BL.auth.signInWithPopup(window.BL.provider); }
-    catch(e){ err.textContent = 'Erro no login: ' + e.message; }
+    catch(e){ if(e.code !== 'auth/cancelled-popup-request') err.textContent = 'Erro no login: ' + e.message; }
+    finally { btn.disabled = false; }
   };
   window.BL.auth.onAuthStateChanged(async (user) => {
     try {
@@ -9548,7 +9551,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
       document.querySelectorAll('.pwa-overlay.open,.bl-v332-picker-overlay.open').forEach(el=>el.classList.remove('open'));
     },60);
   }
-  function scheduleRefresh(){setTimeout(()=>{if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().catch(console.warn);},120);}
+  function scheduleRefresh(){setTimeout(()=>{try{syncCurrentFromSessionsLocal(); if(typeof window.renderLendoCards==='function') window.renderLendoCards(); if(typeof window.atualizarVisaoGeral==='function') window.atualizarVisaoGeral();}catch(e){} if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().catch(console.warn).finally(()=>{try{syncCurrentFromSessionsLocal(); if(typeof window.renderLendoCards==='function') window.renderLendoCards();}catch(e){}});},120);}
   window.enviarSessao=async function(){
     const btn=$('s-btn'); const title=$('s-livro')?.value; const pages=num($('s-paginas')?.value); const date=$('s-data')?.value;
     if(!title||!pages||!date) return msg('s-msg','Preencha livro, páginas e data.','err');
@@ -9604,9 +9607,9 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const oldRefresh=window.blRefreshAndRender;
   if(typeof oldRefresh==='function'&&!window.__BL_V334_REFRESH_WRAPPED){
     window.__BL_V334_REFRESH_WRAPPED=true;
-    window.blRefreshAndRender=async function(){return oldRefresh.apply(this,arguments);};
+    window.blRefreshAndRender=async function(){const r=await oldRefresh.apply(this,arguments); try{syncCurrentFromSessionsLocal(); if(typeof window.renderLendoCards==='function') window.renderLendoCards();}catch(e){console.warn('[BookLegacy]',PATCH,e);} return r;};
   }
-  function boot(){}
+  function boot(){try{syncCurrentFromSessionsLocal();}catch(e){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
   [500,1600,3500].forEach(t=>setTimeout(boot,t));
   const oldDebug=window.blCommunityDebug;
