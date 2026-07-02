@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782952807 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782952898 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4618,12 +4618,9 @@ async function iniciarAppFirebase(){
   const btn = document.getElementById('authLoginBtn');
   const err = document.getElementById('authError');
   if (btn) btn.onclick = async () => {
-    if(btn.disabled) return;
-    btn.disabled = true;
     err.textContent = '';
     try { await window.BL.auth.signInWithPopup(window.BL.provider); }
-    catch(e){ if(e.code !== 'auth/cancelled-popup-request') err.textContent = 'Erro no login: ' + e.message; }
-    finally { btn.disabled = false; }
+    catch(e){ err.textContent = 'Erro no login: ' + e.message; }
   };
   window.BL.auth.onAuthStateChanged(async (user) => {
     try {
@@ -4645,10 +4642,13 @@ async function iniciarAppFirebase(){
       if (window.BL.__activeUid !== user.uid) {
         window.BL.__activeUid = user.uid;
         window.__BL_INITIALIZED = false;
+        window.__BL_VIEW_UID = '';
+        window.__BL_VIEW_LABEL = '';
         window.usuarioAtual = '';
         window._dadosD = {geradoEm:new Date().toISOString(), meta:{}, metasPorAno:{}, sessoes:[], livros:[], lendo:[], pausados:[], aguardando:[], notas:[]};
         window._livros = [];
         window._sessoes = [];
+        window.BL.raw = {};
       }
       blDecorateHeader(user);
       await blEnsureUserProfile(user);
