@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782954582 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782955581 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4084,22 +4084,38 @@ async function blLoadFirestoreData(){
   }
 
   let friends = [];
-  let friendBundles = [];
   try {
     friends = await blLoadFriendsForUser(uid);
-    for (const f of friends) {
-      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
-      try { friendBundles.push(await blReadUserBundle(f.uid, label)); }
-      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
-    }
   } catch(e) {
     console.warn('Amigos não carregados; dashboard individual será exibido.', e);
   }
 
-  const raw = { uid, currentLabel:meLabel, books, users:[myBundle, ...friendBundles], friends };
+  // V3.60: bundles de amigos carregam sob demanda (batalha/comunidade/perfil) — login carrega só o próprio usuário
+  const raw = { uid, currentLabel:meLabel, books, users:[myBundle], friends, friendBundlesLoaded:false };
   window.BL.raw = raw;
   blUpdateUserButtons(raw);
   return blAdaptFirestoreToLegacy(raw);
+}
+
+// V3.60: carrega bundles de amigos sob demanda — chamado por batalha, comunidade e perfil de amigo
+window.blEnsureFriendBundles = async function(){
+  const raw = window.BL?.raw;
+  if(!raw || raw.friendBundlesLoaded) return raw?.users || [];
+  const friends = raw.friends || [];
+  if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users; }
+  const bundles = [];
+  for(const f of friends){
+    const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
+    try {
+      // não recarrega quem já está em users
+      if(!(raw.users||[]).some(u=>String(u.uid||'')===String(f.uid||''))){
+        bundles.push(await blReadUserBundle(f.uid, label));
+      }
+    } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
+  }
+  raw.users = [...(raw.users||[]), ...bundles];
+  raw.friendBundlesLoaded = true;
+  return raw.users;
 }
 
 function blUpdateUserButtons(raw){
@@ -9369,7 +9385,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
       await userCol('sessions').add({bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(date.slice(0,4)),currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,reactionLabels:reactionLabels(reactions),userDisplayName:user?.displayName||raw().currentLabel||'',userPhotoURL:user?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()});
       if(found?.id){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(found.id).set(upd,{merge:true});}
       // Atualização otimista local para a tela inicial responder na hora.
-      try{const arrays=['livros','lendo','pausados','aguardando']; arrays.forEach(k=>(window._dadosD?.[k]||[]).forEach(l=>{if(norm(bookTitle(l))===norm(title)){l.pagAtual=next;l.currentPage=next;l.pct=total?next/total:l.pct;if(total&&next>=total){l.status='Completo';l.pendingRating=true;}else if(next>0)l.status='Lendo';}})); (window._livros||[]).forEach(l=>{if(norm(bookTitle(l))===norm(title)){l.pagAtual=next;l.currentPage=next;l.pct=total?next/total:l.pct;if(total&&next>=total){l.status='Completo';l.pendingRating=true;}else if(next>0)l.status='Lendo';}}); if(typeof window.recalcularDados==='function'&&window._dadosD&&window._sessoes) window.recalcularDados(window._dadosD,window._sessoes); if(typeof window.renderLendoCards==='function') window.renderLendoCards();}catch(e){}
+      try{const arrays=['livros','lendo','pausados','aguardando']; arrays.forEach(k=>(window._dadosD?.[k]||[]).forEach(l=>{if(norm(bookTitle(l))===norm(title)){l.pagAtual=next;l.currentPage=next;l.pct=total?next/total:l.pct;if(total&&next>=total&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;}else if(next>0&&!/^pausado$/i.test(String(l.status||'')))l.status='Lendo';}})); (window._livros||[]).forEach(l=>{if(norm(bookTitle(l))===norm(title)){l.pagAtual=next;l.currentPage=next;l.pct=total?next/total:l.pct;if(total&&next>=total&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;}else if(next>0&&!/^pausado$/i.test(String(l.status||'')))l.status='Lendo';}}); if(typeof window.recalcularDados==='function'&&window._dadosD&&window._sessoes) window.recalcularDados(window._dadosD,window._sessoes); if(typeof window.renderLendoCards==='function') window.renderLendoCards();}catch(e){}
       msg('s-msg','✅ Sessão salva no Firebase!','ok');
       if(typeof window.blRefreshAndRender==='function') await window.blRefreshAndRender();
       setTimeout(()=>{try{if(typeof window.renderLendoCards==='function') window.renderLendoCards(); if(typeof window.atualizarVisaoGeral==='function') window.atualizarVisaoGeral();}catch(e){}},120);
@@ -9527,7 +9543,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
     return found;
   }
   function syncLocalBook(title,next,total,statusExtra){
-    const apply=l=>{if(!l||norm(bookTitle(l))!==norm(title))return; l.pagAtual=next; l.currentPage=next; if(total){l.totalPag=l.totalPag||total; l.totalPages=l.totalPages||total; l.pct=Math.min(1,next/total); l.progress=Math.min(1,next/total);} if(total&&next>=total&&!/^lendo$/i.test(String(l.status||''))&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;l.anoConclusao=l.anoConclusao||today().slice(0,4);l.completionYear=l.completionYear||today().slice(0,4);l.completionDate=l.completionDate||today();} else if(next>0 && !isDoneStatus(l.status)){l.status='Lendo';} Object.assign(l,statusExtra||{});};
+    const apply=l=>{if(!l||norm(bookTitle(l))!==norm(title))return; l.pagAtual=next; l.currentPage=next; if(total){l.totalPag=l.totalPag||total; l.totalPages=l.totalPages||total; l.pct=Math.min(1,next/total); l.progress=Math.min(1,next/total);} if(total&&next>=total&&!/^lendo$/i.test(String(l.status||''))&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;l.anoConclusao=l.anoConclusao||today().slice(0,4);l.completionYear=l.completionYear||today().slice(0,4);l.completionDate=l.completionDate||today();} else if(next>0 && !isDoneStatus(l.status) && !/^pausado$/i.test(String(l.status||''))){l.status='Lendo';} Object.assign(l,statusExtra||{});};
     ['livros','lendo','pausados','aguardando'].forEach(k=>(window._dadosD?.[k]||[]).forEach(apply));
     (window._livros||[]).forEach(apply);
     (currentBundle().library||[]).forEach(apply);
@@ -9690,7 +9706,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function syncLocalBook(title,next,total,extra){
     const t=norm(title); if(!t)return;
     window.__blV335PageOverrides[t]=next;
-    const apply=l=>{if(!l||norm(bookTitle(l))!==t)return; l.pagAtual=next;l.currentPage=next;l.paginaAtual=next;if(total){l.totalPag=l.totalPag||total;l.totalPages=l.totalPages||total;l.pct=Math.min(1,next/total);l.progress=Math.min(1,next/total);} if(total&&next>=total){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;} else if(next>0&&isDone(l.status)){l.status='Lendo';l.pendingRating=false;l.dismissCompletedPrompt=false;} else if(next>0&&!isDone(l.status)){l.status='Lendo';} Object.assign(l,extra||{});};
+    const apply=l=>{if(!l||norm(bookTitle(l))!==t)return; l.pagAtual=next;l.currentPage=next;l.paginaAtual=next;if(total){l.totalPag=l.totalPag||total;l.totalPages=l.totalPages||total;l.pct=Math.min(1,next/total);l.progress=Math.min(1,next/total);} if(total&&next>=total&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;} else if(next>0&&isDone(l.status)){l.status='Lendo';l.pendingRating=false;l.dismissCompletedPrompt=false;} else if(next>0&&!isDone(l.status)&&!/^pausado$/i.test(String(l.status||''))){l.status='Lendo';} Object.assign(l,extra||{});};
     [ownLibrary(),window._livros||[],window._dadosD?.livros||[],window._dadosD?.lendo||[],window._dadosD?.pausados||[],window._dadosD?.aguardando||[]].forEach(a=>(a||[]).forEach(apply));
   }
   function syncPageOverrides(){
@@ -9992,7 +10008,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
     const p=$('blMobileMenuPanel');if(p){const buttons=[...p.querySelectorAll('button')];buttons.forEach(b=>{const txt=norm(b.textContent);const a=norm(b.dataset.a||'');if(txt.includes('comunidade')||txt.includes('amigos')||a.includes('community')||a.includes('friends'))b.remove();});const friends=document.createElement('button');friends.type='button';friends.className='cyan';friends.dataset.a='friends';friends.innerHTML='👥 Amigos';const feed=document.createElement('button');feed.type='button';feed.className='cyan';feed.dataset.a='communityFeed';feed.innerHTML='🌐 Comunidade';const ref=p.querySelector('button[data-a="migracao"],button[data-a="migration"],button[data-a="refresh"]')||p.firstElementChild;if(ref&&ref.parentNode===p){p.insertBefore(friends,ref);p.insertBefore(feed,ref);}else{p.appendChild(friends);p.appendChild(feed);}}
   }
   document.addEventListener('click',function(ev){const btn=ev.target.closest&&ev.target.closest('#blMobileMenuPanel button[data-a]');if(!btn)return;const a=btn.dataset.a;if(a==='friends'||a==='communityFeed'){ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation&&ev.stopImmediatePropagation();closeMenu();setTimeout(()=>{if(a==='friends')(window.blOpenFriendsModal||window.blOpenCommunityModal)?.();else window.blOpenCommunityFeed();},40);}},true);
-  function syncLocalBook(title,next,total,extra){const t=norm(title);if(!t)return;const apply=l=>{if(!l||norm(titleOf(l))!==t)return;l.currentPage=next;l.pagAtual=next;l.paginaAtual=next;if(total){l.totalPages=l.totalPages||total;l.totalPag=l.totalPag||total;l.progress=Math.min(1,next/total);l.pct=Math.min(1,next/total);}if(total&&next>=total){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;}else if(next>0)l.status='Lendo';Object.assign(l,extra||{});};[ownLibrary(),window._livros||[],window._dadosD?.livros||[],window._dadosD?.lendo||[],window._dadosD?.pausados||[],window._dadosD?.aguardando||[]].forEach(a=>(a||[]).forEach(apply));}
+  function syncLocalBook(title,next,total,extra){const t=norm(title);if(!t)return;const apply=l=>{if(!l||norm(titleOf(l))!==t)return;l.currentPage=next;l.pagAtual=next;l.paginaAtual=next;if(total){l.totalPages=l.totalPages||total;l.totalPag=l.totalPag||total;l.progress=Math.min(1,next/total);l.pct=Math.min(1,next/total);}if(total&&next>=total&&!/^pausado$/i.test(String(l.status||''))){l.status='Completo';l.pendingRating=true;l.dismissCompletedPrompt=false;}else if(next>0&&!/^pausado$/i.test(String(l.status||'')))l.status='Lendo';Object.assign(l,extra||{});};[ownLibrary(),window._livros||[],window._dadosD?.livros||[],window._dadosD?.lendo||[],window._dadosD?.pausados||[],window._dadosD?.aguardando||[]].forEach(a=>(a||[]).forEach(apply));}
   function renderLocal(){try{if(typeof window.recalcularDados==='function'&&window._dadosD&&window._sessoes)window.recalcularDados(window._dadosD,window._sessoes);if(typeof window.renderLendoCards==='function')window.renderLendoCards();if(typeof window.atualizarVisaoGeral==='function')window.atualizarVisaoGeral();}catch(e){console.warn('[BookLegacy]',PATCH,e);}}
   function unlock(y){const run=()=>{try{fecharModal&&fecharModal('sessao');}catch(e){}try{fecharModal&&fecharModal('nota');}catch(e){}document.body.classList.remove('bl-v332-modal-open','bl-v333-modal-open','bl-v334-modal-open','bl-v335-modal-open','modal-open','pwa-modal-open');document.documentElement.classList.remove('modal-open','pwa-modal-open');document.body.style.overflow='';document.documentElement.style.overflow='';document.querySelectorAll('.pwa-overlay.open,.bl-v332-picker-overlay.open,.fab-menu.open').forEach(el=>el.classList.remove('open'));if(Number.isFinite(y))window.scrollTo(0,y);};run();setTimeout(run,60);setTimeout(run,220);setTimeout(run,700);}
   function refreshBg(y){if(typeof window.blRefreshAndRender==='function')setTimeout(()=>{try{window.blRefreshAndRender().then(()=>{renderLocal();window.scrollTo(0,y);}).catch(console.warn);}catch(e){}},500);}
@@ -11395,7 +11411,7 @@ body.bl-v40-loading #app{display:none!important;}
   function hideOldCommunity(){document.querySelectorAll('#blV332CommunityFeed,.bl-v332-feed-overlay,#blV337CommunityFeed,#blV336CommunityPage,#blV40FeedList,#blV41FeedList').forEach(el=>{el.classList.remove('open');el.style.display='none';});document.body.classList.remove('bl-v332-modal-open','bl-v333-modal-open','bl-v337-community-open','bl-v338-community-open','bl-v339-community-open','bl-v40-community-open','bl-v41-community-open','bl-v42-community-open');document.documentElement.classList.remove('bl-v337-community-open','bl-v338-community-open','bl-v339-community-open','bl-v40-community-open','bl-v41-community-open','bl-v42-community-open');document.body.style.overflow='';document.documentElement.style.overflow='';}
   function ensurePage(){let page=$('pageComunidade');if(!page){page=document.createElement('div');page.id='pageComunidade';($('app')||document.body).appendChild(page);}page.className='page bl-v43-community-page';page.innerHTML=`<div class="bl-v43-shell"><div class="bl-v43-head"><div><h2>🌐 Comunidade</h2><p>Feed de sessões registradas e avaliações.</p></div><button type="button" class="bl-v43-back">← Voltar</button></div><div id="blV43FeedList" class="bl-v43-feed-list"><div class="bl-v43-loading">Carregando comunidade...</div></div></div>`;page.querySelector('.bl-v43-back').onclick=e=>{e.preventDefault();window.blCloseCommunityPage();};return page;}
   function renderPage(){const list=$('blV43FeedList');if(!list)return;try{const items=buildFeed();if(!items.length){list.innerHTML='<div class="bl-v43-empty">Nenhuma sessão ou avaliação encontrada ainda.</div>';return;}list.innerHTML=items.map(i=>i.type==='session'?sessionCard(i):ratingCard(i)).join('');}catch(e){console.warn('[BookLegacy]',PATCH,'community render',e);list.innerHTML='<div class="bl-v43-empty">Erro ao carregar a Comunidade. Atualize os dados e tente novamente.</div>';}}
-  window.blOpenCommunityPage=function(){hideOldCommunity();const page=ensurePage();document.querySelectorAll('#app > .page, body > .page').forEach(p=>{if(p.id&&p.id!==page.id)p.style.display='none';});['pageDashboard','pageBatalha'].forEach(id=>{const p=$(id);if(p)p.style.display='none';});const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='none';page.style.display='block';document.body.classList.add('bl-v43-community-open');document.documentElement.classList.add('bl-v43-community-open');window.scrollTo(0,0);setTimeout(renderPage,20);};
+  window.blOpenCommunityPage=function(){hideOldCommunity();const page=ensurePage();document.querySelectorAll('#app > .page, body > .page').forEach(p=>{if(p.id&&p.id!==page.id)p.style.display='none';});['pageDashboard','pageBatalha'].forEach(id=>{const p=$(id);if(p)p.style.display='none';});const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='none';page.style.display='block';document.body.classList.add('bl-v43-community-open');document.documentElement.classList.add('bl-v43-community-open');window.scrollTo(0,0);if(window.BL?.raw&&!window.BL.raw.friendBundlesLoaded&&typeof window.blEnsureFriendBundles==='function'){window.blEnsureFriendBundles().then(()=>{try{renderPage();}catch(e){}});}setTimeout(renderPage,20);};
   window.blCloseCommunityPage=function(){hideOldCommunity();document.body.classList.remove('bl-v43-community-open');document.documentElement.classList.remove('bl-v43-community-open');const page=$('pageComunidade');if(page)page.style.display='none';const dash=$('pageDashboard');if(dash)dash.style.display='block';const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='';const app=$('app');if(app)app.style.display='block';window.scrollTo(0,0);};
   window.blOpenCommunityFeed=window.blOpenCommunityPage;window.blCloseCommunityFeed=window.blCloseCommunityPage;
   function stabilizeHeader(){
@@ -12221,6 +12237,12 @@ body.bl-v40-loading #app{display:none!important;}
 
   function renderUid(uid, opts={}){
     const _lw=document.querySelector('.lendo-wrap'); if(_lw) _lw.style.display='';
+    // V3.60: se o uid não é o próprio e os bundles de amigos ainda não carregaram, carrega e re-renderiza
+    const _authUid = authUid();
+    if(uid && uid !== _authUid && window.BL?.raw && !window.BL.raw.friendBundlesLoaded && typeof window.blEnsureFriendBundles==='function'){
+      window.blEnsureFriendBundles().then(()=>{ try{ renderUid(uid, opts); }catch(e){} });
+      return;
+    }
     const p = findPerson(uid) || emptyPerson(uid, 'Amigo');
     if (!p.uid) return;
     const data = dataForUid(p.uid);
@@ -12248,6 +12270,10 @@ body.bl-v40-loading #app{display:none!important;}
     window.__BL_VIEW_UID = '';
     hideHero();
     document.body.classList.remove('bl-visitor-readonly','bl-readonly-profile');
+    // V3.60: batalha precisa dos bundles dos amigos — carrega sob demanda e re-renderiza
+    if(window.BL?.raw && !window.BL.raw.friendBundlesLoaded && typeof window.blEnsureFriendBundles==='function'){
+      window.blEnsureFriendBundles().then(()=>{ try{ renderBattle(); }catch(e){} });
+    }
     window._dadosD = buildAllData();
     setGlobalLabel('Batalha');
     const dash = $('pageDashboard'), bat = $('pageBatalha'); if (dash) dash.style.display='none'; if (bat) bat.style.display='block';
