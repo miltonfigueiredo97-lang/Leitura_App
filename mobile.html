@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1783119565 -->
+<head><!-- V3.60-build-1783119903 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -5450,7 +5450,8 @@ function renderBatalha() {
       .map(l=>({
         livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
         totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
-        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
+        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||''),
+        coverUrl:String(l.coverUrl||l.cover||l.capa||''),isbn:String(l.isbn||'')
       }));
 
     const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
