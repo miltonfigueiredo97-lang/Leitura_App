@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120676 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783121139 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4094,6 +4094,8 @@ async function blLoadFirestoreData(){
   const raw = { uid, currentLabel:meLabel, books, users:[myBundle], friends, friendBundlesLoaded:false };
   window.BL.raw = raw;
   blUpdateUserButtons(raw);
+  // V3.60: carrega bundles de amigos em background logo após login — não bloqueia UI
+  setTimeout(()=>{ if(typeof window.blEnsureFriendBundles==='function') window.blEnsureFriendBundles().catch(()=>{}); }, 100);
   return blAdaptFirestoreToLegacy(raw);
 }
 
