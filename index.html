@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783092053 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783119344 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4108,8 +4108,19 @@ window.blEnsureFriendBundles = async function(){
     const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
     try {
       // não recarrega quem já está em users
-      if(!(raw.users||[]).some(u=>String(u.uid||'')===String(f.uid||''))){
-        bundles.push(await blReadUserBundle(f.uid, label));
+      // V3.60: verifica se o UID já tem dados reais (library/sessions), não apenas se existe
+      const existing = (raw.users||[]).find(u=>String(u.uid||'')===String(f.uid||''));
+      if(!existing || (existing.library?.length===0 && existing.sessions?.length===0)){
+        try {
+          const bundle = await blReadUserBundle(f.uid, label);
+          if(existing){
+            // substitui o placeholder vazio pelo bundle real
+            const idx = raw.users.indexOf(existing);
+            if(idx>=0) raw.users[idx] = bundle;
+          } else {
+            bundles.push(bundle);
+          }
+        } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
       }
     } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
   }
