@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783119887 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120133 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -11427,7 +11427,7 @@ body.bl-v40-loading #app{display:none!important;}
   function hideOldCommunity(){document.querySelectorAll('#blV332CommunityFeed,.bl-v332-feed-overlay,#blV337CommunityFeed,#blV336CommunityPage,#blV40FeedList,#blV41FeedList').forEach(el=>{el.classList.remove('open');el.style.display='none';});document.body.classList.remove('bl-v332-modal-open','bl-v333-modal-open','bl-v337-community-open','bl-v338-community-open','bl-v339-community-open','bl-v40-community-open','bl-v41-community-open','bl-v42-community-open');document.documentElement.classList.remove('bl-v337-community-open','bl-v338-community-open','bl-v339-community-open','bl-v40-community-open','bl-v41-community-open','bl-v42-community-open');document.body.style.overflow='';document.documentElement.style.overflow='';}
   function ensurePage(){let page=$('pageComunidade');if(!page){page=document.createElement('div');page.id='pageComunidade';($('app')||document.body).appendChild(page);}page.className='page bl-v43-community-page';page.innerHTML=`<div class="bl-v43-shell"><div class="bl-v43-head"><div><h2>🌐 Comunidade</h2><p>Feed de sessões registradas e avaliações.</p></div><button type="button" class="bl-v43-back">← Voltar</button></div><div id="blV43FeedList" class="bl-v43-feed-list"><div class="bl-v43-loading">Carregando comunidade...</div></div></div>`;page.querySelector('.bl-v43-back').onclick=e=>{e.preventDefault();window.blCloseCommunityPage();};return page;}
   function renderPage(){const list=$('blV43FeedList');if(!list)return;try{const items=buildFeed();if(!items.length){list.innerHTML='<div class="bl-v43-empty">Nenhuma sessão ou avaliação encontrada ainda.</div>';return;}list.innerHTML=items.map(i=>i.type==='session'?sessionCard(i):ratingCard(i)).join('');}catch(e){console.warn('[BookLegacy]',PATCH,'community render',e);list.innerHTML='<div class="bl-v43-empty">Erro ao carregar a Comunidade. Atualize os dados e tente novamente.</div>';}}
-  window.blOpenCommunityPage=function(){hideOldCommunity();const page=ensurePage();document.querySelectorAll('#app > .page, body > .page').forEach(p=>{if(p.id&&p.id!==page.id)p.style.display='none';});['pageDashboard','pageBatalha'].forEach(id=>{const p=$(id);if(p)p.style.display='none';});const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='none';page.style.display='block';document.body.classList.add('bl-v43-community-open');document.documentElement.classList.add('bl-v43-community-open');window.scrollTo(0,0);if(window.BL?.raw&&!window.BL.raw.friendBundlesLoaded&&typeof window.blEnsureFriendBundles==='function'){window.blEnsureFriendBundles().then(()=>{try{renderPage();}catch(e){}});}setTimeout(renderPage,20);};
+  window.blOpenCommunityPage=function(){hideOldCommunity();const page=ensurePage();document.querySelectorAll('#app > .page, body > .page').forEach(p=>{if(p.id&&p.id!==page.id)p.style.display='none';});['pageDashboard','pageBatalha'].forEach(id=>{const p=$(id);if(p)p.style.display='none';});const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='none';page.style.display='block';document.body.classList.add('bl-v43-community-open');document.documentElement.classList.add('bl-v43-community-open');window.scrollTo(0,0);if(window.BL?.raw&&!window.BL.raw.friendBundlesLoaded&&typeof window.blEnsureFriendBundles==='function'){window.blEnsureFriendBundles().then(()=>{try{renderPage();}catch(e){}});return;}setTimeout(renderPage,20);};
   window.blCloseCommunityPage=function(){hideOldCommunity();document.body.classList.remove('bl-v43-community-open');document.documentElement.classList.remove('bl-v43-community-open');const page=$('pageComunidade');if(page)page.style.display='none';const dash=$('pageDashboard');if(dash)dash.style.display='block';const lw=document.querySelector('.lendo-wrap');if(lw)lw.style.display='';const app=$('app');if(app)app.style.display='block';window.scrollTo(0,0);};
   window.blOpenCommunityFeed=window.blOpenCommunityPage;window.blCloseCommunityFeed=window.blCloseCommunityPage;
   function stabilizeHeader(){
@@ -12289,6 +12289,7 @@ body.bl-v40-loading #app{display:none!important;}
     // V3.60: batalha precisa dos bundles dos amigos — carrega sob demanda e re-renderiza
     if(window.BL?.raw && !window.BL.raw.friendBundlesLoaded && typeof window.blEnsureFriendBundles==='function'){
       window.blEnsureFriendBundles().then(()=>{ try{ renderBattle(); }catch(e){} });
+      return;
     }
     window._dadosD = buildAllData();
     setGlobalLabel('Batalha');
