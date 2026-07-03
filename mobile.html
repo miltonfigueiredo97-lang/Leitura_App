@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1783120697 -->
+<head><!-- V3.60-build-1783121153 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4141,6 +4141,7 @@ async function blLoadFirestoreData(){
   const raw = { uid, currentLabel:meLabel, books, users:[myBundle], friends, friendBundlesLoaded:false };
   window.BL.raw = raw;
   blUpdateUserButtons(raw);
+  setTimeout(()=>{ if(typeof window.blEnsureFriendBundles==='function') window.blEnsureFriendBundles().catch(()=>{}); }, 100);
   return blAdaptFirestoreToLegacy(raw);
 }
 
