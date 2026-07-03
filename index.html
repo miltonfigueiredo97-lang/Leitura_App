@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120133 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120162 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -5481,7 +5481,7 @@ function renderBatalha() {
 
     const notas = (person?.ratings||[]).map(r=>{
       const dt=String(r.date||r.data||'').slice(0,10);
-      return {media:Number(r.rating||r.nota||r.media||0),livro:String(r.title||r.livro||''),ano:dt?new Date(dt+'T12:00:00').getFullYear():Number(r.year||r.ano||0)};
+      return {media:Number(r.notaFinal||r.notaPonderada||r.rating||r.nota||r.media||0),livro:String(r.title||r.livro||''),ano:dt?new Date(dt+'T12:00:00').getFullYear():Number(r.readingYear||r.year||r.ano||0)};
     }).filter(n=>anoFiltro==='total'||String(n.ano)===String(anoFiltro));
     const diasSet = new Set(sess.map(s=>s.data).filter(Boolean));
     const pagTotal = sess.reduce((a,s)=>a+s.paginas,0);
