@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1782955581 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783092053 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9581,16 +9581,20 @@ body.bl-v12-battle #blBattleBackButtonV25{
       const review=($('s-resenha')?.value||'').trim(); const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];
       const u=authUser();
       const sessionData={bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(String(date).slice(0,4)),currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,reactionLabels:reactionLabels(reactions),userDisplayName:u?.displayName||raw().currentLabel||'',userPhotoURL:u?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()};
-      if(db()&&uid()) await userCol('sessions').add(sessionData);
-      if(found?.id&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.completionDate=date;upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(found.id).set(upd,{merge:true});}
+      // V3.60: atualização otimista — UI muda na hora, Firestore grava em seguida
       if(currentBundle().sessions) currentBundle().sessions.push(sessionData);
       if(window._sessoes) window._sessoes.push({livro:title,data:date,paginas:pages,minutos:minutes,segundos:seconds,ano:Number(String(date).slice(0,4)),currentPage:next,totalPages:total,review,reactions,usuario:raw().currentLabel||u?.displayName||''});
       syncLocalBook(title,next,total,total&&next>=total?{completionDate:date,anoConclusao:String(date).slice(0,4),pendingRating:true,dismissCompletedPrompt:false}:{});
-      msg('s-msg','✅ Sessão salva no Firebase!','ok');
       try{if(typeof window.renderLendoCards==='function') window.renderLendoCards(); if(typeof window.atualizarVisaoGeral==='function') window.atualizarVisaoGeral();}catch(e){}
+      msg('s-msg','✅ Sessão salva!','ok');
       setTimeout(()=>closeModalSafe('sessao'),350);
+      const _fsWrites = (async()=>{
+        if(db()&&uid()) await userCol('sessions').add(sessionData);
+        if(found?.id&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.completionDate=date;upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(found.id).set(upd,{merge:true});}
+      })();
+      await _fsWrites;
       scheduleRefresh();
-    }catch(e){console.error(e);msg('s-msg','❌ Firebase: '+e.message,'err');}
+    }catch(e){console.error(e);msg('s-msg','❌ Firebase: '+e.message,'err');scheduleRefresh();}
     finally{if(btn){btn.disabled=false;btn.textContent=old;} setTimeout(()=>document.body.classList.remove('bl-v332-modal-open','bl-v333-modal-open','bl-v334-modal-open'),500);}
   };
   try{enviarSessao=window.enviarSessao;}catch(e){}
