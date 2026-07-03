@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783119344 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783119887 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -5470,7 +5470,8 @@ function renderBatalha() {
       .map(l=>({
         livro:String(l.title||l.livro||''),autor:String(l.author||l.autor||''),status:String(l.status||''),
         totalPag:Number(l.totalPages||l.totalPag||0),pagAtual:Number(l.currentPage||l.pagAtual||0),
-        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||'')
+        colecao:String(l.collection||l.colecao||''),genero:String(l.genre||l.genero||''),metaAno:String(l.metaYear||l.metaAno||''),
+        coverUrl:String(l.coverUrl||l.cover||l.capa||''),isbn:String(l.isbn||'')
       }));
 
     const lidos = todos.filter(l=>l.status==='Completo').filter(l=>{
