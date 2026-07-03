@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120162 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783120676 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -6191,8 +6191,8 @@ function renderBatalha() {
         const img=document.createElement('img');
         img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
         img.onerror=()=>{};
-        img.src=livro.coverUrl||(livro.isbn?`https://covers.openlibrary.org/b/isbn/${livro.isbn}-M.jpg`:'');
-        if(img.src){el.innerHTML='';el.appendChild(img);}
+        const _src=livro.coverUrl||(livro.isbn?`https://covers.openlibrary.org/b/isbn/${livro.isbn}-M.jpg`:'');
+        if(_src){img.src=_src;el.innerHTML='';el.appendChild(img);img.onerror=()=>{img.style.display='none';};}
       },150);
     }
     return html;
@@ -6223,9 +6223,9 @@ function renderBatalha() {
     return lista.map(b=>{
       const l=allLivros.find(x=>x.livro===b.livro);
       const uid='bs-'+Math.random().toString(36).slice(2,8);
-      setTimeout(()=>{const el=document.getElementById(uid);if(!el)return;const src=l?.coverUrl||(l?.isbn?`https://covers.openlibrary.org/b/isbn/${l.isbn}-M.jpg`:'');if(src){el.src=src;el.onerror=()=>{el.style.display='none';};};},200);
+      setTimeout(()=>{const el=document.getElementById(uid);if(!el)return;const src=l?.coverUrl||(l?.isbn?`https://covers.openlibrary.org/b/isbn/${l.isbn}-M.jpg`:'');if(src){el.src=src;el.style.display='';el.onerror=()=>{el.style.display='none';};}},200);
       return `<div style="display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-        <img id="${uid}" src="" class="bat-boss-cover" alt="">
+        <img id="${uid}" class="bat-boss-cover" alt="" style="display:none;">
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#F8FAFC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">💀 ${b.livro}</div>
           <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);">${b.totalPag.toLocaleString('pt-BR')} págs</div>
@@ -6244,7 +6244,7 @@ function renderBatalha() {
       const uid='sl-'+Math.random().toString(36).slice(2,8);
       setTimeout(()=>{const el=document.getElementById(uid);if(!el)return;const src=l?.coverUrl||(l?.isbn?`https://covers.openlibrary.org/b/isbn/${l.isbn}-M.jpg`:'');if(src){el.src=src;el.onerror=()=>{el.style.display='none';};};},250);
       return `<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-        <img id="${uid}" src="" class="bat-boss-cover" alt="">
+        <img id="${uid}" class="bat-boss-cover" alt="" style="display:none;">
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#F8FAFC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🐛 ${b.livro}</div>
           <div style="font-family:'Exo 2',sans-serif;font-size:11px;color:rgba(248,250,252,0.4);">${b.totalPag} págs</div>
