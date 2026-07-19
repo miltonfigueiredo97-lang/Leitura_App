@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784477551 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784477572 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9653,7 +9653,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
       setTimeout(()=>closeModalSafe('sessao'),350);
       const _fsWrites = (async()=>{
         if(db()&&uid()) await userCol('sessions').add(sessionData);
-        if(found?.id&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.completionDate=date;upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(found.id).set(upd,{merge:true});}
+        const targetDocId=(freshPage&&freshPage.docId)||found?.id; if(targetDocId&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.completionDate=date;upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(targetDocId).set(upd,{merge:true});}
       })();
       await _fsWrites;
       scheduleRefresh();
