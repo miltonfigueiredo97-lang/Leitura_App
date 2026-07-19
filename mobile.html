@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784479121 -->
+<head><!-- V3.60-build-1784479172 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12359,11 +12359,9 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function sortSessions(arr){return [...arr].sort((a,b)=>String(a.createdAt||a.updatedAt||a.date||a.data||'').localeCompare(String(b.createdAt||b.updatedAt||b.date||b.data||'')));}
   function localSessionDate(s){return String(s.date||s.data||s.createdAt||s.updatedAt||'').slice(0,10);}
   async function recomputePageAfterDelete(title,bookId,fallbackCurrent,deletedPages,total){
-    const sessions=sortSessions(await getSessionsForBook(title,bookId));
-    // V3.60: soma os deltas de páginas lidas (sempre corretos) em vez de confiar no currentPage absoluto
-    // de uma sessão antiga, que pode ter sido gravado errado antes das correções de hoje
-    let next = sessions.reduce((a,s)=>a+num(s.pages||s.paginas||0),0);
-    if(!sessions.length && fallbackCurrent){ next = Math.max(0, fallbackCurrent - num(deletedPages)); }
+    // V3.60: desfaz exatamente a sessão excluída (página atual - páginas dessa sessão) — simples, direto,
+    // não depende de nenhum outro registro histórico que possa estar corrompido
+    let next = Math.max(0, num(fallbackCurrent) - num(deletedPages));
     if(total)next=Math.min(total,next);
     return Math.max(0,next);
   }
