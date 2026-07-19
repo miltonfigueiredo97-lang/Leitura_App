@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784473749 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784477551 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9397,15 +9397,37 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blFreshBookPage = async function(title){
     try {
       if(!db()||!uid()) return null;
-      const snap = await userCol('library').get();
-      let found = null;
       const t = norm(title);
+      // 1) Busca TODOS os docs de library com esse título — pode haver duplicatas de migração
+      const snap = await userCol('library').get();
+      const candidates = [];
       snap.forEach(doc => {
         const d = doc.data();
-        if(!found && norm(titleOf(d)) === t) found = d;
+        if(d.system || d.customMetaRegistry) return;
+        if(norm(titleOf(d)) === t) candidates.push({id:doc.id, ...d});
       });
-      if(!found) return null;
-      return { current: Number(found.currentPage||0), total: Number(found.totalPages||0) };
+      if(!candidates.length) return null;
+      if(candidates.length > 1) console.warn('[BookLegacy] Duplicata detectada na library:', title, candidates.length, 'docs');
+      // 2) Escolhe o melhor candidato: prioriza Lendo/Pausado > outros > Completo; desempate por maior totalPages
+      const rank = st => { const s=String(st||'').toLowerCase(); if(s==='lendo')return 3; if(s==='pausado')return 2; if(s==='completo')return 0; return 1; };
+      candidates.sort((a,b) => (rank(b.status)-rank(a.status)) || ((Number(b.totalPages||0))-(Number(a.totalPages||0))));
+      const chosen = candidates[0];
+      const total = Number(chosen.totalPages||0);
+      let current = Number(chosen.currentPage||0);
+      // 3) Cross-valida com a ÚLTIMA sessão real registrada — fonte de verdade mais confiável que o campo currentPage salvo
+      try {
+        const sessSnap = await userCol('sessions').get();
+        let lastSession = null, lastDate = '';
+        sessSnap.forEach(doc => {
+          const s = doc.data();
+          if(norm(s.title||s.livro||'') === t && s.currentPage != null) {
+            const d = String(s.date||'');
+            if(d >= lastDate) { lastDate = d; lastSession = s; }
+          }
+        });
+        if(lastSession) current = Number(lastSession.currentPage||0);
+      } catch(e) { console.warn('cross-check de sessões falhou', e); }
+      return { current, total, docId: chosen.id };
     } catch(e) { console.warn('blFreshBookPage falhou', e); return null; }
   };
   async function saveSessionV333(){
