@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784477643 -->
+<head><!-- V3.60-build-1784478024 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2061,7 +2061,7 @@ window.renderLendoCards = renderLendoCards;
 
 function abrirSessaoRapida(livroNome) {
   abrirModal('sessao');
-  setTimeout(() => {
+  setTimeout(async () => {
     // Preencher o livro automaticamente
     const inputBusca = document.getElementById('s-livro-busca');
     const inputHidden = document.getElementById('s-livro');
@@ -2072,10 +2072,8 @@ function abrirSessaoRapida(livroNome) {
     // Iniciar scroll na página atual do livro
     const livro = (window._livros||[]).find(l => l.livro === livroNome);
     if (livro && window.iniciarScrollPagina) {
-      iniciarScrollPagina(livro.pagAtual||0, livro.totalPag||0);
-      if(window.blFreshBookPage) window.blFreshBookPage(livroNome).then(fresh=>{
-        if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||livro.totalPag||0);
-      });
+      const fresh = window.blFreshBookPage ? await window.blFreshBookPage(livroNome).catch(()=>null) : null;
+      iniciarScrollPagina(fresh?fresh.current:(livro.pagAtual||0), (fresh&&fresh.total)||livro.totalPag||0);
     }
     // Esconder o campo de busca
     const buscaWrap = inputBusca?.closest('.pwa-field');
@@ -7170,7 +7168,7 @@ function limparCamposNota() {
   if (msgEl) { msgEl.className = 'pwa-msg'; msgEl.textContent = ''; }
 }
 
-function selecionarLivroSessao(l) {
+async function selecionarLivroSessao(l) {
   document.getElementById('s-livro').value = l.livro;
   document.getElementById('s-livro-busca').value = '';
   document.getElementById('s-livro-busca').placeholder = l.livro;
@@ -7179,11 +7177,8 @@ function selecionarLivroSessao(l) {
   const icon = l.status==='Lendo'?'📖':l.status==='Pausado'?'⏸️':'📋';
   sel.textContent = icon + ' ' + l.livro + ' ✕';
   sel.style.display = 'block';
-  // Inicializa scroll de página com pagAtual do livro
-  iniciarScrollPagina(l.pagAtual||0, l.totalPag||0);
-  if(window.blFreshBookPage) window.blFreshBookPage(l.livro).then(fresh=>{
-    if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||l.totalPag||0);
-  });
+  const fresh = window.blFreshBookPage ? await window.blFreshBookPage(l.livro).catch(()=>null) : null;
+  iniciarScrollPagina(fresh?fresh.current:(l.pagAtual||0), (fresh&&fresh.total)||l.totalPag||0);
   // Verifica dependência
   if (l.depende) {
     const dep = livrosCache.find(x => x.livro === l.depende);
