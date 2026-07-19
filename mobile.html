@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1783121153 -->
+<head><!-- V3.60-build-1784473413 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2073,6 +2073,9 @@ function abrirSessaoRapida(livroNome) {
     const livro = (window._livros||[]).find(l => l.livro === livroNome);
     if (livro && window.iniciarScrollPagina) {
       iniciarScrollPagina(livro.pagAtual||0, livro.totalPag||0);
+      if(window.blFreshBookPage) window.blFreshBookPage(livroNome).then(fresh=>{
+        if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||livro.totalPag||0);
+      });
     }
     // Esconder o campo de busca
     const buscaWrap = inputBusca?.closest('.pwa-field');
@@ -7178,6 +7181,9 @@ function selecionarLivroSessao(l) {
   sel.style.display = 'block';
   // Inicializa scroll de página com pagAtual do livro
   iniciarScrollPagina(l.pagAtual||0, l.totalPag||0);
+  if(window.blFreshBookPage) window.blFreshBookPage(l.livro).then(fresh=>{
+    if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||l.totalPag||0);
+  });
   // Verifica dependência
   if (l.depende) {
     const dep = livrosCache.find(x => x.livro === l.depende);
@@ -12103,6 +12109,20 @@ body.bl-v12-battle #blBattleBackButtonV25{
     let found=null; snap.forEach(doc=>{const d=doc.data(); if(!found && (norm(bookTitle(d))===norm(title)||doc.id===title||d.bookId===title)) found={id:doc.id,data:{id:doc.id,...d}};});
     return found;
   }
+  window.blFreshBookPage = async function(title){
+    try {
+      if(!db()||!uid()) return null;
+      const snap = await userCol('library').get();
+      let found = null;
+      const t = norm(title);
+      snap.forEach(doc => {
+        const d = doc.data();
+        if(!found && norm(titleOf(d)) === t) found = d;
+      });
+      if(!found) return null;
+      return { current: Number(found.currentPage||0), total: Number(found.totalPages||0) };
+    } catch(e) { console.warn('blFreshBookPage falhou', e); return null; }
+  };
   async function saveSessionV333(){
     const btn=$('s-btn'), title=$('s-livro')?.value, pages=num($('s-paginas')?.value), date=$('s-data')?.value;
     if(!title||!pages||!date) return msg('s-msg','Preencha livro, páginas e data.','err');
