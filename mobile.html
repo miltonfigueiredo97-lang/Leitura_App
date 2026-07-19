@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784473773 -->
+<head><!-- V3.60-build-1784477643 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12142,7 +12142,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
       msg('s-msg','✅ Sessão salva!','ok');
       setTimeout(()=>{try{window.fecharModal&&window.fecharModal('sessao');}catch(e){}},350);
       await userCol('sessions').add({bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(date.slice(0,4)),currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,reactionLabels:reactionLabels(reactions),userDisplayName:user?.displayName||raw().currentLabel||'',userPhotoURL:user?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()});
-      if(found?.id){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(found.id).set(upd,{merge:true});}
+      const targetDocId=(freshPage&&freshPage.docId)||found?.id; if(targetDocId){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0}; if(total&&next>=total){upd.status='Completo';upd.completionYear=String(date).slice(0,4);upd.progress=1;upd.pendingRating=true;upd.dismissCompletedPrompt=false;} else if(next>0){upd.status='Lendo';} await userCol('library').doc(targetDocId).set(upd,{merge:true});}
       if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().then(()=>{try{if(typeof window.renderLendoCards==='function') window.renderLendoCards(); if(typeof window.atualizarVisaoGeral==='function') window.atualizarVisaoGeral();}catch(e){}}).catch(console.warn);
     }catch(e){console.error(e);msg('s-msg','❌ Firebase: '+e.message,'err');if(typeof window.blRefreshAndRender==='function')window.blRefreshAndRender().catch(console.warn);}
     finally{if(btn){btn.disabled=false;btn.textContent=old;}}
