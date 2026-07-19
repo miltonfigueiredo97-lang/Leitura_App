@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784477572 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784477978 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -2022,7 +2022,7 @@ window.renderLendoCards = renderLendoCards;
 
 function abrirSessaoRapida(livroNome) {
   abrirModal('sessao');
-  setTimeout(() => {
+  setTimeout(async () => {
     // Preencher o livro automaticamente
     const inputBusca = document.getElementById('s-livro-busca');
     const inputHidden = document.getElementById('s-livro');
@@ -2033,11 +2033,9 @@ function abrirSessaoRapida(livroNome) {
     // Iniciar scroll na página atual do livro
     const livro = (window._livros||[]).find(l => l.livro === livroNome);
     if (livro && window.iniciarScrollPagina) {
-      iniciarScrollPagina(livro.pagAtual||0, livro.totalPag||0);
-      // V3.60: corrige com página real do Firestore assim que carregar (evita cache/duplicata desatualizada)
-      if(window.blFreshBookPage) window.blFreshBookPage(livroNome).then(fresh=>{
-        if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||livro.totalPag||0);
-      });
+      // V3.60: busca a página real do Firestore ANTES de iniciar o stepper — elimina corrida com cliques do usuário
+      const fresh = window.blFreshBookPage ? await window.blFreshBookPage(livroNome).catch(()=>null) : null;
+      iniciarScrollPagina(fresh?fresh.current:(livro.pagAtual||0), (fresh&&fresh.total)||livro.totalPag||0);
     }
     // Esconder o campo de busca
     const buscaWrap = inputBusca?.closest('.pwa-field');
