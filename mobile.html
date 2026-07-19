@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784478024 -->
+<head><!-- V3.60-build-1784478385 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12395,17 +12395,21 @@ body.bl-v12-battle #blBattleBackButtonV25{
     const old=btn?.textContent||'✅ Salvar Sessão';
     try{
       if(btn){btn.disabled=true;btn.textContent='Salvando...';}
-      const found=await findLibraryDoc(title); const lib=found?.data||{}; const book=findBook(title,lib.bookId)||{}; const total=bookPages(lib)||bookPages(book);
-      const prev=bookCurrent(lib); const shown=num($('s-pagina-cur')?.textContent); let next=shown&&shown>=prev?shown:prev+pages; if(total)next=Math.min(total,next);
+      const found=await findLibraryDoc(title); const lib=found?.data||{}; const book=findBook(title,lib.bookId)||{};
+      const freshPage=window.blFreshBookPage?await window.blFreshBookPage(title):null;
+      const prev=freshPage?freshPage.current:bookCurrent(lib);
+      const total=(freshPage&&freshPage.total)||bookPages(lib)||bookPages(book);
+      let next=prev+pages; if(total)next=Math.min(total,next);
       const minutes=num($('s-minutos')?.value)+num($('s-horas')?.value)*60; const seconds=num($('s-segundos')?.value);
       const review=($('s-resenha')?.value||'').trim(); const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];
       const user=authUser(); const sessionData={bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(String(date).slice(0,4)),currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,userDisplayName:user?.displayName||raw().currentLabel||'',userPhotoURL:user?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()};
       if(db()&&uid())await userCol('sessions').add(sessionData);
-      if(found?.id&&db()&&uid()){
+      const targetDocId=(freshPage&&freshPage.docId)||found?.id;
+      if(targetDocId&&db()&&uid()){
         const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0};
         if(total&&next>=total){Object.assign(upd,{status:'Completo',completionYear:String(date).slice(0,4),completionDate:date,progress:1,pendingRating:true,dismissCompletedPrompt:false});}
         else if(next>0)upd.status='Lendo';
-        await userCol('library').doc(found.id).set(upd,{merge:true});
+        await userCol('library').doc(targetDocId).set(upd,{merge:true});
       }
       if(ownSessions())ownSessions().push(sessionData);
       window._sessoes=window._sessoes||[];window._sessoes.push({livro:title,data:date,paginas:pages,minutos:minutes,segundos:seconds,ano:Number(String(date).slice(0,4)),currentPage:next,totalPages:total,review,reactions,usuario:raw().currentLabel||user?.displayName||''});
