@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784473413 -->
+<head><!-- V3.60-build-1784473773 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12130,7 +12130,10 @@ body.bl-v12-battle #blBattleBackButtonV25{
     try{
       if(btn){btn.disabled=true;btn.textContent='Salvando...';}
       const found=await findLibraryDoc(title); const lib=found?.data||{}; const book=findBook(title,lib.bookId)||{};
-      const prev=bookCurrent(lib); const total=bookPages(lib)||bookPages(book); const currentPage=num($('s-pagina-atual')?.value)+pages || prev+pages;
+      const freshPage = window.blFreshBookPage ? await window.blFreshBookPage(title) : null;
+      const prev = freshPage ? freshPage.current : bookCurrent(lib);
+      const total = (freshPage && freshPage.total) || bookPages(lib) || bookPages(book);
+      const currentPage = prev + pages;
       const next=total?Math.min(total,currentPage):currentPage; const minutes=num($('s-minutos')?.value)+num($('s-horas')?.value)*60; const seconds=num($('s-segundos')?.value);
       const review=($('s-resenha')?.value||'').trim(); const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];
       const user=authUser();
