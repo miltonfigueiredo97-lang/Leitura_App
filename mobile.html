@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784478385 -->
+<head><!-- V3.60-build-1784478920 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -7238,6 +7238,9 @@ function atualizarDisplayPagina() {
   if (el('s-pagina-pct')) el('s-pagina-pct').textContent = `${pct}% do livro`;
   if (el('s-pagina-lidas-label')) el('s-pagina-lidas-label').textContent = paginasLidas > 0 ? `+${paginasLidas} págs lidas` : '';
   if (el('s-paginas')) el('s-paginas').value = paginasLidas;
+  // V3.60: expõe o estado exato mostrado na tela — usado no save para garantir 100% de consistência com o que o usuário viu
+  window.__blStepperCurrent = _paginaAtual;
+  window.__blStepperTotal = _totalPag;
   // NÃO sobrescreve s-pagina-atual aqui
 }
 window.atualizarDisplayPagina = atualizarDisplayPagina;
@@ -12397,9 +12400,16 @@ body.bl-v12-battle #blBattleBackButtonV25{
       if(btn){btn.disabled=true;btn.textContent='Salvando...';}
       const found=await findLibraryDoc(title); const lib=found?.data||{}; const book=findBook(title,lib.bookId)||{};
       const freshPage=window.blFreshBookPage?await window.blFreshBookPage(title):null;
-      const prev=freshPage?freshPage.current:bookCurrent(lib);
-      const total=(freshPage&&freshPage.total)||bookPages(lib)||bookPages(book);
-      let next=prev+pages; if(total)next=Math.min(total,next);
+      // V3.60: usa o valor exato já confirmado na tela (stepper), evita qualquer divergência entre buscas
+      const total=window.__blStepperTotal||(freshPage&&freshPage.total)||bookPages(lib)||bookPages(book);
+      let next;
+      if(window.__blStepperCurrent && window.__blStepperCurrent > 0){
+        next = window.__blStepperCurrent;
+      } else {
+        const prev=freshPage?freshPage.current:bookCurrent(lib);
+        next=prev+pages;
+      }
+      if(total)next=Math.min(total,next);
       const minutes=num($('s-minutos')?.value)+num($('s-horas')?.value)*60; const seconds=num($('s-segundos')?.value);
       const review=($('s-resenha')?.value||'').trim(); const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];
       const user=authUser(); const sessionData={bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(String(date).slice(0,4)),currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,userDisplayName:user?.displayName||raw().currentLabel||'',userPhotoURL:user?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()};
