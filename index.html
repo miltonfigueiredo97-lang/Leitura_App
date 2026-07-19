@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784473393 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784473719 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9415,7 +9415,11 @@ body.bl-v12-battle #blBattleBackButtonV25{
     try{
       if(btn){btn.disabled=true;btn.textContent='Salvando...';}
       const found=await findLibraryDoc(title); const lib=found?.data||{}; const book=findBook(title,lib.bookId)||{};
-      const prev=bookCurrent(lib); const total=bookPages(lib)||bookPages(book); const currentPage=num($('s-pagina-atual')?.value)+pages || prev+pages;
+      // V3.60: busca página atual REAL do Firestore (ignora cache local/campo oculto que pode estar desatualizado)
+      const freshPage = window.blFreshBookPage ? await window.blFreshBookPage(title) : null;
+      const prev = freshPage ? freshPage.current : bookCurrent(lib);
+      const total = (freshPage && freshPage.total) || bookPages(lib) || bookPages(book);
+      const currentPage = prev + pages;
       const next=total?Math.min(total,currentPage):currentPage; const minutes=num($('s-minutos')?.value)+num($('s-horas')?.value)*60; const seconds=num($('s-segundos')?.value);
       const review=($('s-resenha')?.value||'').trim(); const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];
       const user=authUser();
