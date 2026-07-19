@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784479172 -->
+<head><!-- V3.60-build-1784479247 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -5223,6 +5223,10 @@ iniciarAppFirebase();
         <input id="l-paginas" type="number" min="1" placeholder="—">
       </div>
       <div class="pwa-field">
+        <label>Página Atual (corrige manualmente se estiver errado)</label>
+        <input id="l-pagina-atual" type="number" min="0" placeholder="Deixe vazio para não alterar">
+      </div>
+      <div class="pwa-field">
         <label>Ano da Meta</label>
         <input id="l-metaano" type="text" pattern="\d{4}" placeholder="Ex: 2026 (deixe vazio para remover da meta)">
       </div>
@@ -7900,6 +7904,7 @@ if ('serviceWorker' in navigator) {
     try{ if(btn){btn.disabled=true;btn.textContent='Atualizando...';}
       const data={updatedAt:nowISO()}; [['status','l-status'],['author','l-autor'],['targetYear','l-metaano'],['dependency','l-depende'],['coverUrl','l-capa'],['isbn','l-isbn'],['collection','l-colecao'],['genre','l-genero']].forEach(([k,id])=>{const el=document.getElementById(id); if(el) data[k]=el.value.trim();});
       const pages=n(document.getElementById('l-paginas')?.value); if(pages) data.totalPages=pages; const ord=n(document.getElementById('l-ordem')?.value); if(ord) data.collectionOrder=ord;
+      const pagAtualManual=document.getElementById('l-pagina-atual')?.value; if(pagAtualManual!==''&&pagAtualManual!=null){data.currentPage=n(pagAtualManual); data.progress=data.totalPages?data.currentPage/data.totalPages:(pages?data.currentPage/pages:0);}
       await userCol('library').doc(lib.id).set(data,{merge:true});
       if(lib.bookId) await window.BL.db.collection('books').doc(lib.bookId).set({title,author:data.author||lib.author||'',pages:pages||bookPages(lib),coverUrl:data.coverUrl||lib.coverUrl||'',isbn:data.isbn||lib.isbn||'',collection:data.collection||lib.collection||'',genre:data.genre||lib.genre||'',updatedAt:nowISO()},{merge:true});
       safeMsg('l-msg','✅ Livro atualizado no Firebase!','ok'); await blRefreshAndRender(); setTimeout(()=>fecharModal('livro'),800);
@@ -12359,9 +12364,11 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function sortSessions(arr){return [...arr].sort((a,b)=>String(a.createdAt||a.updatedAt||a.date||a.data||'').localeCompare(String(b.createdAt||b.updatedAt||b.date||b.data||'')));}
   function localSessionDate(s){return String(s.date||s.data||s.createdAt||s.updatedAt||'').slice(0,10);}
   async function recomputePageAfterDelete(title,bookId,fallbackCurrent,deletedPages,total){
-    // V3.60: desfaz exatamente a sessão excluída (página atual - páginas dessa sessão) — simples, direto,
-    // não depende de nenhum outro registro histórico que possa estar corrompido
-    let next = Math.max(0, num(fallbackCurrent) - num(deletedPages));
+    const sessions=sortSessions(await getSessionsForBook(title,bookId));
+    // V3.60: soma os deltas de páginas lidas (sempre corretos) em vez de confiar no currentPage absoluto
+    // de uma sessão antiga, que pode ter sido gravado errado antes das correções de hoje
+    let next = sessions.reduce((a,s)=>a+num(s.pages||s.paginas||0),0);
+    if(!sessions.length && fallbackCurrent){ next = Math.max(0, fallbackCurrent - num(deletedPages)); }
     if(total)next=Math.min(total,next);
     return Math.max(0,next);
   }
