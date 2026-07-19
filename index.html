@@ -579,7 +579,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1783121139 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784473393 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -2034,6 +2034,10 @@ function abrirSessaoRapida(livroNome) {
     const livro = (window._livros||[]).find(l => l.livro === livroNome);
     if (livro && window.iniciarScrollPagina) {
       iniciarScrollPagina(livro.pagAtual||0, livro.totalPag||0);
+      // V3.60: corrige com página real do Firestore assim que carregar (evita cache/duplicata desatualizada)
+      if(window.blFreshBookPage) window.blFreshBookPage(livroNome).then(fresh=>{
+        if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||livro.totalPag||0);
+      });
     }
     // Esconder o campo de busca
     const buscaWrap = inputBusca?.closest('.pwa-field');
@@ -7200,6 +7204,10 @@ function selecionarLivroSessao(l) {
   sel.style.display = 'block';
   // Inicializa scroll de página com pagAtual do livro
   iniciarScrollPagina(l.pagAtual||0, l.totalPag||0);
+  // V3.60: corrige com página real do Firestore assim que carregar
+  if(window.blFreshBookPage) window.blFreshBookPage(l.livro).then(fresh=>{
+    if(fresh && window.iniciarScrollPagina) iniciarScrollPagina(fresh.current, fresh.total||l.totalPag||0);
+  });
   // Verifica dependência
   if (l.depende) {
     const dep = livrosCache.find(x => x.livro === l.depende);
@@ -9385,6 +9393,21 @@ body.bl-v12-battle #blBattleBackButtonV25{
     let found=null; snap.forEach(doc=>{const d=doc.data(); if(!found && (norm(bookTitle(d))===norm(title)||doc.id===title||d.bookId===title)) found={id:doc.id,data:{id:doc.id,...d}};});
     return found;
   }
+  // V3.60: busca página atual REAL do Firestore, ignora cache local que pode ter duplicatas desatualizadas
+  window.blFreshBookPage = async function(title){
+    try {
+      if(!db()||!uid()) return null;
+      const snap = await userCol('library').get();
+      let found = null;
+      const t = norm(title);
+      snap.forEach(doc => {
+        const d = doc.data();
+        if(!found && norm(titleOf(d)) === t) found = d;
+      });
+      if(!found) return null;
+      return { current: Number(found.currentPage||0), total: Number(found.totalPages||0) };
+    } catch(e) { console.warn('blFreshBookPage falhou', e); return null; }
+  };
   async function saveSessionV333(){
     const btn=$('s-btn'), title=$('s-livro')?.value, pages=num($('s-paginas')?.value), date=$('s-data')?.value;
     if(!title||!pages||!date) return msg('s-msg','Preencha livro, páginas e data.','err');
