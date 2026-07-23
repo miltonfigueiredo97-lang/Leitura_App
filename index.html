@@ -5,6 +5,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 
+<script id="bl-local-date-helper">
+window.blLocalToday=function(){var d=new Date();var p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+window.blLocalDayOffset=function(days){var d=new Date();d.setDate(d.getDate()+(days||0));var p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+</script>
 <script id="bl-v349-early-console-guard">
 (function(){
   'use strict';
@@ -579,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.60-build-1784479284 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.61-build-1784775003 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4104,35 +4108,36 @@ async function blLoadFirestoreData(){
 }
 
 // V3.60: carrega bundles de amigos sob demanda — chamado por batalha, comunidade e perfil de amigo
-window.blEnsureFriendBundles = async function(){
+window.blEnsureFriendBundles = function(){
   const raw = window.BL?.raw;
-  if(!raw || raw.friendBundlesLoaded) return raw?.users || [];
-  const friends = raw.friends || [];
-  if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users; }
-  const bundles = [];
-  for(const f of friends){
-    const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
-    try {
-      // não recarrega quem já está em users
-      // V3.60: verifica se o UID já tem dados reais (library/sessions), não apenas se existe
+  if(!raw) return Promise.resolve([]);
+  if(raw.friendBundlesLoaded) return Promise.resolve(raw.users || []);
+  // V3.61: uma unica carga em voo. Login, Comunidade e Batalha compartilham a MESMA promise,
+  // em vez de dispararem 3 carregamentos concorrentes (causa principal do travamento).
+  if(window.__blFriendBundlesInFlight) return window.__blFriendBundlesInFlight;
+  window.__blFriendBundlesInFlight = (async () => {
+    const friends = raw.friends || [];
+    if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users || []; }
+    // V3.61: carrega TODOS os amigos em paralelo (antes era um de cada vez)
+    const results = await Promise.all(friends.map(async f => {
+      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
       const existing = (raw.users||[]).find(u=>String(u.uid||'')===String(f.uid||''));
-      if(!existing || (existing.library?.length===0 && existing.sessions?.length===0)){
-        try {
-          const bundle = await blReadUserBundle(f.uid, label);
-          if(existing){
-            // substitui o placeholder vazio pelo bundle real
-            const idx = raw.users.indexOf(existing);
-            if(idx>=0) raw.users[idx] = bundle;
-          } else {
-            bundles.push(bundle);
-          }
-        } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
-      }
-    } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
-  }
-  raw.users = [...(raw.users||[]), ...bundles];
-  raw.friendBundlesLoaded = true;
-  return raw.users;
+      const temDados = existing && !((existing.library?.length||0)===0 && (existing.sessions?.length||0)===0);
+      if(temDados) return null;
+      try { return { uid: f.uid, bundle: await blReadUserBundle(f.uid, label) }; }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); return null; }
+    }));
+    raw.users = raw.users || [];
+    results.forEach(r => {
+      if(!r || !r.bundle) return;
+      const idx = raw.users.findIndex(u=>String(u.uid||'')===String(r.uid||''));
+      if(idx>=0) raw.users[idx] = r.bundle; else raw.users.push(r.bundle);
+    });
+    raw.friendBundlesLoaded = true;
+    return raw.users;
+  })();
+  window.__blFriendBundlesInFlight.catch(()=>{}).then(()=>{ window.__blFriendBundlesInFlight = null; });
+  return window.__blFriendBundlesInFlight;
 }
 
 function blUpdateUserButtons(raw){
@@ -5508,8 +5513,8 @@ function renderBatalha() {
       }
       streakRecord=Math.max(streakRecord,cur);
     }
-    const hojeStr=new Date().toISOString().slice(0,10);
-    const ontemStr=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const hojeStr=blLocalToday();
+    const ontemStr=blLocalDayOffset(-1);
     if(diasSet.has(hojeStr)||diasSet.has(ontemStr)){
       let c=new Date((diasSet.has(hojeStr)?hojeStr:ontemStr)+'T12:00:00');
       while(diasSet.has(c.toISOString().slice(0,10))){streakAtual++;c=new Date(c-86400000);}
@@ -6881,7 +6886,7 @@ function abrirModal(tipo) {
   const id = 'modal' + tipo.charAt(0).toUpperCase() + tipo.slice(1);
   document.getElementById(id).classList.add('open');
   if (tipo === 'sessao') {
-    document.getElementById('s-data').value = new Date().toISOString().slice(0,10);
+    document.getElementById('s-data').value = blLocalToday();
     carregarLivros();
   }
   if (tipo === 'nota' || tipo === 'livro' || tipo === 'excluir') carregarLivros();
@@ -9493,7 +9498,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const num=v=>{const n=Number(String(v??'').replace(',','.')); return Number.isFinite(n)?n:0;};
   const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const slug=v=>(typeof window.blSlug==='function'?window.blSlug(v):String(v||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,90));
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const raw=()=>window.BL?.raw||{};
   const authUser=()=>window.BL?.auth?.currentUser||null;
@@ -9721,7 +9726,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const num=v=>{const n=Number(String(v??'').replace(',','.').replace(/[^0-9.\-]/g,''));return Number.isFinite(n)?n:0;};
   const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const slug=v=>(typeof window.blSlug==='function'?window.blSlug(v):String(v||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,90));
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const raw=()=>window.BL?.raw||{};
   const authUser=()=>window.BL?.auth?.currentUser||null;
@@ -9768,14 +9773,14 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function sortSessions(arr){return [...arr].sort((a,b)=>String(a.createdAt||a.updatedAt||a.date||a.data||'').localeCompare(String(b.createdAt||b.updatedAt||b.date||b.data||'')));}
   function localSessionDate(s){return String(s.date||s.data||s.createdAt||s.updatedAt||'').slice(0,10);}
   async function recomputePageAfterDelete(title,bookId,fallbackCurrent,deletedPages,total){
-    const sessions=sortSessions(await getSessionsForBook(title,bookId));
-    const withCurrent=sessions.filter(s=>bookCurrent(s)>0);
-    let next=0;
-    if(withCurrent.length){next=bookCurrent(withCurrent[withCurrent.length-1]);}
-    else if(fallbackCurrent){next=Math.max(0,fallbackCurrent-num(deletedPages));}
-    else{next=sessions.reduce((a,s)=>a+num(s.pages||s.paginas),0);}
-    if(total)next=Math.min(total,next);
-    return Math.max(0,next);
+    // V3.61 SEGURANCA: excluir sessao SO pode diminuir o progresso, exatamente pelas paginas daquela sessao.
+    // Se nao houver pagina anterior confiavel, retorna null e o chamador NAO grava nada (livro preservado).
+    const before=num(fallbackCurrent), del=num(deletedPages);
+    if(!(before>0)){console.warn('[BookLegacy] exclusao: pagina anterior desconhecida — library preservada');return null;}
+    let next=before-del;
+    if(!(next>=0))next=0;
+    if(total&&next>total)next=total;
+    return next;
   }
   function syncLocalBook(title,next,total,extra){
     const t=norm(title); if(!t)return;
@@ -9840,14 +9845,16 @@ body.bl-v12-battle #blBattleBackButtonV25{
       if(window._sessoes)window._sessoes=window._sessoes.filter(x=>!same(x));
       const cb=currentBundle(); if(cb.sessions)cb.sessions=cb.sessions.filter(x=>!same(x));
       const next=await recomputePageAfterDelete(title,bookId,currentBefore,num(s.pages||s.paginas),total);
-      if(found?.id&&db()&&uid()){
-        const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0};
-        if(total&&next>=total){Object.assign(upd,{status:'Completo',pendingRating:true,dismissCompletedPrompt:false,progress:1});}
-        else if(next>0){Object.assign(upd,{status:'Lendo',pendingRating:false,dismissCompletedPrompt:false});}
-        else{Object.assign(upd,{status:'Aguardando',pendingRating:false,dismissCompletedPrompt:false});}
+      const _prevSt=String(lib.status||''); const _pausado=/^pausado$/i.test(_prevSt); const _eraCompleto=/^(completo|lido|finalizado|conclu)/i.test(_prevSt);
+      if(next!==null&&found?.id&&db()&&uid()){
+        const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0,pendingRating:false};
+        // V3.61: excluir sessao NUNCA marca um livro como Completo do nada, e nunca perde o Pausado
+        if(next<=0){upd.status=_pausado?'Pausado':'Aguardando';upd.dismissCompletedPrompt=false;}
+        else if(total&&next>=total&&_eraCompleto){upd.status='Completo';upd.progress=1;upd.pendingRating=true;}
+        else {upd.status=_pausado?'Pausado':'Lendo';upd.dismissCompletedPrompt=false;}
         await userCol('library').doc(found.id).set(upd,{merge:true});
       }
-      syncLocalBook(title,next,total,total&&next>=total?{}:{pendingRating:false,dismissCompletedPrompt:false});
+      if(next!==null)syncLocalBook(title,next,total,{pendingRating:false,dismissCompletedPrompt:false});
       msg('es-msg','✅ Sessão excluída no Firebase!','ok');
       renderLocal(); if(typeof window.renderSessoesExcluir==='function')window.renderSessoesExcluir();
       backgroundRefreshKeepPlace(y);
@@ -9980,7 +9987,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const slug=v=>(typeof window.blSlug==='function'?window.blSlug(v):String(v||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,90));
   const nowISO=()=>new Date().toISOString();
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const raw=()=>window.BL?.raw||{};
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
@@ -10099,7 +10106,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
         next=prev+pages;
       }
       if(total)next=Math.min(total,next);const minutes=num($('s-minutos')?.value)+num($('s-horas')?.value)*60;const seconds=num($('s-segundos')?.value);const review=($('s-resenha')?.value||'').trim();const reactions=(window.blGetSelectedReactions?window.blGetSelectedReactions('session'):null)||window.__blV333SessionReactions||[];const user=authUser();const data={bookId:lib.bookId||book.id||'',title,collection:lib.collection||lib.colecao||book.collection||'',date,pages,minutes,seconds,year:Number(String(date).slice(0,4)),previousPage:prev,currentPage:next,totalPages:total,review,reactions,termometro:reactions,thermometer:reactions,userDisplayName:user?.displayName||raw().currentLabel||'',userPhotoURL:user?.photoURL||'',createdAt:nowISO(),updatedAt:nowISO()};if(db()&&uid())await userCol('sessions').add(data);const targetDocId=(freshPage&&freshPage.docId)||found?.id;if(targetDocId&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0};if(total&&next>=total)Object.assign(upd,{status:'Completo',completionYear:String(date).slice(0,4),completionDate:date,progress:1,pendingRating:true,dismissCompletedPrompt:false});else if(next>0)upd.status='Lendo';await userCol('library').doc(targetDocId).set(upd,{merge:true});}(ownSessions()||[]).push(data);window._sessoes=window._sessoes||[];window._sessoes.push({id:data.id,livro:title,title,data:date,date,paginas:pages,pages,minutos:minutes,minutes,segundos:seconds,seconds,ano:Number(String(date).slice(0,4)),previousPage:prev,currentPage:next,totalPages:total,review,reactions,usuario:raw().currentLabel||user?.displayName||''});syncLocalBook(title,next,total,total&&next>=total?{completionDate:date,anoConclusao:String(date).slice(0,4),pendingRating:true,dismissCompletedPrompt:false}:{});msg('s-msg','✅ Sessão salva!','ok');renderLocal();setTimeout(()=>unlock(y),160);refreshBg(y);}catch(e){console.error(e);msg('s-msg','❌ Firebase: '+(e.message||e),'err');}finally{if(btn){btn.disabled=false;btn.textContent=old;}}};
-  async function recomputeAfterDelete(s){const title=titleOf(s);const bookId=s.bookId||'';const found=await findLibraryDoc(title,bookId);const lib=found?.data||{};const total=pagesOf(lib)||totalFor(title,bookId,currentBundle());const uidNow=uid();let next=null;try{const snap=uidNow?await userCol('sessions').get():null;const all=snap?snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.id!==s.id&&norm(titleOf(x))===norm(title)):[];const normed=normalizeSessionsForBundle({library:ownLibrary(),sessions:all,ratings:[]}).filter(x=>norm(x.title)===norm(title));if(normed.length)next=normed[normed.length-1].current;}catch(e){console.warn('recompute via historico falhou, usando fallback',e);}if(next===null){next=num(s.previousPage);if(!next&&next!==0)next=Math.max(0,currentOf(lib)-num(s.pages||s.paginas));}if(total)next=Math.min(total,next);if(found?.id&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0};if(total&&next<total)Object.assign(upd,{status:next>0?'Lendo':'Aguardando',pendingRating:false});await userCol('library').doc(found.id).set(upd,{merge:true});}syncLocalBook(title,next,total,{pendingRating:false});return next;}
+  async function recomputeAfterDelete(s){const title=titleOf(s);const bookId=s.bookId||'';const found=await findLibraryDoc(title,bookId);const lib=found?.data||{};const total=pagesOf(lib)||totalFor(title,bookId,currentBundle());const before=num(currentOf(lib));const del=num(s.pages||s.paginas);/* V3.61 SEGURANCA: excluir sessao so DIMINUI o progresso, exatamente pelas paginas dela. Sem pagina anterior confiavel, nao grava nada. */if(!(before>0)){console.warn('[BookLegacy] exclusao: pagina anterior desconhecida — library preservada');return null;}let next=before-del;if(!(next>=0))next=0;if(total&&next>total)next=total;const _prevSt=String(lib.status||'');const _pausado=/^pausado$/i.test(_prevSt);const _eraCompleto=/^(completo|lido|finalizado|conclu)/i.test(_prevSt);if(found?.id&&db()&&uid()){const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0,pendingRating:false};if(next<=0){upd.status=_pausado?'Pausado':'Aguardando';upd.dismissCompletedPrompt=false;}else if(total&&next>=total&&_eraCompleto){upd.status='Completo';upd.progress=1;upd.pendingRating=true;}else{upd.status=_pausado?'Pausado':'Lendo';upd.dismissCompletedPrompt=false;}await userCol('library').doc(found.id).set(upd,{merge:true});}syncLocalBook(title,next,total,{pendingRating:false});return next;}
   const oldExcluir=window.excluirSessao;
   window.excluirSessao=async function(sOrLivro,data,paginas){const y=window.scrollY||0;const s=typeof sOrLivro==='object'?sOrLivro:{livro:sOrLivro,title:sOrLivro,data,paginas,pages:paginas};if(!s.id&&typeof oldExcluir==='function')return oldExcluir.apply(this,arguments);if(!s.id)return msg('es-msg','❌ Sessão sem ID. Atualize a página e tente novamente.','err');if(!confirm(`Excluir sessão de "${titleOf(s)}" em ${s.data||s.date}?`))return;try{if(db()&&uid())await userCol('sessions').doc(s.id).delete();window._sessoes=(window._sessoes||[]).filter(x=>x.id!==s.id);const b=currentBundle();if(b.sessions)b.sessions=b.sessions.filter(x=>x.id!==s.id);await recomputeAfterDelete(s);msg('es-msg','✅ Sessão excluída!','ok');renderLocal();if(typeof window.renderSessoesExcluir==='function')window.renderSessoesExcluir();refreshBg(y);setTimeout(()=>window.scrollTo(0,y),60);}catch(e){console.error(e);msg('es-msg','❌ Firebase: '+(e.message||e),'err');}};
   const oldNota=window.enviarNota;
@@ -10203,7 +10210,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||raw().uid||'';
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const bookTitle=x=>x?.title||x?.livro||x?.nome||x?.bookTitle||'';
   const bookPages=x=>num(x?.totalPages||x?.pagesTotal||x?.totalPag||x?.paginasTotal||x?.pages||x?.paginas);
@@ -10373,7 +10380,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||raw().uid||'';
   const nowISO=()=>new Date().toISOString();
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const bookTitle=x=>x?.title||x?.livro||x?.nome||x?.bookTitle||'';
   const bookPages=x=>num(x?.totalPages||x?.pagesTotal||x?.paginasTotal||x?.totalPag||x?.pages||x?.paginas||x?.total);
   const bookCurrent=x=>num(x?.currentPage||x?.pagAtual||x?.paginaAtual||x?.paginaAtualTotal||x?.pagina||x?.pageCurrent);
@@ -10566,7 +10573,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||raw().uid||'';
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const bookTitle=x=>x?.title||x?.livro||x?.nome||x?.bookTitle||x?.titulo||'';
   const bookPages=x=>num(x?.totalPages||x?.pagesTotal||x?.paginasTotal||x?.totalPag||x?.paginasTotais||x?.pages||x?.paginas||x?.total);
@@ -10827,7 +10834,7 @@ body.bl-v40-loading #app{display:none!important;}
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||window.BL?.__activeUid||'';
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const timeNow=()=>new Date().toTimeString().slice(0,8);
   function bookTitle(o){return String(o?.title||o?.livro||o?.nome||o?.bookTitle||o?.name||'').trim();}
@@ -11016,7 +11023,7 @@ body.bl-v40-loading #app{display:none!important;}
   const num=v=>Number(String(v??'').replace(',','.').replace(/[^0-9.\-]/g,''))||0;
   const raw=()=>window.BL?.raw||window._dadosD||{};
   const nowISO=()=>new Date().toISOString();
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const timeNow=()=>new Date().toTimeString().slice(0,8);
   function bookTitle(o){return String(o?.livro||o?.title||o?.nome||o?.bookTitle||o?.name||'').trim();}
   function bookId(o){return String(o?.bookId||o?.idLivro||o?.livroId||o?.id||o?.docId||'').trim();}
