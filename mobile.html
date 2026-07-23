@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.60-build-1784479247 -->
+<head><!-- V3.61-build-1784775003 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 
+<script id="bl-local-date-helper">
+window.blLocalToday=function(){var d=new Date();var p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+window.blLocalDayOffset=function(days){var d=new Date();d.setDate(d.getDate()+(days||0));var p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+</script>
 <script id="bl-v349-early-console-guard">
 (function(){
   'use strict';
@@ -4146,32 +4150,35 @@ async function blLoadFirestoreData(){
   return blAdaptFirestoreToLegacy(raw);
 }
 
-window.blEnsureFriendBundles = async function(){
+window.blEnsureFriendBundles = function(){
   const raw = window.BL?.raw;
-  if(!raw || raw.friendBundlesLoaded) return raw?.users || [];
-  const friends = raw.friends || [];
-  if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users; }
-  const bundles = [];
-  for(const f of friends){
-    const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
-    try {
+  if(!raw) return Promise.resolve([]);
+  if(raw.friendBundlesLoaded) return Promise.resolve(raw.users || []);
+  // V3.61: uma unica carga em voo, compartilhada por login/Comunidade/Batalha
+  if(window.__blFriendBundlesInFlight) return window.__blFriendBundlesInFlight;
+  window.__blFriendBundlesInFlight = (async () => {
+    const friends = raw.friends || [];
+    if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users || []; }
+    // V3.61: todos os amigos em paralelo (antes era um de cada vez)
+    const results = await Promise.all(friends.map(async f => {
+      const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
       const existing = (raw.users||[]).find(u=>String(u.uid||'')===String(f.uid||''));
-      if(!existing || (existing.library?.length===0 && existing.sessions?.length===0)){
-        try {
-          const bundle = await blReadUserBundle(f.uid, label);
-          if(existing){
-            const idx = raw.users.indexOf(existing);
-            if(idx>=0) raw.users[idx] = bundle;
-          } else {
-            bundles.push(bundle);
-          }
-        } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
-      }
-    } catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); }
-  }
-  raw.users = [...(raw.users||[]), ...bundles];
-  raw.friendBundlesLoaded = true;
-  return raw.users;
+      const temDados = existing && !((existing.library?.length||0)===0 && (existing.sessions?.length||0)===0);
+      if(temDados) return null;
+      try { return { uid: f.uid, bundle: await blReadUserBundle(f.uid, label) }; }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); return null; }
+    }));
+    raw.users = raw.users || [];
+    results.forEach(r => {
+      if(!r || !r.bundle) return;
+      const idx = raw.users.findIndex(u=>String(u.uid||'')===String(r.uid||''));
+      if(idx>=0) raw.users[idx] = r.bundle; else raw.users.push(r.bundle);
+    });
+    raw.friendBundlesLoaded = true;
+    return raw.users;
+  })();
+  window.__blFriendBundlesInFlight.catch(()=>{}).then(()=>{ window.__blFriendBundlesInFlight = null; });
+  return window.__blFriendBundlesInFlight;
 }
 
 function blUpdateUserButtons(raw){
@@ -5483,8 +5490,8 @@ function renderBatalha() {
       }
       streakRecord=Math.max(streakRecord,cur);
     }
-    const hojeStr=new Date().toISOString().slice(0,10);
-    const ontemStr=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const hojeStr=blLocalToday();
+    const ontemStr=blLocalDayOffset(-1);
     if(diasSet.has(hojeStr)||diasSet.has(ontemStr)){
       let c=new Date((diasSet.has(hojeStr)?hojeStr:ontemStr)+'T12:00:00');
       while(diasSet.has(c.toISOString().slice(0,10))){streakAtual++;c=new Date(c-86400000);}
@@ -6856,7 +6863,7 @@ function abrirModal(tipo) {
   const id = 'modal' + tipo.charAt(0).toUpperCase() + tipo.slice(1);
   document.getElementById(id).classList.add('open');
   if (tipo === 'sessao') {
-    document.getElementById('s-data').value = new Date().toISOString().slice(0,10);
+    document.getElementById('s-data').value = blLocalToday();
     carregarLivros();
   }
   if (tipo === 'nota' || tipo === 'livro' || tipo === 'excluir') carregarLivros();
@@ -12317,7 +12324,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const num=v=>{const n=Number(String(v??'').replace(',','.').replace(/[^0-9.\-]/g,''));return Number.isFinite(n)?n:0;};
   const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const slug=v=>(typeof window.blSlug==='function'?window.blSlug(v):String(v||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,90));
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const raw=()=>window.BL?.raw||{};
   const authUser=()=>window.BL?.auth?.currentUser||null;
@@ -12364,13 +12371,14 @@ body.bl-v12-battle #blBattleBackButtonV25{
   function sortSessions(arr){return [...arr].sort((a,b)=>String(a.createdAt||a.updatedAt||a.date||a.data||'').localeCompare(String(b.createdAt||b.updatedAt||b.date||b.data||'')));}
   function localSessionDate(s){return String(s.date||s.data||s.createdAt||s.updatedAt||'').slice(0,10);}
   async function recomputePageAfterDelete(title,bookId,fallbackCurrent,deletedPages,total){
-    const sessions=sortSessions(await getSessionsForBook(title,bookId));
-    // V3.60: soma os deltas de páginas lidas (sempre corretos) em vez de confiar no currentPage absoluto
-    // de uma sessão antiga, que pode ter sido gravado errado antes das correções de hoje
-    let next = sessions.reduce((a,s)=>a+num(s.pages||s.paginas||0),0);
-    if(!sessions.length && fallbackCurrent){ next = Math.max(0, fallbackCurrent - num(deletedPages)); }
-    if(total)next=Math.min(total,next);
-    return Math.max(0,next);
+    // V3.61 SEGURANCA: excluir sessao SO pode diminuir o progresso, exatamente pelas paginas daquela sessao.
+    // Se nao houver pagina anterior confiavel, retorna null e o chamador NAO grava nada (livro preservado).
+    const before=num(fallbackCurrent), del=num(deletedPages);
+    if(!(before>0)){console.warn('[BookLegacy] exclusao: pagina anterior desconhecida — library preservada');return null;}
+    let next=before-del;
+    if(!(next>=0))next=0;
+    if(total&&next>total)next=total;
+    return next;
   }
   function syncLocalBook(title,next,total,extra){
     const t=norm(title); if(!t)return;
@@ -12439,14 +12447,16 @@ body.bl-v12-battle #blBattleBackButtonV25{
       if(window._sessoes)window._sessoes=window._sessoes.filter(x=>!same(x));
       const cb=currentBundle(); if(cb.sessions)cb.sessions=cb.sessions.filter(x=>!same(x));
       const next=await recomputePageAfterDelete(title,bookId,currentBefore,num(s.pages||s.paginas),total);
-      if(found?.id&&db()&&uid()){
-        const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0};
-        if(total&&next>=total){Object.assign(upd,{status:'Completo',pendingRating:true,dismissCompletedPrompt:false,progress:1});}
-        else if(next>0){Object.assign(upd,{status:'Lendo',pendingRating:false,dismissCompletedPrompt:false});}
-        else{Object.assign(upd,{status:'Aguardando',pendingRating:false,dismissCompletedPrompt:false});}
+      const _prevSt=String(lib.status||''); const _pausado=/^pausado$/i.test(_prevSt); const _eraCompleto=/^(completo|lido|finalizado|conclu)/i.test(_prevSt);
+      if(next!==null&&found?.id&&db()&&uid()){
+        const upd={currentPage:next,updatedAt:nowISO(),progress:total?next/total:0,pendingRating:false};
+        // V3.61: excluir sessao NUNCA marca um livro como Completo do nada, e nunca perde o Pausado
+        if(next<=0){upd.status=_pausado?'Pausado':'Aguardando';upd.dismissCompletedPrompt=false;}
+        else if(total&&next>=total&&_eraCompleto){upd.status='Completo';upd.progress=1;upd.pendingRating=true;}
+        else {upd.status=_pausado?'Pausado':'Lendo';upd.dismissCompletedPrompt=false;}
         await userCol('library').doc(found.id).set(upd,{merge:true});
       }
-      syncLocalBook(title,next,total,total&&next>=total?{}:{pendingRating:false,dismissCompletedPrompt:false});
+      if(next!==null)syncLocalBook(title,next,total,{pendingRating:false,dismissCompletedPrompt:false});
       msg('es-msg','✅ Sessão excluída no Firebase!','ok');
       renderLocal(); if(typeof window.renderSessoesExcluir==='function')window.renderSessoesExcluir();
       backgroundRefreshKeepPlace(y);
@@ -12599,7 +12609,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||raw().uid||'';
   const nowISO=()=>new Date().toISOString();
-  const today=()=>new Date().toISOString().slice(0,10);
+  const today=()=>blLocalToday();
   const bookTitle=x=>x?.title||x?.livro||x?.nome||x?.bookTitle||'';
   const bookPages=x=>num(x?.totalPages||x?.pagesTotal||x?.paginasTotal||x?.totalPag||x?.pages||x?.paginas||x?.total);
   const bookCurrent=x=>num(x?.currentPage||x?.pagAtual||x?.paginaAtual||x?.paginaAtualTotal||x?.pagina||x?.pageCurrent);
@@ -12792,7 +12802,7 @@ body.bl-v12-battle #blBattleBackButtonV25{
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||raw().uid||'';
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const bookTitle=x=>x?.title||x?.livro||x?.nome||x?.bookTitle||x?.titulo||'';
   const bookPages=x=>num(x?.totalPages||x?.pagesTotal||x?.paginasTotal||x?.totalPag||x?.paginasTotais||x?.pages||x?.paginas||x?.total);
@@ -13052,7 +13062,7 @@ body.bl-v40-loading #app{display:none!important;}
   const authUser=()=>window.BL?.auth?.currentUser||null;
   const db=()=>window.BL?.db||null;
   const uid=()=>authUser()?.uid||window.BL?.__activeUid||'';
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const nowISO=()=>new Date().toISOString();
   const timeNow=()=>new Date().toTimeString().slice(0,8);
   function bookTitle(o){return String(o?.title||o?.livro||o?.nome||o?.bookTitle||o?.name||'').trim();}
@@ -13241,7 +13251,7 @@ body.bl-v40-loading #app{display:none!important;}
   const num=v=>Number(String(v??'').replace(',','.').replace(/[^0-9.\-]/g,''))||0;
   const raw=()=>window.BL?.raw||window._dadosD||{};
   const nowISO=()=>new Date().toISOString();
-  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const todayISO=()=>blLocalToday();
   const timeNow=()=>new Date().toTimeString().slice(0,8);
   function bookTitle(o){return String(o?.livro||o?.title||o?.nome||o?.bookTitle||o?.name||'').trim();}
   function bookId(o){return String(o?.bookId||o?.idLivro||o?.livroId||o?.id||o?.docId||'').trim();}
@@ -14372,7 +14382,7 @@ body.bl-v40-loading #app{display:none!important;}
     ov.classList.add('open');
     const modal=ov.querySelector('.pwa-modal'); if(modal) modal.scrollTop=0;
     if(tipo==='sessao'){
-      const d=$('s-data'); if(d&&!d.value) d.value=new Date().toISOString().slice(0,10);
+      const d=$('s-data'); if(d&&!d.value) d.value=blLocalToday();
       try{ if(typeof carregarLivros==='function') carregarLivros(); }catch(e){}
     }
     if(tipo==='nota'||tipo==='livro'||tipo==='excluir'){
