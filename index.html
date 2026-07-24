@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.62-build-1784888165 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.63-build-1784888572 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4135,8 +4135,13 @@ window.blEnsureFriendBundles = function(){
     });
     raw.friendBundlesLoaded = true;
     return raw.users;
-  })();
-  window.__blFriendBundlesInFlight.catch(()=>{}).then(()=>{ window.__blFriendBundlesInFlight = null; });
+  })().catch(function(e){
+    // V3.62: NUNCA devolve promise rejeitada — quem espera por ela precisa renderizar de qualquer jeito
+    console.warn('[BookLegacy] falha ao carregar amigos:', e);
+    try{ raw.friendBundlesLoaded = true; }catch(_){}
+    return (raw && raw.users) || [];
+  });
+  window.__blFriendBundlesInFlight.then(function(){ window.__blFriendBundlesInFlight = null; });
   return window.__blFriendBundlesInFlight;
 }
 
@@ -12962,6 +12967,47 @@ window.blDiagnostico = async function(){
     catch(e){ cp.textContent='Selecione e copie manualmente'; }
   };
 };
+</script>
+<script id="bl-error-reporter-v362">
+(function(){
+  if(window.__blErrReporter) return; window.__blErrReporter=true;
+  var erros=[];
+  function mostrar(){
+    var bar=document.getElementById('blErrBar');
+    if(!bar){
+      bar=document.createElement('div'); bar.id='blErrBar';
+      bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:100000;background:#7f1d1d;color:#fff;font:12px/1.4 system-ui,sans-serif;padding:8px 12px;cursor:pointer;box-shadow:0 -2px 10px rgba(0,0,0,.4);';
+      bar.onclick=function(){ detalhe(); };
+      document.body.appendChild(bar);
+    }
+    bar.textContent='\u26a0\ufe0f '+erros.length+' erro(s) de JavaScript detectado(s) \u2014 toque para ver';
+  }
+  function detalhe(){
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;';
+    var box=document.createElement('div');
+    box.style.cssText='background:#13182a;border:1px solid rgba(255,255,255,.2);border-radius:12px;max-width:560px;width:100%;max-height:80vh;overflow:auto;padding:16px;color:#e8ecf5;font:12px/1.5 ui-monospace,monospace;';
+    var html='<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><b style="font:700 14px system-ui;">Erros de JavaScript</b><button id="blErrX" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;">Fechar</button></div>';
+    erros.forEach(function(e,i){
+      html+='<div style="background:#0e1220;border-radius:8px;padding:8px;margin-bottom:8px;white-space:pre-wrap;word-break:break-word;"><b>#'+(i+1)+'</b>\n'+String(e).replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];})+'</div>';
+    });
+    html+='<button id="blErrCopy" style="background:#6d5efc;border:none;color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font:700 13px system-ui;">Copiar</button>';
+    box.innerHTML=html; ov.appendChild(box); document.body.appendChild(ov);
+    box.querySelector('#blErrX').onclick=function(){ ov.remove(); };
+    ov.addEventListener('click',function(ev){ if(ev.target===ov) ov.remove(); });
+    box.querySelector('#blErrCopy').onclick=function(){
+      try{ navigator.clipboard.writeText(erros.join('\n\n')); this.textContent='Copiado!'; }catch(e){ this.textContent='Copie manualmente'; }
+    };
+  }
+  function reg(txt){ erros.push(txt); try{ mostrar(); }catch(e){} }
+  window.addEventListener('error', function(ev){
+    if(ev && ev.message) reg(ev.message+'\n'+(ev.filename||'')+':'+(ev.lineno||'')+':'+(ev.colno||'')+'\n'+((ev.error&&ev.error.stack)||''));
+  });
+  window.addEventListener('unhandledrejection', function(ev){
+    var r=ev&&ev.reason; reg('Promise rejeitada: '+((r&&r.stack)||(r&&r.message)||String(r)));
+  });
+  window.blVerErros=detalhe;
+})();
 </script>
 </body>
 </html>
