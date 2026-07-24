@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.64-build-1784889354 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.65-build-1784890961 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -1764,15 +1764,27 @@ function recalcularDados(d, sessoes) {
   });
 
   const anosMetaDisp = Object.keys(metasPorAno).sort();
-  const selMetaAno = document.getElementById('selMetaAno');
-  selMetaAno.innerHTML = '';
-  const anosParaSel = anosMetaDisp.length ? anosMetaDisp : ['2026'];
-  anosParaSel.forEach(a => {
-    selMetaAno.innerHTML += `<option value="${a}" ${a==='2026'?'selected':''}>${a}</option>`;
+  /* V3.65: cada etapa isolada. Antes, uma falha aqui matava TODO o resto do dashboard
+     (tudo abaixo de "Dica de Leitura" fica dentro de #pageDashboard e nao era desenhado). */
+  const _blSafe = function(nome, fn){
+    try { fn(); }
+    catch(e){
+      console.error('[BookLegacy] falha ao renderizar ' + nome, e);
+      try { window.dispatchEvent(new ErrorEvent('error', {message:'Falha ao renderizar ' + nome + ': ' + (e && e.message), error:e})); } catch(_){}
+    }
+  };
+  _blSafe('seletor de metas', function(){
+    const selMetaAno = document.getElementById('selMetaAno');
+    if(!selMetaAno) return;
+    selMetaAno.innerHTML = '';
+    const anosParaSel = anosMetaDisp.length ? anosMetaDisp : ['2026'];
+    anosParaSel.forEach(a => {
+      selMetaAno.innerHTML += `<option value="${a}" ${a==='2026'?'selected':''}>${a}</option>`;
+    });
   });
   window._metasPorAno = metasPorAno;
-  buildMeta();
-  renderLendoCards();
+  _blSafe('meta', function(){ buildMeta(); });
+  _blSafe('cards de leitura', function(){ renderLendoCards(); });
 
   // Atualiza rodapé com data de geração
   if (d.geradoEm) {
@@ -1781,10 +1793,10 @@ function recalcularDados(d, sessoes) {
   }
 
   // Passa os dados calculados para os gráficos e re-renderiza tudo
-  renderizarGraficos({ MONTHLY, YEARS, WD_AVG, WD_SUM, NOTES, COLECOES, BOOK_DAILY });
-  atualizarVisaoGeral();
-  renderLendoCards();
-  buildMeta();
+  _blSafe('graficos', function(){ renderizarGraficos({ MONTHLY, YEARS, WD_AVG, WD_SUM, NOTES, COLECOES, BOOK_DAILY }); });
+  _blSafe('visao geral', function(){ atualizarVisaoGeral(); });
+  _blSafe('cards de leitura', function(){ renderLendoCards(); });
+  _blSafe('meta', function(){ buildMeta(); });
   document.getElementById('header-badge').textContent =
     `${(window._livros||[]).length} livros · ${(window._sessoes||[]).length} sessões`;
 }
