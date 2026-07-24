@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.61-build-1784775003 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.62-build-1784888165 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4729,6 +4729,7 @@ function blEnsureDesktopMenu(){
     <button type="button" data-bl-menu="migration" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#ffd166;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">📥 Migração</button>
     <div style="height:1px;background:var(--border);margin:4px 0;"></div>
     <button type="button" data-bl-menu="delete" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#ef4444;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🗑️ Excluir conta</button>
+    <button type="button" data-bl-menu="diag" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#9aa4bd;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🩺 Diagnóstico de dados</button>
     <button type="button" data-bl-menu="logout" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;color:#f87171;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;width:100%;">🚪 Sair da conta</button>
   `;
   document.body.appendChild(panel);
@@ -4742,6 +4743,7 @@ function blEnsureDesktopMenu(){
       else if (action === 'community') window.blOpenCommunityModal?.();
       else if (action === 'migration') window.blOpenMigrationModal?.();
       else if (action === 'delete') window.blDeleteMyAccount?.();
+      else if (action === 'diag') window.blDiagnostico?.();
       else if (action === 'logout') { if(confirm('Tem certeza que deseja sair da conta?')) window.BL.auth.signOut(); }
     });
   });
@@ -12884,5 +12886,82 @@ body.bl-v40-loading #app{display:none!important;}
 })();
 </script>
 
+<script id="bl-diagnostico-v361">
+window.blDiagnostico = async function(){
+  var auth = (window.BL && window.BL.auth) || window.firebaseAuth || window.auth;
+  var db = window.BL && window.BL.db;
+  var u = auth && auth.currentUser;
+  var ov = document.createElement('div');
+  ov.id='blDiagOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#13182a;border:1px solid rgba(255,255,255,.15);border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:18px;color:#e8ecf5;font-size:13px;line-height:1.6;font-family:system-ui,sans-serif;';
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;"><b style="font-size:15px;">Diagnostico de dados</b><button id="blDiagClose" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#e8ecf5;border-radius:8px;padding:4px 10px;cursor:pointer;">Fechar</button></div><div id="blDiagBody">Lendo dados...</div>';
+  ov.appendChild(box); document.body.appendChild(ov);
+  var close=function(){ try{ ov.remove(); }catch(e){} };
+  box.querySelector('#blDiagClose').onclick=close;
+  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+  var body=box.querySelector('#blDiagBody');
+  var esc=function(s){ return String(s==null?'':s).replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];}); };
+  if(!u||!db){ body.innerHTML='<b style="color:#f87171;">Nao ha usuario logado ou o Firebase nao esta pronto.</b>'; return; }
+  var uid=u.uid, email=String(u.email||'').toLowerCase(), nome=String(u.displayName||'');
+  var cnt=async function(col){ try{ var s=await db.collection('users').doc(uid).collection(col).get(); return s.size; }catch(e){ return 'erro ('+(e.code||e.message)+')'; } };
+  var r=await Promise.all([cnt('library'),cnt('sessions'),cnt('ratings'),cnt('goals')]);
+  var lib=r[0], ses=r[1], rat=r[2], goa=r[3];
+  var txt='';
+  txt+='<div style="background:#0e1220;border-radius:10px;padding:10px;margin-bottom:10px;">';
+  txt+='<div><b>Conta logada agora</b></div>';
+  txt+='<div>Nome: '+esc(nome||'(sem nome)')+'</div>';
+  txt+='<div>E-mail: '+esc(email||'(sem e-mail)')+'</div>';
+  txt+='<div>UID: <code style="color:#8ab4ff;">'+esc(uid)+'</code></div>';
+  txt+='</div>';
+  txt+='<div style="background:#0e1220;border-radius:10px;padding:10px;margin-bottom:10px;">';
+  txt+='<div><b>Dados encontrados neste UID</b></div>';
+  txt+='<div>Livros (library): <b style="color:'+(lib===0?'#f87171':'#4ade80')+';">'+esc(lib)+'</b></div>';
+  txt+='<div>Sessoes: <b>'+esc(ses)+'</b></div>';
+  txt+='<div>Avaliacoes: <b>'+esc(rat)+'</b></div>';
+  txt+='<div>Metas: <b>'+esc(goa)+'</b></div>';
+  txt+='</div>';
+  body.innerHTML=txt+'<div style="color:#9aa4bd;">Procurando outras contas com os mesmos dados...</div>';
+  var extra='';
+  if(lib===0){
+    try{
+      var snap=await db.collection('users').get();
+      var cands=[];
+      snap.forEach(function(d){
+        if(d.id===uid) return;
+        var x=d.data()||{};
+        var e=String(x.email||'').toLowerCase();
+        var n=String(x.displayName||x.name||x.label||'');
+        if((email&&e===email)||(nome&&n&&n.toLowerCase()===nome.toLowerCase())) cands.push({id:d.id,email:e,name:n});
+      });
+      if(!cands.length){
+        extra='<div style="background:#0e1220;border-radius:10px;padding:10px;"><b style="color:#ffd166;">Nenhuma outra conta com o mesmo e-mail/nome foi encontrada.</b><br>Isso indica que os dados ainda nao foram importados para esta conta. Use <b>Migracao</b> para importar.</div>';
+      } else {
+        for(var i=0;i<cands.length && i<5;i++){
+          try{ var s2=await db.collection('users').doc(cands[i].id).collection('library').get(); cands[i].lib=s2.size; }
+          catch(e2){ cands[i].lib='sem permissao de leitura'; }
+        }
+        extra='<div style="background:#0e1220;border-radius:10px;padding:10px;"><b style="color:#ffd166;">Foram encontradas outras contas com o mesmo e-mail/nome:</b>';
+        cands.slice(0,5).forEach(function(c){
+          extra+='<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;">UID: <code style="color:#8ab4ff;">'+esc(c.id)+'</code><br>Nome: '+esc(c.name||'-')+'<br>Livros nessa conta: <b>'+esc(c.lib)+'</b></div>';
+        });
+        extra+='<div style="margin-top:8px;color:#9aa4bd;">Se uma dessas contas tem seus livros, seus dados estao gravados sob outro UID (login feito por outro provedor/conta Google). Envie este diagnostico para o suporte do app.</div></div>';
+      }
+    }catch(e3){
+      extra='<div style="background:#0e1220;border-radius:10px;padding:10px;color:#f87171;">Nao foi possivel varrer outras contas: '+esc(e3.code||e3.message)+'</div>';
+    }
+  } else {
+    extra='<div style="background:#0e1220;border-radius:10px;padding:10px;color:#4ade80;">Os dados existem neste UID. Se a tela aparece vazia, o problema esta na exibicao, nao no banco.</div>';
+  }
+  body.innerHTML=txt+extra+'<div style="margin-top:12px;"><button id="blDiagCopy" style="background:#6d5efc;border:none;color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;">Copiar diagnostico</button></div>';
+  var cp=box.querySelector('#blDiagCopy');
+  if(cp) cp.onclick=function(){
+    var plain=body.innerText||body.textContent||'';
+    try{ navigator.clipboard.writeText(plain); cp.textContent='Copiado!'; }
+    catch(e){ cp.textContent='Selecione e copie manualmente'; }
+  };
+};
+</script>
 </body>
 </html>
