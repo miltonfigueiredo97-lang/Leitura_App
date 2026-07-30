@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.66-build-1785432511 -->
+<head><!-- V3.67-build-1785450504 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -6822,7 +6822,7 @@ window.blLivrosElegiveis = function(usarMeta){
   var anoMeta = window.blMetaAnoSelecionado();
   var todos = (window._livros||[]);
   var lidos = new Set(todos.filter(function(l){return /^(completo|lido|finalizado|conclu)/i.test(String(l.status||''));}).map(function(l){return N(l.livro);}));
-  var naMeta = function(l){ return !usarMeta || !l.metaAno || String(l.metaAno)===anoMeta; };
+  var naMeta = function(l){ return !usarMeta || (!!l.metaAno && l.metaAno !== 'AINDA N\u00c3O DEFINIDO' && String(l.metaAno)===anoMeta); };
   var porColecao = {};
   todos.forEach(function(l){ var col=String(l.colecao||'').trim(); if(!col) return; (porColecao[col]=porColecao[col]||[]).push(l); });
   Object.keys(porColecao).forEach(function(k){ porColecao[k].sort(function(a,b){ return M(a.ordemColecao||a.ordem||0)-M(b.ordemColecao||b.ordem||0); }); });
