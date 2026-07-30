@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.66-build-1785432511 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.67-build-1785450504 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -6847,7 +6847,7 @@ window.blLivrosElegiveis = function(usarMeta){
   var anoMeta = window.blMetaAnoSelecionado();
   var todos = (window._livros||[]);
   var lidos = new Set(todos.filter(function(l){return /^(completo|lido|finalizado|conclu)/i.test(String(l.status||''));}).map(function(l){return N(l.livro);}));
-  var naMeta = function(l){ return !usarMeta || !l.metaAno || String(l.metaAno)===anoMeta; };
+  var naMeta = function(l){ return !usarMeta || (!!l.metaAno && l.metaAno !== 'AINDA N\u00c3O DEFINIDO' && String(l.metaAno)===anoMeta); };
   var porColecao = {};
   todos.forEach(function(l){ var col=String(l.colecao||'').trim(); if(!col) return; (porColecao[col]=porColecao[col]||[]).push(l); });
   Object.keys(porColecao).forEach(function(k){ porColecao[k].sort(function(a,b){ return M(a.ordemColecao||a.ordem||0)-M(b.ordemColecao||b.ordem||0); }); });
