@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.65-build-1784890961 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.66-build-1785432511 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -6834,16 +6834,39 @@ function setModoRoleta(modo) {
 }
 window.setModoRoleta = setModoRoleta;
 
-function girarRoleta() {
-  const anoAtual = new Date().getFullYear().toString();
-  const livrosLidos = new Set((window._livros||[]).filter(l=>l.status==='Completo').map(l=>l.livro));
-  let pool = (window._livros||[]).filter(l => {
-    if (l.status !== 'Aguardando') return false;
-    if (l.depende && !livrosLidos.has(l.depende.trim())) return false;
-    if (modoRoleta === 'meta' && l.metaAno && l.metaAno !== anoAtual) return false;
+window.blMetaAnoSelecionado = function(){
+  return String(document.getElementById('selMetaAno')?.value || new Date().getFullYear());
+};
+// helpers locais e independentes (nao dependem de norm/num de outro escopo)
+window.__blNorm = function(v){ return String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); };
+window.__blNum = function(v){ var n=parseFloat(v); return isNaN(n)?0:n; };
+// V3.66: elegiveis = Aguardando, da meta selecionada, sem dependencia pendente,
+// e sem nenhum livro ANTERIOR da mesma colecao ainda por ler (respeita a ordem).
+window.blLivrosElegiveis = function(usarMeta){
+  var N=window.__blNorm, M=window.__blNum;
+  var anoMeta = window.blMetaAnoSelecionado();
+  var todos = (window._livros||[]);
+  var lidos = new Set(todos.filter(function(l){return /^(completo|lido|finalizado|conclu)/i.test(String(l.status||''));}).map(function(l){return N(l.livro);}));
+  var naMeta = function(l){ return !usarMeta || !l.metaAno || String(l.metaAno)===anoMeta; };
+  var porColecao = {};
+  todos.forEach(function(l){ var col=String(l.colecao||'').trim(); if(!col) return; (porColecao[col]=porColecao[col]||[]).push(l); });
+  Object.keys(porColecao).forEach(function(k){ porColecao[k].sort(function(a,b){ return M(a.ordemColecao||a.ordem||0)-M(b.ordemColecao||b.ordem||0); }); });
+  function temAnteriorPendente(l){
+    var col=String(l.colecao||'').trim(); if(!col) return false;
+    var arr=porColecao[col]||[]; var minha=M(l.ordemColecao||l.ordem||0);
+    return arr.some(function(x){ var o=M(x.ordemColecao||x.ordem||0); return o<minha && !lidos.has(N(x.livro)); });
+  }
+  return todos.filter(function(l){
+    if(String(l.status||'')!=='Aguardando') return false;
+    if(!naMeta(l)) return false;
+    if(l.depende && !lidos.has(N(String(l.depende).trim()))) return false;
+    if(temAnteriorPendente(l)) return false;
     return true;
   });
-  if (!pool.length) { alert('Nenhum livro disponível!'); return; }
+};
+function girarRoleta() {
+  var pool = window.blLivrosElegiveis(modoRoleta === 'meta');
+  if (!pool.length) { alert('Nenhum livro disponível para sortear nesta seleção.'); return; }
 
   document.getElementById('roleta-resultado').style.display = 'none';
   document.getElementById('roleta-girando').style.display   = 'block';
@@ -13026,6 +13049,61 @@ window.blDiagnostico = async function(){
     var r=ev&&ev.reason; reg('Promise rejeitada: '+((r&&r.stack)||(r&&r.message)||String(r)));
   });
   window.blVerErros=detalhe;
+})();
+</script>
+<script id="bl-decidir-proximo-v366">
+window.blAbrirDecidirProximo = function(){
+  try{
+    var N=window.__blNum||function(v){var n=parseFloat(v);return isNaN(n)?0:n;};
+    var lista = (typeof window.blLivrosElegiveis==='function') ? window.blLivrosElegiveis(true) : [];
+    var ano = (typeof window.blMetaAnoSelecionado==='function') ? window.blMetaAnoSelecionado() : String(new Date().getFullYear());
+    var ov = document.getElementById('blDecidirOverlay'); if(ov) ov.remove();
+    ov = document.createElement('div'); ov.id='blDecidirOverlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px;';
+    var box=document.createElement('div');
+    box.style.cssText='background:#13182a;border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:680px;width:100%;max-height:86vh;overflow:auto;padding:18px;color:#e8ecf5;font-family:system-ui,sans-serif;';
+    var esc=function(s){return String(s==null?'':s).replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];});};
+    var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;"><b style="font-size:18px;">\ud83c\udfaf Decida seu pr\u00f3ximo livro</b><button id="blDecX" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#e8ecf5;border-radius:8px;padding:5px 12px;cursor:pointer;">Fechar</button></div>';
+    head+='<div style="color:#9aa4bd;font-size:13px;margin-bottom:14px;">Livros ainda por ler da meta de '+esc(ano)+' \u2014 na ordem certa das cole\u00e7\u00f5es ('+lista.length+').</div>';
+    var body='';
+    if(!lista.length){
+      body='<div style="background:#0e1220;border-radius:12px;padding:20px;text-align:center;color:#ffd166;">Nenhum livro pendente nesta meta. \ud83c\udf89</div>';
+    } else {
+      body='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">';
+      lista.forEach(function(l){
+        var capa;
+        try{ capa = (typeof coverImg==='function') ? coverImg(l.isbn,'\ud83d\udcd6','',l.coverUrl||'').replace(/width:\d+px;height:\d+px/,'width:100%;height:180px') : ''; }catch(e){ capa=''; }
+        if(!capa) capa='<div style="width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:40px;background:#0e1220;border-radius:8px;">\ud83d\udcd6</div>';
+        body+='<div style="background:#0e1220;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;">'
+            + '<div style="border-radius:8px;overflow:hidden;">'+capa+'</div>'
+            + '<div style="font-weight:700;font-size:13px;line-height:1.25;">'+esc(l.livro)+'</div>'
+            + '<div style="color:#9aa4bd;font-size:11px;">'+esc(l.autor||'')+'</div>'
+            + (l.colecao?'<div style="color:#8ab4ff;font-size:11px;">'+esc(l.colecao)+(l.ordemColecao?(' \u00b7 #'+l.ordemColecao):'')+'</div>':'')
+            + '<div style="color:#4ecdc4;font-size:11px;">'+(N(l.totalPag)||0)+' p\u00e1gs</div>'
+            + '</div>';
+      });
+      body+='</div>';
+    }
+    box.innerHTML=head+body;
+    ov.appendChild(box); document.body.appendChild(ov);
+    box.querySelector('#blDecX').onclick=function(){ ov.remove(); };
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  }catch(e){ console.error('[BookLegacy] decidir proximo falhou', e); alert('N\u00e3o foi poss\u00edvel abrir agora.'); }
+};
+(function(){
+  function injeta(){
+    var gear=document.querySelector('button[onclick="abrirGerenciarMeta()"]');
+    if(gear && !document.getElementById('blDecidirBtn')){
+      var b=document.createElement('button');
+      b.id='blDecidirBtn'; b.type='button'; b.title='Decida seu pr\u00f3ximo livro'; b.textContent='\ud83c\udfaf';
+      b.style.cssText=gear.getAttribute('style')||''; b.style.marginLeft='2px';
+      b.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); window.blAbrirDecidirProximo(); };
+      gear.insertAdjacentElement('afterend', b);
+    }
+  }
+  if(document.readyState!=='loading') injeta();
+  document.addEventListener('DOMContentLoaded', injeta);
+  setInterval(injeta, 1500);
 })();
 </script>
 </body>
