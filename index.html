@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.72-build-1785508324 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.73-build-1785508457 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -12762,9 +12762,20 @@ body.bl-v40-loading #app{display:none!important;}
   }
 
   function averagePagesPerDay(){
-    const sessions=(window._sessoes||[]).filter(ownerOk); const by={};
-    sessions.forEach(s=>{ const d=String(s?.data||s?.date||'').slice(0,10); const p=num(s?.paginas??s?.pages??s?.pagesRead); if(d&&p)by[d]=(by[d]||0)+p; });
-    const vals=Object.values(by); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:50;
+    // V3.73: mesma janela usada no widget de Meta e na previsao do detalhe do livro —
+    // ritmo real dos ULTIMOS 30 DIAS, nao mais a media historica desde sempre.
+    const sessions=(window._sessoes||[]).filter(ownerOk);
+    const corte=new Date(Date.now()-30*86400000);
+    const by={};
+    sessions.forEach(s=>{
+      const d=String(s?.data||s?.date||'').slice(0,10);
+      if(!d) return;
+      if(new Date(d+'T12:00:00')<corte) return;
+      const p=num(s?.paginas??s?.pages??s?.pagesRead);
+      if(p) by[d]=(by[d]||0)+p;
+    });
+    const vals=Object.values(by);
+    return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:50;
   }
 
   function coverHtml(b, icon){
