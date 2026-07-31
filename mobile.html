@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.75-build-1785509529 -->
+<head><!-- V3.76-build-1785509764 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -5506,13 +5506,18 @@ function renderBatalha() {
     // streak
     const diasOrdem=[...diasSet].sort();
     let streakAtual=0,streakRecord=0,cur=0;
+    const streaksFechadas=[];
     for(let i=0;i<diasOrdem.length;i++){
       if(i===0){cur=1;}else{
         const diff=Math.round((new Date(diasOrdem[i]+'T12:00:00')-new Date(diasOrdem[i-1]+'T12:00:00'))/86400000);
-        cur=diff===1?cur+1:1;
+        if(diff===1){cur=cur+1;}else{streaksFechadas.push(cur);cur=1;}
       }
       streakRecord=Math.max(streakRecord,cur);
     }
+    if(diasOrdem.length) streaksFechadas.push(cur);
+    // V3.76: media de todas as sequencias de leitura (nao so a atual nem so o recorde) —
+    // respeita o filtro de temporada ja aplicado (anoFiltro==='total' cobre "todas as").
+    const streakMedio = streaksFechadas.length ? Math.round(streaksFechadas.reduce((a,b)=>a+b,0)/streaksFechadas.length*10)/10 : 0;
     const hojeStr=blLocalToday();
     const ontemStr=blLocalDayOffset(-1);
     if(diasSet.has(hojeStr)||diasSet.has(ontemStr)){
@@ -5555,7 +5560,7 @@ function renderBatalha() {
     const generosSet = new Set(todos.filter(l => l.genero && l.status === 'Completo').map(l => l.genero));
 
     return {u,nome:person?.label||u,sess,todos,lidos,notas,diasSet,pagTotal,horas,media,notaMedia,
-      streakAtual,streakRecord,bosses,autorTop,mesPags,wdMap,eficiencia,
+      streakAtual,streakRecord,streakMedio,bosses,autorTop,mesPags,wdMap,eficiencia,
       maiorSessao,colSet,sessoes:sess.length,metaPct,metaLidos,metaTotal,
       autMap,seriesConcluidas,generosSet};
   }
@@ -6147,7 +6152,7 @@ function renderBatalha() {
     {title:'DOMÍNIO DE PÁGINAS',icon:'📄',vA:dA.pagTotal,vB:dB.pagTotal,fmt:v=>v.toLocaleString('pt-BR'),sub:'páginas lidas'},
     {title:'GRIMÓRIO COMPLETO',icon:'✅',vA:dA.lidos.length,vB:dB.lidos.length,fmt:v=>v,sub:'livros concluídos'},
     {title:'STAMINA',icon:'🕐',vA:dA.horas,vB:dB.horas,fmt:v=>v+'h',sub:'horas lidas'},
-    {title:'COMBO',icon:'🔥',vA:dA.streakAtual,vB:dB.streakAtual,fmt:v=>v+' dias',sub:'streak atual'},
+    {title:'COMBO',icon:'🔥',vA:dA.streakMedio,vB:dB.streakMedio,fmt:v=>v+' dias',sub:'média de sequências'},
     {title:'VELOCIDADE',icon:'⚡',vA:dA.media,vB:dB.media,fmt:v=>v,sub:'págs/dia média'},
     {title:'CRÍTICO',icon:'⭐',vA:dA.notaMedia,vB:dB.notaMedia,fmt:(v,dd)=>dd.notaMedia!==null?dd.notaMedia.toFixed(1):'—',sub:'nota média'},
     {title:'SESSÕES',icon:'📖',vA:dA.sessoes,vB:dB.sessoes,fmt:v=>v,sub:'sessões registradas'},
