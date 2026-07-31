@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.74-build-1785508896 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.75-build-1785509529 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -2658,7 +2658,8 @@ window.filtrarSelBook = filtrarSelBook;
       // Gera previsão baseada na média diária por dia da semana
       const pagLidas = rows.reduce((s,r)=>s+r.p, 0);
       const totalPag = livroData?.totalPag || 300;
-      const pagFaltam = totalPag - pagLidas;
+      const curAgora = Number(livroData?.pagAtual ?? livroData?.currentPage ?? pagLidas);
+      const pagFaltam = Math.max(0, totalPag - curAgora);
 
       // V3.71: mesma base do widget de Meta — ritmo real dos ULTIMOS 30 DIAS (todas as sessoes),
       // nao mais uma media historica por dia da semana desde sempre.
@@ -2779,6 +2780,9 @@ window.filtrarSelBook = filtrarSelBook;
     const autorNome = livroData?.autor || AUTOR_MAP[book] || '—';
     const rows = BOOK_DAILY[book] || [];
     const pagLidas = rows.reduce((s,r)=>s+r.p, 0);
+    // V3.75: paginas restantes usa a PAGINA ATUAL REAL do livro (mesma fonte do card do dashboard),
+    // nao a soma do historico de sessoes — as duas podiam divergir e dar estimativas de dias diferentes.
+    const cur = Number(livroData?.pagAtual ?? livroData?.currentPage ?? pagLidas);
     const totalPag = livroData?.totalPag || 0;
     const status = livroData?.status || '—';
     const minutos = (window._sessoes||[]).filter(s=>s.livro===book).reduce((s,r)=>s+(r.minutos||0),0);
@@ -2818,7 +2822,7 @@ window.filtrarSelBook = filtrarSelBook;
       </div>
       ${lendo ? `
       <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center;grid-column:1/-1;">
-        <div style="font-size:18px;font-weight:700;color:var(--coral)">~${Math.ceil((totalPag-pagLidas)/Math.max(mediaDia,1))} dias</div>
+        <div style="font-size:18px;font-weight:700;color:var(--coral)">~${Math.ceil(Math.max(0,totalPag-cur)/Math.max(mediaDia,1))} dias</div>
         <div style="font-size:11px;color:var(--muted)">Estimativa para terminar (${mediaDia} págs/dia)</div>
       </div>` : ''}
       <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center;grid-column:1/-1;">
@@ -13125,7 +13129,7 @@ window.blAbrirDecidirProximo = function(){
       lista.forEach(function(l){
         var _src = l.coverUrl || (l.isbn ? ('https://covers.openlibrary.org/b/isbn/'+l.isbn+'-M.jpg') : '');
         var capa = _src
-          ? '<img src="'+esc(_src)+'" style="width:100%;height:180px;object-fit:cover;border-radius:8px;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
+          ? '<img src="'+esc(_src)+'" class="blZoomCover" style="width:100%;height:180px;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
           : '';
         capa += '<div style="width:100%;height:180px;'+(_src?'display:none;':'display:flex;')+'align-items:center;justify-content:center;font-size:40px;background:#0e1220;border-radius:8px;">\ud83d\udcd6</div>';
         body+='<div style="background:#0e1220;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;">'
@@ -13148,7 +13152,7 @@ window.blAbrirDecidirProximo = function(){
         var capa;
         var _src2 = l.coverUrl || (l.isbn ? ('https://covers.openlibrary.org/b/isbn/'+l.isbn+'-M.jpg') : '');
         capa = _src2
-          ? '<img src="'+esc(_src2)+'" style="width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;filter:grayscale(60%);" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
+          ? '<img src="'+esc(_src2)+'" class="blZoomCover" style="width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;filter:grayscale(60%);cursor:zoom-in;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
           : '';
         capa += '<div style="width:100%;height:130px;'+(_src2?'display:none;':'display:flex;')+'align-items:center;justify-content:center;font-size:30px;background:#171d33;border-radius:8px;">\ud83d\udcd6</div>';
         body+='<div class="blBloqCard" data-idx="'+idx+'" style="cursor:pointer;background:#171d33;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:5px;opacity:.75;">'
@@ -13162,13 +13166,29 @@ window.blAbrirDecidirProximo = function(){
     box.innerHTML=head+body;
     ov.appendChild(box); document.body.appendChild(ov);
     box.querySelectorAll('.blBloqCard').forEach(function(card){
-      card.onclick=function(){
+      card.addEventListener('click', function(ev){
+        if(ev.target && ev.target.classList && ev.target.classList.contains('blZoomCover')) return; // zoom cuida disso
         var m=card.querySelector('.blBloqMotivo');
         if(!m) return;
         var aberto = m.style.display==='block';
         box.querySelectorAll('.blBloqMotivo').forEach(function(x){ x.style.display='none'; });
         m.style.display = aberto ? 'none' : 'block';
-      };
+      });
+    });
+    // V3.75: zoom em lightbox de verdade — uma camada por cima de TUDO, nunca cortada por
+    // nenhum container (o zoom CSS antigo ficava preso no overflow:hidden do card).
+    box.querySelectorAll('.blZoomCover').forEach(function(img){
+      img.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var lb=document.createElement('div');
+        lb.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+        var big=document.createElement('img');
+        big.src=img.src;
+        big.style.cssText='max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;box-shadow:0 10px 50px rgba(0,0,0,.6);';
+        lb.appendChild(big);
+        lb.addEventListener('click', function(){ lb.remove(); });
+        document.body.appendChild(lb);
+      });
     });
     box.querySelector('#blDecX').onclick=function(){ ov.remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
@@ -13258,22 +13278,32 @@ window.blAbrirDetalheLivro = function(livro){
       var row=document.createElement('div');
       row.className='blColRow';
       row.dataset.idx=idx;
-      row.style.cssText='display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;touch-action:none;';
+      row.style.cssText='display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;';
       var numBadge = (item.ordemColecao==null)
         ? '<div class="blColNum" style="width:30px;height:30px;border-radius:8px;background:rgba(248,140,106,.15);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;flex-shrink:0;">\u2715</div>'
         : '<div class="blColNum" style="width:30px;height:30px;border-radius:8px;background:rgba(78,205,196,.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;flex-shrink:0;">'+item.ordemColecao+'</div>';
       row.innerHTML =
-        '<div class="blColHandle" style="cursor:grab;color:var(--muted);font-size:18px;padding:8px;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;">\u2637</div>' +
+        '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">' +
+          '<button class="blColUp" style="width:26px;height:22px;border:none;border-radius:5px;background:var(--bg4);color:var(--text);cursor:pointer;font-size:12px;line-height:1;">\u25b2</button>' +
+          '<button class="blColDown" style="width:26px;height:22px;border:none;border-radius:5px;background:var(--bg4);color:var(--text);cursor:pointer;font-size:12px;line-height:1;">\u25bc</button>' +
+        '</div>' +
         numBadge +
         '<div style="flex:1;min-width:0;">' +
           '<div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.livro)+'</div>' +
           '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.autor)+'</div>' +
-        '</div>';
+        '</div>' +
+        '<div class="blColHandle" style="cursor:grab;color:var(--muted);font-size:18px;padding:8px;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;">\u2637</div>';
       wrap.appendChild(row);
       row.querySelector('.blColNum').addEventListener('click', function(){
         listaAtual[idx].ordemColecao = (listaAtual[idx].ordemColecao==null) ? 9999 : null;
         renumerar();
         render();
+      });
+      row.querySelector('.blColUp').addEventListener('click', function(){
+        if(idx>0){ var t=listaAtual[idx-1]; listaAtual[idx-1]=listaAtual[idx]; listaAtual[idx]=t; renumerar(); render(); }
+      });
+      row.querySelector('.blColDown').addEventListener('click', function(){
+        if(idx<listaAtual.length-1){ var t=listaAtual[idx+1]; listaAtual[idx+1]=listaAtual[idx]; listaAtual[idx]=t; renumerar(); render(); }
       });
       var handle=row.querySelector('.blColHandle');
       handle.addEventListener('pointerdown', function(ev){ iniciarDrag(ev, row, idx); });
@@ -13296,13 +13326,11 @@ window.blAbrirDetalheLivro = function(livro){
     row.style.opacity='0.5';
     row.style.zIndex='10';
     var wrap=document.getElementById('blColResultado');
-    // V3.74: trava o scroll do modal durante o arrasto — e' o que impedia o drag de funcionar
-    // livremente (o dedo brigava com o scroll da caixa por baixo).
-    var overflowAntes = boxEl ? boxEl.style.overflow : '';
-    if(boxEl) boxEl.style.overflow = 'hidden';
+    // V3.75: removido o "travar o scroll do modal" — ficava preso se o arrasto nao terminasse
+    // corretamente (por isso "nao consigo mais rolar dentro dele"). As setas ▲▼ sao agora
+    // o jeito garantido de reordenar; o arrastar continua disponivel como extra.
 
     function onMove(e){
-      e.preventDefault();
       var rows=[].slice.call(wrap.querySelectorAll('.blColRow'));
       var y=e.clientY;
       var target=rows.find(function(r){
@@ -13316,14 +13344,13 @@ window.blAbrirDetalheLivro = function(livro){
         wrap.insertBefore(dragEl, before?target:target.nextSibling);
       }
     }
-    function onUp(e){
+    function finalizar(e){
       try{ row.releasePointerCapture(e.pointerId); }catch(err){}
       row.style.opacity='';
       row.style.zIndex='';
-      if(boxEl) boxEl.style.overflow = overflowAntes || 'auto';
       row.removeEventListener('pointermove', onMove);
-      row.removeEventListener('pointerup', onUp);
-      row.removeEventListener('pointercancel', onUp);
+      row.removeEventListener('pointerup', finalizar);
+      row.removeEventListener('pointercancel', finalizar);
       var rows=[].slice.call(wrap.querySelectorAll('.blColRow'));
       var nova=rows.map(function(r){ return listaAtual[Number(r.dataset.idx)]; });
       listaAtual = nova;
@@ -13331,8 +13358,8 @@ window.blAbrirDetalheLivro = function(livro){
       render();
     }
     row.addEventListener('pointermove', onMove);
-    row.addEventListener('pointerup', onUp);
-    row.addEventListener('pointercancel', onUp);
+    row.addEventListener('pointerup', finalizar);
+    row.addEventListener('pointercancel', finalizar);
   }
 
   window.blAbrirColecoes = function(){
@@ -13395,14 +13422,22 @@ window.blAbrirDetalheLivro = function(livro){
       var falhas=[];
       for(var i=0;i<listaAtual.length;i++){
         var item=listaAtual[i];
-        // V3.74: SEMPRE atualiza o espelho local, mesmo que o doc do Firestore nao seja achado —
+        // V3.75: SEMPRE atualiza o espelho local, mesmo que o doc do Firestore nao seja achado —
         // assim a tela reflete a decisao do usuario na hora, e nao fica "como se nada tivesse mudado".
         (window._livros||[]).forEach(function(l){ if(N(l.livro)===N(item.livro)){ l.ordemColecao = item.ordemColecao; } });
         var docId = (item.bookId && porBookId[item.bookId]) || (item.bookId && porDocId[item.bookId]) || porTitulo[N(item.livro)];
-        if(!docId){ falhas.push(item.livro); continue; }
+        if(!docId){ falhas.push(item.livro+' (nao encontrado no banco)'); continue; }
+        var valorAlvo = item.ordemColecao==null ? null : item.ordemColecao;
         await db.collection('users').doc(uidNow).collection('library').doc(docId).set({
-          ordemColecao: item.ordemColecao==null ? null : item.ordemColecao
+          ordemColecao: valorAlvo
         }, {merge:true});
+        // V3.75: confirma lendo de volta o que realmente ficou gravado — nunca mais avisar
+        // "salvo" sem ter certeza de que o Firestore aceitou o valor.
+        try{
+          var back = await db.collection('users').doc(uidNow).collection('library').doc(docId).get();
+          var gravado = back.exists ? (back.data().ordemColecao ?? null) : undefined;
+          if(gravado !== valorAlvo){ falhas.push(item.livro+' (gravou mas nao confirmou ao reler)'); }
+        }catch(eVerif){ falhas.push(item.livro+' (nao foi possivel confirmar)'); }
       }
       if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().catch(function(){});
       if(falhas.length){
