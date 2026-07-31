@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.70-build-1785464412 -->
+<head><!-- V3.71-build-1785507817 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2696,24 +2696,22 @@ window.filtrarSelBook = filtrarSelBook;
       const totalPag = livroData?.totalPag || 300;
       const pagFaltam = totalPag - pagLidas;
 
-      // Média por dia da semana (0=Dom...6=Sab) das sessões globais
-      const wdTotals = [0,0,0,0,0,0,0], wdCounts = [0,0,0,0,0,0,0];
-      (window._sessoes||[]).forEach(s => {
-        if (!s.data) return;
-        const wd = new Date(s.data + 'T12:00:00').getDay();
-        wdTotals[wd] += s.paginas;
-        wdCounts[wd]++;
-      });
-      const wdAvg = wdTotals.map((t,i) => wdCounts[i] > 0 ? Math.round(t/wdCounts[i]) : 30);
+      // V3.71: mesma base do widget de Meta — ritmo real dos ULTIMOS 30 DIAS (todas as sessoes),
+      // nao mais uma media historica por dia da semana desde sempre.
+      const _hoje30 = new Date();
+      const _corte30 = new Date(_hoje30.getTime() - 30*86400000);
+      const _sessoesRecentes = (window._sessoes||[]).filter(s => s.data && new Date(s.data+'T12:00:00') >= _corte30);
+      const _diasRec = new Set(_sessoesRecentes.map(s=>s.data)).size;
+      const _pagRec  = _sessoesRecentes.reduce((a,s)=>a+(s.paginas||0),0);
+      const ritmoAtual30d = _diasRec > 0 ? (_pagRec/_diasRec) : 30;
 
-      // Projeta a partir de hoje até acabar o livro
+      // Projeta a partir de hoje até acabar o livro, no ritmo atual (constante, sem variar por dia da semana)
       const today = new Date();
       const forecastLabels = [], forecastData = [], forecastDates = [];
       let pagesLeft = pagFaltam;
       let day = new Date(today);
       while (pagesLeft > 0 && forecastLabels.length < 120) {
-        const wd = day.getDay();
-        const pags = Math.min(wdAvg[wd], pagesLeft);
+        const pags = Math.min(Math.max(1,Math.round(ritmoAtual30d)), pagesLeft);
         if (pags > 0) {
           forecastLabels.push(day.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
           forecastData.push(pags);
@@ -15387,7 +15385,7 @@ body.bl-v40-loading #app{display:none!important;}
         <div class="lendo-card ${lendo?'lendo':'pausado'}">
           <div class="lendo-tag">${icon} ${lendo?'Lendo':'Pausado'}</div>
           <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;">
-            <div style="flex-shrink:0">${coverHtml(p,icon)}</div>
+            <div style="flex-shrink:0;cursor:pointer" onclick="window.blAbrirDetalheLivro('${livroEsc}')" title="Ver detalhes do livro">${coverHtml(p,icon)}</div>
             <div style="flex:1;min-width:0">
               <div class="lendo-book-title" style="margin-bottom:0">${esc(p.livro)}</div>
               <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(p.autor||'')}</div>
@@ -15405,7 +15403,7 @@ body.bl-v40-loading #app{display:none!important;}
     const waiting=collectWaiting().filter(w=>!active.some(a=>norm(a.livro)===norm(w.livro)));
     if(waiting.length){
       const dica=waiting[0]; const total=pagesOf(dica)||200; const dias=Math.ceil(total/(avg||50));
-      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,"&#39;")}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
+      cont.innerHTML+=`<div class="lendo-card dica"><div class="lendo-tag">💡 Dica de Leitura</div><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;"><div style="flex-shrink:0;cursor:pointer" onclick="window.blAbrirDetalheLivro('${esc(dica.livro).replace(/'/g,"&#39;")}')" title="Ver detalhes do livro">${coverHtml(dica,'💡')}</div><div style="flex:1;min-width:0"><div class="lendo-book-title" style="margin-bottom:0">${esc(dica.livro)}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(dica.autor||'')}</div><div class="lendo-stats"><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--teal)">${total}</span><span class="lendo-stat-lbl">Total de páginas</span></div><div class="lendo-stat"><span class="lendo-stat-val" style="color:var(--yellow)">~${dias}</span><span class="lendo-stat-lbl">Dias para ler</span></div></div></div></div><div class="lendo-progress-wrap"><div class="lendo-bar-bg"><div class="lendo-bar-fg" style="width:0%;background:var(--teal)"></div></div><span class="lendo-pct-label teal">Não iniciado</span></div>${editable?`<div class="lendo-meta" style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;"><button onclick="abrirSessaoRapida('${esc(dica.livro).replace(/'/g,"&#39;")}')" style="background:var(--purple);border:none;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Registrar sessão</button></div>`:''}</div>`;
     }
     applyPrivacyAndReadonly();
   }
@@ -15753,6 +15751,25 @@ window.blAbrirDecidirProximo = function(){
   document.addEventListener('DOMContentLoaded', injeta);
   setInterval(injeta, 1500);
 })();
+</script>
+<script id="bl-abrir-detalhe-livro-v371">
+window.blAbrirDetalheLivro = function(livro){
+  try{
+    var busca=document.getElementById('selBookBusca');
+    var hidden=document.getElementById('selBook');
+    if(!hidden) return;
+    hidden.value = livro;
+    if(busca) busca.value = livro;
+    var lista=document.getElementById('selBookLista'); if(lista) lista.style.display='none';
+    if(typeof showDashboard==='function') showDashboard();
+    setTimeout(function(){
+      try{ if(typeof buildBookChart==='function') buildBookChart(); }catch(e){}
+      try{ if(typeof buildBookInfo==='function') buildBookInfo(); }catch(e){}
+      var sec=document.querySelector('[data-msection="livro"]') || hidden.closest('.card') || hidden;
+      if(sec && sec.scrollIntoView) sec.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 60);
+  }catch(e){ console.error('[BookLegacy] blAbrirDetalheLivro falhou', e); }
+};
 </script>
 </body>
 </html>
