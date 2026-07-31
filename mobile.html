@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.69-build-1785464106 -->
+<head><!-- V3.70-build-1785464412 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -6828,10 +6828,14 @@ window.blLivrosDiagnostico = function(usarMeta){
   todos.forEach(function(l){ var col=String(l.colecao||'').trim(); if(!col) return; (porColecao[col]=porColecao[col]||[]).push(l); });
   Object.keys(porColecao).forEach(function(k){ porColecao[k].sort(function(a,b){ return M(a.ordemColecao||a.ordem||0)-M(b.ordemColecao||b.ordem||0); }); });
   function anteriorPendente(l){
+    // V3.70: aponta o VIZINHO mais proximo ainda nao lido (nao o primeiro da fila) —
+    // "leia antes: Livro 2" e mais util que "leia antes: Livro 1" quando ambos faltam.
     var col=String(l.colecao||'').trim(); if(!col) return null;
     var arr=porColecao[col]||[]; var minha=M(l.ordemColecao||l.ordem||0);
-    var bloq=arr.find(function(x){ var o=M(x.ordemColecao||x.ordem||0); return o<minha && !lidos.has(N(x.livro)); });
-    return bloq ? bloq.livro : null;
+    var candidatos=arr.filter(function(x){ var o=M(x.ordemColecao||x.ordem||0); return o<minha && !lidos.has(N(x.livro)); });
+    if(!candidatos.length) return null;
+    candidatos.sort(function(a,b){ return M(b.ordemColecao||b.ordem||0)-M(a.ordemColecao||a.ordem||0); });
+    return candidatos[0].livro;
   }
   var incluidos=[], excluidos=[];
   todos.forEach(function(l){
@@ -6843,13 +6847,19 @@ window.blLivrosDiagnostico = function(usarMeta){
         motivo: st==='Lendo' ? 'Você já está lendo este livro agora' : st==='Pausado' ? 'Está pausado — retome ou finalize para liberar a sequência' : ('Status "'+(st||'em branco')+'" não reconhecido') });
       return;
     }
-    if(l.depende && !lidos.has(N(String(l.depende).trim()))){
+    // V3.70: uma coleção com ordem definida usa SOMENTE a ordem como fonte de verdade.
+    // Um "depende" solto (texto livre da migração) pode contradizer a ordem numerica e
+    // gerar ciclos (A precisa de B, B precisa de A). "depende" so vale para livro AVULSO,
+    // sem colecao/ordem, onde nao ha como haver contradicao.
+    var temColecao = !!String(l.colecao||'').trim();
+    if(temColecao){
+      var bloq=anteriorPendente(l);
+      if(bloq){
+        excluidos.push({ book:l, tipo:'ordem', requisito:bloq, motivo:'Leia antes: '+bloq });
+        return;
+      }
+    } else if(l.depende && !lidos.has(N(String(l.depende).trim()))){
       excluidos.push({ book:l, tipo:'dependencia', requisito:l.depende, motivo:'Leia antes: '+l.depende });
-      return;
-    }
-    var bloq=anteriorPendente(l);
-    if(bloq){
-      excluidos.push({ book:l, tipo:'ordem', requisito:bloq, motivo:'Leia antes: '+bloq });
       return;
     }
     incluidos.push(l);
