@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.71-build-1785507817 -->
+<head><!-- V3.72-build-1785508324 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4834,6 +4834,10 @@ iniciarAppFirebase();
     <button style="background:var(--purple)" onclick="abrirModal('sessao')">📖</button>
   </div>
   <div class="fab-item">
+    <span>Verificar Coleções</span>
+    <button style="background:#5b8cff" onclick="toggleFabMenu();window.blAbrirColecoes()">📚</button>
+  </div>
+  <div class="fab-item">
     <span>Avaliar Livro</span>
     <button style="background:var(--teal)" onclick="abrirModal('nota')">⭐</button>
   </div>
@@ -6826,11 +6830,17 @@ window.blLivrosDiagnostico = function(usarMeta){
   todos.forEach(function(l){ var col=String(l.colecao||'').trim(); if(!col) return; (porColecao[col]=porColecao[col]||[]).push(l); });
   Object.keys(porColecao).forEach(function(k){ porColecao[k].sort(function(a,b){ return M(a.ordemColecao||a.ordem||0)-M(b.ordemColecao||b.ordem||0); }); });
   function anteriorPendente(l){
-    // V3.70: aponta o VIZINHO mais proximo ainda nao lido (nao o primeiro da fila) —
-    // "leia antes: Livro 2" e mais util que "leia antes: Livro 1" quando ambos faltam.
+    // V3.72: livro SEM ordem definida na colecao nao bloqueia ninguem e nao e bloqueado por ordem —
+    // antes, "sem ordem" virava 0 e furava na frente do livro #1 de verdade.
     var col=String(l.colecao||'').trim(); if(!col) return null;
-    var arr=porColecao[col]||[]; var minha=M(l.ordemColecao||l.ordem||0);
-    var candidatos=arr.filter(function(x){ var o=M(x.ordemColecao||x.ordem||0); return o<minha && !lidos.has(N(x.livro)); });
+    var minhaRaw=l.ordemColecao||l.ordem; var minha=M(minhaRaw);
+    if(!minhaRaw || !(minha>0)) return null;
+    var arr=porColecao[col]||[];
+    var candidatos=arr.filter(function(x){
+      var oRaw=x.ordemColecao||x.ordem; var o=M(oRaw);
+      if(!oRaw || !(o>0)) return false;
+      return o<minha && !lidos.has(N(x.livro));
+    });
     if(!candidatos.length) return null;
     candidatos.sort(function(a,b){ return M(b.ordemColecao||b.ordem||0)-M(a.ordemColecao||a.ordem||0); });
     return candidatos[0].livro;
@@ -15770,6 +15780,188 @@ window.blAbrirDetalheLivro = function(livro){
     }, 60);
   }catch(e){ console.error('[BookLegacy] blAbrirDetalheLivro falhou', e); }
 };
+</script>
+<script id="bl-colecoes-v372">
+(function(){
+  var colecaoAtual = null;
+  var listaAtual = [];
+  var dragEl = null, dragIdx = null;
+
+  function N(v){ return String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+  function M(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
+  function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];}); }
+
+  function buscarColecao(termo){
+    var t=N(termo); if(!t) return null;
+    var livros=(window._livros||[]);
+    var porNome={};
+    livros.forEach(function(l){ var c=String(l.colecao||'').trim(); if(c) (porNome[c]=porNome[c]||[]).push(l); });
+    var nomes=Object.keys(porNome);
+    var direto=nomes.find(function(n){ return N(n).includes(t); });
+    if(direto) return direto;
+    var porLivro=livros.find(function(l){ return String(l.colecao||'').trim() && N(l.livro).includes(t); });
+    return porLivro ? String(porLivro.colecao).trim() : null;
+  }
+
+  function carregarColecao(nomeColecao){
+    colecaoAtual = nomeColecao;
+    var livros=(window._livros||[]).filter(function(l){ return String(l.colecao||'').trim()===nomeColecao; });
+    listaAtual = livros.map(function(l){
+      var raw = l.ordemColecao||l.ordem;
+      return { livro:l.livro, autor:l.autor||'', coverUrl:l.coverUrl||'', isbn:l.isbn||'', ordemColecao: (raw && M(raw)>0) ? M(raw) : null };
+    }).sort(function(a,b){
+      if(a.ordemColecao==null && b.ordemColecao!=null) return 1;
+      if(a.ordemColecao!=null && b.ordemColecao==null) return -1;
+      if(a.ordemColecao==null && b.ordemColecao==null) return N(a.livro).localeCompare(N(b.livro));
+      return a.ordemColecao-b.ordemColecao;
+    });
+    render();
+  }
+
+  function render(){
+    var wrap=document.getElementById('blColResultado');
+    var titulo=document.getElementById('blColTitulo');
+    if(!wrap) return;
+    if(!colecaoAtual){ wrap.innerHTML=''; if(titulo) titulo.textContent=''; return; }
+    if(titulo) titulo.textContent = '📚 '+colecaoAtual+' ('+listaAtual.length+' livros)';
+    wrap.innerHTML='';
+    listaAtual.forEach(function(item, idx){
+      var row=document.createElement('div');
+      row.className='blColRow';
+      row.dataset.idx=idx;
+      row.style.cssText='display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;touch-action:none;';
+      var numBadge = (item.ordemColecao==null)
+        ? '<div class="blColNum" style="width:30px;height:30px;border-radius:8px;background:rgba(248,140,106,.15);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;flex-shrink:0;">\u2715</div>'
+        : '<div class="blColNum" style="width:30px;height:30px;border-radius:8px;background:rgba(78,205,196,.15);color:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;flex-shrink:0;">'+item.ordemColecao+'</div>';
+      row.innerHTML =
+        '<div class="blColHandle" style="cursor:grab;color:var(--muted);font-size:18px;padding:4px;flex-shrink:0;">\u2637</div>' +
+        numBadge +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.livro)+'</div>' +
+          '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.autor)+'</div>' +
+        '</div>';
+      wrap.appendChild(row);
+      row.querySelector('.blColNum').addEventListener('click', function(){
+        listaAtual[idx].ordemColecao = (listaAtual[idx].ordemColecao==null) ? 9999 : null;
+        renumerar();
+        render();
+      });
+      var handle=row.querySelector('.blColHandle');
+      handle.addEventListener('pointerdown', function(ev){ iniciarDrag(ev, row, idx); });
+    });
+  }
+
+  function renumerar(){
+    var seq=1;
+    listaAtual.forEach(function(item){
+      if(item.ordemColecao==null) return;
+      item.ordemColecao = seq++;
+    });
+  }
+
+  function iniciarDrag(ev, row, idx){
+    ev.preventDefault();
+    dragEl = row; dragIdx = idx;
+    row.setPointerCapture(ev.pointerId);
+    row.style.opacity='0.5';
+    var wrap=document.getElementById('blColResultado');
+
+    function onMove(e){
+      var rows=[].slice.call(wrap.querySelectorAll('.blColRow'));
+      var y=e.clientY;
+      var target=rows.find(function(r){
+        if(r===dragEl) return false;
+        var rect=r.getBoundingClientRect();
+        return y>=rect.top && y<=rect.bottom;
+      });
+      if(target){
+        var rect=target.getBoundingClientRect();
+        var before = y < rect.top+rect.height/2;
+        wrap.insertBefore(dragEl, before?target:target.nextSibling);
+      }
+    }
+    function onUp(e){
+      row.releasePointerCapture(e.pointerId);
+      row.style.opacity='';
+      row.removeEventListener('pointermove', onMove);
+      row.removeEventListener('pointerup', onUp);
+      var rows=[].slice.call(wrap.querySelectorAll('.blColRow'));
+      var nova=rows.map(function(r){ return listaAtual[Number(r.dataset.idx)]; });
+      listaAtual = nova;
+      renumerar();
+      render();
+    }
+    row.addEventListener('pointermove', onMove);
+    row.addEventListener('pointerup', onUp);
+  }
+
+  window.blAbrirColecoes = function(){
+    var ov=document.getElementById('blColecoesOverlay');
+    if(!ov){
+      ov=document.createElement('div');
+      ov.id='blColecoesOverlay';
+      ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px;';
+      var box=document.createElement('div');
+      box.style.cssText='background:#13182a;border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:520px;width:100%;max-height:86vh;overflow:auto;padding:18px;color:#e8ecf5;font-family:system-ui,sans-serif;';
+      box.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">' +
+          '<b style="font-size:18px;">\ud83d\udcda Verificar Cole\u00e7\u00f5es</b>' +
+          '<button id="blColX" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#e8ecf5;border-radius:8px;padding:5px 12px;cursor:pointer;">Fechar</button>' +
+        '</div>' +
+        '<input id="blColBusca" type="text" placeholder="Nome da cole\u00e7\u00e3o ou de um livro dela..." style="width:100%;padding:10px 14px;background:#0e1220;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#e8ecf5;font-size:14px;box-sizing:border-box;margin-bottom:6px;">' +
+        '<div id="blColSemResultado" style="display:none;color:#ffd166;font-size:13px;margin-bottom:10px;">Nenhuma cole\u00e7\u00e3o encontrada.</div>' +
+        '<div id="blColTitulo" style="font-weight:700;color:#8ab4ff;margin:10px 0 8px;"></div>' +
+        '<div id="blColResultado"></div>' +
+        '<div id="blColDica" style="color:#9aa4bd;font-size:12px;margin-top:6px;">Arraste pelo \u2637 para reordenar. Toque no n\u00famero para marcar/desmarcar "sem ordem" (\u2715).</div>' +
+        '<button id="blColSalvar" style="width:100%;margin-top:16px;padding:12px;background:#6d5efc;border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;">Salvar ordem</button>' +
+        '<div id="blColMsg" style="text-align:center;font-size:13px;margin-top:8px;"></div>';
+      ov.appendChild(box);
+      document.body.appendChild(ov);
+      box.querySelector('#blColX').onclick=function(){ ov.style.display='none'; };
+      ov.addEventListener('click', function(e){ if(e.target===ov) ov.style.display='none'; });
+      var busca=box.querySelector('#blColBusca');
+      busca.addEventListener('input', function(){
+        var nome=buscarColecao(busca.value);
+        var msg=document.getElementById('blColSemResultado');
+        if(nome){ msg.style.display='none'; carregarColecao(nome); }
+        else { msg.style.display = busca.value.trim() ? 'block' : 'none'; colecaoAtual=null; render(); }
+      });
+      box.querySelector('#blColSalvar').onclick=salvar;
+    }
+    ov.style.display='flex';
+  };
+
+  async function salvar(){
+    var msg=document.getElementById('blColMsg');
+    var btn=document.getElementById('blColSalvar');
+    if(!colecaoAtual || !listaAtual.length){ if(msg){msg.style.color='#ffd166';msg.textContent='Nada para salvar.';} return; }
+    try{
+      btn.disabled=true; btn.textContent='Salvando...';
+      var uidNow = (window.BL && window.BL.auth && window.BL.auth.currentUser && window.BL.auth.currentUser.uid) || (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.uid);
+      var db = window.BL && window.BL.db;
+      if(!db || !uidNow) throw new Error('Sem conex\u00e3o com o Firebase.');
+      var snap = await db.collection('users').doc(uidNow).collection('library').get();
+      var porTitulo={};
+      snap.forEach(function(d){ var data=d.data(); porTitulo[N(data.title||data.livro||'')] = d.id; });
+      for(var i=0;i<listaAtual.length;i++){
+        var item=listaAtual[i];
+        var docId=porTitulo[N(item.livro)];
+        if(!docId) continue;
+        await db.collection('users').doc(uidNow).collection('library').doc(docId).set({
+          ordemColecao: item.ordemColecao==null ? null : item.ordemColecao
+        }, {merge:true});
+        (window._livros||[]).forEach(function(l){ if(N(l.livro)===N(item.livro)){ l.ordemColecao = item.ordemColecao; } });
+      }
+      if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().catch(function(){});
+      if(msg){ msg.style.color='#4ade80'; msg.textContent='\u2705 Ordem salva!'; }
+    }catch(e){
+      console.error('[BookLegacy] salvar colecao falhou', e);
+      if(msg){ msg.style.color='#f87171'; msg.textContent='\u274c '+(e.message||e); }
+    }finally{
+      btn.disabled=false; btn.textContent='Salvar ordem';
+    }
+  }
+})();
 </script>
 </body>
 </html>
