@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.78-build-1785510605 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.79-build-1785510800 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -13163,10 +13163,20 @@ window.blAbrirDecidirProximo = function(){
       body+='</div>';
     }
     if(ocultos && ocultos.length){
+      // V3.79: ordena da esquerda pra direita na ordem REAL de leitura — agrupa por colecao
+      // e dentro dela usa a posicao (ordemColecao/ordem), em vez da ordem arbitraria de chegada.
+      var M2=window.__blNum||function(v){var n=parseFloat(v);return isNaN(n)?0:n;};
+      var ocultosOrdenados = ocultos.slice().sort(function(a,b){
+        var ca=String((a.book&&a.book.colecao)||''), cb=String((b.book&&b.book.colecao)||'');
+        if(ca!==cb) return ca.localeCompare(cb);
+        var oa=M2((a.book&&(a.book.ordemColecao||a.book.ordem)))||9999;
+        var ob=M2((b.book&&(b.book.ordemColecao||b.book.ordem)))||9999;
+        return oa-ob;
+      });
       body+='<div style="margin-top:20px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px;">';
       body+='<div style="font-weight:700;color:#ffd166;margin-bottom:10px;">\ud83d\udd12 Ainda não é a vez desses ('+ocultos.length+')</div>';
       body+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">';
-      ocultos.forEach(function(o){
+      ocultosOrdenados.forEach(function(o){
         var l=o.book||{};
         var _src2 = l.coverUrl || (l.isbn ? ('https://covers.openlibrary.org/b/isbn/'+l.isbn+'-M.jpg') : '');
         var capa = _src2
