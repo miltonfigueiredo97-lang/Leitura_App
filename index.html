@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.81-build-1785775957 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.82-build-1785782804 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -12368,6 +12368,7 @@ body.bl-v40-loading #app{display:none!important;}
 
   function isOwnView(){ return !!window.__BL_VIEW_UID && window.__BL_VIEW_UID === authUid(); }
   function canEdit(){ return !!authUid() && (!window.__BL_VIEW_UID || window.__BL_VIEW_UID === authUid()); }
+  window.canEdit = canEdit;
 
   function ensureCss(){
     if ($('blV58Css')) return;
@@ -12622,12 +12623,34 @@ body.bl-v40-loading #app{display:none!important;}
   }, true);
 
   function blockEdit(){ alert('Modo visitante: você só pode editar os seus próprios dados.'); return false; }
-  const EDIT_MODAL_TYPES = new Set(['sessao','nota','livro','novoLivro','excluir','excluirSessao','editarSessao','gerenciarMeta','migracao']);
-  const prevAbrirModal = window.abrirModal;
-  if (typeof prevAbrirModal === 'function') window.abrirModal = function(tipo){ if (!canEdit() && EDIT_MODAL_TYPES.has(String(tipo))) return blockEdit(); return prevAbrirModal.apply(this, arguments); };
-  const prevToggleFab = window.toggleFabMenu;
-  if (typeof prevToggleFab === 'function') window.toggleFabMenu = function(){ if (!canEdit()) return blockEdit(); return prevToggleFab.apply(this, arguments); };
-  ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta'].forEach(fn => { const prev = window[fn]; if (typeof prev === 'function') window[fn] = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); }; });
+  const EDIT_MODAL_TYPES = new Set(['sessao','nota','livro','novoLivro','excluir','excluirSessao','editarSessao','gerenciarMeta','migracao','colecoes']);
+  // V3.82: a trava so era aplicada UMA VEZ no carregamento — se qualquer patch reatribuisse
+  // essas funcoes depois (como ja aconteceu varias vezes nesta base), a protecao sumia sem avisar.
+  // Agora reaplica de forma idempotente (marca __blGuarded) sempre que o perfil visualizado muda.
+  window.blApplyEditGuards = function(){
+    const prevAbrirModal = window.abrirModal;
+    if (typeof prevAbrirModal === 'function' && !prevAbrirModal.__blGuarded) {
+      const wrapped = function(tipo){ if (!canEdit() && EDIT_MODAL_TYPES.has(String(tipo))) return blockEdit(); return prevAbrirModal.apply(this, arguments); };
+      wrapped.__blGuarded = true;
+      window.abrirModal = wrapped;
+    }
+    const prevToggleFab = window.toggleFabMenu;
+    if (typeof prevToggleFab === 'function' && !prevToggleFab.__blGuarded) {
+      const wrapped = function(){ if (!canEdit()) return blockEdit(); return prevToggleFab.apply(this, arguments); };
+      wrapped.__blGuarded = true;
+      window.toggleFabMenu = wrapped;
+    }
+    ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blAbrirColecoes','blAbrirDecidirProximo'].forEach(fn => {
+      const prev = window[fn];
+      if (typeof prev === 'function' && !prev.__blGuarded) {
+        const wrapped = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); };
+        wrapped.__blGuarded = true;
+        window[fn] = wrapped;
+      }
+    });
+  };
+  window.blApplyEditGuards();
+  setInterval(window.blApplyEditGuards, 2000);
 
   async function deleteCollection(path, chunkSize=350){
     if (!db()) return 0;
@@ -13435,6 +13458,11 @@ window.blAbrirDetalheLivro = function(livro){
   async function salvar(){
     var msg=document.getElementById('blColMsg');
     var btn=document.getElementById('blColSalvar');
+    // V3.82: segunda camada de defesa — nunca grava se estiver visualizando o perfil de outra pessoa
+    if(typeof window.canEdit==='function' && !window.canEdit()){
+      if(msg){ msg.style.color='#f87171'; msg.textContent='❌ Modo visitante: você só pode editar os seus próprios dados.'; }
+      return;
+    }
     if(!colecaoAtual || !listaAtual.length){ if(msg){msg.style.color='#ffd166';msg.textContent='Nada para salvar.';} return; }
     try{
       btn.disabled=true; btn.textContent='Salvando...';
