@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.79-build-1785510800 -->
+<head><!-- V3.80-build-1785775750 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1609,18 +1609,25 @@ function recalcularDados(d, sessoes) {
   sessoes.forEach(s => {
     const yr = s.ano || parseInt((s.data||'').slice(0,4));
     if (!yr) return;
-    if (!byYear[yr]) byYear[yr] = { pag:0, sess:0, min:0, days:{} };
+    if (!byYear[yr]) byYear[yr] = { pag:0, sess:0, min:0, sessComTempo:0, days:{} };
     byYear[yr].pag  += s.paginas;
     byYear[yr].sess += 1;
     byYear[yr].min  += s.minutos || 0;
+    if ((s.minutos||0) > 0) byYear[yr].sessComTempo += 1;
     if (s.data) byYear[yr].days[s.data] = (byYear[yr].days[s.data]||0) + s.paginas;
   });
   const YEARS = Object.keys(byYear).sort().map(yr => {
     const y = byYear[yr];
     const dias = Object.values(y.days);
     const pgdia = dias.length ? Math.round(dias.reduce((a,b)=>a+b,0)/dias.length*10)/10 : 0;
-    const ppm = y.min>0 ? Math.round(y.pag/y.min*100)/100 : 0;
-    return { ano: parseInt(yr), pag: y.pag, sess: y.sess, pgdia, ppm, horas: Math.round(y.min/60) };
+    // V3.80: se a maioria das sessões desse ano não tem duração registrada, "pág/min" e "horas"
+    // viram números sem sentido (ex.: 30 págs/min). Só mostra quando pelo menos 30% das sessões
+    // do ano têm tempo real — senão avisa que o dado de tempo está incompleto, em vez de mentir.
+    const cobertura = y.sess>0 ? y.sessComTempo/y.sess : 0;
+    const tempoConfiavel = cobertura >= 0.3;
+    const ppm = (tempoConfiavel && y.min>0) ? Math.round(y.pag/y.min*100)/100 : null;
+    const horas = tempoConfiavel ? Math.round(y.min/60) : null;
+    return { ano: parseInt(yr), pag: y.pag, sess: y.sess, pgdia, ppm, horas, tempoConfiavel };
   });
 
   // ── WEEKDAY ─────────────────────────────────────────
@@ -2381,9 +2388,10 @@ function buildYearBars() {
         <div class="yr-stats">
           <span>Sessões: <b>${y.sess}</b></span>
           <span>Págs/dia: <b style="color:${YC[i]}">${y.pgdia}</b></span>
-          <span>Pág/min: <b>${y.ppm}</b></span>
-          <span>Horas: <b>${y.horas}h</b></span>
+          <span>Pág/min: <b>${y.tempoConfiavel ? y.ppm : '—'}</b></span>
+          <span>Horas: <b>${y.tempoConfiavel ? y.horas+'h' : '—'}</b></span>
         </div>
+        ${!y.tempoConfiavel ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">⏱️ Duração não registrada na maioria das sessões deste ano</div>' : ''}
       </div>`;
   });
 }
