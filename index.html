@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.80-build-1785775750 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.81-build-1785775957 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -1620,11 +1620,25 @@ function recalcularDados(d, sessoes) {
     if (s.ano > 2000) bookFinishYear[s.livro] = Math.max(bookFinishYear[s.livro]||0, s.ano);
   });
   const u = (typeof usuarioAtual !== 'undefined' ? usuarioAtual : 'Milton');
-  const notasFiltradas = (d.notas || []).filter(n =>
+  const notasFiltradas_bruto = (d.notas || []).filter(n =>
     u === 'Milton'
       ? (!n.usuario || n.usuario === '' || n.usuario.toUpperCase() === 'MILTON')
       : n.usuario?.toUpperCase() === u.toUpperCase()
   );
+  // V3.81: livros duplicados no ranking — o mesmo titulo podia gerar 2 documentos de nota
+  // diferentes (ex.: por causa de acentos no slug do ID). Mantem so a avaliacao mais recente
+  // por titulo normalizado + ano, sem depender de qual ID o app usou pra salvar.
+  const _normDedup = v => String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  const _porChave = new Map();
+  notasFiltradas_bruto.forEach(n => {
+    const chave = _normDedup(n.livro)+'|'+(n.ano||0);
+    const atual = _porChave.get(chave);
+    if (!atual) { _porChave.set(chave, n); return; }
+    const tAtual = new Date(atual.updatedAt||atual.ratedAt||0).getTime();
+    const tNovo  = new Date(n.updatedAt||n.ratedAt||0).getTime();
+    if (tNovo >= tAtual) _porChave.set(chave, n);
+  });
+  const notasFiltradas = [..._porChave.values()];
   const NOTES = notasFiltradas.map(n => ({
     ...n,
     ano: bookFinishYear[n.livro] || (n.ano > 2000 ? n.ano : 0)
@@ -7918,7 +7932,7 @@ if ('serviceWorker' in navigator) {
   function allBooks(){ return window.BL?.raw?.books || []; }
   function norm(v){ return (typeof blNormalizeText==='function') ? blNormalizeText(v) : String(v||'').toLowerCase().trim(); }
   function n(v){ return (typeof blNum==='function') ? blNum(v) : (Number(v)||0); }
-  function slug(v){ return (typeof blSlug==='function') ? blSlug(v) : String(v||'item').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+  function slug(v){ return (typeof blSlug==='function') ? blSlug(v) : String(v||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
   function userCol(name){ return window.BL.db.collection('users').doc(uid()).collection(name); }
   function bookTitle(x){ return x?.title || x?.livro || ''; }
   function bookPages(x){ return n(x?.totalPages || x?.pages || x?.totalPag); }
