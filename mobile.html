@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.83-build-1785894485 -->
+<head><!-- V3.84-build-1785894866 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -5639,18 +5639,26 @@ function renderBatalha() {
   // Dias do período por player:
   // - ano específico: 1 jan até 31 dez (ou hoje se ano atual)
   // - total: primeira sessão do player até hoje
+  function diasNoAno(ano) {
+    const bissexto = (ano%4===0 && ano%100!==0) || ano%400===0;
+    return bissexto ? 366 : 365;
+  }
   function calcDiasPeriodo(dd) {
+    // V3.84: a nota 10 de "Consistência" e' o ano CHEIO (365/366 dias), nao "dias ja passados
+    // ate hoje" — do contrario a metrica fica mais facil de bater conforme o ano avanca, mesmo
+    // lendo no mesmo ritmo. Pra "todas as temporadas", soma o numero real de dias de cada ano
+    // coberto (do primeiro ao ultimo ano com sessao registrada).
     const todasDatas = (dd.sess||[]).map(s=>s.data).filter(Boolean).sort();
     if (!todasDatas.length) return 365;
     if (anoFiltro === 'total') {
-      const primeira = new Date(todasDatas[0]+'T12:00:00');
-      return Math.max(1, Math.round((hoje - primeira)/86400000)+1);
+      const anos = new Set(todasDatas.map(d=>parseInt(d.slice(0,4))));
+      const minAno = Math.min(...anos), maxAno = Math.max(...anos);
+      let total = 0;
+      for (let a=minAno; a<=maxAno; a++) total += diasNoAno(a);
+      return total;
     } else {
-      // Ano específico: sempre 1/jan até 31/dez (ou hoje se ano atual)
       const anoNum = parseInt(anoFiltro);
-      const inicio = new Date(anoNum, 0, 1, 12);
-      const fim = anoNum === hoje.getFullYear() ? hoje : new Date(anoNum, 11, 31, 12);
-      return Math.max(1, Math.round((fim - inicio)/86400000)+1);
+      return diasNoAno(anoNum);
     }
   }
 
