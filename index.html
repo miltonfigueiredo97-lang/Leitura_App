@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.82-build-1785782804 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.83-build-1785894485 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -975,7 +975,13 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
   <div class="sec" data-msection="graficos">📅 Comparativo por Ano</div>
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title">📅 Resumo por Ano</div>
-    <div class="card-sub">Páginas totais, média diária, sessões e velocidade de leitura</div>
+    <div class="card-sub">Escolha o que a barra compara entre os anos</div>
+    <select id="selYearBarMetrica" style="width:100%;margin:8px 0 12px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+      <option value="pag">Páginas totais</option>
+      <option value="pgdia">Páginas por dia</option>
+      <option value="ppm">Páginas por minuto</option>
+      <option value="horas">Horas de leitura</option>
+    </select>
     <div id="yearBars" class="yr-list"></div>
   </div>
 
@@ -2353,19 +2359,31 @@ function buildYearBars() {
   if (!el) return;
   el.innerHTML = '';
   if (!YEARS || !YEARS.length) return;
-  const maxP = Math.max(...YEARS.map(y => y.pag));
+  // V3.83: cor cicla (nunca mais fica sem cor quando ha mais anos que cores na paleta)
+  const corAno = i => YC[i % YC.length];
+  // V3.83: a barra agora reflete a metrica escolhida no seletor, nao so paginas totais
+  const metrica = document.getElementById('selYearBarMetrica')?.value || 'pag';
+  const valorPara = y => {
+    if (metrica === 'pgdia') return y.pgdia || 0;
+    if (metrica === 'ppm')   return y.tempoConfiavel ? (y.ppm || 0) : 0;
+    if (metrica === 'horas') return y.tempoConfiavel ? (y.horas || 0) : 0;
+    return y.pag || 0;
+  };
+  const maxV = Math.max(...YEARS.map(valorPara), 1);
   YEARS.forEach((y, i) => {
-    const pct = Math.round(y.pag / maxP * 100);
+    const v = valorPara(y);
+    const pct = Math.round(v / maxV * 100);
+    const semDadoNestaMetrica = (metrica === 'ppm' || metrica === 'horas') && !y.tempoConfiavel;
     el.innerHTML += `
       <div class="yr-item">
         <div class="yr-top">
-          <span class="yr-name" style="color:${YC[i]}">${y.ano}</span>
+          <span class="yr-name" style="color:${corAno(i)}">${y.ano}</span>
           <span class="yr-pag">${y.pag.toLocaleString('pt-BR')} páginas</span>
         </div>
-        <div class="bar-bg"><div class="bar-fg" style="width:${pct}%;background:${YC[i]}"></div></div>
+        <div class="bar-bg"><div class="bar-fg" style="width:${semDadoNestaMetrica?0:pct}%;background:${corAno(i)}"></div></div>
         <div class="yr-stats">
           <span>Sessões: <b>${y.sess}</b></span>
-          <span>Págs/dia: <b style="color:${YC[i]}">${y.pgdia}</b></span>
+          <span>Págs/dia: <b style="color:${corAno(i)}">${y.pgdia}</b></span>
           <span>Pág/min: <b>${y.tempoConfiavel ? y.ppm : '—'}</b></span>
           <span>Horas: <b>${y.tempoConfiavel ? y.horas+'h' : '—'}</b></span>
         </div>
@@ -2374,6 +2392,10 @@ function buildYearBars() {
   });
 }
 window.buildYearBars = buildYearBars;
+(function(){
+  const sel = document.getElementById('selYearBarMetrica');
+  if (sel && !sel.__blWired) { sel.__blWired = true; sel.addEventListener('change', () => buildYearBars()); }
+})();
 buildYearBars();
 
 // ════════════════════════════════════════════════
