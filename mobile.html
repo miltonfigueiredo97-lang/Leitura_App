@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.86-build-1786462748 -->
+<head><!-- V3.87-build-1786468406 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12281,15 +12281,28 @@ body.bl-v12-battle #blBattleBackButtonV25{
   window.blFreshBookPage = async function(title){
     try {
       if(!db()||!uid()) return null;
-      const snap = await userCol('library').get();
-      let found = null;
       const t = norm(title);
+      // V3.87: quando existe mais de um documento com o mesmo titulo (duplicata), a versao
+      // antiga pegava o PRIMEIRO que aparecesse (ordem arbitraria do Firestore) — tanto pra
+      // ler quanto pra gravar, podendo cair sempre num duplicado desatualizado (ex.: "zerar"
+      // gravava certo num doc, mas a tela lia o outro doc antigo com a pagina velha).
+      // Agora sempre escolhe o documento com updatedAt mais recente — o ultimo editado vence.
+      const snap = await userCol('library').get();
+      const candidatos = [];
       snap.forEach(doc => {
         const d = doc.data();
-        if(!found && norm(titleOf(d)) === t) found = d;
+        if(d.system || d.customMetaRegistry) return;
+        if(norm(titleOf(d)) === t) candidatos.push({id: doc.id, ...d});
       });
-      if(!found) return null;
-      return { current: Number(found.currentPage||0), total: Number(found.totalPages||0) };
+      if(!candidatos.length) return null;
+      if(candidatos.length > 1) console.warn('[BookLegacy] Duplicata detectada na library:', title, candidatos.length, 'docs');
+      candidatos.sort((a,b) => {
+        const ta = new Date(a.updatedAt||0).getTime();
+        const tb = new Date(b.updatedAt||0).getTime();
+        return tb - ta;
+      });
+      const found = candidatos[0];
+      return { current: Number(found.currentPage||0), total: Number(found.totalPages||0), docId: found.id };
     } catch(e) { console.warn('blFreshBookPage falhou', e); return null; }
   };
   async function saveSessionV333(){
