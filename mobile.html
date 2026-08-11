@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.87-build-1786468406 -->
+<head><!-- V3.88-build-1786485220 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -14939,9 +14939,13 @@ body.bl-v40-loading #app{display:none!important;}
 
   function mergeLibrary(items, sessions){
     const sums = new Map();
+    const lastSessDate = new Map();
     (sessions || []).forEach(s => {
       const k = s.usuarioUid + '::' + norm(s.livro);
-      if (norm(s.livro)) sums.set(k, (sums.get(k) || 0) + num(s.paginas));
+      if (!norm(s.livro)) return;
+      sums.set(k, (sums.get(k) || 0) + num(s.paginas));
+      const d = String(s.createdAt || s.date || '');
+      if (!lastSessDate.has(k) || d > lastSessDate.get(k)) lastSessDate.set(k, d);
     });
     const groups = new Map();
     (items || []).forEach(l => {
@@ -14954,7 +14958,14 @@ body.bl-v40-loading #app{display:none!important;}
     groups.forEach((arr, key) => {
       const base = Object.assign({}, ...arr);
       const total = Math.max(...arr.map(pagesOf), 0);
-      const sessionSum = sums.get(key) || 0;
+      // V3.88: soma de sessoes so vale se a ULTIMA sessao for mais recente que a ultima edicao
+      // manual do livro (updatedAt). Antes, uma sessao antiga sempre vencia qualquer correcao
+      // feita depois (ex.: "Zerar progresso" em Atualizar Livro), porque a soma historica nunca
+      // "esquecia" — o livro voltava pra pagina antiga toda vez que o app recarregava.
+      const editadoEm = String(base.updatedAt || '');
+      const sessMaisRecente = lastSessDate.get(key) || '';
+      const sessaoConfiavel = !editadoEm || sessMaisRecente >= editadoEm;
+      const sessionSum = sessaoConfiavel ? (sums.get(key) || 0) : 0;
       // V3.60: só considera hasDone pelo status real — ignora completionDate/Year de migração antigos
       const hasDone = arr.some(l => isDone(l.status));
       const hasReading = arr.some(l => isReading(l.status));
