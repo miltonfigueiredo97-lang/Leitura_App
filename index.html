@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.85-build-1786462456 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.86-build-1786462748 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -8097,12 +8097,15 @@ if ('serviceWorker' in navigator) {
       const data={updatedAt:nowISO()}; [['status','l-status'],['author','l-autor'],['targetYear','l-metaano'],['dependency','l-depende'],['coverUrl','l-capa'],['isbn','l-isbn'],['collection','l-colecao'],['genre','l-genero']].forEach(([k,id])=>{const el=document.getElementById(id); if(el) data[k]=el.value.trim();});
       const pages=n(document.getElementById('l-paginas')?.value); if(pages) data.totalPages=pages; const ord=n(document.getElementById('l-ordem')?.value); if(ord) data.collectionOrder=ord;
       const pagAtualManual=document.getElementById('l-pagina-atual')?.value; if(pagAtualManual!==''&&pagAtualManual!=null){data.currentPage=n(pagAtualManual); data.progress=data.totalPages?data.currentPage/data.totalPages:(pages?data.currentPage/pages:0);}
-      // V3.85: permite corrigir o titulo do livro. O bookId permanece o mesmo, entao sessoes e
-      // avaliacoes ja registradas continuam vinculadas — so o texto exibido muda daqui pra frente.
       const novoNome=(document.getElementById('l-novo-nome')?.value||'').trim();
       let novoTitle=title;
       if(novoNome && novoNome!==title){ data.title=novoNome; novoTitle=novoNome; }
-      await userCol('library').doc(lib.id).set(data,{merge:true});
+      // V3.86: "findLib" usa cache local e pode pegar o duplicado errado quando existe mais de
+      // um documento com o mesmo titulo (mesmo problema ja visto em outras partes do app).
+      // Confirma no Firestore direto qual e' o doc correto ANTES de gravar.
+      const freshPage = window.blFreshBookPage ? await window.blFreshBookPage(title).catch(()=>null) : null;
+      const targetDocId = (freshPage && freshPage.docId) || lib.id;
+      await userCol('library').doc(targetDocId).set(data,{merge:true});
       if(lib.bookId) await window.BL.db.collection('books').doc(lib.bookId).set({title:novoTitle,author:data.author||lib.author||'',pages:pages||bookPages(lib),coverUrl:data.coverUrl||lib.coverUrl||'',isbn:data.isbn||lib.isbn||'',collection:data.collection||lib.collection||'',genre:data.genre||lib.genre||'',updatedAt:nowISO()},{merge:true});
       safeMsg('l-msg','✅ Livro atualizado no Firebase!','ok'); await blRefreshAndRender(); setTimeout(()=>fecharModal('livro'),800);
     }catch(e){ console.error(e); safeMsg('l-msg','❌ Firebase: '+e.message,'err'); }
