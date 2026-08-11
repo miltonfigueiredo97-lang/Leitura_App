@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.86-build-1786462748 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.87-build-1786468406 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9590,18 +9590,21 @@ body.bl-v12-battle #blBattleBackButtonV25{
       const chosen = candidates[0];
       const total = Number(chosen.totalPages||0);
       let current = Number(chosen.currentPage||0);
-      // 3) Cross-valida com a ÚLTIMA sessão real registrada — fonte de verdade mais confiável que o campo currentPage salvo
+      // V3.87: a sessão só vence o campo salvo se for MAIS RECENTE que a última edição do livro.
+      // Antes, uma sessão antiga (ex.: registrada antes de "Zerar progresso") sempre vencia,
+      // desfazendo silenciosamente qualquer correção manual feita depois pelo Atualizar Livro.
       try {
         const sessSnap = await userCol('sessions').get();
         let lastSession = null, lastDate = '';
         sessSnap.forEach(doc => {
           const s = doc.data();
           if(norm(s.title||s.livro||'') === t && s.currentPage != null) {
-            const d = String(s.date||'');
+            const d = String(s.createdAt||s.date||'');
             if(d >= lastDate) { lastDate = d; lastSession = s; }
           }
         });
-        if(lastSession) current = Number(lastSession.currentPage||0);
+        const docUpdated = String(chosen.updatedAt||'');
+        if(lastSession && (!docUpdated || lastDate >= docUpdated)) current = Number(lastSession.currentPage||0);
       } catch(e) { console.warn('cross-check de sessões falhou', e); }
       return { current, total, docId: chosen.id };
     } catch(e) { console.warn('blFreshBookPage falhou', e); return null; }
