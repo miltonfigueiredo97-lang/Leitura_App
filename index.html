@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.84-build-1785894866 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.85-build-1786462456 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -5309,6 +5309,10 @@ iniciarAppFirebase();
       <div id="l-livro-sel" style="display:none;margin-top:6px;padding:6px 12px;background:rgba(139,124,248,0.15);border-radius:8px;font-size:13px;color:var(--teal);cursor:pointer;" onclick="limparBuscaSelect('l'); document.getElementById('l-livro').value='';"></div>
     </div>
     <div class="pwa-field">
+      <label>Novo nome do livro (deixe vazio para não alterar)</label>
+      <input id="l-novo-nome" type="text" placeholder="Digite para corrigir o título">
+    </div>
+    <div class="pwa-field">
       <label>Status</label>
       <select id="l-status" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;">
         <option value="">Não alterar</option>
@@ -5330,6 +5334,7 @@ iniciarAppFirebase();
       <div class="pwa-field">
         <label>Página Atual (corrige manualmente se estiver errado)</label>
         <input id="l-pagina-atual" type="number" min="0" placeholder="Deixe vazio para não alterar">
+        <button type="button" onclick="document.getElementById('l-pagina-atual').value='0';document.getElementById('l-status').value='Aguardando';" style="margin-top:6px;width:100%;padding:8px;background:rgba(248,140,106,.12);border:1px solid var(--orange,#f88c6a);border-radius:8px;color:var(--orange,#f88c6a);font-size:12px;font-weight:700;cursor:pointer;">↺ Zerar progresso (marca como Aguardando)</button>
       </div>
       <div class="pwa-field">
         <label>Ano da Meta</label>
@@ -8092,8 +8097,13 @@ if ('serviceWorker' in navigator) {
       const data={updatedAt:nowISO()}; [['status','l-status'],['author','l-autor'],['targetYear','l-metaano'],['dependency','l-depende'],['coverUrl','l-capa'],['isbn','l-isbn'],['collection','l-colecao'],['genre','l-genero']].forEach(([k,id])=>{const el=document.getElementById(id); if(el) data[k]=el.value.trim();});
       const pages=n(document.getElementById('l-paginas')?.value); if(pages) data.totalPages=pages; const ord=n(document.getElementById('l-ordem')?.value); if(ord) data.collectionOrder=ord;
       const pagAtualManual=document.getElementById('l-pagina-atual')?.value; if(pagAtualManual!==''&&pagAtualManual!=null){data.currentPage=n(pagAtualManual); data.progress=data.totalPages?data.currentPage/data.totalPages:(pages?data.currentPage/pages:0);}
+      // V3.85: permite corrigir o titulo do livro. O bookId permanece o mesmo, entao sessoes e
+      // avaliacoes ja registradas continuam vinculadas — so o texto exibido muda daqui pra frente.
+      const novoNome=(document.getElementById('l-novo-nome')?.value||'').trim();
+      let novoTitle=title;
+      if(novoNome && novoNome!==title){ data.title=novoNome; novoTitle=novoNome; }
       await userCol('library').doc(lib.id).set(data,{merge:true});
-      if(lib.bookId) await window.BL.db.collection('books').doc(lib.bookId).set({title,author:data.author||lib.author||'',pages:pages||bookPages(lib),coverUrl:data.coverUrl||lib.coverUrl||'',isbn:data.isbn||lib.isbn||'',collection:data.collection||lib.collection||'',genre:data.genre||lib.genre||'',updatedAt:nowISO()},{merge:true});
+      if(lib.bookId) await window.BL.db.collection('books').doc(lib.bookId).set({title:novoTitle,author:data.author||lib.author||'',pages:pages||bookPages(lib),coverUrl:data.coverUrl||lib.coverUrl||'',isbn:data.isbn||lib.isbn||'',collection:data.collection||lib.collection||'',genre:data.genre||lib.genre||'',updatedAt:nowISO()},{merge:true});
       safeMsg('l-msg','✅ Livro atualizado no Firebase!','ok'); await blRefreshAndRender(); setTimeout(()=>fecharModal('livro'),800);
     }catch(e){ console.error(e); safeMsg('l-msg','❌ Firebase: '+e.message,'err'); }
     finally{ if(btn){btn.disabled=false;btn.textContent='✅ Atualizar';} }
