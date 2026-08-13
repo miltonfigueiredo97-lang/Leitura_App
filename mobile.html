@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.88-build-1786485220 -->
+<head><!-- V3.89-build-1786625950 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -8069,6 +8069,17 @@ if ('serviceWorker' in navigator) {
       const novoNome=(document.getElementById('l-novo-nome')?.value||'').trim();
       let novoTitle=title;
       if(novoNome && novoNome!==title){ data.title=novoNome; novoTitle=novoNome; }
+      // V3.89: "Zerar progresso"/edicao manual de pagina precisa atualizar TAMBEM o mapa de
+      // sobreposicao local (window.__blV335PageOverrides) — ele guarda o ultimo valor otimista
+      // de UMA SESSAO e nunca era limpo por aqui, entao continuava forcando o numero antigo (ex.:
+      // 10) de volta na tela e em telas futuras, mesmo com o Firestore ja corretamente zerado.
+      if(pagAtualManual!==''&&pagAtualManual!=null && window.__blV335PageOverrides){
+        try{
+          const tOld=norm(title), tNew=norm(novoTitle);
+          delete window.__blV335PageOverrides[tOld];
+          window.__blV335PageOverrides[tNew]=n(pagAtualManual);
+        }catch(e){}
+      }
       // V3.86: "findLib" usa cache local e pode pegar o duplicado errado quando existe mais de
       // um documento com o mesmo titulo (mesmo problema ja visto em outras partes do app).
       // Confirma no Firestore direto qual e' o doc correto ANTES de gravar.
