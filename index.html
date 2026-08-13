@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.88-build-1786485220 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.89-build-1786625950 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -8100,6 +8100,17 @@ if ('serviceWorker' in navigator) {
       const novoNome=(document.getElementById('l-novo-nome')?.value||'').trim();
       let novoTitle=title;
       if(novoNome && novoNome!==title){ data.title=novoNome; novoTitle=novoNome; }
+      // V3.89: "Zerar progresso"/edicao manual de pagina precisa atualizar TAMBEM o mapa de
+      // sobreposicao local (window.__blV335PageOverrides) — ele guarda o ultimo valor otimista
+      // de UMA SESSAO e nunca era limpo por aqui, entao continuava forcando o numero antigo (ex.:
+      // 10) de volta na tela e em telas futuras, mesmo com o Firestore ja corretamente zerado.
+      if(pagAtualManual!==''&&pagAtualManual!=null && window.__blV335PageOverrides){
+        try{
+          const tOld=norm(title), tNew=norm(novoTitle);
+          delete window.__blV335PageOverrides[tOld];
+          window.__blV335PageOverrides[tNew]=n(pagAtualManual);
+        }catch(e){}
+      }
       // V3.86: "findLib" usa cache local e pode pegar o duplicado errado quando existe mais de
       // um documento com o mesmo titulo (mesmo problema ja visto em outras partes do app).
       // Confirma no Firestore direto qual e' o doc correto ANTES de gravar.
