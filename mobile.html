@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.89-build-1786625950 -->
+<head><!-- V3.90-build-1786634905 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -8065,7 +8065,12 @@ if ('serviceWorker' in navigator) {
     try{ if(btn){btn.disabled=true;btn.textContent='Atualizando...';}
       const data={updatedAt:nowISO()}; [['status','l-status'],['author','l-autor'],['targetYear','l-metaano'],['dependency','l-depende'],['coverUrl','l-capa'],['isbn','l-isbn'],['collection','l-colecao'],['genre','l-genero']].forEach(([k,id])=>{const el=document.getElementById(id); if(el) data[k]=el.value.trim();});
       const pages=n(document.getElementById('l-paginas')?.value); if(pages) data.totalPages=pages; const ord=n(document.getElementById('l-ordem')?.value); if(ord) data.collectionOrder=ord;
-      const pagAtualManual=document.getElementById('l-pagina-atual')?.value; if(pagAtualManual!==''&&pagAtualManual!=null){data.currentPage=n(pagAtualManual); data.progress=data.totalPages?data.currentPage/data.totalPages:(pages?data.currentPage/pages:0);}
+      const pagAtualManual=document.getElementById('l-pagina-atual')?.value; if(pagAtualManual!==''&&pagAtualManual!=null){data.currentPage=n(pagAtualManual); data.progress=data.totalPages?data.currentPage/data.totalPages:(pages?data.currentPage/pages:0);
+        // V3.90: pagina = 0 sempre forca status Aguardando, mesmo que o dropdown de status
+        // nao tenha sido mudado junto. Antes, zerar a pagina sem tambem trocar o status
+        // manualmente deixava o livro com 0 paginas mas ainda marcado como "Lendo".
+        if(data.currentPage===0){ data.status='Aguardando'; data.pendingRating=false; data.dismissCompletedPrompt=true; }
+      }
       const novoNome=(document.getElementById('l-novo-nome')?.value||'').trim();
       let novoTitle=title;
       if(novoNome && novoNome!==title){ data.title=novoNome; novoTitle=novoNome; }
