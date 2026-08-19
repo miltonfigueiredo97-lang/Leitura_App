@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.94-build-1787160175 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.95-build-1787160509 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -11501,7 +11501,15 @@ body.bl-v40-loading #app{display:none!important;}
   function saveMetaStore(arr){localStorage.setItem('blCustomMetasV42',JSON.stringify(arr));try{const u=window.BL?.auth?.currentUser,db=window.BL?.db;if(u&&db)db.collection('users').doc(u.uid).collection('settings').doc('customMetas').set({items:arr,updatedAt:new Date().toISOString()},{merge:true});}catch(e){}}
   function metaBaseYear(label){const custom=metaStore().find(m=>m.label===label);if(custom&&custom.year)return custom.year;const m=String(label||'').match(/20\d{2}/);return m?m[0]:String(new Date().getFullYear());}
   function ensureCustomMetaOptions(){
-  const sel=$('selMetaAno');if(!sel)return;const cur=sel.value;const metas=metaStore();
+  const sel=$('selMetaAno');if(!sel)return;
+  // V3.95: enquanto a verdade do Firestore (sync) ainda nao foi conferida nesta sessao,
+  // NAO mostra nada vindo do localStorage bruto — evita o "aparece e some depois de 1s"
+  // (a leitura antiga, sincrona, ganhava a corrida da leitura nova, assincrona, do Firestore).
+  if(!window.__blMetaRegistrySynced){
+    if(typeof sync==='function') sync().then(()=>{ try{ ensureCustomMetaOptions(); }catch(e){} }).catch(()=>{});
+    return;
+  }
+  const cur=sel.value;const metas=metaStore();
   // V3.94: antes so ADICIONAVA opcoes que faltavam, nunca removia as que ja nao deveriam
   // mais estar la — bastava essa funcao rodar depois do sistema novo (registry) ja ter
   // limpado tudo pra reintroduzir metas "excluidas" de volta no seletor.
@@ -12065,6 +12073,8 @@ body.bl-v40-loading #app{display:none!important;}
   }
   async function sync(opts={}){
     stripRegistryFromMemory(); const reg=await readRegistry();
+    // V3.95: marca que a verdade do Firestore ja foi conferida pelo menos uma vez nesta sessao
+    window.__blMetaRegistrySynced = true;
     if(reg.available&&reg.exists) return applyOptions(reg.items,true);
     if(reg.available&&!reg.exists){
       const initialized=localStorage.getItem(INIT)==='1';
