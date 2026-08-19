@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.95-build-1787160509 -->
+<head><!-- V3.96-build-1787160688 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -13785,7 +13785,20 @@ body.bl-v40-loading #app{display:none!important;}
 }
   const oldBuildMeta=window.buildMeta;if(typeof oldBuildMeta==='function'&&!oldBuildMeta.__bl_v42){window.buildMeta=function(){ensureCustomMetaOptions();const r=oldBuildMeta.apply(this,arguments);try{const label=$('selMetaAno')?.value;const ano=metaBaseYear(label);const el=$('meta-ano-final');if(el)el.textContent=ano;}catch(e){}return r;};window.buildMeta.__bl_v42=true;}
   function ensureMetaFeature(){ensureCustomMetaOptions();const gear=document.querySelector('button[onclick="abrirGerenciarMeta()"]');if(gear&&!$('blV42NewMetaBtn')){const b=document.createElement('button');b.id='blV42NewMetaBtn';b.type='button';b.title='Criar nova meta';b.textContent='＋';b.style.cssText=gear.getAttribute('style')||'';b.style.marginLeft='2px';b.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();window.blOpenNewMetaModal();};gear.insertAdjacentElement('afterend',b);}const gmTitle=$('gmTitulo');if(gmTitle&&!$('blV42GmNewMetaBtn')){const b=document.createElement('button');b.id='blV42GmNewMetaBtn';b.type='button';b.textContent='+ Nova meta';b.style.cssText='margin-left:8px;background:rgba(78,205,196,.12);border:1px solid var(--teal,#4ecdc4);color:var(--teal,#4ecdc4);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:900;cursor:pointer;';b.onclick=(ev)=>{ev.preventDefault();window.blOpenNewMetaModal();};gmTitle.appendChild(b);} }
-  window.blOpenNewMetaModal=function(){let ov=$('blV42NewMetaOverlay');if(!ov){ov=document.createElement('div');ov.id='blV42NewMetaOverlay';ov.innerHTML=`<div class="blv42-meta-box"><h2 style="margin:0 0 6px">🎯 Nova meta</h2><p style="margin:0 0 14px;color:var(--muted,#8892a8);font-size:13px">Crie uma meta separada, por exemplo: <b>2026 Etapa 2</b>.</p><label style="font-size:12px;font-weight:900">Nome da meta</label><input id="blV42MetaLabel" placeholder="Ex: 2026 Etapa 2"><label style="font-size:12px;font-weight:900">Ano base</label><input id="blV42MetaYear" inputmode="numeric" placeholder="Ex: 2026"><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button type="button" id="blV42MetaCancel" style="background:var(--bg3,#1e2535);border:1px solid var(--border,#2a3248);color:var(--text,#e2e8f0);border-radius:10px;padding:10px 12px;font-weight:900">Cancelar</button><button type="button" id="blV42MetaSave" style="background:var(--purple,#8b7cf8);border:none;color:white;border-radius:10px;padding:10px 12px;font-weight:900">Criar meta</button></div></div>`;document.body.appendChild(ov);$('blV42MetaCancel').onclick=()=>ov.classList.remove('open');$('blV42MetaSave').onclick=()=>{const label=String($('blV42MetaLabel').value||'').trim();const year=String($('blV42MetaYear').value||'').trim();if(!label||!/20\d{2}/.test(year)){alert('Preencha o nome da meta e o ano base.');return;}const arr=metaStore().filter(m=>m.label!==label);arr.push({label,year,createdAt:new Date().toISOString()});saveMetaStore(arr);ensureCustomMetaOptions();const sel=$('selMetaAno');if(sel)sel.value=label;ov.classList.remove('open');try{window.buildMeta&&window.buildMeta();}catch(e){}try{window.abrirGerenciarMeta&&window.abrirGerenciarMeta();}catch(e){}};}ov.classList.add('open');setTimeout(()=>{$('blV42MetaLabel').value='';$('blV42MetaYear').value=String(new Date().getFullYear());$('blV42MetaLabel').focus();},20);};
+  window.blOpenNewMetaModal=function(){let ov=$('blV42NewMetaOverlay');if(!ov){ov=document.createElement('div');ov.id='blV42NewMetaOverlay';ov.innerHTML=`<div class="blv42-meta-box"><h2 style="margin:0 0 6px">🎯 Nova meta</h2><p style="margin:0 0 14px;color:var(--muted,#8892a8);font-size:13px">Crie uma meta separada, por exemplo: <b>2026 Etapa 2</b>.</p><label style="font-size:12px;font-weight:900">Nome da meta</label><input id="blV42MetaLabel" placeholder="Ex: 2026 Etapa 2"><label style="font-size:12px;font-weight:900">Ano base</label><input id="blV42MetaYear" inputmode="numeric" placeholder="Ex: 2026"><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button type="button" id="blV42MetaCancel" style="background:var(--bg3,#1e2535);border:1px solid var(--border,#2a3248);color:var(--text,#e2e8f0);border-radius:10px;padding:10px 12px;font-weight:900">Cancelar</button><button type="button" id="blV42MetaSave" style="background:var(--purple,#8b7cf8);border:none;color:white;border-radius:10px;padding:10px 12px;font-weight:900">Criar meta</button></div></div>`;document.body.appendChild(ov);$('blV42MetaCancel').onclick=()=>ov.classList.remove('open');$('blV42MetaSave').onclick=async()=>{
+      const label=String($('blV42MetaLabel').value||'').trim();
+      const year=String($('blV42MetaYear').value||'').trim();
+      if(!label||!/20\d{2}/.test(year)){alert('Preencha o nome da meta e o ano base.');return;}
+      const btnSave=$('blV42MetaSave'); if(btnSave){btnSave.disabled=true;btnSave.textContent='Criando...';}
+      // V3.96: usa o sistema de registro real (o mesmo que a leitura/sync confia), nao mais
+      // o caminho antigo (saveMetaStore) que gravava num lugar que nunca era lido de volta.
+      let ok=true;
+      if(typeof window.blMetaRegistryCreate==='function'){ ok=await window.blMetaRegistryCreate(label,year); }
+      else { const arr=metaStore().filter(m=>m.label!==label); arr.push({label,year,createdAt:new Date().toISOString()}); saveMetaStore(arr); }
+      if(btnSave){btnSave.disabled=false;btnSave.textContent='Criar meta';}
+      if(!ok) return;
+      ensureCustomMetaOptions();const sel=$('selMetaAno');if(sel)sel.value=label;ov.classList.remove('open');try{window.buildMeta&&window.buildMeta();}catch(e){}try{window.abrirGerenciarMeta&&window.abrirGerenciarMeta();}catch(e){}
+    };}ov.classList.add('open');setTimeout(()=>{$('blV42MetaLabel').value='';$('blV42MetaYear').value=String(new Date().getFullYear());$('blV42MetaLabel').focus();},20);};
   const oldOpenGM=window.abrirGerenciarMeta;if(typeof oldOpenGM==='function'&&!oldOpenGM.__bl_v42){window.abrirGerenciarMeta=function(){const r=oldOpenGM.apply(this,arguments);setTimeout(ensureMetaFeature,40);return r;};window.abrirGerenciarMeta.__bl_v42=true;}
   function boot(){document.body.classList.add('bl-v42-ready');buildMenu();cleanupHeader();hideLegacyMenus();ensureCommunityPage();ensureMetaFeature();try{normalizeStatusBuckets();}catch(e){}try{window.renderLendoCards&&window.renderLendoCards();}catch(e){} }
   ready(()=>{boot();setTimeout(boot,250);setTimeout(boot,1000);});
@@ -14352,6 +14365,18 @@ body.bl-v40-loading #app{display:none!important;}
     }catch(e){ console.warn('[BookLegacy] verificação de meta falhou', e); }
     applyOptions(clean,true); try{window.buildMeta&&window.buildMeta();}catch(e){} return true;
   }
+  // V3.96: expoe o SAVE de verdade (registro no Firestore) globalmente. O botao "Criar nova
+  // meta" usava um caminho antigo e desconectado (saveMetaStore -> settings/customMetas) que
+  // o sync()/leitura NUNCA olhava — a meta nova aparecia por 1s (cache local) e sumia assim
+  // que o sync confirmava com a fonte real, que nunca tinha recebido a criacao.
+  window.blMetaRegistryCreate = async function(label, year){
+    try{
+      const reg = await readRegistry();
+      const base = (reg.available && reg.exists) ? reg.items : local();
+      const next = uniq([...base.filter(m => low(m.label)!==low(label)), {label, year, createdAt:new Date().toISOString()}]);
+      return await save(next);
+    }catch(e){ console.warn('[BookLegacy] blMetaRegistryCreate falhou', e); return false; }
+  };
   function selectedCustom(){const sel=$('selMetaAno'); if(!sel)return null; const opt=sel.options[sel.selectedIndex]; const label=norm(sel.value||opt?.textContent); if(!label||isDefault(label,opt))return null; return local().find(m=>low(m.label)===low(label))||{label,year:inferYear(label,opt),custom:true,source:'selected-v48'};}
   async function createMeta(label,year){label=norm(label); year=norm(year); if(!label||!isYear(year)){alert('Preencha o nome da meta e o ano base.'); return false;} const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:(reg.available?uniq([...local(),...collectFromSelect()]):local()); const next=uniq([...base,{label,year,custom:true,createdAt:now(),updatedAt:now(),source:PATCH}]); const ok=await save(next); if(ok){const sel=$('selMetaAno'); if(sel)sel.value=label;} return ok;}
   async function deleteCurrent(){const info=selectedCustom(); const sel=$('selMetaAno'); if(!info){alert('Essa meta padrão não pode ser excluída por aqui.'); return false;} if(!confirm('Excluir a meta "'+info.label+'"?'))return false; const reg=await readRegistry(); const base=(reg.available&&reg.exists)?reg.items:uniq([...local(),...collectFromSelect()]); const next=uniq(base).filter(m=>low(m.label)!==low(info.label)); const ok=await save(next); if(!ok)return false; if(sel){[...sel.options].forEach(o=>{if(low(o.value||o.textContent)===low(info.label))o.remove();}); const fb=[...sel.options].find(o=>isYear(o.value))||sel.options[0]; if(fb)sel.value=fb.value;} closeMetaPanels(); setTimeout(sync,300); return true;}
