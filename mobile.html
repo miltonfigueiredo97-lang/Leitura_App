@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.91-build-1786635510 -->
+<head><!-- V3.92-build-1787157860 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4226,13 +4226,20 @@ window.blEnsureFriendBundles = function(){
     const friends = raw.friends || [];
     if(!friends.length){ raw.friendBundlesLoaded = true; return raw.users || []; }
     // V3.61: todos os amigos em paralelo (antes era um de cada vez)
+    let algumFalhou = false;
     const results = await Promise.all(friends.map(async f => {
       const label = f.displayName || f.name || f.label || (f.email||'Amigo').split('@')[0] || 'Amigo';
       const existing = (raw.users||[]).find(u=>String(u.uid||'')===String(f.uid||''));
       const temDados = existing && !((existing.library?.length||0)===0 && (existing.sessions?.length||0)===0);
       if(temDados) return null;
-      try { return { uid: f.uid, bundle: await blReadUserBundle(f.uid, label) }; }
-      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); return null; }
+      try {
+        // V3.92: limite de 10s por amigo — um unico amigo com rede lenta nao trava mais
+        // o carregamento de todos os outros (nem a Batalha inteira).
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
+        const bundle = await Promise.race([blReadUserBundle(f.uid, label), timeout]);
+        return { uid: f.uid, bundle };
+      }
+      catch(e){ console.warn('Não foi possível ler amigo', f.uid, e); algumFalhou = true; return null; }
     }));
     raw.users = raw.users || [];
     results.forEach(r => {
@@ -4240,12 +4247,17 @@ window.blEnsureFriendBundles = function(){
       const idx = raw.users.findIndex(u=>String(u.uid||'')===String(r.uid||''));
       if(idx>=0) raw.users[idx] = r.bundle; else raw.users.push(r.bundle);
     });
-    raw.friendBundlesLoaded = true;
+    // V3.92: SO marca como "carregado" se TODOS os amigos realmente carregaram. Antes, se
+    // apenas UM falhasse (rede lenta, timeout), o app marcava tudo como pronto mesmo assim —
+    // e como essa flag bloqueia qualquer nova tentativa, o unico jeito de ver o dado era
+    // fechar e abrir o app de novo (unico jeito de zerar a flag).
+    raw.friendBundlesLoaded = !algumFalhou;
     return raw.users;
   })().catch(function(e){
-    // V3.62: NUNCA devolve promise rejeitada — quem espera por ela precisa renderizar de qualquer jeito
+    // NUNCA devolve promise rejeitada — quem espera por ela precisa renderizar de qualquer jeito.
+    // Mas tambem NAO marca como carregado — deixa uma proxima tentativa (reabrir a Batalha,
+    // por exemplo) tentar de novo, sem precisar fechar o app inteiro.
     console.warn('[BookLegacy] falha ao carregar amigos:', e);
-    try{ raw.friendBundlesLoaded = true; }catch(_){}
     return (raw && raw.users) || [];
   });
   window.__blFriendBundlesInFlight.then(function(){ window.__blFriendBundlesInFlight = null; });
