@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.92-build-1787157860 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.93-build-1787159198 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -9143,7 +9143,11 @@ body.bl-v12-battle #blBattleBackButtonV25{
     const uid = window.BL?.auth?.currentUser?.uid;
     const db = window.BL?.db;
     if(!uid || !db){ if(typeof mostrarMsg==='function') mostrarMsg(msg,'❌ Usuário/Firebase não carregado.','err'); return; }
-    const rawLib = (window.BL?.raw?.users?.[0]?.library) || (window.BL?.raw?.library) || [];
+    // V3.93: nao assume mais que "users[0]" e' sempre a propria conta — busca pelo UID exato.
+    // Se essa lista mudasse de ordem (ex.: apos carregar dados de amigos), a busca do doc do
+    // livro falhava silenciosamente e o "Adicionar a meta" simplesmente nao fazia nada.
+    const meuBundle = (window.BL?.raw?.users||[]).find(u => String(u.uid||'')===String(uid||''));
+    const rawLib = (meuBundle?.library) || (window.BL?.raw?.users?.[0]?.library) || (window.BL?.raw?.library) || [];
     const byTitle = new Map();
     rawLib.forEach(l=>{ const title=l.title||l.livro||l.nome; if(title) byTitle.set(norm(title), l); });
     const livrosAtuais = (window._livros||[]).filter(l => String(l.metaAno||l.targetYear||'') === ano).map(l=>l.livro||l.title).filter(Boolean);
@@ -12739,7 +12743,7 @@ body.bl-v40-loading #app{display:none!important;}
       wrapped.__blGuarded = true;
       window.toggleFabMenu = wrapped;
     }
-    ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blAbrirColecoes','blAbrirDecidirProximo'].forEach(fn => {
+    ['abrirSessaoRapida','enviarSessao','enviarNota','enviarLivro','enviarNovoLivro','confirmarExcluir','excluirSessao','salvarEdicaoSessao','salvarGerenciarMeta','blAbrirColecoes','blAbrirDecidirProximo','blOpenNewMetaModal','blDeleteCurrentMetaV43','blDeleteCurrentMetaV44','blDeleteCurrentMetaV45','blDeleteCurrentMetaV46','blDeleteCurrentMetaV47','blDeleteCurrentMetaV48'].forEach(fn => {
       const prev = window[fn];
       if (typeof prev === 'function' && !prev.__blGuarded) {
         const wrapped = function(){ if (!canEdit()) return blockEdit(); return prev.apply(this, arguments); };
