@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.98-build-1787283061 -->
+<head><!-- V3.99-build-1787283491 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3878,6 +3878,11 @@ function renderGerenciarMeta() {
       ? `<img src="${l.coverUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">`
       : `<div style="width:100%;height:100%;background:var(--bg3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">📚</div>`;
     const livroEsc = l.livro.replace(/'/g,"\\'");
+    // V3.99: escape PROPRIO pra atributo HTML (data-livro) — o livroEsc acima e' pra dentro
+    // de aspas simples de JS (onclick), nao serve pra atributo HTML. Livros com apostrofo
+    // no titulo ficavam com uma barra invertida a mais no data-livro, quebrando a busca
+    // no Firestore ("mover para meta" nunca encontrava o livro).
+    const livroHtmlEsc = l.livro.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const statusBadge = l.status === 'Completo'
       ? `<div style="position:absolute;top:4px;left:4px;background:rgba(34,197,94,0.85);border-radius:4px;font-size:9px;padding:1px 4px;color:#fff;">✅</div>`
       : '';
@@ -3887,7 +3892,7 @@ function renderGerenciarMeta() {
       : '';
     return `
     <div onclick="toggleGmLivro('${livroEsc}')" title="${l.livro}"
-      class="gmBookCard" data-livro="${livroEsc}" data-checked="${checked?'1':'0'}"
+      class="gmBookCard" data-livro="${livroHtmlEsc}" data-checked="${checked?'1':'0'}"
       style="position:relative;width:84px!important;max-width:84px!important;min-width:84px;flex:0 0 84px!important;flex-shrink:0;flex-grow:0;cursor:pointer;box-sizing:border-box;transition:transform .2s;transform-origin:center;z-index:1;background:var(--bg2);border-radius:8px;padding:4px;"
       onmouseenter="this.style.transform='scale(2)';this.style.zIndex='50';this.style.boxShadow='0 8px 32px rgba(0,0,0,0.9)'"
       onmouseleave="this.style.transform='scale(1)';this.style.zIndex='1';this.style.boxShadow='none'">
@@ -8108,6 +8113,24 @@ if ('serviceWorker' in navigator) {
       const freshPage = window.blFreshBookPage ? await window.blFreshBookPage(title).catch(()=>null) : null;
       const targetDocId = (freshPage && freshPage.docId) || lib.id;
       await userCol('library').doc(targetDocId).set(data,{merge:true});
+      // V3.99: "Zerar progresso" agora TAMBEM apaga todo o historico de sessoes desse livro —
+      // era exatamente isso que fazia o livro "ressuscitar" pagina/status antigos toda vez
+      // que o app recarregava, mesmo com resetAt e a correcao de duplicatas ja aplicadas.
+      // Se as sessoes que causaram a confusao nem existem mais, nao tem mais o que reviver.
+      if(data.currentPage===0){
+        try{
+          const tNorm=norm(title);
+          const sessSnap=await userCol('sessions').get();
+          const del=window.BL.db.batch();
+          let n=0;
+          sessSnap.forEach(doc=>{
+            const s=doc.data();
+            if(norm(s.title||s.livro||'')===tNorm){ del.delete(doc.ref); n++; }
+          });
+          if(n>0) await del.commit();
+          window._sessoes=(window._sessoes||[]).filter(s=>norm(s.livro||s.title||'')!==tNorm);
+        }catch(e){ console.warn('[BookLegacy] limpeza de sessoes ao zerar falhou', e); }
+      }
       if(lib.bookId) await window.BL.db.collection('books').doc(lib.bookId).set({title:novoTitle,author:data.author||lib.author||'',pages:pages||bookPages(lib),coverUrl:data.coverUrl||lib.coverUrl||'',isbn:data.isbn||lib.isbn||'',collection:data.collection||lib.collection||'',genre:data.genre||lib.genre||'',updatedAt:nowISO()},{merge:true});
       safeMsg('l-msg','✅ Livro atualizado no Firebase!','ok'); await blRefreshAndRender(); setTimeout(()=>fecharModal('livro'),800);
     }catch(e){ console.error(e); safeMsg('l-msg','❌ Firebase: '+e.message,'err'); }
