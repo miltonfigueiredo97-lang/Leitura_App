@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V4.00-build-1787283634 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V4.01-build-1787284183 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4922,21 +4922,11 @@ iniciarAppFirebase();
 
 <!-- Menu do FAB -->
 <div class="fab-menu" id="fabMenu" style="display:none">
+  <!-- V4.01: reorganizado por prioridade de uso. "Registrar Sessão" removido daqui —
+       ja existe direto em cada card do livro, era redundante ter tambem no menu geral. -->
   <div class="fab-item">
     <span>Adicionar Livro</span>
     <button style="background:#4ecdc4" onclick="abrirModal('novoLivro')">➕</button>
-  </div>
-  <div class="fab-item">
-    <span>Registrar Sessão</span>
-    <button style="background:var(--purple)" onclick="abrirModal('sessao')">📖</button>
-  </div>
-  <div class="fab-item">
-    <span>Verificar Coleções</span>
-    <button style="background:#5b8cff" onclick="toggleFabMenu();window.blAbrirColecoes()">📚</button>
-  </div>
-  <div class="fab-item">
-    <span>Meu Wrapped</span>
-    <button style="background:linear-gradient(135deg,#8b7cf8,#e56cff)" onclick="toggleFabMenu();window.blAbrirWrapped()">🎨</button>
   </div>
   <div class="fab-item">
     <span>Avaliar Livro</span>
@@ -4951,12 +4941,20 @@ iniciarAppFirebase();
     <button style="background:#e56cff" onclick="abrirModal('roleta')">🎲</button>
   </div>
   <div class="fab-item">
-    <span>Excluir Livro</span>
-    <button style="background:#e53935" onclick="abrirModal('excluir')">🗑️</button>
+    <span>Verificar Coleções</span>
+    <button style="background:#5b8cff" onclick="toggleFabMenu();window.blAbrirColecoes()">📚</button>
+  </div>
+  <div class="fab-item">
+    <span>Meu Wrapped</span>
+    <button style="background:linear-gradient(135deg,#8b7cf8,#e56cff)" onclick="toggleFabMenu();window.blAbrirWrapped()">🎨</button>
   </div>
   <div class="fab-item">
     <span>Excluir Sessão</span>
     <button style="background:#b71c1c" onclick="abrirModal('excluirSessao')">📅</button>
+  </div>
+  <div class="fab-item">
+    <span>Excluir Livro</span>
+    <button style="background:#e53935" onclick="abrirModal('excluir')">🗑️</button>
   </div>
 </div>
 
@@ -12518,9 +12516,13 @@ body.bl-v40-loading #app{display:none!important;}
       const sessaoConfiavel = !corte || sessMaisRecente >= corte;
       const sessionSum = sessaoConfiavel ? (sums.get(key) || 0) : 0;
       // V3.60: só considera hasDone pelo status real — ignora completionDate/Year de migração antigos
-      const hasDone = arr.some(l => isDone(l.status));
-      const hasReading = arr.some(l => isReading(l.status));
-      const hasPaused = arr.some(l => isPaused(l.status));
+      // V4.01: status TAMBEM tem que vir do documento MAIS RECENTE, nao de "existe alguma
+      // duplicata com esse status" — era exatamente esse .some() que travava o livro em
+      // "Lendo" pra sempre: uma copia antiga esquecida com status Lendo sempre vencia,
+      // mesmo a copia mais nova (o reset) dizendo Aguardando.
+      const hasDone = isDone(maisRecente.status);
+      const hasReading = isReading(maisRecente.status);
+      const hasPaused = isPaused(maisRecente.status);
       // usa a pagina do documento mais recente como base, nao o maior valor entre duplicatas
       let current = currentOf(maisRecente);
       let status = base.status || 'Aguardando';
@@ -13888,25 +13890,45 @@ window.blAbrirDetalheLivro = function(livro){
     return arr.length?arr:[new Date().getFullYear()];
   }
 
+  function diasNoAno(ano){ var b=(ano%4===0&&ano%100!==0)||ano%400===0; return b?366:365; }
+
   function statsDoAno(ano){
     var sess=(window._sessoes||[]).filter(function(s){ return Number(s.ano)===Number(ano); });
     var paginas=sess.reduce(function(a,s){return a+(s.paginas||0);},0);
     var minutos=sess.reduce(function(a,s){return a+(s.minutos||0);},0);
-    var dias=new Set(sess.map(function(s){return s.data;})).size;
+    var diasSet=new Set(sess.map(function(s){return s.data;}));
     var livrosCompletos=(window._livros||[]).filter(function(l){
       var ac=String(l.anoConclusao||l.completionYear||'');
       return ac===String(ano);
     });
-    var top3=(window.NOTES||[]).filter(function(n){ return Number(n.ano)===Number(ano); })
-      .sort(function(a,b){ return (b.media||0)-(a.media||0); })
-      .slice(0,3)
-      .map(function(n){
-        var livroInfo=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(n.livro); }) || {};
-        return { livro:n.livro, media:n.media, autor:n.autor||livroInfo.autor||'', coverUrl:n.coverUrl||livroInfo.coverUrl||'' };
-      });
+
+    var rankGeral=[...(window.NOTES||[])].sort(function(a,b){ return (b.media||0)-(a.media||0); });
+    function posicaoGeral(livroNome){
+      var idx=rankGeral.findIndex(function(n){ return norm(n.livro)===norm(livroNome); });
+      return idx>=0?idx+1:null;
+    }
+    function montaItem(n){
+      var info=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(n.livro); }) || {};
+      return { livro:n.livro, media:n.media, autor:n.autor||info.autor||'', coverUrl:n.coverUrl||info.coverUrl||'', posicaoGeral:posicaoGeral(n.livro), totalGeral:rankGeral.length };
+    }
+    var notasDoAno=(window.NOTES||[]).filter(function(n){ return Number(n.ano)===Number(ano); });
+    var top3=[...notasDoAno].sort(function(a,b){return (b.media||0)-(a.media||0);}).slice(0,3).map(montaItem);
+    var worst3=[...notasDoAno].sort(function(a,b){return (a.media||0)-(b.media||0);}).slice(0,3).map(montaItem);
+
+    var totalDiasAno=diasNoAno(ano);
+    var heat=[];
+    for(var d=1; d<=totalDiasAno; d++){
+      var dt=new Date(ano,0,d);
+      var iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      heat.push(diasSet.has(iso));
+    }
+    var melhorDia=sess.reduce(function(acc,s){ return (s.paginas||0)>acc.paginas ? {data:s.data,paginas:s.paginas} : acc; }, {data:null,paginas:0});
+    var mediaPorSessao=sess.length?Math.round(paginas/sess.length):0;
+
     return {
-      ano: ano, paginas: paginas, horas: Math.round(minutos/60), dias: dias,
-      livros: livrosCompletos.length, top3: top3
+      ano:ano, paginas:paginas, minutos:minutos, horas:Math.round(minutos/60), dias:diasSet.size,
+      totalDiasAno:totalDiasAno, sessoesCount:sess.length, mediaPorSessao:mediaPorSessao,
+      livros:livrosCompletos.length, top3:top3, worst3:worst3, heat:heat, melhorDia:melhorDia
     };
   }
 
@@ -13928,6 +13950,7 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.fillStyle='rgba(255,255,255,.25)'; ctx.font='700 '+Math.round(w*0.4)+'px system-ui,sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('📖', x+w/2, y+h/2);
+    ctx.textBaseline='alphabetic';
   }
 
   function roundRect(ctx,x,y,w,h,r){
@@ -13936,96 +13959,155 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
   }
 
-  async function gerarImagem(stats){
-    var W=1080, H=1920;
-    var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
-    var ctx=canvas.getContext('2d');
-
-    var bg=ctx.createLinearGradient(0,0,W,H);
-    bg.addColorStop(0,'#0e1220'); bg.addColorStop(0.5,'#171034'); bg.addColorStop(1,'#0e1220');
-    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-
-    // decoracao: circulos suaves
-    ctx.save();
-    ctx.globalAlpha=0.12;
-    ctx.fillStyle='#8b7cf8'; ctx.beginPath(); ctx.arc(W-100,140,220,0,7); ctx.fill();
-    ctx.fillStyle='#e56cff'; ctx.beginPath(); ctx.arc(60,H-160,260,0,7); ctx.fill();
-    ctx.restore();
-
-    ctx.textAlign='center';
-    ctx.fillStyle='#9aa4bd'; ctx.font='700 34px system-ui,sans-serif';
-    ctx.fillText('MEU ANO DE LEITURA', W/2, 130);
-
-    var gradTxt=ctx.createLinearGradient(0,0,W,0);
-    gradTxt.addColorStop(0,'#8b7cf8'); gradTxt.addColorStop(1,'#e56cff');
-    ctx.fillStyle=gradTxt; ctx.font='900 150px system-ui,sans-serif';
-    ctx.fillText(String(stats.ano), W/2, 260);
-
-    // TOP 3
-    ctx.textAlign='center'; ctx.fillStyle='#ffd166'; ctx.font='700 40px system-ui,sans-serif';
-    ctx.fillText('⭐ TOP 3 MELHORES AVALIADOS', W/2, 400);
-
-    var coverW=240, coverH=340, gap=40;
+  async function desenharFileira(ctx, itens, y, corMedalha, W){
+    var coverW=220, coverH=310, gap=36;
     var totalW=coverW*3+gap*2;
     var startX=(W-totalW)/2;
-    var coverY=450;
-
     for(var i=0;i<3;i++){
       var x=startX+i*(coverW+gap);
-      var item=stats.top3[i];
+      var item=itens[i];
       if(!item){
-        roundRect(ctx,x,coverY,coverW,coverH,16); ctx.fillStyle='#171d33'; ctx.fill();
+        roundRect(ctx,x,y,coverW,coverH,16); ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fill();
         continue;
       }
       var img=await carregarImagem(item.coverUrl);
       ctx.save();
-      roundRect(ctx,x,coverY,coverW,coverH,16); ctx.clip();
-      if(img) ctx.drawImage(img,x,coverY,coverW,coverH);
-      else desenharCoverFallback(ctx,x,coverY,coverW,coverH);
+      roundRect(ctx,x,y,coverW,coverH,16); ctx.clip();
+      if(img) ctx.drawImage(img,x,y,coverW,coverH);
+      else desenharCoverFallback(ctx,x,y,coverW,coverH);
       ctx.restore();
-      // medalha de posicao
-      ctx.beginPath(); ctx.arc(x+30,coverY+30,28,0,7);
-      ctx.fillStyle = i===0?'#ffd166':(i===1?'#c7cbd6':'#f88c6a'); ctx.fill();
-      ctx.fillStyle='#0e1220'; ctx.font='900 28px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(String(i+1), x+30, coverY+32);
+      ctx.beginPath(); ctx.arc(x+28,y+28,26,0,7);
+      ctx.fillStyle=corMedalha; ctx.fill();
+      ctx.fillStyle='#0e1220'; ctx.font='900 26px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(i+1), x+28, y+30);
       ctx.textBaseline='alphabetic';
-      // titulo
-      ctx.fillStyle='#e8ecf5'; ctx.font='700 24px system-ui,sans-serif'; ctx.textAlign='center';
-      var titulo=item.livro.length>22?item.livro.slice(0,20)+'…':item.livro;
-      ctx.fillText(titulo, x+coverW/2, coverY+coverH+38);
-      ctx.fillStyle='#9aa4bd'; ctx.font='400 20px system-ui,sans-serif';
-      var autor=(item.autor||'').length>24?item.autor.slice(0,22)+'…':(item.autor||'');
-      ctx.fillText(autor, x+coverW/2, coverY+coverH+68);
-      ctx.fillStyle='#ffd166'; ctx.font='900 30px system-ui,sans-serif';
-      ctx.fillText('★ '+(item.media||0).toFixed(1), x+coverW/2, coverY+coverH+108);
+      ctx.fillStyle='#e8ecf5'; ctx.font='700 22px system-ui,sans-serif'; ctx.textAlign='center';
+      var titulo=item.livro.length>20?item.livro.slice(0,18)+'…':item.livro;
+      ctx.fillText(titulo, x+coverW/2, y+coverH+34);
+      ctx.fillStyle='#9aa4bd'; ctx.font='400 18px system-ui,sans-serif';
+      var autor=(item.autor||'').length>22?item.autor.slice(0,20)+'…':(item.autor||'');
+      ctx.fillText(autor, x+coverW/2, y+coverH+60);
+      ctx.fillStyle='#ffd166'; ctx.font='900 26px system-ui,sans-serif';
+      ctx.fillText('★ '+(item.media||0).toFixed(1), x+coverW/2, y+coverH+96);
+      if(item.posicaoGeral){
+        ctx.fillStyle='#8ab4ff'; ctx.font='700 16px system-ui,sans-serif';
+        ctx.fillText('#'+item.posicaoGeral+' de '+item.totalGeral+' (geral)', x+coverW/2, y+coverH+122);
+      }
+    }
+    return y+coverH+150;
+  }
+
+  function desenharStatCard(ctx,x,y,w,h,valor,label,cor,icone){
+    roundRect(ctx,x,y,w,h,18);
+    var g=ctx.createLinearGradient(x,y,x,y+h);
+    g.addColorStop(0,'rgba(255,255,255,.06)'); g.addColorStop(1,'rgba(255,255,255,.02)');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.textAlign='center';
+    ctx.font='36px system-ui,sans-serif'; ctx.fillText(icone, x+w/2, y+44);
+    ctx.fillStyle=cor; ctx.font='900 52px system-ui,sans-serif';
+    ctx.fillText(valor, x+w/2, y+h/2+22);
+    ctx.fillStyle='#9aa4bd'; ctx.font='700 18px system-ui,sans-serif';
+    ctx.fillText(label, x+w/2, y+h-18);
+  }
+
+  function desenharHeatmap(ctx,x,y,w,heat,ano){
+    ctx.textAlign='left';
+    ctx.fillStyle='#e8ecf5'; ctx.font='700 32px system-ui,sans-serif';
+    ctx.fillText('📅 Dias Lidos em '+ano, x, y);
+    var totalDias=heat.length;
+    var cols=Math.ceil(totalDias/14);
+    var cell=(w-((cols-1)*4))/cols;
+    cell=Math.min(cell,16);
+    var gap=3;
+    var usedW=cols*cell+(cols-1)*gap;
+    var startX=x+(w-usedW)/2;
+    var startY=y+30;
+    for(var i=0;i<totalDias;i++){
+      var col=Math.floor(i/14), row=i%14;
+      var cx=startX+col*(cell+gap), cy=startY+row*(cell+gap);
+      roundRect(ctx,cx,cy,cell,cell,2);
+      ctx.fillStyle = heat[i] ? '#4ecdc4' : 'rgba(255,255,255,.06)';
+      ctx.fill();
+    }
+    return startY+14*(cell+gap)+40;
+  }
+
+  async function gerarImagem(stats){
+    var W=1080, H=3000;
+    var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+    var ctx=canvas.getContext('2d');
+
+    var bg=ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,'#0e1220'); bg.addColorStop(0.3,'#171034'); bg.addColorStop(0.7,'#0e1220'); bg.addColorStop(1,'#171034');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    ctx.globalAlpha=0.10;
+    ctx.fillStyle='#8b7cf8'; ctx.beginPath(); ctx.arc(W-100,140,220,0,7); ctx.fill();
+    ctx.fillStyle='#e56cff'; ctx.beginPath(); ctx.arc(60,900,260,0,7); ctx.fill();
+    ctx.fillStyle='#4ecdc4'; ctx.beginPath(); ctx.arc(W-80,1900,240,0,7); ctx.fill();
+    ctx.restore();
+
+    var y=110;
+    ctx.textAlign='center';
+    ctx.fillStyle='#9aa4bd'; ctx.font='700 32px system-ui,sans-serif';
+    ctx.fillText('MEU ANO DE LEITURA', W/2, y); y+=140;
+
+    var gradTxt=ctx.createLinearGradient(0,0,W,0);
+    gradTxt.addColorStop(0,'#8b7cf8'); gradTxt.addColorStop(1,'#e56cff');
+    ctx.fillStyle=gradTxt; ctx.font='900 150px system-ui,sans-serif';
+    ctx.fillText(String(stats.ano), W/2, y); y+=90;
+
+    // TOP 3
+    ctx.fillStyle='#ffd166'; ctx.font='700 38px system-ui,sans-serif';
+    ctx.fillText('⭐ TOP 3 MELHORES AVALIADOS', W/2, y); y+=40;
+    y=await desenharFileira(ctx, stats.top3, y, '#ffd166', W);
+
+    // WORST 3
+    ctx.fillStyle='#f87171'; ctx.font='700 38px system-ui,sans-serif';
+    ctx.fillText('💀 TOP 3 PIORES AVALIADOS', W/2, y); y+=40;
+    y=await desenharFileira(ctx, stats.worst3, y, '#f87171', W);
+
+    y+=20;
+    // STATS GRID 3x2
+    var cols=3, gapX=24, gapY=24;
+    var cellW=(W-80-gapX*(cols-1))/cols, cellH=190;
+    var statsData=[
+      {valor:stats.paginas.toLocaleString('pt-BR'), label:'PÁGINAS LIDAS', cor:'#4ecdc4', icone:'📖'},
+      {valor:String(stats.livros), label:'LIVROS LIDOS', cor:'#8b7cf8', icone:'📚'},
+      {valor:stats.horas+'h', label:'HORAS DE LEITURA', cor:'#ffd166', icone:'⏱️'},
+      {valor:String(stats.dias)+'/'+stats.totalDiasAno, label:'DIAS QUE VOCÊ LEU', cor:'#f88c6a', icone:'🔥'},
+      {valor:String(stats.sessoesCount), label:'SESSÕES REGISTRADAS', cor:'#e56cff', icone:'📝'},
+      {valor:stats.mediaPorSessao+' págs', label:'MÉDIA POR SESSÃO', cor:'#56cfff', icone:'📊'}
+    ];
+    statsData.forEach(function(s,idx){
+      var cx=40+(idx%cols)*(cellW+gapX);
+      var cy=y+Math.floor(idx/cols)*(cellH+gapY);
+      desenharStatCard(ctx,cx,cy,cellW,cellH,s.valor,s.label,s.cor,s.icone);
+    });
+    y += Math.ceil(statsData.length/cols)*(cellH+gapY) + 30;
+
+    if(stats.melhorDia.data){
+      roundRect(ctx,40,y,W-80,110,16);
+      ctx.fillStyle='rgba(255,209,102,.08)'; ctx.fill();
+      ctx.strokeStyle='rgba(255,209,102,.3)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.textAlign='center';
+      ctx.fillStyle='#ffd166'; ctx.font='700 24px system-ui,sans-serif';
+      ctx.fillText('🏆 Melhor dia: '+stats.melhorDia.data.split('-').reverse().join('/')+' — '+stats.melhorDia.paginas+' páginas', W/2, y+65);
+      y+=150;
     }
 
-    // STATS GRID
-    var statsY=coverY+coverH+220;
-    var statsData=[
-      {label:'PÁGINAS LIDAS', valor:stats.paginas.toLocaleString('pt-BR'), cor:'#4ecdc4'},
-      {label:'LIVROS LIDOS', valor:String(stats.livros), cor:'#8b7cf8'},
-      {label:'HORAS DE LEITURA', valor:stats.horas+'h', cor:'#ffd166'},
-      {label:'DIAS QUE VOCÊ LEU', valor:String(stats.dias), cor:'#f88c6a'}
-    ];
-    var cols=2, cellW=(W-160)/2, cellH=190, gapY=30;
-    statsData.forEach(function(s,idx){
-      var cx=80+(idx%cols)*(cellW+40);
-      var cy=statsY+Math.floor(idx/cols)*(cellH+gapY);
-      roundRect(ctx,cx,cy,cellW,cellH,20);
-      ctx.fillStyle='rgba(255,255,255,.05)'; ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=2; ctx.stroke();
-      ctx.textAlign='center';
-      ctx.fillStyle=s.cor; ctx.font='900 64px system-ui,sans-serif';
-      ctx.fillText(s.valor, cx+cellW/2, cy+95);
-      ctx.fillStyle='#9aa4bd'; ctx.font='700 22px system-ui,sans-serif';
-      ctx.fillText(s.label, cx+cellW/2, cy+140);
-    });
+    y = desenharHeatmap(ctx, 40, y+20, W-80, stats.heat, stats.ano);
 
     ctx.textAlign='center'; ctx.fillStyle='#5c6785'; ctx.font='700 26px system-ui,sans-serif';
-    ctx.fillText('📚 BookLegacy', W/2, H-60);
+    ctx.fillText('📚 BookLegacy', W/2, H-40);
 
-    return canvas;
+    // corta o canvas na altura realmente usada
+    var finalH=Math.min(H, y+80);
+    var finalCanvas=document.createElement('canvas'); finalCanvas.width=W; finalCanvas.height=finalH;
+    finalCanvas.getContext('2d').drawImage(canvas,0,0,W,finalH,0,0,W,finalH);
+    return finalCanvas;
   }
 
   window.blAbrirWrapped = function(){
