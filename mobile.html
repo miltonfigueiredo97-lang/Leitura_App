@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V4.05-build-1787311608 -->
+<head><!-- V4.06-build-1787311794 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -949,6 +949,9 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
     </div>
     <div style="margin-bottom:12px;">
       <button id="gmToggleOutrasMetas" onclick="gmMostrarOutrasMetas=!gmMostrarOutrasMetas;atualizarBtnOutrasMetas();renderGerenciarMeta()" style="width:100%;text-align:left;font-size:12px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;">☐ Considerar livros que já tenham meta</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <button id="gmToggleLidos" onclick="gmMostrarLidos=!gmMostrarLidos;atualizarBtnLidos();renderGerenciarMeta()" style="width:100%;text-align:left;font-size:12px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;">☐ Mostrar livros já lidos</button>
     </div>
     <div id="gmContador" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
     <div id="gmLista" style="display:flex;flex-wrap:wrap;gap:46px 24px;flex:1;overflow-y:auto;overflow-x:hidden;align-content:flex-start;min-height:120px;padding:20px;"></div>
@@ -3771,6 +3774,23 @@ function fecharPainelMeta() {
 let gmSelecionados = new Set(); // livros marcados (vivem fora da renderização p/ persistir com filtros)
 let gmAnoAtual = null;
 let gmMostrarOutrasMetas = false; // mostra livros que já têm metaAno de outro ano
+let gmMostrarLidos = false; // V4.06: mostra tambem livros ja marcados como Completo,
+// pra poder mover um livro ja lido pra meta de outro ano sem perder status/progresso
+
+function atualizarBtnLidos() {
+  const btn = document.getElementById('gmToggleLidos');
+  if (!btn) return;
+  if (gmMostrarLidos) {
+    btn.textContent = '☑ Mostrar livros já lidos';
+    btn.style.color = 'var(--purple)';
+    btn.style.borderColor = 'var(--purple)';
+  } else {
+    btn.textContent = '☐ Mostrar livros já lidos';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
+  }
+}
+window.atualizarBtnLidos = atualizarBtnLidos;
 
 function atualizarBtnOutrasMetas() {
   const btn = document.getElementById('gmToggleOutrasMetas');
@@ -3810,6 +3830,8 @@ function abrirGerenciarMeta() {
   document.getElementById('gmOrdem').value = 'az';
   gmMostrarOutrasMetas = false;
   atualizarBtnOutrasMetas();
+  gmMostrarLidos = false;
+  atualizarBtnLidos();
   const gmBuscaEl = document.getElementById('gmBusca');
   if (gmBuscaEl) gmBuscaEl.value = '';
 
@@ -3837,7 +3859,10 @@ function renderGerenciarMeta() {
   const ordem = document.getElementById('gmOrdem').value;
   const busca = (document.getElementById('gmBusca')?.value || '').toLowerCase().trim();
 
-  let pool = (window._livros || []).filter(l => String(l.status||'').trim().toLowerCase() !== 'completo');
+  // V4.06: livros ja lidos (Completo) so aparecem se o seletor "Mostrar livros já lidos"
+  // estiver ligado — assim da pra mover um livro ja concluido pra meta de outro ano,
+  // mantendo status/progresso intactos (a mudanca so grava targetYear, nada mais).
+  let pool = (window._livros || []).filter(l => gmMostrarLidos || String(l.status||'').trim().toLowerCase() !== 'completo');
 
   // Livros que já têm metaAno definido para OUTRO ano: ocultos por padrão
   if (!gmMostrarOutrasMetas) {
