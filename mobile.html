@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V3.97-build-1787282577 -->
+<head><!-- V3.98-build-1787283061 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12652,6 +12652,20 @@ body.bl-v12-battle #blBattleBackButtonV25{
       renderLocal();
       setTimeout(()=>closeSessionModalKeepPlace(y),180);
       backgroundRefreshKeepPlace(y);
+      // V3.98: ao completar 100% do livro nesta sessao, abre "Avaliar Livro" automaticamente
+      if(concluiu){
+        setTimeout(()=>{
+          try{
+            if(typeof window.abrirModal==='function') window.abrirModal('nota');
+            setTimeout(()=>{
+              const nLivro=document.getElementById('n-livro'); if(nLivro) nLivro.value=title;
+              const nBusca=document.getElementById('n-livro-busca'); if(nBusca) nBusca.value=title;
+              const nSel=document.getElementById('n-livro-selecionado');
+              if(nSel){ nSel.textContent='📖 '+title+' ✕'; nSel.style.display='block'; }
+            },150);
+          }catch(e){ console.warn('[BookLegacy] abrir avaliacao automatica falhou', e); }
+        },900);
+      }
     }catch(e){console.error(e);msg('s-msg','❌ Firebase: '+(e.message||e),'err');}
     finally{if(btn){btn.disabled=false;btn.textContent=old;}setTimeout(()=>window.scrollTo(0,y),260);}
   };
@@ -15061,7 +15075,14 @@ body.bl-v40-loading #app{display:none!important;}
     });
     const out = [];
     groups.forEach((arr, key) => {
-      const base = Object.assign({}, ...arr);
+      // V3.98: quando existem documentos DUPLICADOS do mesmo livro, "base" e "current" vinham
+      // do Object.assign/Math.max, que sempre pegam o MAIOR valor entre eles — se uma copia
+      // antiga esquecida ainda tem pagina 10 e outra foi corretamente zerada agora, o maior
+      // (10) sempre vencia, ignorando qualquer reset/edicao manual feita depois.
+      const marco = d => { const r=String(d.resetAt||''), u=String(d.updatedAt||''); return r>u?r:u; };
+      const arrOrdenado = [...arr].sort((a,b) => marco(b).localeCompare(marco(a)));
+      const base = Object.assign({}, ...[...arrOrdenado].reverse()); // mescla campos, mas o mais recente por cima
+      const maisRecente = arrOrdenado[0];
       const total = Math.max(...arr.map(pagesOf), 0);
       // V3.88: soma de sessoes so vale se a ULTIMA sessao for mais recente que a ultima edicao
       // manual do livro (updatedAt). Antes, uma sessao antiga sempre vencia qualquer correcao
@@ -15079,7 +15100,8 @@ body.bl-v40-loading #app{display:none!important;}
       const hasDone = arr.some(l => isDone(l.status));
       const hasReading = arr.some(l => isReading(l.status));
       const hasPaused = arr.some(l => isPaused(l.status));
-      let current = Math.max(...arr.map(currentOf), 0);
+      // usa a pagina do documento mais recente como base, nao o maior valor entre duplicatas
+      let current = currentOf(maisRecente);
       let status = base.status || 'Aguardando';
       if (hasDone) { status = 'Completo'; current = total || Math.max(current, sessionSum); }
       else if (hasReading || hasPaused) { current = sessionSum > 0 ? sessionSum : current; if (total && current >= total) { status = 'Completo'; current = total; } else status = hasReading ? 'Lendo' : 'Pausado'; }
@@ -16400,6 +16422,22 @@ window.blAbrirDetalheLivro = function(livro){
   }
   conectar();
   setInterval(conectar, 1500);
+
+  // V3.98: mitigacao pratica pro "flash" de metas antigas que somem depois de ~1s — o codigo
+  // legado dessa area tem versoes duplicadas concorrentes (V46/V47/V48) que disputam a mesma
+  // corrida entre localStorage e Firestore. Em vez de perseguir cada copia, reforça a lista
+  // correta repetidamente por alguns segundos sempre que o seletor de meta e' aberto/focado.
+  function reforcarMetaSelect(){
+    for(var i=0;i<6;i++){
+      setTimeout(function(){ try{ if(typeof ensureCustomMetaOptions==='function') ensureCustomMetaOptions(); }catch(e){} }, i*300);
+    }
+  }
+  document.addEventListener('focusin', function(ev){
+    if(ev.target && ev.target.id==='selMetaAno') reforcarMetaSelect();
+  });
+  document.addEventListener('click', function(ev){
+    if(ev.target && ev.target.id==='selMetaAno') reforcarMetaSelect();
+  });
 })();
 </script>
 </body>
