@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V4.04-build-1787310884 -->
+<head><!-- V4.05-build-1787311608 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -16660,23 +16660,32 @@ window.blAbrirDetalheLivro = function(livro){
     };
   }
 
-  function rankingStats(){
-    var rankGeral=[...(window.NOTES||[])].sort(function(a,b){ return (b.media||0)-(a.media||0); });
+  function rankingStats(anoFiltro){
+    var todasNotas = (!anoFiltro || anoFiltro==='total') ? (window.NOTES||[]) : (window.NOTES||[]).filter(function(n){ return Number(n.ano)===Number(anoFiltro); });
+    var rankGeral=[...todasNotas].sort(function(a,b){ return (b.media||0)-(a.media||0); });
     function montaItem(n){
       var idx=rankGeral.indexOf(n);
       var info=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(n.livro); }) || {};
-      return { livro:n.livro, media:n.media, autor:n.autor||info.autor||'', coverUrl:n.coverUrl||info.coverUrl||'', genero:info.genero||info.genre||'', posicao:idx+1 };
+      return { livro:n.livro, media:n.media, autor:n.autor||info.autor||'', coverUrl:n.coverUrl||info.coverUrl||'', totalPag:info.totalPag||0, colecao:info.colecao||'', posicao:idx+1 };
     }
     var top10=rankGeral.slice(0,10).map(montaItem);
     var worst10=[...rankGeral].reverse().slice(0,10).map(montaItem);
-    var porGenero={};
-    rankGeral.forEach(function(n){
-      var info=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(n.livro); }) || {};
-      var g=info.genero||info.genre||'';
-      if(!g) return;
-      if(!porGenero[g] || n.media>porGenero[g].media) porGenero[g]={ livro:n.livro, media:n.media, autor:n.autor||info.autor||'', coverUrl:n.coverUrl||info.coverUrl||'' };
+    // V4.05: "melhor por categoria" agora usa os CRITERIOS REAIS de avaliacao do app
+    // (Dialogos, Enredo, Imersao, Impacto Emocional etc.), nao mais genero.
+    var CRITERIOS=['Diálogos','Enredo','Estilo Visual','Finalização','Imersão','Impacto Emocional','Originalidade','Personagens','Ritmo','Temas'];
+    var melhorPorCriterio={};
+    CRITERIOS.forEach(function(crit){
+      var melhor=null, melhorVal=-1;
+      todasNotas.forEach(function(n){
+        var v=n.criterios && n.criterios[crit];
+        if(v>melhorVal){ melhorVal=v; melhor=n; }
+      });
+      if(melhor && melhorVal>0){
+        var info=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(melhor.livro); }) || {};
+        melhorPorCriterio[crit]={ livro:melhor.livro, valor:melhorVal, autor:melhor.autor||info.autor||'' };
+      }
     });
-    return { top10:top10, worst10:worst10, melhorPorGenero:porGenero, total:rankGeral.length };
+    return { top10:top10, worst10:worst10, melhorPorCriterio:melhorPorCriterio, total:rankGeral.length };
   }
 
   function carregarImagem(url){
@@ -16704,8 +16713,6 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
   }
 
-  // V4.04: paleta reduzida (roxo + teal, cores do proprio app) em vez de gradiente
-  // roxo->rosa saturado que lia como "modelo generico de IA".
   var CORES = { fundo1:'#0e1220', fundo2:'#161b2e', roxo:'#8b7cf8', teal:'#4ecdc4', amarelo:'#ffd166', vermelho:'#f87171', texto:'#e8ecf5', muted:'#8892a8' };
 
   async function desenharFileira(ctx, itens, y, corMedalha, W){
@@ -16743,25 +16750,32 @@ window.blAbrirDetalheLivro = function(livro){
     return y+coverH+150;
   }
 
-  // linha simples "label ......... valor", sem caixinha — pedido explicito de reformatar
-  function desenharLinhaStat(ctx,x,y,w,label,valor,corValor){
-    ctx.textAlign='left'; ctx.fillStyle=CORES.muted; ctx.font='600 26px system-ui,sans-serif';
+  // V4.05: letras maiores em toda a secao de estatisticas (pedido explicito — sem
+  // diminuir o tamanho das capas, so redistribuindo o espaco vertical disponivel).
+  function desenharLinhaStat(ctx,x,y,w,label,valor,detalhe,corValor){
+    ctx.textAlign='left'; ctx.fillStyle=CORES.muted; ctx.font='600 32px system-ui,sans-serif';
     ctx.fillText(label, x, y);
-    ctx.textAlign='right'; ctx.fillStyle=corValor||CORES.texto; ctx.font='900 30px system-ui,sans-serif';
+    ctx.textAlign='right'; ctx.fillStyle=corValor||CORES.texto; ctx.font='900 36px system-ui,sans-serif';
     ctx.fillText(valor, x+w, y);
+    if(detalhe){
+      ctx.textAlign='right'; ctx.fillStyle=CORES.muted; ctx.font='500 22px system-ui,sans-serif';
+      ctx.fillText(detalhe, x+w, y+30);
+      return 90;
+    }
+    return 58;
   }
 
-  function desenharSecaoTitulo(ctx,x,y,texto){
-    ctx.textAlign='left'; ctx.fillStyle=CORES.roxo; ctx.font='700 24px system-ui,sans-serif';
+  function desenharSecaoTitulo(ctx,x,y,texto,W){
+    ctx.textAlign='left'; ctx.fillStyle=CORES.roxo; ctx.font='700 28px system-ui,sans-serif';
     ctx.fillText(texto.toUpperCase(), x, y);
     ctx.strokeStyle='rgba(139,124,248,.25)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(x, y+14); ctx.lineTo(x+ (ctx.canvas.width-2*x), y+14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+16); ctx.lineTo(W-x, y+16); ctx.stroke();
   }
 
   function desenharHeatmap(ctx,x,y,w,heat,ano){
     var totalDias=heat.length;
     var cols=Math.ceil(totalDias/14);
-    var cell=Math.min((w-((cols-1)*4))/cols,15);
+    var cell=Math.min((w-((cols-1)*4))/cols,16);
     var gap=3;
     var usedW=cols*cell+(cols-1)*gap;
     var startX=x+(w-usedW)/2;
@@ -16776,7 +16790,7 @@ window.blAbrirDetalheLivro = function(livro){
   }
 
   async function gerarImagemResumo(stats){
-    var W=1080, H=2400;
+    var W=1080, H=2700;
     var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
     var ctx=canvas.getContext('2d');
 
@@ -16799,38 +16813,41 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.fillText('⭐ TOP 3 MELHORES AVALIADOS', W/2, y); y+=36;
     y=await desenharFileira(ctx, stats.top3, y, CORES.amarelo, W);
 
-    y+=20;
+    y+=30;
     ctx.fillStyle=CORES.vermelho; ctx.font='700 34px system-ui,sans-serif';
     ctx.fillText('💀 TOP 3 PIORES AVALIADOS', W/2, y); y+=36;
     y=await desenharFileira(ctx, stats.worst3, y, CORES.vermelho, W);
 
+    y+=40;
+    var mx=64;
+    desenharSecaoTitulo(ctx,mx,y,'Leitura no geral',W); y+=64;
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Total de páginas lidas', stats.paginas.toLocaleString('pt-BR'), null, CORES.teal);
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Horas de leitura', stats.horas+'h', null, CORES.amarelo);
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Média de páginas por dia', String(stats.mediaPorDia), null, CORES.texto);
+    y+=20;
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Total de sessões', String(stats.sessoesCount), null, CORES.roxo);
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Média de páginas por sessão', String(stats.mediaPorSessao), null, CORES.texto);
     y+=30;
-    var mx=70;
-    desenharSecaoTitulo(ctx,mx,y,'Leitura no geral'); y+=56;
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Total de páginas lidas', stats.paginas.toLocaleString('pt-BR'), CORES.teal); y+=50;
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Horas de leitura', stats.horas+'h', CORES.amarelo); y+=50;
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Média de páginas por dia', String(stats.mediaPorDia), CORES.texto); y+=70;
 
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Total de sessões', String(stats.sessoesCount), CORES.roxo); y+=50;
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Média de páginas por sessão', String(stats.mediaPorSessao), CORES.texto); y+=80;
+    desenharSecaoTitulo(ctx,mx,y,'Curiosidades',W); y+=64;
+    if(stats.autorMaisLido) y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Autor mais lido', stats.autorMaisLido.nome, stats.autorMaisLido.paginas.toLocaleString('pt-BR')+' páginas', CORES.texto);
+    if(stats.generoMaisLido) y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Gênero mais lido', stats.generoMaisLido.nome, stats.generoMaisLido.paginas.toLocaleString('pt-BR')+' páginas', CORES.texto);
+    if(stats.diaSemanaMaisLido) y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Dia da semana mais lido', stats.diaSemanaMaisLido.nome, stats.diaSemanaMaisLido.paginas.toLocaleString('pt-BR')+' páginas', CORES.texto);
+    if(stats.mesMaisLido) y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Mês com mais páginas', stats.mesMaisLido.nome, stats.mesMaisLido.paginas.toLocaleString('pt-BR')+' páginas', CORES.texto);
+    y+=30;
 
-    desenharSecaoTitulo(ctx,mx,y,'Curiosidades'); y+=56;
-    if(stats.autorMaisLido){ desenharLinhaStat(ctx,mx,y,W-2*mx,'Autor mais lido', stats.autorMaisLido.nome, CORES.texto); y+=50; }
-    if(stats.generoMaisLido){ desenharLinhaStat(ctx,mx,y,W-2*mx,'Gênero mais lido', stats.generoMaisLido.nome, CORES.texto); y+=50; }
-    if(stats.diaSemanaMaisLido){ desenharLinhaStat(ctx,mx,y,W-2*mx,'Dia da semana mais lido', stats.diaSemanaMaisLido.nome, CORES.texto); y+=50; }
-    if(stats.mesMaisLido){ desenharLinhaStat(ctx,mx,y,W-2*mx,'Mês com mais páginas', stats.mesMaisLido.nome, CORES.texto); y+=80; }
-
-    desenharSecaoTitulo(ctx,mx,y,'Recordes'); y+=56;
-    if(stats.melhorDia.data){ desenharLinhaStat(ctx,mx,y,W-2*mx,'Melhor dia', stats.melhorDia.data.split('-').reverse().join('/')+' ('+stats.melhorDia.paginas+' págs)', CORES.amarelo); y+=50; }
-    desenharLinhaStat(ctx,mx,y,W-2*mx,'Maior sequência lendo', stats.maiorSequencia+' dias seguidos', CORES.amarelo); y+=80;
+    desenharSecaoTitulo(ctx,mx,y,'Recordes',W); y+=64;
+    if(stats.melhorDia.data) y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Melhor dia', stats.melhorDia.data.split('-').reverse().join('/'), stats.melhorDia.paginas+' páginas', CORES.amarelo);
+    y+=desenharLinhaStat(ctx,mx,y,W-2*mx,'Maior sequência lendo', stats.maiorSequencia+' dias', 'seguidos', CORES.amarelo);
+    y+=30;
 
     if(stats.heat){
-      ctx.textAlign='left'; ctx.fillStyle=CORES.texto; ctx.font='700 30px system-ui,sans-serif';
-      ctx.fillText('📅 Dias lidos em '+stats.ano+': '+stats.dias+'/'+stats.totalDiasAno, mx, y); y+=34;
-      y = desenharHeatmap(ctx, mx, y+20, W-2*mx, stats.heat, stats.ano) + 60;
+      ctx.textAlign='left'; ctx.fillStyle=CORES.texto; ctx.font='700 34px system-ui,sans-serif';
+      ctx.fillText('📅 Dias lidos em '+stats.ano+': '+stats.dias+'/'+stats.totalDiasAno, mx, y); y+=40;
+      y = desenharHeatmap(ctx, mx, y+24, W-2*mx, stats.heat, stats.ano) + 70;
     } else { y += 40; }
 
-    ctx.textAlign='center'; ctx.fillStyle='#4a5570'; ctx.font='700 24px system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.fillStyle='#4a5570'; ctx.font='700 26px system-ui,sans-serif';
     ctx.fillText('📚 BookLegacy', W/2, y);
     y += 60;
 
@@ -16840,29 +16857,40 @@ window.blAbrirDetalheLivro = function(livro){
     return finalCanvas;
   }
 
-  async function desenharFileiraRanking(ctx, itens, y, corMedalha, W, tituloListra){
-    // lista compacta (nao capas grandes) pra caber 10 itens
-    var itemH=64;
-    itens.forEach(function(item, i){
+  async function desenharFileiraRanking(ctx, itens, y, corMedalha, W){
+    var itemH=132;
+    for(var i=0;i<itens.length;i++){
+      var item=itens[i];
       var iy=y+i*itemH;
-      roundRect(ctx,60,iy,W-120,itemH-10,10);
+      roundRect(ctx,60,iy,W-120,itemH-14,10);
       ctx.fillStyle='rgba(255,255,255,.03)'; ctx.fill();
-      ctx.textAlign='left'; ctx.fillStyle=corMedalha; ctx.font='900 26px system-ui,sans-serif';
-      ctx.fillText('#'+item.posicao, 80, iy+40);
-      ctx.fillStyle=CORES.texto; ctx.font='700 24px system-ui,sans-serif';
-      var titulo=item.livro.length>28?item.livro.slice(0,26)+'…':item.livro;
-      ctx.fillText(titulo, 165, iy+34);
-      ctx.fillStyle=CORES.muted; ctx.font='400 17px system-ui,sans-serif';
-      ctx.fillText((item.autor||'').slice(0,32), 165, iy+56);
+      // capa pequena
+      var coverW=70, coverH=100;
+      var img=await carregarImagem(item.coverUrl);
+      ctx.save();
+      roundRect(ctx,78,iy+9,coverW,coverH,6); ctx.clip();
+      if(img) ctx.drawImage(img,78,iy+9,coverW,coverH);
+      else desenharCoverFallback(ctx,78,iy+9,coverW,coverH);
+      ctx.restore();
+      ctx.textAlign='left'; ctx.fillStyle=corMedalha; ctx.font='900 24px system-ui,sans-serif';
+      ctx.fillText('#'+item.posicao, 165, iy+34);
+      ctx.fillStyle=CORES.texto; ctx.font='700 23px system-ui,sans-serif';
+      var titulo=item.livro.length>24?item.livro.slice(0,22)+'…':item.livro;
+      ctx.fillText(titulo, 165, iy+64);
+      ctx.fillStyle=CORES.muted; ctx.font='400 16px system-ui,sans-serif';
+      ctx.fillText((item.autor||'').slice(0,30), 165, iy+86);
+      var detalheLinha=(item.totalPag?item.totalPag+' págs':'')+(item.colecao?' · '+item.colecao:'');
+      if(detalheLinha){ ctx.fillStyle=CORES.roxo; ctx.font='400 15px system-ui,sans-serif'; ctx.fillText(detalheLinha.slice(0,34), 165, iy+108); }
       ctx.textAlign='right'; ctx.fillStyle=CORES.amarelo; ctx.font='900 26px system-ui,sans-serif';
-      ctx.fillText('★ '+(item.media||0).toFixed(1), W-80, iy+40);
-    });
+      ctx.fillText('★ '+(item.media||0).toFixed(1), W-90, iy+64);
+    }
     return y+itens.length*itemH+30;
   }
 
-  async function gerarImagemRanking(rk){
+  async function gerarImagemRanking(rk, anoLabel){
     var W=1080;
-    var H=400+ (rk.top10.length+rk.worst10.length)*64 + Object.keys(rk.melhorPorGenero).length*46 + 500;
+    var criteriosCount = Object.keys(rk.melhorPorCriterio).length;
+    var H=460+ (rk.top10.length+rk.worst10.length)*132 + criteriosCount*48 + 550;
     var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
     var ctx=canvas.getContext('2d');
     ctx.fillStyle=CORES.fundo1; ctx.fillRect(0,0,W,H);
@@ -16875,30 +16903,31 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.fillStyle=CORES.muted; ctx.font='700 30px system-ui,sans-serif';
     ctx.fillText('MEU RANKING DE LIVROS', W/2, y); y+=90;
     ctx.fillStyle=CORES.texto; ctx.font='900 46px system-ui,sans-serif';
-    ctx.fillText('de todos os tempos ('+rk.total+' avaliados)', W/2, y); y+=70;
+    ctx.fillText((anoLabel||'Todos os tempos')+' · '+rk.total+' avaliados', W/2, y); y+=80;
 
-    ctx.textAlign='left'; ctx.fillStyle=CORES.amarelo; ctx.font='700 30px system-ui,sans-serif';
+    ctx.textAlign='left'; ctx.fillStyle=CORES.amarelo; ctx.font='700 32px system-ui,sans-serif';
     ctx.fillText('⭐ TOP 10 MELHORES', 60, y); y+=30;
     y=await desenharFileiraRanking(ctx, rk.top10, y+20, CORES.amarelo, W);
 
     y+=10;
-    ctx.fillStyle=CORES.vermelho; ctx.font='700 30px system-ui,sans-serif';
+    ctx.textAlign='left'; ctx.fillStyle=CORES.vermelho; ctx.font='700 32px system-ui,sans-serif';
     ctx.fillText('💀 TOP 10 PIORES', 60, y); y+=30;
     y=await desenharFileiraRanking(ctx, rk.worst10, y+20, CORES.vermelho, W);
 
-    y+=10;
-    ctx.fillStyle=CORES.roxo; ctx.font='700 30px system-ui,sans-serif';
-    ctx.fillText('🏆 MELHOR DE CADA GÊNERO', 60, y); y+=50;
-    Object.entries(rk.melhorPorGenero).forEach(function(entry){
-      var g=entry[0], item=entry[1];
+    y+=20;
+    ctx.textAlign='left'; ctx.fillStyle=CORES.roxo; ctx.font='700 32px system-ui,sans-serif';
+    ctx.fillText('🏆 MELHOR DE CADA CATEGORIA', 60, y); y+=56;
+    Object.entries(rk.melhorPorCriterio).forEach(function(entry){
+      var crit=entry[0], item=entry[1];
       ctx.textAlign='left'; ctx.fillStyle=CORES.muted; ctx.font='600 22px system-ui,sans-serif';
-      ctx.fillText(g, 80, y);
+      ctx.fillText(crit, 80, y);
       ctx.textAlign='right'; ctx.fillStyle=CORES.texto; ctx.font='700 22px system-ui,sans-serif';
-      ctx.fillText(item.livro+' (★'+item.media.toFixed(1)+')', W-80, y);
-      y+=46;
+      var linha=item.livro+' ('+item.valor.toFixed(1)+')';
+      ctx.fillText(linha.length>40?linha.slice(0,38)+'…':linha, W-80, y);
+      y+=44;
     });
 
-    y+=30;
+    y+=40;
     ctx.textAlign='center'; ctx.fillStyle='#4a5570'; ctx.font='700 24px system-ui,sans-serif';
     ctx.fillText('📚 BookLegacy', W/2, y); y+=40;
 
@@ -16907,9 +16936,6 @@ window.blAbrirDetalheLivro = function(livro){
     return finalCanvas;
   }
 
-  // V4.04: download robusto — toBlob()+ObjectURL em vez de toDataURL() direto num <a>,
-  // que falhava silenciosamente em vários navegadores mobile. Com fallback de abrir
-  // a imagem numa aba nova (o usuario pode segurar e salvar manualmente) se tudo mais falhar.
   function baixarCanvas(canvas, nomeArquivo){
     try{
       canvas.toBlob(function(blob){
@@ -16945,12 +16971,10 @@ window.blAbrirDetalheLivro = function(livro){
           '<button id="blWrapTipoAno" data-tipo="ano" style="flex:1;padding:10px;background:#8b7cf8;border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:13px;">📅 Resumo do Ano</button>'+
           '<button id="blWrapTipoRanking" data-tipo="ranking" style="flex:1;padding:10px;background:#1e2535;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#e8ecf5;font-weight:700;cursor:pointer;font-size:13px;">🏆 Ranking de Livros</button>'+
         '</div>'+
-        '<div id="blWrapAnoWrap">'+
-          '<select id="blWrapAno" style="width:100%;padding:10px;background:#0e1220;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#e8ecf5;font-size:14px;margin-bottom:12px;">'+
-            anos.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+
-            '<option value="total">Todas as temporadas</option>'+
-          '</select>'+
-        '</div>'+
+        '<select id="blWrapAno" style="width:100%;padding:10px;background:#0e1220;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#e8ecf5;font-size:14px;margin-bottom:12px;">'+
+          anos.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+
+          '<option value="total">Todas as temporadas</option>'+
+        '</select>'+
         '<button id="blWrapGerar" style="width:100%;padding:12px;background:linear-gradient(135deg,#8b7cf8,#4ecdc4);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">✨ Gerar imagem</button>'+
         '<div id="blWrapPreviewWrap" style="margin-top:14px;"></div>';
       ov.appendChild(box); document.body.appendChild(ov);
@@ -16958,44 +16982,47 @@ window.blAbrirDetalheLivro = function(livro){
       ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
 
       var tipoAtual='ano';
-      var btnAno=box.querySelector('#blWrapTipoAno'), btnRank=box.querySelector('#blWrapTipoRanking'), anoWrap=box.querySelector('#blWrapAnoWrap');
-      function atualizarTipo(){
+      var btnAno=box.querySelector('#blWrapTipoAno'), btnRank=box.querySelector('#blWrapTipoRanking');
+      var previewWrap=box.querySelector('#blWrapPreviewWrap');
+      function atualizarTipo(novoTipo){
+        // V4.05: trocar de aba agora limpa o preview antigo — antes a imagem gerada
+        // anteriormente continuava visivel, dando a impressao de que nada tinha mudado.
+        tipoAtual=novoTipo;
+        previewWrap.innerHTML='';
         btnAno.style.background = tipoAtual==='ano' ? '#8b7cf8' : '#1e2535';
         btnAno.style.border = tipoAtual==='ano' ? 'none' : '1px solid rgba(255,255,255,.15)';
         btnRank.style.background = tipoAtual==='ranking' ? '#8b7cf8' : '#1e2535';
         btnRank.style.border = tipoAtual==='ranking' ? 'none' : '1px solid rgba(255,255,255,.15)';
-        anoWrap.style.display = tipoAtual==='ano' ? 'block' : 'none';
       }
-      btnAno.onclick=function(){ tipoAtual='ano'; atualizarTipo(); };
-      btnRank.onclick=function(){ tipoAtual='ranking'; atualizarTipo(); };
+      btnAno.onclick=function(){ atualizarTipo('ano'); };
+      btnRank.onclick=function(){ atualizarTipo('ranking'); };
 
       box.querySelector('#blWrapGerar').onclick=async function(){
         var btn=box.querySelector('#blWrapGerar');
         btn.disabled=true; btn.textContent='Gerando...';
         try{
           var canvas, nomeArquivo;
+          var anoVal=box.querySelector('#blWrapAno').value;
           if(tipoAtual==='ranking'){
-            var rk=rankingStats();
-            canvas=await gerarImagemRanking(rk);
-            nomeArquivo='meu-ranking-livros.png';
+            var rk=rankingStats(anoVal);
+            canvas=await gerarImagemRanking(rk, anoVal==='total'?null:anoVal);
+            nomeArquivo='meu-ranking-livros-'+anoVal+'.png';
           } else {
-            var anoVal=box.querySelector('#blWrapAno').value;
             var ano = anoVal==='total' ? 'total' : Number(anoVal);
             var stats=statsDoAno(ano);
             canvas=await gerarImagemResumo(stats);
             nomeArquivo='meu-wrapped-'+anoVal+'.png';
           }
-          var wrap=box.querySelector('#blWrapPreviewWrap');
-          wrap.innerHTML='';
+          previewWrap.innerHTML='';
           var imgPreview=document.createElement('img');
           imgPreview.src=canvas.toDataURL('image/png');
           imgPreview.style.cssText='width:100%;border-radius:12px;margin-bottom:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);';
-          wrap.appendChild(imgPreview);
+          previewWrap.appendChild(imgPreview);
           var down=document.createElement('button');
           down.textContent='⬇️ Baixar imagem';
           down.style.cssText='display:block;width:100%;padding:12px;background:rgba(78,205,196,.15);border:1px solid #4ecdc4;color:#4ecdc4;border-radius:10px;font-weight:700;cursor:pointer;';
           down.onclick=function(){ baixarCanvas(canvas, nomeArquivo); };
-          wrap.appendChild(down);
+          previewWrap.appendChild(down);
         }catch(e){ console.error('[BookLegacy] wrapped falhou', e); alert('Não foi possível gerar a imagem: '+(e.message||e)); }
         finally{ btn.disabled=false; btn.textContent='✨ Gerar imagem'; }
       };
