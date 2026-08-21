@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V4.01-build-1787284183 -->
+<head><!-- V4.02-build-1787308608 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -13807,7 +13807,7 @@ body.bl-v40-loading #app{display:none!important;}
   // NAO mostra nada vindo do localStorage bruto — evita o "aparece e some depois de 1s"
   // (a leitura antiga, sincrona, ganhava a corrida da leitura nova, assincrona, do Firestore).
   if(!window.__blMetaRegistrySynced){
-    if(typeof sync==='function') sync().then(()=>{ try{ ensureCustomMetaOptions(); }catch(e){} }).catch(()=>{});
+    if(typeof window.blSyncCustomMetasV48==='function') Promise.resolve(window.blSyncCustomMetasV48()).then(()=>{ try{ ensureCustomMetaOptions(); }catch(e){} }).catch(()=>{});
     return;
   }
   const cur=sel.value;const metas=metaStore();
@@ -14290,17 +14290,19 @@ body.bl-v40-loading #app{display:none!important;}
     const fab=$('fabMenu'); if(fab){fab.style.pointerEvents='auto';}
     document.querySelectorAll('#fabMenu button,.fab-menu button,.pwa-modal button,.pwa-btn').forEach(b=>{b.style.pointerEvents='auto'; if(b.disabled && !b.dataset.blReallyDisabled) b.disabled=false;});
   }
-  window.blSyncCustomMetasV44=syncV47; window.blSyncCustomMetasV45=syncV47; window.blSyncCustomMetasV46=syncV47; window.blSyncCustomMetasV47=syncV47;
-  window.blSaveCustomMetasV44=saveV47; window.blSaveCustomMetasV45=saveV47; window.blSaveCustomMetasV46=saveV47; window.blSaveCustomMetasV47=saveV47;
-  window.blDeleteCurrentMetaV43=deleteCurrent; window.blDeleteCurrentMetaV44=deleteCurrent; window.blDeleteCurrentMetaV45=deleteCurrent; window.blDeleteCurrentMetaV46=deleteCurrent; window.blDeleteCurrentMetaV47=deleteCurrent;
-  window.blCreateCustomMetaV47=createMeta;
-  function boot(){patchButtons();wrapRefreshes();restorePlusClicks();setTimeout(syncV47,80);setTimeout(syncV47,800);setTimeout(syncV47,2500);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  /* V3.51: watchdog V47 removido; evita chamadas remotas/DOM repetidas. */
-  try{window.BL?.auth?.onAuthStateChanged?.(()=>setTimeout(syncV47,500));}catch(e){}
-  window.addEventListener('focus',()=>setTimeout(syncV47,250));
-  window.addEventListener('pageshow',()=>setTimeout(syncV47,250));
-  document.addEventListener('click',e=>{if(e.target?.closest?.('#btn-refresh,[data-a="refresh"]'))setTimeout(syncV47,1200);},true);
+  // V4.02: CONSOLIDACAO. O bloco V48 (mais abaixo) e' a versao final e correta. Este bloco
+  // V47 rodava em PARALELO com o V48 — dois ciclos independentes de sincronizacao (80/800/2500ms
+  // aqui, 80/900ms no V48) e DOIS listeners de clique concorrendo pelos mesmos botoes de meta,
+  // cada um chamando stopImmediatePropagation(). Isso causava exatamente o "meta aparece e some
+  // sozinha depois de 1 segundo" — os dois ciclos de leitura do Firestore se atropelavam.
+  // Aqui so ficam os aliases de compatibilidade, agora apontando para as funcoes REAIS do V48
+  // (que sao definidas mais abaixo neste mesmo arquivo, mas resolvidas em runtime via window).
+  window.blSyncCustomMetasV44=function(){return window.blSyncCustomMetasV48?.();}; 
+  window.blSyncCustomMetasV45=window.blSyncCustomMetasV44;
+  window.blSyncCustomMetasV46=window.blSyncCustomMetasV44;
+  window.blSyncCustomMetasV47=window.blSyncCustomMetasV44;
+  // boot(), wrapRefreshes() e os listeners periodicos do V47 foram DESATIVADOS (V4.02) —
+  // o V48 ja cobre 100% dessa funcionalidade sozinho, sem concorrencia.
   const oldC=window.blCommunityDebug; window.blCommunityDebug=function(){const prev=typeof oldC==='function'?oldC():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),selectedMetaV47:$('selMetaAno')?.value||'',registryPathV47:'users/{uid}/library/'+REG_ID,registryReadyV47:localStorage.getItem(INIT)==='1'});};
   const oldM=window.blMobileDebug; window.blMobileDebug=function(){const prev=typeof oldM==='function'?oldM():{};return Object.assign({},prev,{patchV47:PATCH,customMetasV47:local(),plusRestoredV47:true,registryPathV47:'library/'+REG_ID});};
   console.log('[BookLegacy]',PATCH);
