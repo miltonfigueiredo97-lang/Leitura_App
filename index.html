@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V3.99-build-1787283491 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V4.00-build-1787283634 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -4933,6 +4933,10 @@ iniciarAppFirebase();
   <div class="fab-item">
     <span>Verificar Coleções</span>
     <button style="background:#5b8cff" onclick="toggleFabMenu();window.blAbrirColecoes()">📚</button>
+  </div>
+  <div class="fab-item">
+    <span>Meu Wrapped</span>
+    <button style="background:linear-gradient(135deg,#8b7cf8,#e56cff)" onclick="toggleFabMenu();window.blAbrirWrapped()">🎨</button>
   </div>
   <div class="fab-item">
     <span>Avaliar Livro</span>
@@ -13869,6 +13873,208 @@ window.blAbrirDetalheLivro = function(livro){
   document.addEventListener('click', function(ev){
     if(ev.target && ev.target.id==='selMetaAno') reforcarMetaSelect();
   });
+})();
+</script>
+<script id="bl-wrapped-v400">
+(function(){
+  function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,function(m){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[m];}); }
+  function norm(v){ return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+
+  function anosDisponiveis(){
+    var anos=new Set();
+    (window._sessoes||[]).forEach(function(s){ if(s.ano>2000) anos.add(s.ano); });
+    (window._livros||[]).forEach(function(l){ var a=parseInt(l.anoConclusao||l.completionYear); if(a>2000) anos.add(a); });
+    var arr=[...anos].sort(function(a,b){return b-a;});
+    return arr.length?arr:[new Date().getFullYear()];
+  }
+
+  function statsDoAno(ano){
+    var sess=(window._sessoes||[]).filter(function(s){ return Number(s.ano)===Number(ano); });
+    var paginas=sess.reduce(function(a,s){return a+(s.paginas||0);},0);
+    var minutos=sess.reduce(function(a,s){return a+(s.minutos||0);},0);
+    var dias=new Set(sess.map(function(s){return s.data;})).size;
+    var livrosCompletos=(window._livros||[]).filter(function(l){
+      var ac=String(l.anoConclusao||l.completionYear||'');
+      return ac===String(ano);
+    });
+    var top3=(window.NOTES||[]).filter(function(n){ return Number(n.ano)===Number(ano); })
+      .sort(function(a,b){ return (b.media||0)-(a.media||0); })
+      .slice(0,3)
+      .map(function(n){
+        var livroInfo=(window._livros||[]).find(function(l){ return norm(l.livro)===norm(n.livro); }) || {};
+        return { livro:n.livro, media:n.media, autor:n.autor||livroInfo.autor||'', coverUrl:n.coverUrl||livroInfo.coverUrl||'' };
+      });
+    return {
+      ano: ano, paginas: paginas, horas: Math.round(minutos/60), dias: dias,
+      livros: livrosCompletos.length, top3: top3
+    };
+  }
+
+  function carregarImagem(url){
+    return new Promise(function(resolve){
+      if(!url){ resolve(null); return; }
+      var img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=function(){ resolve(img); };
+      img.onerror=function(){ resolve(null); };
+      img.src=url;
+    });
+  }
+
+  function desenharCoverFallback(ctx,x,y,w,h){
+    var grad=ctx.createLinearGradient(x,y,x+w,y+h);
+    grad.addColorStop(0,'#2a3248'); grad.addColorStop(1,'#171d33');
+    ctx.fillStyle=grad; ctx.fillRect(x,y,w,h);
+    ctx.fillStyle='rgba(255,255,255,.25)'; ctx.font='700 '+Math.round(w*0.4)+'px system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('📖', x+w/2, y+h/2);
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+
+  async function gerarImagem(stats){
+    var W=1080, H=1920;
+    var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+    var ctx=canvas.getContext('2d');
+
+    var bg=ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,'#0e1220'); bg.addColorStop(0.5,'#171034'); bg.addColorStop(1,'#0e1220');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    // decoracao: circulos suaves
+    ctx.save();
+    ctx.globalAlpha=0.12;
+    ctx.fillStyle='#8b7cf8'; ctx.beginPath(); ctx.arc(W-100,140,220,0,7); ctx.fill();
+    ctx.fillStyle='#e56cff'; ctx.beginPath(); ctx.arc(60,H-160,260,0,7); ctx.fill();
+    ctx.restore();
+
+    ctx.textAlign='center';
+    ctx.fillStyle='#9aa4bd'; ctx.font='700 34px system-ui,sans-serif';
+    ctx.fillText('MEU ANO DE LEITURA', W/2, 130);
+
+    var gradTxt=ctx.createLinearGradient(0,0,W,0);
+    gradTxt.addColorStop(0,'#8b7cf8'); gradTxt.addColorStop(1,'#e56cff');
+    ctx.fillStyle=gradTxt; ctx.font='900 150px system-ui,sans-serif';
+    ctx.fillText(String(stats.ano), W/2, 260);
+
+    // TOP 3
+    ctx.textAlign='center'; ctx.fillStyle='#ffd166'; ctx.font='700 40px system-ui,sans-serif';
+    ctx.fillText('⭐ TOP 3 MELHORES AVALIADOS', W/2, 400);
+
+    var coverW=240, coverH=340, gap=40;
+    var totalW=coverW*3+gap*2;
+    var startX=(W-totalW)/2;
+    var coverY=450;
+
+    for(var i=0;i<3;i++){
+      var x=startX+i*(coverW+gap);
+      var item=stats.top3[i];
+      if(!item){
+        roundRect(ctx,x,coverY,coverW,coverH,16); ctx.fillStyle='#171d33'; ctx.fill();
+        continue;
+      }
+      var img=await carregarImagem(item.coverUrl);
+      ctx.save();
+      roundRect(ctx,x,coverY,coverW,coverH,16); ctx.clip();
+      if(img) ctx.drawImage(img,x,coverY,coverW,coverH);
+      else desenharCoverFallback(ctx,x,coverY,coverW,coverH);
+      ctx.restore();
+      // medalha de posicao
+      ctx.beginPath(); ctx.arc(x+30,coverY+30,28,0,7);
+      ctx.fillStyle = i===0?'#ffd166':(i===1?'#c7cbd6':'#f88c6a'); ctx.fill();
+      ctx.fillStyle='#0e1220'; ctx.font='900 28px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(i+1), x+30, coverY+32);
+      ctx.textBaseline='alphabetic';
+      // titulo
+      ctx.fillStyle='#e8ecf5'; ctx.font='700 24px system-ui,sans-serif'; ctx.textAlign='center';
+      var titulo=item.livro.length>22?item.livro.slice(0,20)+'…':item.livro;
+      ctx.fillText(titulo, x+coverW/2, coverY+coverH+38);
+      ctx.fillStyle='#9aa4bd'; ctx.font='400 20px system-ui,sans-serif';
+      var autor=(item.autor||'').length>24?item.autor.slice(0,22)+'…':(item.autor||'');
+      ctx.fillText(autor, x+coverW/2, coverY+coverH+68);
+      ctx.fillStyle='#ffd166'; ctx.font='900 30px system-ui,sans-serif';
+      ctx.fillText('★ '+(item.media||0).toFixed(1), x+coverW/2, coverY+coverH+108);
+    }
+
+    // STATS GRID
+    var statsY=coverY+coverH+220;
+    var statsData=[
+      {label:'PÁGINAS LIDAS', valor:stats.paginas.toLocaleString('pt-BR'), cor:'#4ecdc4'},
+      {label:'LIVROS LIDOS', valor:String(stats.livros), cor:'#8b7cf8'},
+      {label:'HORAS DE LEITURA', valor:stats.horas+'h', cor:'#ffd166'},
+      {label:'DIAS QUE VOCÊ LEU', valor:String(stats.dias), cor:'#f88c6a'}
+    ];
+    var cols=2, cellW=(W-160)/2, cellH=190, gapY=30;
+    statsData.forEach(function(s,idx){
+      var cx=80+(idx%cols)*(cellW+40);
+      var cy=statsY+Math.floor(idx/cols)*(cellH+gapY);
+      roundRect(ctx,cx,cy,cellW,cellH,20);
+      ctx.fillStyle='rgba(255,255,255,.05)'; ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.textAlign='center';
+      ctx.fillStyle=s.cor; ctx.font='900 64px system-ui,sans-serif';
+      ctx.fillText(s.valor, cx+cellW/2, cy+95);
+      ctx.fillStyle='#9aa4bd'; ctx.font='700 22px system-ui,sans-serif';
+      ctx.fillText(s.label, cx+cellW/2, cy+140);
+    });
+
+    ctx.textAlign='center'; ctx.fillStyle='#5c6785'; ctx.font='700 26px system-ui,sans-serif';
+    ctx.fillText('📚 BookLegacy', W/2, H-60);
+
+    return canvas;
+  }
+
+  window.blAbrirWrapped = function(){
+    var ov=document.getElementById('blWrappedOverlay');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='blWrappedOverlay';
+      ov.style.cssText='position:fixed;inset:0;z-index:99996;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:14px;';
+      var box=document.createElement('div');
+      box.style.cssText='background:#13182a;border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow:auto;padding:18px;color:#e8ecf5;font-family:system-ui,sans-serif;text-align:center;';
+      var anos=anosDisponiveis();
+      box.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'+
+          '<b style="font-size:18px;">🎨 Meu Wrapped</b>'+
+          '<button id="blWrapX" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#e8ecf5;border-radius:8px;padding:5px 12px;cursor:pointer;">Fechar</button>'+
+        '</div>'+
+        '<p style="color:#9aa4bd;font-size:13px;margin-bottom:14px;">Escolha o ano e gere uma imagem bonitinha do seu ano de leitura, pronta pra postar.</p>'+
+        '<select id="blWrapAno" style="width:100%;padding:10px;background:#0e1220;border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#e8ecf5;font-size:14px;margin-bottom:12px;">'+
+          anos.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+
+        '</select>'+
+        '<button id="blWrapGerar" style="width:100%;padding:12px;background:linear-gradient(135deg,#8b7cf8,#e56cff);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">✨ Gerar imagem</button>'+
+        '<div id="blWrapPreviewWrap" style="margin-top:14px;"></div>';
+      ov.appendChild(box); document.body.appendChild(ov);
+      box.querySelector('#blWrapX').onclick=function(){ ov.remove(); };
+      ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+      box.querySelector('#blWrapGerar').onclick=async function(){
+        var btn=box.querySelector('#blWrapGerar');
+        btn.disabled=true; btn.textContent='Gerando...';
+        try{
+          var ano=Number(box.querySelector('#blWrapAno').value);
+          var stats=statsDoAno(ano);
+          var canvas=await gerarImagem(stats);
+          var wrap=box.querySelector('#blWrapPreviewWrap');
+          wrap.innerHTML='';
+          var imgPreview=document.createElement('img');
+          imgPreview.src=canvas.toDataURL('image/png');
+          imgPreview.style.cssText='width:100%;border-radius:12px;margin-bottom:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);';
+          wrap.appendChild(imgPreview);
+          var down=document.createElement('a');
+          down.href=canvas.toDataURL('image/png');
+          down.download='meu-wrapped-'+ano+'.png';
+          down.textContent='⬇️ Baixar imagem';
+          down.style.cssText='display:block;padding:12px;background:rgba(78,205,196,.15);border:1px solid #4ecdc4;color:#4ecdc4;border-radius:10px;font-weight:700;text-decoration:none;';
+          wrap.appendChild(down);
+        }catch(e){ console.error('[BookLegacy] wrapped falhou', e); alert('Não foi possível gerar a imagem: '+(e.message||e)); }
+        finally{ btn.disabled=false; btn.textContent='✨ Gerar imagem'; }
+      };
+    }
+    ov.style.display='flex';
+  };
 })();
 </script>
 </body>
