@@ -583,7 +583,7 @@ body.mobile-view .meta-stats { grid-template-columns:1fr 1fr !important; }
 </style>
 <script>window.__BOOKLEGACY_BUILD_MARKER="booklegacy-v12-marker";</script>
 
-<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V4.07-build-1787312326 -->
+<!-- BookLegacy V3.42 early guard: hide old patch menus before JS mounts --><!-- V4.08-build-1787312936 -->
 <style id="blV42EarlyGuard">
   #blMobileMenuPanel,#blMobileMenuFab,#blV40MenuPanel,#blV40MenuFab,#blV41MenuPanel,#blV41MenuFab,
   #btn-community-feed,#btn-community-page,#btn-community-page-v39,#btn-community-page-v40,#btn-community-page-v41,
@@ -14007,6 +14007,12 @@ window.blAbrirDetalheLivro = function(livro){
   function statsDoAno(ano){
     var todasTemporadas = (ano==='total');
     var sess=(window._sessoes||[]).filter(function(s){ return todasTemporadas || Number(s.ano)===Number(ano); });
+    // V4.08: intervalo real de anos considerados, pra mostrar "X a X" em vez da palavra "Todas"
+    var anoInicio=null, anoFim=null;
+    if(todasTemporadas){
+      var todosAnos=(window._sessoes||[]).map(function(s){return Number(s.ano);}).filter(function(a){return a>2000;});
+      if(todosAnos.length){ anoInicio=Math.min(...todosAnos); anoFim=Math.max(...todosAnos); }
+    }
     var paginas=sess.reduce(function(a,s){return a+(s.paginas||0);},0);
     var minutos=sess.reduce(function(a,s){return a+(s.minutos||0);},0);
     var diasSet=new Set(sess.map(function(s){return s.data;}));
@@ -14091,7 +14097,7 @@ window.blAbrirDetalheLivro = function(livro){
     });
 
     return {
-      ano:ano, todasTemporadas:todasTemporadas, paginas:paginas, minutos:minutos, horas:Math.round(minutos/60), dias:diasSet.size,
+      ano:ano, todasTemporadas:todasTemporadas, anoInicio:anoInicio, anoFim:anoFim, paginas:paginas, minutos:minutos, horas:Math.round(minutos/60), dias:diasSet.size,
       totalDiasAno:totalDiasAno, sessoesCount:sess.length, mediaPorSessao:mediaPorSessao, mediaPorDia:mediaPorDia,
       livros:livrosCompletos.length, top3:top3, worst3:worst3, heat:heat, melhorDia:melhorDia,
       autorMaisLido:autorMaisLido, generoMaisLido:generoMaisLido, diaSemanaMaisLido:diaSemanaMaisLido, mesMaisLido:mesMaisLido,
@@ -14230,6 +14236,22 @@ window.blAbrirDetalheLivro = function(livro){
     return y+14*(cell+gap);
   }
 
+    // V4.08: as duas imagens do Wrapped agora SEMPRE saem em 1080x1920 (9:16, formato
+  // Reels/Stories do Instagram) — antes cada uma tinha uma altura variavel dependendo
+  // do conteudo. Desenha o conteudo no tamanho natural, depois encaixa (com escala se
+  // precisar) dentro do quadro fixo, centralizado, sem esticar nem cortar nada.
+  function encaixarEm1080x1920(naturalCanvas, naturalUsedH){
+    var W=1080, H=1920;
+    var finalCanvas=document.createElement('canvas'); finalCanvas.width=W; finalCanvas.height=H;
+    var ctx=finalCanvas.getContext('2d');
+    ctx.fillStyle=CORES.fundo1; ctx.fillRect(0,0,W,H);
+    var escala=Math.min(1, H/naturalUsedH);
+    var destW=W*escala, destH=naturalUsedH*escala;
+    var destX=(W-destW)/2, destY=(H-destH)/2;
+    ctx.drawImage(naturalCanvas, 0,0,W,naturalUsedH, destX,destY,destW,destH);
+    return finalCanvas;
+  }
+
   async function gerarImagemResumo(stats){
     var W=1080, H=2700;
     var canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
@@ -14243,10 +14265,15 @@ window.blAbrirDetalheLivro = function(livro){
     var y=100;
     ctx.textAlign='center';
     ctx.fillStyle=CORES.muted; ctx.font='700 30px system-ui,sans-serif';
-    ctx.fillText('MEU ANO DE LEITURA', W/2, y); y+=130;
+    // V4.08: quando e' "todas as temporadas", o titulo vira plural e mostra o intervalo
+    // real de anos (ex.: "2022 a 2026"), nao mais a palavra genérica "TODAS".
+    ctx.fillText(stats.todasTemporadas ? 'MEUS ANOS DE LEITURA' : 'MEU ANO DE LEITURA', W/2, y); y+=130;
 
-    ctx.fillStyle=CORES.texto; ctx.font='900 140px system-ui,sans-serif';
-    ctx.fillText(stats.todasTemporadas?'TODAS':String(stats.ano), W/2, y);
+    var tituloAno = stats.todasTemporadas
+      ? (stats.anoInicio!=null ? (stats.anoInicio===stats.anoFim ? String(stats.anoInicio) : stats.anoInicio+' a '+stats.anoFim) : 'Todas')
+      : String(stats.ano);
+    ctx.fillStyle=CORES.texto; ctx.font='900 '+(tituloAno.length>9?90:140)+'px system-ui,sans-serif';
+    ctx.fillText(tituloAno, W/2, y);
     ctx.fillStyle=CORES.roxo; ctx.fillRect(W/2-70,y+18,140,8);
     y+=100;
 
@@ -14295,9 +14322,7 @@ window.blAbrirDetalheLivro = function(livro){
     y += 60;
 
     var finalH=Math.min(H, y);
-    var finalCanvas=document.createElement('canvas'); finalCanvas.width=W; finalCanvas.height=finalH;
-    finalCanvas.getContext('2d').drawImage(canvas,0,0,W,finalH,0,0,W,finalH);
-    return finalCanvas;
+    return encaixarEm1080x1920(canvas, finalH);
   }
 
   async function desenharFileiraRanking(ctx, itens, y, corMedalha, W){
@@ -14375,30 +14400,45 @@ window.blAbrirDetalheLivro = function(livro){
     ctx.textAlign='center'; ctx.fillStyle='#4a5570'; ctx.font='700 24px system-ui,sans-serif';
     ctx.fillText('📚 BookLegacy', W/2, y); y+=40;
 
-    var finalCanvas=document.createElement('canvas'); finalCanvas.width=W; finalCanvas.height=Math.min(H,y);
-    finalCanvas.getContext('2d').drawImage(canvas,0,0,W,finalCanvas.height,0,0,W,finalCanvas.height);
-    return finalCanvas;
+    return encaixarEm1080x1920(canvas, Math.min(H,y));
   }
 
-  async function baixarCanvas(canvas, nomeArquivo){
-    // V4.07: no celular, o link de download (<a download>) muitas vezes nao funciona porque
-    // o momento do clique "expira" entre o toBlob assincrono e o a.click() — vários navegadores
-    // mobile exigem que o download aconteca bem colado no toque do usuario. Agora usa o
-    // compartilhamento nativo do sistema (Web Share API) como caminho principal, que e' o
-    // jeito confiavel de "salvar imagem" em celular — com o link antigo como reserva.
+  function dataURLtoBlobSync(dataurl){
+    var arr = dataurl.split(','), mimeMatch = arr[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : 'image/png';
+    var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    return new Blob([u8arr], {type:mime});
+  }
+
+  function baixarCanvas(canvas, nomeArquivo){
+    // V4.08: o "await new Promise(...canvas.toBlob...)" da tentativa anterior criava um
+    // intervalo assincrono entre o toque do usuario e a chamada do compartilhamento —
+    // vários navegadores de celular exigem que isso aconteça de forma SINCRONA, sem
+    // nenhum "await" no meio, ou tratam a permissao como expirada e recusam silenciosamente.
+    // Agora tudo (toDataURL + conversao pra Blob) acontece de forma sincrona, na mesma
+    // pilha de execucao do clique, antes de chamar o compartilhamento.
     try{
-      var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, 'image/png'); });
-      if(!blob){ window.open(canvas.toDataURL('image/png'), '_blank'); return; }
+      var dataUrl = canvas.toDataURL('image/png'); // sincrono
+      var blob = dataURLtoBlobSync(dataUrl);        // sincrono
       var file = new File([blob], nomeArquivo, {type:'image/png'});
       if(navigator.canShare && navigator.canShare({files:[file]})){
-        try{
-          await navigator.share({ files:[file], title:'BookLegacy', text:'Meu ano de leitura 📚' });
-          return;
-        }catch(shareErr){
+        navigator.share({ files:[file], title:'BookLegacy', text:'Meu ano de leitura 📚' }).catch(function(shareErr){
           if(shareErr && shareErr.name==='AbortError') return; // usuario cancelou de proposito
           console.warn('[BookLegacy] compartilhar falhou, tentando download direto', shareErr);
-        }
+          baixarViaLink(blob, nomeArquivo, dataUrl);
+        });
+        return;
       }
+      baixarViaLink(blob, nomeArquivo, dataUrl);
+    }catch(e){
+      console.warn('[BookLegacy] baixarCanvas falhou, abrindo em nova aba', e);
+      try{ window.open(canvas.toDataURL('image/png'), '_blank'); }catch(e2){ alert('Não foi possível baixar. Tente tirar um print da imagem.'); }
+    }
+  }
+
+  function baixarViaLink(blob, nomeArquivo, dataUrlFallback){
+    try{
       var url=URL.createObjectURL(blob);
       var a=document.createElement('a');
       a.href=url; a.download=nomeArquivo;
@@ -14407,8 +14447,8 @@ window.blAbrirDetalheLivro = function(livro){
       document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
     }catch(e){
-      console.warn('[BookLegacy] baixarCanvas falhou, abrindo em nova aba', e);
-      try{ window.open(canvas.toDataURL('image/png'), '_blank'); }catch(e2){ alert('Não foi possível baixar. Tente tirar um print da imagem.'); }
+      console.warn('[BookLegacy] link de download falhou, abrindo em nova aba', e);
+      try{ window.open(dataUrlFallback, '_blank'); }catch(e2){ alert('Não foi possível baixar. Tente tirar um print da imagem.'); }
     }
   }
 
