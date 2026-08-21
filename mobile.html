@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><!-- V4.02-build-1787308608 -->
+<head><!-- V4.03-build-1787308689 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -16369,12 +16369,27 @@ window.blAbrirDetalheLivro = function(livro){
       var uidNow = window.BL?.auth?.currentUser?.uid;
       var db = window.BL?.db;
       if(!db || !uidNow) throw new Error('Sem conexão com o Firebase.');
-      var freshPage = window.blFreshBookPage ? await window.blFreshBookPage(livro).catch(function(){return null;}) : null;
-      var docId = freshPage && freshPage.docId;
-      if(!docId){ alert('Não encontrei esse livro no banco pra mover.'); return false; }
+      var normL = function(v){ return String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); };
+      // V4.03: PLANO A — usa o ID que o livro JA TEM em memoria (o mesmo que a propria tela
+      // usa pra exibi-lo, ja que ele esta visivel e marcado na grade). So cai pro Firestore
+      // (PLANO B, blFreshBookPage) se por algum motivo esse ID nao existir localmente.
+      var localBook = (window._livros||[]).find(function(l){ return normL(l.livro)===normL(livro); });
+      var docId = localBook && (localBook.id || localBook.docId || localBook.bookIdDoc);
+      if(!docId){
+        var freshPage = window.blFreshBookPage ? await window.blFreshBookPage(livro).catch(function(){return null;}) : null;
+        docId = freshPage && freshPage.docId;
+      }
+      if(!docId){
+        // erro visivel e detalhado — pra proxima vez sabermos exatamente o que faltou, em vez de adivinhar
+        var detalhe = 'Livro: "'+livro+'" | encontrado localmente: '+(!!localBook)+' | campos locais: '+(localBook?Object.keys(localBook).join(','):'nenhum');
+        console.error('[BookLegacy] mover-para-meta: docId nao resolvido.', detalhe);
+        alert('Não encontrei esse livro no banco pra mover.\n\n'+detalhe);
+        try{ window.dispatchEvent(new ErrorEvent('error', {message:'mover-para-meta falhou: '+detalhe})); }catch(_){}
+        return false;
+      }
       await db.collection('users').doc(uidNow).collection('library').doc(docId).set({ targetYear: novaMeta, updatedAt: new Date().toISOString() }, {merge:true});
       // espelha localmente pra tela responder na hora
-      (window._livros||[]).forEach(function(l){ if(l.livro===livro) l.metaAno=novaMeta; });
+      (window._livros||[]).forEach(function(l){ if(normL(l.livro)===normL(livro)) l.metaAno=novaMeta; });
       try{ if(typeof gmSelecionados!=='undefined' && gmSelecionados.delete) gmSelecionados.delete(livro); }catch(e){}
       if(typeof window.renderGerenciarMeta==='function') window.renderGerenciarMeta();
       if(typeof window.blRefreshAndRender==='function') window.blRefreshAndRender().catch(function(){});
